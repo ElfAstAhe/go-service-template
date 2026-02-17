@@ -5,7 +5,7 @@ import (
 	"database/sql"
 )
 
-type NotFoundInfo func(error) (string, string, error)
+type NotFoundInfo func(error) (string, any, error)
 
 type DBHelper interface {
 	RunInTx(ctx context.Context, db *sql.DB, fn func(ctx context.Context, tx *sql.Tx) error) error
