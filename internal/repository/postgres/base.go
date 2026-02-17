@@ -21,6 +21,8 @@ type (
 	NewEntityFactory[T domain.Identity[ID], ID any]       func() *T
 	ValidateEntityFunc[T domain.Identity[ID], ID any]     func(*T) error
 	BeforeCreateChangeFunc[T domain.Identity[ID], ID any] func(*T) error
+	CreatorFunc[T domain.Identity[ID], ID any]            func(context.Context, *sql.Tx, *T) (*sql.Row, error)
+	ChangerFunc[T domain.Identity[ID], ID any]            func(context.Context, *sql.Tx, *T) (*sql.Row, error)
 )
 
 type BaseRepository[T domain.Identity[ID], ID any] struct {
@@ -39,10 +41,12 @@ type BaseRepository[T domain.Identity[ID], ID any] struct {
 	newEntityFactory NewEntityFactory[T, ID]
 
 	validateCreate ValidateEntityFunc[T, ID]
-	validateChange ValidateEntityFunc[T, ID]
+	creator        CreatorFunc[T, ID]
+	beforeCreate   BeforeCreateChangeFunc[T, ID]
 
-	beforeCreate BeforeCreateChangeFunc[T, ID]
-	beforeChange BeforeCreateChangeFunc[T, ID]
+	validateChange ValidateEntityFunc[T, ID]
+	changer        ChangerFunc[T, ID]
+	beforeChange   BeforeCreateChangeFunc[T, ID]
 }
 
 //goland:noinspection GoResourceLeak
@@ -55,6 +59,12 @@ func NewBaseRepository[T domain.Identity[ID], ID any](
 	afterGet AfterGetFunc[T, ID],
 	afterListYeld AfterListYeldFunc[T, ID],
 	newEntityFactory NewEntityFactory[T, ID],
+	validateCreate ValidateEntityFunc[T, ID],
+	creator CreatorFunc[T, ID],
+	beforeCreate BeforeCreateChangeFunc[T, ID],
+	validateChange ValidateEntityFunc[T, ID],
+	changer ChangerFunc[T, ID],
+	beforeChange BeforeCreateChangeFunc[T, ID],
 ) (*BaseRepository[T, ID], error) {
 	ctxStmt, cancelStmt := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelStmt()
@@ -65,6 +75,8 @@ func NewBaseRepository[T domain.Identity[ID], ID any](
 	}
 	deleteStmt, err := db.GetDB().PrepareContext(ctxStmt, fmt.Sprintf("delete from %s where id = $1", table))
 	if err != nil {
+		_ = getStmt.Close()
+
 		return nil, errs.NewDalError("NewBaseRepository", "prepare delete stmt", err)
 	}
 
@@ -79,6 +91,12 @@ func NewBaseRepository[T domain.Identity[ID], ID any](
 		afterGet:         afterGet,
 		afterListYeld:    afterListYeld,
 		newEntityFactory: newEntityFactory,
+		validateCreate:   validateCreate,
+		creator:          creator,
+		beforeCreate:     beforeCreate,
+		validateChange:   validateChange,
+		changer:          changer,
+		beforeChange:     beforeChange,
 	}, nil
 }
 
@@ -155,47 +173,79 @@ func (br *BaseRepository[T, ID]) Create(ctx context.Context, entity *T) (*T, err
 		}
 	}
 
+	res := br.newEntityFactory()
 	// выполнение
 	err := br.db.GetHelper().RunInTx(ctx, br.db.GetDB(), func(ctx context.Context, tx *sql.Tx) error {
-		// стейтмент
-		stmt, err := tx.PrepareContext(ctx, sqlUserCreate)
+		var err error
+		row, err := br.creator(ctx, tx, entity)
 		if err != nil {
-			return apperrs.NewDalCommonError("UserRepo.Create", "prepare stmt", err)
+			return errs.NewDalError("BaseRepository.Create", "create entity", err)
 		}
-		defer stmt.Close()
 
-		_, err = stmt.ExecContext(ctx,
-			user.ID,
-			user.Key.Username,
-			user.PasswordHash,
-			user.PrivateKey,
-			user.PublicKey,
-			user.Active,
-			user.Deleted,
-			user.Person,
-			user.EMail,
-		)
-
+		res, err = br.rowScanner(row)
 		if err != nil {
-			if urp.db.GetHelper().IsUniqueViolation(err) {
-				return apperrs.NewDalAlreadyExistsError("User", user.Key.Username, err)
+			if br.db.GetHelper().IsUniqueViolation(err) {
+				return errs.NewDalAlreadyExistsError(br.entity, nil, err)
 			}
 
-			return apperrs.NewDalCommonError("UserRepo.Create", "exec stmt", err)
+			return errs.NewDalError("BaseRepository.Create", "scan after create entity", err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Create", "run in transaction", err)
+		return nil, errs.NewDalError("BaseRepository.Create", "run in transaction", err)
 	}
 
-	return urp.afterGet(user)
+	if br.afterGet != nil {
+		return br.afterGet(res)
+	}
+
+	return res, nil
 }
 
 func (br *BaseRepository[T, ID]) Change(ctx context.Context, entity *T) (*T, error) {
-	//TODO implement me
-	panic("implement me")
+	if br.validateChange != nil {
+		if err := br.validateChange(entity); err != nil {
+			return nil, errs.NewDalError("BaseRepository.Change", "validate change", err)
+		}
+	}
+
+	if br.beforeChange != nil {
+		if err := br.beforeChange(entity); err != nil {
+			return nil, errs.NewDalError("BaseRepository.Change", "before change", err)
+		}
+	}
+
+	res := br.newEntityFactory()
+	// выполнение
+	err := br.db.GetHelper().RunInTx(ctx, br.db.GetDB(), func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		row, err := br.changer(ctx, tx, entity)
+		if err != nil {
+			return errs.NewDalError("BaseRepository.Change", "change entity", err)
+		}
+
+		res, err = br.rowScanner(row)
+		if err != nil {
+			if br.db.GetHelper().IsUniqueViolation(err) {
+				return errs.NewDalAlreadyExistsError(br.entity, (*entity).GetID(), err)
+			}
+
+			return errs.NewDalError("BaseRepository.Change", "scan after change entity", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, errs.NewDalError("BaseRepository.Change", "run in transaction", err)
+	}
+
+	if br.afterGet != nil {
+		return br.afterGet(res)
+	}
+
+	return res, nil
 }
 
 func (br *BaseRepository[T, ID]) Delete(ctx context.Context, id ID) error {

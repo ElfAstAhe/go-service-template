@@ -4,6 +4,8 @@ type Identity[ID any] interface {
 	GetID() ID
 	SetID(id ID)
 
+	IsExists() bool
+
 	BeforeCreate() error
 	BeforeChange() error
 
