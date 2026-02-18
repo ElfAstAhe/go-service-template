@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,6 +12,8 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport"
+	"github.com/hellofresh/health-go/v5"
 )
 
 type App struct {
@@ -21,8 +24,11 @@ type App struct {
 	db     db.DB
 	wg     sync.WaitGroup
 
-	// Здесь будут наши конкретные репозитории
-	// userRepo *postgres.UserRepo
+	// checkers
+	health *health.Health
+	// http
+	httpRouter transport.HTTPRouter
+	httpServer *http.Server
 }
 
 func NewApp(config *config.Config, logger logger.Logger) *App {
