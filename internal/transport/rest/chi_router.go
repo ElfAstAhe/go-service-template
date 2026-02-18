@@ -7,6 +7,7 @@ import (
 	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/transport"
+	mware "github.com/ElfAstAhe/go-service-template/pkg/transport/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/hellofresh/health-go/v5"
@@ -70,7 +71,7 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// decompress
 	// ..
 	// income/outcome logger
-	// ..
+	cr.router.Use(mware.NewHTTPRequestLogger(logger).Handle)
 	// recoverer
 	cr.router.Use(middleware.Recoverer)
 	// timeout
