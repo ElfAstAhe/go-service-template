@@ -5,7 +5,8 @@ import (
 )
 
 type Repository[T Identity[ID], ID any] interface {
-	Get(ctx context.Context, id ID) (*T, error)
+	Find(ctx context.Context, id ID) (*T, error)
+
 	List(ctx context.Context, limit, offset int) ([]*T, error)
 
 	Create(ctx context.Context, entity *T) (*T, error)

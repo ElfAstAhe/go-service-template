@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -12,12 +13,12 @@ import (
 
 // Config — корневой объект
 type Config struct {
-	App  *AppConfig  `mapstructure:"app"`
-	Auth *AuthConfig `mapstructure:"auth"`
-	HTTP *HTTPConfig `mapstructure:"http"`
+	App  *AppConfig       `mapstructure:"app"`
+	Auth *conf.AuthConfig `mapstructure:"auth"`
+	HTTP *conf.HTTPConfig `mapstructure:"http"`
 	//    GRPC  *GRPCConfig  `mapstructure:"grpc"`
-	Log *LogConfig `mapstructure:"log"`
-	DB  *DBConfig  `mapstructure:"db"` // <-- Универсальное имя
+	Log *conf.LogConfig `mapstructure:"log"`
+	DB  *conf.DBConfig  `mapstructure:"db"` // <-- Универсальное имя
 	//    Redis *RedisConfig `mapstructure:"redis"`
 }
 
@@ -28,7 +29,7 @@ var (
 	AppBuildTime string
 )
 
-func NewConfig(app *AppConfig, auth *AuthConfig, HTTP *HTTPConfig, log *LogConfig, db *DBConfig) *Config {
+func NewConfig(app *AppConfig, auth *conf.AuthConfig, HTTP *conf.HTTPConfig, log *conf.LogConfig, db *conf.DBConfig) *Config {
 	return &Config{
 		App:  app,
 		Auth: auth,
@@ -41,10 +42,10 @@ func NewConfig(app *AppConfig, auth *AuthConfig, HTTP *HTTPConfig, log *LogConfi
 func NewDefaultConfig() *Config {
 	return NewConfig(
 		NewDefaultAppConfig(),
-		NewDefaultAuthConfig(),
-		NewDefaultHTTPConfig(),
-		NewDefaultLogConfig(),
-		NewDefaultDBConfig(),
+		conf.NewDefaultAuthConfig(),
+		conf.NewDefaultHTTPConfig(),
+		conf.NewDefaultLogConfig(),
+		conf.NewDefaultDBConfig(),
 	)
 }
 
@@ -82,12 +83,12 @@ func Load() (*Config, error) {
 		return nil, errs.NewConfigError("failed to bind pflags", err)
 	}
 
-	// 2. Настройка Переменных окружения (ENV)
+	// 3. Настройка Переменных окружения (ENV)
 	// Используем твой механизм AutomaticEnv
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
-	// 3. Поддержка ENV для пути к конфигу
+	// 4. Поддержка ENV для пути к конфигу
 	err = v.BindEnv(FlagConfig, EnvConfig)
 	if err != nil {
 		return nil, errs.NewConfigError("failed to bind env", err)
@@ -121,26 +122,26 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault(keyAppEnv, defaultAppEnv)
 
 	// HTTP
-	v.SetDefault(keyHTTPAddress, defaultHTTPAddress)
-	v.SetDefault(keyHTTPReadTimeout, defaultHTTPReadTimeout)
-	v.SetDefault(keyHTTPWriteTimeout, defaultHTTPWriteTimeout)
-	v.SetDefault(keyHTTPIdleTimeout, defaultHTTPIdleTimeout)
-	v.SetDefault(keyHTTPShutdownTimeout, defaultHTTPShutdownTimeout)
-	v.SetDefault(keyHTTPSecure, defaultHTTPSecure)
+	v.SetDefault(conf.KeyHTTPAddress, conf.DefaultHTTPAddress)
+	v.SetDefault(conf.KeyHTTPReadTimeout, conf.DefaultHTTPReadTimeout)
+	v.SetDefault(conf.KeyHTTPWriteTimeout, conf.DefaultHTTPWriteTimeout)
+	v.SetDefault(conf.KeyHTTPIdleTimeout, conf.DefaultHTTPIdleTimeout)
+	v.SetDefault(conf.KeyHTTPShutdownTimeout, conf.DefaultHTTPShutdownTimeout)
+	v.SetDefault(conf.KeyHTTPSecure, conf.DefaultHTTPSecure)
 
 	// gRPC
-	v.SetDefault(keyGRPCAddress, defaultGRPCAddress)
-	v.SetDefault(keyGRPCTimeout, defaultGRPCTimeout)
+	v.SetDefault(conf.KeyGRPCAddress, conf.DefaultGRPCAddress)
+	v.SetDefault(conf.KeyGRPCTimeout, conf.DefaultGRPCTimeout)
 
 	// DB
-	v.SetDefault(keyDBMaxOpenConns, defaultDBMaxOpenConns)
-	v.SetDefault(keyDBMaxIdleConns, defaultDBMaxIdleConns)
-	v.SetDefault(keyDBConnMaxIdleLifetime, defaultDBConnMaxIdleLifetime)
-	v.SetDefault(keyDBConnTimeout, defaultDBConnTimeout)
+	v.SetDefault(conf.KeyDBMaxOpenConns, conf.DefaultDBMaxOpenConns)
+	v.SetDefault(conf.KeyDBMaxIdleConns, conf.DefaultDBMaxIdleConns)
+	v.SetDefault(conf.KeyDBConnMaxIdleLifetime, conf.DefaultDBConnMaxIdleLifetime)
+	v.SetDefault(conf.KeyDBConnTimeout, conf.DefaultDBConnTimeout)
 
 	// Log
-	v.SetDefault(keyLogLevel, defaultLogLevel)
-	v.SetDefault(keyLogFormat, defaultLogFormat)
+	v.SetDefault(conf.KeyLogLevel, conf.DefaultLogLevel)
+	v.SetDefault(conf.KeyLogFormat, conf.DefaultLogFormat)
 
 	// ... и так далее для всех критичных полей
 }
@@ -160,33 +161,33 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	res.String(FlagAuthMasterPasswordSalt, "", "master password salt")
 
 	// HTTP
-	res.String(FlagHTTPAddress, defaultHTTPAddress, "http address")
-	res.Duration(FlagHTTPReadTimeout, defaultHTTPReadTimeout, "http read timeout")
-	res.Duration(FlagHTTPWriteTimeout, defaultHTTPWriteTimeout, "http write timeout")
-	res.Duration(FlagHTTPIdleTimeout, defaultHTTPIdleTimeout, "http idle timeout")
-	res.Duration(FlagHTTPShutdownTimeout, defaultHTTPShutdownTimeout, "http shutdown timeout")
+	res.String(FlagHTTPAddress, conf.DefaultHTTPAddress, "http address")
+	res.Duration(FlagHTTPReadTimeout, conf.DefaultHTTPReadTimeout, "http read timeout")
+	res.Duration(FlagHTTPWriteTimeout, conf.DefaultHTTPWriteTimeout, "http write timeout")
+	res.Duration(FlagHTTPIdleTimeout, conf.DefaultHTTPIdleTimeout, "http idle timeout")
+	res.Duration(FlagHTTPShutdownTimeout, conf.DefaultHTTPShutdownTimeout, "http shutdown timeout")
 	res.String(FlagHTTPPrivateKeyPath, "", "http private key path")
 	res.String(FlagHTTPCertificatePath, "", "http certificate path")
-	res.Bool(FlagHTTPSecure, defaultHTTPSecure, "http secure mode")
+	res.Bool(FlagHTTPSecure, conf.DefaultHTTPSecure, "http secure mode")
 
 	// gRPC
-	res.String(FlagGRPCAddress, defaultGRPCAddress, "gRPC address")
+	res.String(FlagGRPCAddress, conf.DefaultGRPCAddress, "gRPC address")
 	res.Duration(FlagGRPCMaxConnIdle, 0, "gRPC max connection idle timeout")
 	res.Duration(FlagGRPCMaxConnAge, 0, "gRPC max connection age timeout")
-	res.Duration(FlagGRPCTimeout, defaultGRPCTimeout, "gRPC timeout")
+	res.Duration(FlagGRPCTimeout, conf.DefaultGRPCTimeout, "gRPC timeout")
 	res.Duration(FlagGRPCKeepAliveTime, 0, "gRPC keep alive timeout")
 	res.Duration(FlagGRPCKeepAliveTimeout, 0, "gRPC keep alive timeout")
 
 	// DB
 	res.String(FlagDBDSN, "", "database dsn")
-	res.Int(FlagDBMaxOpenConns, defaultDBMaxOpenConns, "db max open connections")
-	res.Int(FlagDBMaxIdleConns, defaultDBMaxIdleConns, "db max idle connections")
-	res.Duration(FlagDBMaxIdleLifetime, defaultDBConnMaxIdleLifetime, "db max idle connection lifetime")
-	res.Duration(FlagDBConnTimeout, defaultDBConnTimeout, "db connection timeout")
+	res.Int(FlagDBMaxOpenConns, conf.DefaultDBMaxOpenConns, "db max open connections")
+	res.Int(FlagDBMaxIdleConns, conf.DefaultDBMaxIdleConns, "db max idle connections")
+	res.Duration(FlagDBMaxIdleLifetime, conf.DefaultDBConnMaxIdleLifetime, "db max idle connection lifetime")
+	res.Duration(FlagDBConnTimeout, conf.DefaultDBConnTimeout, "db connection timeout")
 
 	// Log
-	res.String(FlagLogLevel, defaultLogLevel, "log level")
-	res.String(FlagLogFormat, defaultLogFormat, "log format")
+	res.String(FlagLogLevel, conf.DefaultLogLevel, "log level")
+	res.String(FlagLogFormat, conf.DefaultLogFormat, "log format")
 
 	// Добавь остальные pflag.String/Int/Duration для GRPC, Redis, etc. ...
 	// ..

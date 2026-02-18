@@ -42,7 +42,16 @@ func NewHTTPConfig(
 }
 
 func NewDefaultHTTPConfig() *HTTPConfig {
-	return NewHTTPConfig("", defaultHTTPReadTimeout, defaultHTTPWriteTimeout, defaultHTTPIdleTimeout, defaultHTTPShutdownTimeout, "", "", defaultHTTPSecure)
+	return NewHTTPConfig(
+		"",
+		DefaultHTTPReadTimeout,
+		DefaultHTTPWriteTimeout,
+		DefaultHTTPIdleTimeout,
+		DefaultHTTPShutdownTimeout,
+		"",
+		"",
+		DefaultHTTPSecure,
+	)
 }
 
 func (hc *HTTPConfig) Validate() error {

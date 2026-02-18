@@ -29,7 +29,7 @@ func NewGRPCConfig(address string, maxConnIdle, maxConnAge, timeout, keepAliveTi
 }
 
 func NewDefaultGRPCConfig() *GRPCConfig {
-	return NewGRPCConfig(defaultGRPCAddress, 0, 0, defaultGRPCTimeout, 0, 0)
+	return NewGRPCConfig(DefaultGRPCAddress, 0, 0, DefaultGRPCTimeout, 0, 0)
 }
 
 func (gc *GRPCConfig) Validate() error {

@@ -6,11 +6,12 @@ import (
 
 // LogConfig — уровни и формат логирования
 type LogConfig struct {
-	Level  string `mapstructure:"level"`  // debug, info, warn, error
-	Format string `mapstructure:"format"` // json, console
+	Level    string `mapstructure:"level"`  // debug, info, warn, error
+	Format   string `mapstructure:"format"` // json, console
+	FilePath string `mapstructure:"file_path"`
 }
 
-func NewLogConfig(level, format string) *LogConfig {
+func NewLogConfig(level, format string, filePath string) *LogConfig {
 	return &LogConfig{
 		Level:  level,
 		Format: format,
@@ -18,7 +19,7 @@ func NewLogConfig(level, format string) *LogConfig {
 }
 
 func NewDefaultLogConfig() *LogConfig {
-	return NewLogConfig(defaultLogLevel, defaultLogFormat)
+	return NewLogConfig(DefaultLogLevel, DefaultLogFormat, "")
 }
 
 func (lc *LogConfig) Validate() error {
