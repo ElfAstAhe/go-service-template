@@ -66,10 +66,12 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	cr.router.Use(middleware.RequestID)
 	// realIP
 	cr.router.Use(middleware.RealIP)
-	// compress
-	// ..
+	// compress (add any content-types)
+	cr.router.Use(mware.NewHTTPCompress(logger,
+		"application/json", "plain/text",
+	).Handle)
 	// decompress
-	// ..
+	cr.router.Use(mware.NewHTTPDecompress(int64(cr.config.MaxRequestBodySize), logger).Handle)
 	// income/outcome logger
 	cr.router.Use(mware.NewHTTPRequestLogger(logger).Handle)
 	// recoverer

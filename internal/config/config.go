@@ -128,6 +128,7 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault(conf.KeyHTTPIdleTimeout, conf.DefaultHTTPIdleTimeout)
 	v.SetDefault(conf.KeyHTTPShutdownTimeout, conf.DefaultHTTPShutdownTimeout)
 	v.SetDefault(conf.KeyHTTPSecure, conf.DefaultHTTPSecure)
+	v.SetDefault(conf.KeyHTTPMaxRequestBodySize, conf.DefaultHTTPMaxRequestBodySize)
 
 	// gRPC
 	v.SetDefault(conf.KeyGRPCAddress, conf.DefaultGRPCAddress)
@@ -169,6 +170,7 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	res.String(FlagHTTPPrivateKeyPath, "", "http private key path")
 	res.String(FlagHTTPCertificatePath, "", "http certificate path")
 	res.Bool(FlagHTTPSecure, conf.DefaultHTTPSecure, "http secure mode")
+	res.Int(FlagHTTPMaxRequestBodySize, conf.DefaultHTTPMaxRequestBodySize, "http max request body size")
 
 	// gRPC
 	res.String(FlagGRPCAddress, conf.DefaultGRPCAddress, "gRPC address")

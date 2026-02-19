@@ -53,14 +53,15 @@ const (
 
 // http config flags
 const (
-	FlagHTTPAddress         string = "http-address"
-	FlagHTTPReadTimeout     string = "http-read-timeout"
-	FlagHTTPWriteTimeout    string = "http-write-timeout"
-	FlagHTTPIdleTimeout     string = "http-idle-timeout"
-	FlagHTTPShutdownTimeout string = "http-shutdown-timeout"
-	FlagHTTPPrivateKeyPath  string = "http-private-key-path"
-	FlagHTTPCertificatePath string = "http-certificate-path"
-	FlagHTTPSecure          string = "http-secure"
+	FlagHTTPAddress            string = "http-address"
+	FlagHTTPReadTimeout        string = "http-read-timeout"
+	FlagHTTPWriteTimeout       string = "http-write-timeout"
+	FlagHTTPIdleTimeout        string = "http-idle-timeout"
+	FlagHTTPShutdownTimeout    string = "http-shutdown-timeout"
+	FlagHTTPPrivateKeyPath     string = "http-private-key-path"
+	FlagHTTPCertificatePath    string = "http-certificate-path"
+	FlagHTTPSecure             string = "http-secure"
+	FlagHTTPMaxRequestBodySize string = "http-max-request-body-size"
 )
 
 // log config flags
@@ -110,14 +111,15 @@ const (
 
 // HTTP config envs
 const (
-	EnvHTTPAddress         string = "HTTP_ADDRESS"
-	EnvHTTPReadTimeout     string = "HTTP_READ_TIMEOUT"
-	EnvHTTPWriteTimeout    string = "HTTP_WRITE_TIMEOUT"
-	EnvHTTPIdleTimeout     string = "HTTP_IDLE_TIMEOUT"
-	EnvHTTPShutdownTimeout string = "HTTP_SHUTDOWN_TIMEOUT"
-	EnvHTTPPrivateKeyPath  string = "HTTP_PRIVATE_KEY_PATH"
-	EnvHTTPCertificatePath string = "HTTP_CERTIFICATE_PATH"
-	EnvHTTPSecure          string = "HTTP_SECURE"
+	EnvHTTPAddress            string = "HTTP_ADDRESS"
+	EnvHTTPReadTimeout        string = "HTTP_READ_TIMEOUT"
+	EnvHTTPWriteTimeout       string = "HTTP_WRITE_TIMEOUT"
+	EnvHTTPIdleTimeout        string = "HTTP_IDLE_TIMEOUT"
+	EnvHTTPShutdownTimeout    string = "HTTP_SHUTDOWN_TIMEOUT"
+	EnvHTTPPrivateKeyPath     string = "HTTP_PRIVATE_KEY_PATH"
+	EnvHTTPCertificatePath    string = "HTTP_CERTIFICATE_PATH"
+	EnvHTTPSecure             string = "HTTP_SECURE"
+	EnvHTTPMaxRequestBodySize string = "HTTP_MAX_REQUEST_BODY_SIZE"
 )
 
 // Log config envs

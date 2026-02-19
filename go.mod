@@ -3,6 +3,7 @@ module github.com/ElfAstAhe/go-service-template
 go 1.25.6
 
 require (
+	github.com/andybalholm/brotli v1.2.0
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/hellofresh/health-go/v5 v5.5.5
 	github.com/jackc/pgx/v5 v5.8.0

@@ -20,11 +20,14 @@ func NewHTTPRequestLogger(logger logger.Logger) *HTTPRequestLogger {
 
 func (hrl *HTTPRequestLogger) Handle(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hrl.log.Debug("HTTPRequestLogger.Handle start")
+		defer hrl.log.Debug("HTTPRequestLogger.Handle end")
+
 		wrw := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		start := time.Now()
 
 		defer func() {
-			hrl.log.InfoW("http request",
+			hrl.log.DebugW("http request",
 				"request_id", middleware.GetReqID(r.Context()),
 				"method", r.Method,
 				"uri", r.RequestURI,

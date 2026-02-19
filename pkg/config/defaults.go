@@ -6,21 +6,23 @@ import (
 
 // HTTP defaults
 const (
-	DefaultHTTPAddress         string        = "localhost:8080"
-	DefaultHTTPSecure          bool          = false
-	DefaultHTTPReadTimeout     time.Duration = 5 * time.Second
-	DefaultHTTPWriteTimeout    time.Duration = 5 * time.Second
-	DefaultHTTPIdleTimeout     time.Duration = 30 * time.Second
-	DefaultHTTPShutdownTimeout time.Duration = 15 * time.Second
+	DefaultHTTPAddress            string        = "localhost:8080"
+	DefaultHTTPSecure             bool          = false
+	DefaultHTTPReadTimeout        time.Duration = 5 * time.Second
+	DefaultHTTPWriteTimeout       time.Duration = 5 * time.Second
+	DefaultHTTPIdleTimeout        time.Duration = 30 * time.Second
+	DefaultHTTPShutdownTimeout    time.Duration = 15 * time.Second
+	DefaultHTTPMaxRequestBodySize int           = 1024 * 1024 * 4
 )
 
 const (
-	KeyHTTPAddress         string = "http.address"
-	KeyHTTPSecure          string = "http.secure"
-	KeyHTTPReadTimeout     string = "http.read_timeout"
-	KeyHTTPWriteTimeout    string = "http.write_timeout"
-	KeyHTTPIdleTimeout     string = "http.idle_timeout"
-	KeyHTTPShutdownTimeout string = "http.shutdown_timeout"
+	KeyHTTPAddress            string = "http.address"
+	KeyHTTPSecure             string = "http.secure"
+	KeyHTTPReadTimeout        string = "http.read_timeout"
+	KeyHTTPWriteTimeout       string = "http.write_timeout"
+	KeyHTTPIdleTimeout        string = "http.idle_timeout"
+	KeyHTTPShutdownTimeout    string = "http.shutdown_timeout"
+	KeyHTTPMaxRequestBodySize string = "http.max_request_body_size"
 )
 
 // gRPC defaults
