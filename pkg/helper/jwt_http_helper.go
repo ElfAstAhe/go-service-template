@@ -78,7 +78,7 @@ func (jhh *JWTHTTPHelper) ExtractTokenStringFromHeader(headerName string, header
 	}
 
 	if !strings.HasPrefix(headers.Get(headerName), TokenPrefix) {
-		return headerName, nil
+		return "", nil
 	}
 
 	return strings.TrimPrefix(headers.Get(headerName), TokenPrefix), nil
