@@ -8,6 +8,21 @@ const (
 	SubjectGuest   SubjectType = "guest"
 )
 
+var allowedSubjectTypes = map[SubjectType]struct{}{
+	SubjectUser:    {},
+	SubjectService: {},
+	SubjectGuest:   {},
+}
+
+func (st SubjectType) IsValid() bool {
+	_, ok := allowedSubjectTypes[st]
+	return ok
+}
+
+func (st SubjectType) FromString(str string) SubjectType {
+
+}
+
 type Subject struct {
 	ID       string              // sub в JWT
 	Type     SubjectType         // тип клиента
@@ -15,13 +30,17 @@ type Subject struct {
 	Metadata map[string]string   // Доп. данные (IP, DeviceID)
 }
 
+func NewSubject(id, subjectType, roles []string, metadata map[string]string) *Subject {
+	return &Subject{}
+}
+
 // HasRole — аналог securityContext.isCallerInRole(role)
-func (s Subject) HasRole(role string) bool {
+func (s *Subject) HasRole(role string) bool {
 	_, ok := s.Roles[role]
 	return ok
 }
 
 // IsAuthenticated — проверка, что это не Anonymous
-func (s Subject) IsAuthenticated() bool {
+func (s *Subject) IsAuthenticated() bool {
 	return s.Type != SubjectGuest && s.ID != ""
 }
