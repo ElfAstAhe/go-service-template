@@ -41,7 +41,7 @@ func NewDecompressReader(encoding string, compressedSource io.ReadCloser) (*Deco
 func (dr *DecompressReader) Read(p []byte) (n int, err error) {
 	cnt, err := dr.decompressor.Read(p)
 	if err != nil && errors.As(err, &io.EOF) {
-		return cnt, errs.NewUtilsError("DecompressReader.Read", "read error", err)
+		return cnt, errs.NewUtlError("DecompressReader.Read", "read error", err)
 	}
 
 	return cnt, err
@@ -55,7 +55,7 @@ func (dr *DecompressReader) Close() error {
 		err = dr.compressedSource.Close()
 	}
 	if err != nil {
-		return errs.NewUtilsError("DecompressReader.Close", "close error", err)
+		return errs.NewUtlError("DecompressReader.Close", "close error", err)
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func decompressorFactory(encoding string, compressedSource io.ReadCloser) (io.Re
 		res, err = nil, errs.NewMiddleWareError(fmt.Sprintf("unknown encoding [%s]", encoding), nil)
 	}
 	if err != nil {
-		err = errs.NewUtilsError("newDecompressor", "create decompressed reader", err)
+		err = errs.NewUtlError("newDecompressor", "create decompressed reader", err)
 	}
 
 	return res, err
