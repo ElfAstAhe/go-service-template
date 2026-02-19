@@ -29,14 +29,16 @@ type TokenIDBuilder func() string
 
 type AppClaims struct {
 	jwt.RegisteredClaims
-	Admin  bool     `json:"admin,omitempty"`
-	UserID string   `json:"user_id,omitempty"`
-	Roles  []string `json:"roles,omitempty"`
+	Admin       bool     `json:"admin,omitempty"`
+	SubjectID   string   `json:"subject_id,omitempty"`
+	SubjectType string   `json:"subject_type,omitempty"`
+	Roles       []string `json:"roles,omitempty"`
 }
 
 func NewAppClaims(
-	userID string,
-	user string,
+	subjectID string,
+	subject string,
+	subjectType string,
 	admin bool,
 	tokenIDBuilder TokenIDBuilder,
 	issuer string,
@@ -49,11 +51,11 @@ func NewAppClaims(
 			Issuer:    issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expirationDuration)),
-			Subject:   user,
+			Subject:   subject,
 		},
-		Admin:  admin,
-		UserID: userID,
-		Roles:  roles,
+		Admin:     admin,
+		SubjectID: subjectID,
+		Roles:     roles,
 	}
 }
 
@@ -111,19 +113,19 @@ func (h *JWTHelper) ExtractTokenFromString(tokenString string) (*jwt.Token, erro
 	return token, nil
 }
 
-func (h *JWTHelper) BuildClaims(userID, username string, admin bool, roles ...string) (*AppClaims, error) {
-	if userID == "" {
-		return nil, errs.NewInvalidArgumentError("user ID", "user ID is empty")
+func (h *JWTHelper) BuildClaims(subjectID, subject, subjectType string, admin bool, roles ...string) (*AppClaims, error) {
+	if subjectID == "" {
+		return nil, errs.NewInvalidArgumentError("subject ID", "subject ID is empty")
 	}
-	if username == "" {
-		return nil, errs.NewInvalidArgumentError("user name", "user name is empty")
+	if subject == "" {
+		return nil, errs.NewInvalidArgumentError("subject", "subject is empty")
 	}
 
-	return NewAppClaims(userID, username, admin, h.buildTokenID, DefaultJWTIssuer, h.expirationDuration, roles...), nil
+	return NewAppClaims(subjectID, subject, subjectType, admin, h.buildTokenID, DefaultJWTIssuer, h.expirationDuration, roles...), nil
 }
 
-func (h *JWTHelper) BuildToken(userID, username string, admin bool, roles ...string) (*jwt.Token, error) {
-	claims, err := h.BuildClaims(userID, username, admin, roles...)
+func (h *JWTHelper) BuildToken(subjectID, subject, subjectType string, admin bool, roles ...string) (*jwt.Token, error) {
+	claims, err := h.BuildClaims(subjectID, subject, subjectType, admin, roles...)
 	if err != nil {
 		return nil, errs.NewUtlJWTError("error building claims", err)
 	}
@@ -144,8 +146,8 @@ func (h *JWTHelper) BuildTokenStr(token *jwt.Token) (string, error) {
 	return res, nil
 }
 
-func (h *JWTHelper) BuildTokenString(userID, username string, admin bool, roles ...string) (string, error) {
-	token, err := h.BuildToken(userID, username, admin, roles...)
+func (h *JWTHelper) BuildTokenString(subjectID, subject, subjectType string, admin bool, roles ...string) (string, error) {
+	token, err := h.BuildToken(subjectID, subject, subjectType, admin, roles...)
 	if err != nil {
 		return "", errs.NewUtlJWTError("error building token", err)
 	}
