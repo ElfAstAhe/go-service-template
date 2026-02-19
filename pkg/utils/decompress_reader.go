@@ -40,7 +40,7 @@ func NewDecompressReader(encoding string, compressedSource io.ReadCloser) (*Deco
 
 func (dr *DecompressReader) Read(p []byte) (n int, err error) {
 	cnt, err := dr.decompressor.Read(p)
-	if err != nil && errors.As(err, &io.EOF) {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return cnt, errs.NewUtlError("DecompressReader.Read", "read error", err)
 	}
 
