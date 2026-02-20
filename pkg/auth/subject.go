@@ -1,5 +1,11 @@
 package auth
 
+import (
+	"fmt"
+
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+)
+
 type SubjectType string
 
 const (
@@ -19,19 +25,54 @@ func (st SubjectType) IsValid() bool {
 	return ok
 }
 
-func (st SubjectType) FromString(str string) SubjectType {
+func ParseSubjectType(str string) (SubjectType, error) {
+	var res = SubjectType(str)
+	if !res.IsValid() {
+		return "", errs.NewInvalidArgumentError("str", fmt.Sprintf("subject type [%s] not allowed", str))
+	}
 
+	return res, nil
 }
 
+func (st *SubjectType) UnmarshalText(text []byte) error {
+	val := SubjectType(text)
+	if !val.IsValid() {
+		return fmt.Errorf("invalid subject type: %s", string(text))
+	}
+	*st = val
+	return nil
+}
+
+func (st SubjectType) MarshalText() ([]byte, error) {
+	return []byte(st), nil
+}
+
+// Subject представляет из себя аутентифицированного и авторизованного юзверя
 type Subject struct {
-	ID       string              // sub в JWT
+	ID       string // sub в JWT
+	Name     string
 	Type     SubjectType         // тип клиента
 	Roles    map[string]struct{} // Оптимизировано для быстрой проверки @RolesAllowed
 	Metadata map[string]string   // Доп. данные (IP, DeviceID)
 }
 
-func NewSubject(id, subjectType, roles []string, metadata map[string]string) *Subject {
-	return &Subject{}
+func NewSubject(id, name string, subjectType SubjectType, roles []string, metadata map[string]string) *Subject {
+	mapRoles := make(map[string]struct{})
+	for _, role := range roles {
+		mapRoles[role] = struct{}{}
+	}
+	mapMetadata := make(map[string]string, len(metadata))
+	for k, v := range metadata {
+		mapMetadata[k] = v
+	}
+
+	return &Subject{
+		ID:       id,
+		Name:     name,
+		Type:     subjectType,
+		Roles:    mapRoles,
+		Metadata: mapMetadata,
+	}
 }
 
 // HasRole — аналог securityContext.isCallerInRole(role)
