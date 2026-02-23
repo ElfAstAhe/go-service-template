@@ -132,27 +132,17 @@ func (app *App) WaitForStop() {
 func (app *App) Close() error {
 	log := app.logger.GetLogger("bootstrap close")
 
-	//log.Info("save in mem data")
-	//if err := app.saveInMemData(); err != nil {
-	//    return err
-	//}
-
 	log.Info("close db connection")
 	if err := app.db.Close(); err != nil {
 		return err
 	}
-
-	//log.Info("close audit event service")
-	//if err := app.auditEventService.Close(); err != nil {
-	//    return err
-	//}
 
 	return nil
 }
 
 // gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c) + остальные сигналы OS на закрытие
 func (app *App) gracefulShutdown() {
-	//    log := app.logger.GetLogger("App.gracefulShutdown")
+	log := app.logger.GetLogger("App.gracefulShutdown")
 	defer app.wg.Done()
 	// channel
 	sig := make(chan os.Signal, 1)
@@ -172,12 +162,17 @@ func (app *App) gracefulShutdown() {
 		}
 	}
 
+	ctxTimed, _ := context.WithTimeout(context.Background(), app.config.HTTP.ShutdownTimeout)
+
 	// stop http
-	//log.Info("graceful shutdown http server")
-	//if err := app.httpServer.Shutdown(context.Background()); err != nil {
-	//    log.Errorf("error graceful shutdown http server with error [%v]", err)
-	//}
+	log.Info("shutdown http server...")
+	if err := app.httpServer.Shutdown(ctxTimed); err != nil {
+		log.Errorf("shutdown http server with error [%v]", err)
+	}
+	log.Info("shutdown http server complete")
+
 	// stop gRPC
-	//log.Info("graceful shutdown gRPC server")
+	log.Info("shutdown gRPC server...")
 	//app.grpcServer.GracefulStop()
+	log.Info("shutdown gRPC server complete")
 }
