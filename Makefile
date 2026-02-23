@@ -2,8 +2,8 @@
 PROTO_PATH=api/proto
 PROTO_OUT=api/grpc
 MODULE_NAME=github.com/ElfAstAhe/go-service-template
-SERVER_BINARY_NAME=test-server
-SERVER_BUILD_DIR=./cmd/test-server
+SERVER_BINARY_NAME=example-service
+SERVER_BUILD_DIR=./cmd/example-service
 VERSION=1.0.0
 BUILD_TIME=$(shell date +'%Y/%m/%d_%H:%M:%S')
 STAGE=DEV
