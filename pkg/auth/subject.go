@@ -37,7 +37,7 @@ func ParseSubjectType(str string) (SubjectType, error) {
 func (st *SubjectType) UnmarshalText(text []byte) error {
 	val := SubjectType(text)
 	if !val.IsValid() {
-		return fmt.Errorf("invalid subject type: %s", string(text))
+		return errs.NewInvalidArgumentError("text", fmt.Sprintf("invalid subject type: %s", string(text)))
 	}
 	*st = val
 	return nil
@@ -84,4 +84,24 @@ func (s *Subject) HasRole(role string) bool {
 // IsAuthenticated — проверка, что это не Anonymous
 func (s *Subject) IsAuthenticated() bool {
 	return s.Type != SubjectGuest && s.ID != ""
+}
+
+func (s *Subject) IsUser() bool {
+	return s.Type == SubjectUser
+}
+
+func (s *Subject) IsService() bool {
+	return s.Type == SubjectService
+}
+
+func (s *Subject) IsGuest() bool {
+	return s.Type == SubjectGuest
+}
+
+func (s *Subject) IsValid() bool {
+	return s.ID != "" && s.Name != "" && s.Type != ""
+}
+
+func (s *Subject) String() string {
+	return s.ID + "@" + s.Name
 }

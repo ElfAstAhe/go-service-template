@@ -14,7 +14,7 @@ import (
 const (
 	DefaultJWTSigningMethodName  string = "HS256"
 	DefaultJWTExpirationDuration        = 30 * time.Minute
-	DefaultJWTIssuer             string = "goph-keeper"
+	DefaultJWTIssuer             string = "go-service-template"
 )
 
 const (
@@ -53,9 +53,17 @@ func NewAppClaims(
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expirationDuration)),
 			Subject:   subject,
 		},
-		Admin:     admin,
-		SubjectID: subjectID,
-		Roles:     roles,
+		Admin:       admin,
+		SubjectID:   subjectID,
+		SubjectType: subjectType,
+		Roles:       roles,
+	}
+}
+
+func NewEmptyAppClaims() *AppClaims {
+	return &AppClaims{
+		RegisteredClaims: jwt.RegisteredClaims{},
+		Roles:            make([]string, 0),
 	}
 }
 
@@ -89,7 +97,7 @@ func (h *JWTHelper) ExtractClaims(token *jwt.Token) (*AppClaims, error) {
 }
 
 func (h *JWTHelper) ExtractTokenFromString(tokenString string) (*jwt.Token, error) {
-	claims := new(AppClaims)
+	claims := NewEmptyAppClaims()
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if reflect.TypeOf(h.signingMethod) != reflect.TypeOf(token.Method) {
 			return nil, errs.NewUtlJWTError("invalid signing method", nil)

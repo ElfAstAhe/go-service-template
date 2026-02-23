@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/helper"
@@ -65,7 +64,7 @@ func (ah *Helper) SubjectFromToken(token *jwt.Token) (*Subject, error) {
 		return nil, errs.NewUtlAuthError("extract claims", err)
 	}
 
-	return NewSubject(claims.SubjectID, claims.Subject, claims.SubjectType, claims.Roles, nil), nil
+	return NewSubject(claims.SubjectID, claims.Subject, SubjectType(claims.SubjectType), claims.Roles, nil), nil
 }
 
 func (ah *Helper) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
@@ -73,7 +72,7 @@ func (ah *Helper) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
 		return nil, errs.NewInvalidArgumentError("subject", "nil user info")
 	}
 
-	return ah.jwtHelper.BuildToken(subject.ID, subject.Name, subject.Type, false)
+	return ah.jwtHelper.BuildToken(subject.ID, subject.Name, string(subject.Type), false)
 }
 
 func (ah *Helper) TokenStringFromSubjet(subject *Subject) (string, error) {
