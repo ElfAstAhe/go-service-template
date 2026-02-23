@@ -1,6 +1,6 @@
 package domain
 
-type Identity[ID any] interface {
+type Entity[ID any] interface {
 	GetID() ID
 	SetID(id ID)
 
@@ -13,7 +13,7 @@ type Identity[ID any] interface {
 	ValidateChange() error
 }
 
-type SoftDeleteIdentity[DEL any] interface {
+type SoftDeleteEntity[DEL any] interface {
 	GetDeleted() DEL
 	SetDeleted(deleted DEL)
 

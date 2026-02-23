@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
-	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/transport"
@@ -17,12 +16,19 @@ import (
 )
 
 type App struct {
+	// app context
 	ctx    context.Context
 	cancel context.CancelFunc
+	// app config
 	config *config.Config
+	// logging
 	logger logger.Logger
-	db     db.DB
-	wg     sync.WaitGroup
+
+	// DB
+	db db.DB
+
+	// infra
+	wg sync.WaitGroup
 
 	// checkers
 	health *health.Health
@@ -48,19 +54,50 @@ func (app *App) Init() error {
 
 	log.Info("initializing application resources...")
 
-	// 1. Инициализация БД (используем твой NewPgDB с PingContext)
-	pg, err := postgres.NewPgDB(app.config.DB)
-	if err != nil {
-		log.ErrorW("failed to initialize database", "error", err)
-
+	log.Info("init helpers")
+	if err := app.initHelpers(); err != nil {
 		return err
 	}
-	app.db = pg
-	log.Info("database connection established")
 
-	// 2. Инициализация репозиториев
-	// a.userRepo, err = postgres.NewUserRepo(a.db)
-	// if err != nil { ... }
+	log.Info("init database")
+	if err := app.initDB(); err != nil {
+		return err
+	}
+
+	log.Info("launch migrations")
+	if err := app.migrateDB(); err != nil {
+		return err
+	}
+
+	log.Info("init dependencies")
+	if err := app.initDependencies(); err != nil {
+		return err
+	}
+
+	log.Info("init startup services")
+	if err := app.initStartupServices(); err != nil {
+		return err
+	}
+
+	log.Info("init health")
+	if err := app.initHealth(); err != nil {
+		return err
+	}
+
+	log.Info("init http router")
+	if err := app.initHTTPRouter(); err != nil {
+		return err
+	}
+
+	log.Info("init http server")
+	if err := app.initHTTPServer(); err != nil {
+		return err
+	}
+
+	log.Info("init gRPC server")
+	if err := app.initGRPCServer(); err != nil {
+		return err
+	}
 
 	return nil
 }

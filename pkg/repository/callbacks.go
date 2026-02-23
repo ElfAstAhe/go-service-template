@@ -5,7 +5,7 @@ import (
 )
 
 // BaseRepositoryCallbacks набор методов обратного вызова пост/пред обработки, валидаторов и мэперов
-type BaseRepositoryCallbacks[T domain.Identity[ID], ID any] struct {
+type BaseRepositoryCallbacks[T domain.Entity[ID], ID any] struct {
 	RowScanner  RowToEntityMapperFunc[T, ID]
 	RowsScanner RowsToEntityMapperFunc[T, ID]
 
@@ -22,15 +22,15 @@ type BaseRepositoryCallbacks[T domain.Identity[ID], ID any] struct {
 	BeforeChange   BeforeChangeFunc[T, ID]
 }
 
-func newEmptyBaseRepositoryCallbacks[T domain.Identity[ID], ID any]() *BaseRepositoryCallbacks[T, ID] {
+func newEmptyBaseRepositoryCallbacks[T domain.Entity[ID], ID any]() *BaseRepositoryCallbacks[T, ID] {
 	return &BaseRepositoryCallbacks[T, ID]{}
 }
 
-type BaseRepositoryCallbacksBuilder[T domain.Identity[ID], ID any] struct {
+type BaseRepositoryCallbacksBuilder[T domain.Entity[ID], ID any] struct {
 	instance *BaseRepositoryCallbacks[T, ID]
 }
 
-func NewBaseRepositoryCallbacksBuilder[T domain.Identity[ID], ID any]() *BaseRepositoryCallbacksBuilder[T, ID] {
+func NewBaseRepositoryCallbacksBuilder[T domain.Entity[ID], ID any]() *BaseRepositoryCallbacksBuilder[T, ID] {
 	return &BaseRepositoryCallbacksBuilder[T, ID]{}
 }
 

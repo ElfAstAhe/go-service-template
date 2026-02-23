@@ -15,7 +15,7 @@ import (
 )
 
 // BaseRepository базовая реализация CRUD репозитория
-type BaseRepository[T domain.Identity[ID], ID any] struct {
+type BaseRepository[T domain.Entity[ID], ID any] struct {
 	onceFind   sync.Once
 	onceDelete sync.Once
 	db         db.DB
@@ -29,7 +29,7 @@ type BaseRepository[T domain.Identity[ID], ID any] struct {
 }
 
 //goland:noinspection GoResourceLeak
-func NewBaseRepository[T domain.Identity[ID], ID any](
+func NewBaseRepository[T domain.Entity[ID], ID any](
 	db db.DB,
 	info *EntityInfo,
 	queryBuilders *BaseQueryBuilders,
