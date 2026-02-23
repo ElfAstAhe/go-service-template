@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-type Repository[T Identity[ID], ID any] interface {
+type Repository[T Entity[ID], ID any] interface {
 	Find(ctx context.Context, id ID) (*T, error)
 
 	List(ctx context.Context, limit, offset int) ([]*T, error)
