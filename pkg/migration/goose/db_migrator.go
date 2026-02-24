@@ -2,8 +2,8 @@ package migrations
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/pressly/goose/v3"
@@ -11,23 +11,23 @@ import (
 
 // GooseDBMigrator is implementation of DBMigrator interface
 type GooseDBMigrator struct {
-	DB  *sql.DB
+	db  db.DB
 	ctx context.Context
 	log logger.Logger
 }
 
-func NewGooseDBMigrator(ctx context.Context, db *sql.DB, logger logger.Logger) (*GooseDBMigrator, error) {
+func NewGooseDBMigrator(ctx context.Context, db db.DB, logger logger.Logger) (*GooseDBMigrator, error) {
 	return &GooseDBMigrator{
-		DB:  db,
+		db:  db,
 		ctx: ctx,
-		log: logger.GetLogger("goose DB migrator"),
+		log: logger.GetLogger("DB migrator"),
 	}, nil
 }
 
 // DBMigrator
 
 func (g *GooseDBMigrator) Initialize() error {
-	if err := goose.SetDialect("postgres"); err != nil {
+	if err := goose.SetDialect(g.db.GetDriver()); err != nil {
 		return errs.NewDBMigrationError("error select dialect", err)
 	}
 	goose.SetTableName("goose_version_history")
@@ -37,7 +37,7 @@ func (g *GooseDBMigrator) Initialize() error {
 }
 
 func (g *GooseDBMigrator) Up() error {
-	if err := goose.UpContext(g.ctx, g.DB, ".", goose.WithAllowMissing()); err != nil {
+	if err := goose.UpContext(g.ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate up", err)
 	}
 
@@ -45,7 +45,7 @@ func (g *GooseDBMigrator) Up() error {
 }
 
 func (g *GooseDBMigrator) Down() error {
-	if err := goose.DownContext(g.ctx, g.DB, ".", goose.WithAllowMissing()); err != nil {
+	if err := goose.DownContext(g.ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate down", err)
 	}
 

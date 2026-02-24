@@ -2,17 +2,22 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
+	_ "expvar"
+
 	"github.com/ElfAstAhe/go-service-template/internal/config"
+	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/transport"
 	"github.com/hellofresh/health-go/v5"
+	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
@@ -105,12 +110,46 @@ func (app *App) Init() error {
 // Run запускает серверы (HTTP/gRPC) и блокирует поток до сигнала завершения
 func (app *App) Run() error {
 	log := app.logger.GetLogger("App.Run")
-	log.Info("application is running")
 
-	// Тут будет запуск http.ListenAndServe в горутине
-	// и ожидание <-ctx.Done() или сигналов ОС
+	log.Info("start graceful shutdown")
+	app.wg.Add(1)
+	go app.gracefulShutdown()
 
-	return nil
+	var eg errgroup.Group
+	log.Info("start servers...")
+	// http
+	eg.Go(func() error {
+		if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return err
+		}
+
+		return nil
+	})
+	//// gRPC
+	//eg.Go(func() error {
+	//    if err := app.launchGRPCServer(); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+	//        log.Errorf("Error starting gRPC server with error [%v]", err)
+	//
+	//        return err
+	//    }
+	//
+	//    return nil
+	//})
+	//
+	return eg.Wait()
+}
+
+func (app *App) launchHTTPServer() error {
+	log := app.logger.GetLogger("App.launchHTTPServer")
+	if app.config.HTTP.Secure {
+		log.Info("enable https")
+
+		return app.httpServer.ListenAndServeTLS(app.config.HTTP.CertificatePath, app.config.HTTP.PrivateKeyPath)
+	}
+
+	log.Info("enable http")
+
+	return app.httpServer.ListenAndServe()
 }
 
 // Stop - метод остановки приложения
@@ -167,7 +206,7 @@ func (app *App) gracefulShutdown() {
 	// stop http
 	log.Info("shutdown http server...")
 	if err := app.httpServer.Shutdown(ctxTimed); err != nil {
-		log.Errorf("shutdown http server with error [%v]", err)
+		log.Warnf("shutdown http server with error [%v]", err)
 	}
 	log.Info("shutdown http server complete")
 

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"net/http"
+
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -26,14 +28,14 @@ func (app *App) initDB() error {
 }
 
 func (app *App) migrateDB() error {
-	migrator, err := migrations.NewGooseDBMigrator(app.ctx, app.db.GetDB(), app.logger)
+	migrator, err := migrations.NewGooseDBMigrator(app.ctx, app.db, app.logger)
 	if err != nil {
 		return errs.NewCommonError("create migrator", err)
 	}
-	if err := migrator.Initialize(); err != nil {
+	if err = migrator.Initialize(); err != nil {
 		return errs.NewCommonError("init migrator", err)
 	}
-	if err := migrator.Up(); err != nil {
+	if err = migrator.Up(); err != nil {
 		return errs.NewCommonError("migrator up", err)
 	}
 
@@ -86,9 +88,12 @@ func (app *App) initHTTPRouter() error {
 }
 
 func (app *App) initHTTPServer() error {
-	// ToDo: implement
+	app.httpServer = &http.Server{
+		Addr:    app.config.HTTP.Address,
+		Handler: app.httpRouter.GetRouter(),
+	}
 
-	return errs.NewNotImplementedError(nil)
+	return nil
 }
 
 func (app *App) initGRPCServer() error {

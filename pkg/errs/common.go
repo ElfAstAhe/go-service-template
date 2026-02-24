@@ -36,11 +36,16 @@ func (ce *CommonError) Error() string {
 		stack = fmt.Sprintf("[%s:%d] ", ce.file, ce.line)
 	}
 
-	if ce.err != nil {
-		return fmt.Sprintf("%sBLL: %s: %v", stack, ce.msg, ce.err)
+	msg := fmt.Sprintf("CMN: error at %s", stack)
+	if ce.msg != "" {
+		msg = fmt.Sprintf("%s %s", msg, ce.msg)
 	}
 
-	return fmt.Sprintf("%sCMN: %s", stack, ce.msg)
+	if ce.err != nil {
+		msg = fmt.Sprintf("%s: %v", msg, ce.err)
+	}
+
+	return msg
 }
 
 func (ce *CommonError) Unwrap() error {

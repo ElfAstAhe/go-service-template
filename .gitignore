@@ -31,3 +31,4 @@ go.work.sum
 .idea/
 .vscode/
 /cmd/server/server
+/token.txt
