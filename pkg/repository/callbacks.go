@@ -6,8 +6,7 @@ import (
 
 // BaseRepositoryCallbacks набор методов обратного вызова пост/пред обработки, валидаторов и мэперов
 type BaseRepositoryCallbacks[T domain.Entity[ID], ID any] struct {
-	RowScanner  RowToEntityMapperFunc[T, ID]
-	RowsScanner RowsToEntityMapperFunc[T, ID]
+	EntityScanner func(scanner Scannable, entity T) error
 
 	NewEntityFactory NewEntityFactory[T, ID]
 	AfterFind        AfterFindFunc[T, ID]
@@ -40,14 +39,8 @@ func (bbr *BaseRepositoryCallbacksBuilder[T, ID]) NewInstance() *BaseRepositoryC
 	return bbr
 }
 
-func (bbr *BaseRepositoryCallbacksBuilder[T, ID]) WithRowMapper(mapper RowToEntityMapperFunc[T, ID]) *BaseRepositoryCallbacksBuilder[T, ID] {
-	bbr.instance.RowScanner = mapper
-
-	return bbr
-}
-
-func (bbr *BaseRepositoryCallbacksBuilder[T, ID]) WithRowsMapper(mapper RowsToEntityMapperFunc[T, ID]) *BaseRepositoryCallbacksBuilder[T, ID] {
-	bbr.instance.RowsScanner = mapper
+func (bbr *BaseRepositoryCallbacksBuilder[T, ID]) WithEntityScanner(scanner EntityScannerFunc[T, ID]) *BaseRepositoryCallbacksBuilder[T, ID] {
+	bbr.instance.EntityScanner = scanner
 
 	return bbr
 }

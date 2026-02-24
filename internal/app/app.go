@@ -18,6 +18,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/transport"
 	"github.com/hellofresh/health-go/v5"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 )
 
 type App struct {
@@ -40,6 +41,8 @@ type App struct {
 	// http
 	httpRouter transport.HTTPRouter
 	httpServer *http.Server
+	// gRPC
+	grpcServer *grpc.Server
 }
 
 func NewApp(config *config.Config, logger logger.Logger) *App {

@@ -21,6 +21,8 @@ type BaseRepository[T domain.Entity[ID], ID any] struct {
 	db         db.DB
 	info       *EntityInfo
 
+	nilInstance T
+
 	findStmt   *sql.Stmt
 	deleteStmt *sql.Stmt
 
@@ -45,18 +47,23 @@ func NewBaseRepository[T domain.Entity[ID], ID any](
 	}, nil
 }
 
-func (br *BaseRepository[T, ID]) Find(ctx context.Context, id ID) (*T, error) {
+func (br *BaseRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
 	if err := br.prepareFind(); err != nil {
-		return nil, errs.NewNotImplementedError(err)
+		return br.nilInstance, errs.NewNotImplementedError(err)
 	}
 
-	res, err := br.callbacks.RowScanner(br.findStmt.QueryRowContext(ctx, id))
+	row := br.findStmt.QueryRowContext(ctx, id)
+
+	res := br.callbacks.NewEntityFactory()
+
+	// res, err := br.callbacks.RowScanner(br.findStmt.QueryRowContext(ctx, id))
+	err := br.callbacks.EntityScanner(row, res)
 	if err != nil {
 		if errors.As(err, &sql.ErrNoRows) {
-			return nil, errs.NewDalNotFoundError(br.info.Entity, id, err)
+			return br.nilInstance, errs.NewDalNotFoundError(br.info.Entity, id, err)
 		}
 
-		return nil, errs.NewDalError("BaseRepository.Find", "get row", err)
+		return br.nilInstance, errs.NewDalError("BaseRepository.Find", "get row", err)
 	}
 
 	if br.callbacks.AfterFind != nil {
@@ -70,14 +77,14 @@ func (br *BaseRepository[T, ID]) prepareFind() error {
 	var err error = nil
 	br.onceFind.Do(func() {
 		if br.queryBuilders == nil {
-			err = errs.NewDalError("BaseRepository.Find", "query builders not applied", nil)
+			err = errs.NewDalError("BaseRepository.prepareFind", "query builders not applied", nil)
 		}
 		if br.queryBuilders.findBuilder == nil {
-			err = errs.NewDalError("BaseRepository.Find", "query find builder not applied", nil)
+			err = errs.NewDalError("BaseRepository.prepareFind", "query find builder not applied", nil)
 		}
 		sqlFind := br.queryBuilders.findBuilder()
 		if strings.TrimSpace(sqlFind) == "" {
-			err = errs.NewDalError("BaseRepository.Find", "query find empty", nil)
+			err = errs.NewDalError("BaseRepository.prepareFind", "query find empty", nil)
 		}
 
 		queryCtx, queryCancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -85,17 +92,17 @@ func (br *BaseRepository[T, ID]) prepareFind() error {
 
 		br.findStmt, err = br.db.GetDB().PrepareContext(queryCtx, br.queryBuilders.GetFind()())
 		if err != nil {
-			err = errs.NewDalError("BaseRepository.Find", "prepare find stmt", err)
+			err = errs.NewDalError("BaseRepository.prepareFind", "prepare find stmt", err)
 		}
 	})
 	if err != nil {
-		return errs.NewDalError("BaseRepository.Find", "prepare find ", err)
+		return errs.NewDalError("BaseRepository.prepareFind", "prepare find ", err)
 	}
 
 	return nil
 }
 
-func (br *BaseRepository[T, ID]) List(ctx context.Context, limit, offset int) ([]*T, error) {
+func (br *BaseRepository[T, ID]) List(ctx context.Context, limit, offset int) ([]T, error) {
 	if err := br.ValidateList(limit, offset); err != nil {
 		return nil, errs.NewDalError("BaseRepository.List", "validate list", err)
 	}
@@ -127,14 +134,14 @@ func (br *BaseRepository[T, ID]) prepareList() (string, error) {
 	return sqlList, nil
 }
 
-func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string, params ...any) ([]*T, error) {
+func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string, params ...any) ([]T, error) {
 	rows, err := br.db.GetDB().QueryContext(ctx, sqlReq, params...)
 	if err != nil {
 		return nil, errs.NewDalError("BaseRepository.List", "query", err)
 	}
 	defer rows.Close()
 
-	res := make([]*T, 0)
+	res := make([]T, 0)
 	for rows.Next() {
 		if err = ctx.Err(); err != nil {
 			return nil, errs.NewDalError("BaseRepository.InternalList", "check context", err)
@@ -142,7 +149,7 @@ func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string
 
 		entity := br.callbacks.NewEntityFactory()
 
-		err = br.callbacks.RowsScanner(ctx, rows, entity)
+		err = br.callbacks.EntityScanner(rows, entity)
 		if err != nil {
 			return nil, errs.NewDalError("BaseRepository.InternalList", "scan rows", err)
 		}
@@ -167,20 +174,20 @@ func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string
 	return res, nil
 }
 
-func (br *BaseRepository[T, ID]) Create(ctx context.Context, entity *T) (*T, error) {
+func (br *BaseRepository[T, ID]) Create(ctx context.Context, entity T) (T, error) {
 	if br.callbacks.Creator == nil {
-		return nil, errs.NewNotImplementedError(errs.NewDalError("BaseRepository.Create", "creator not applied", nil))
+		return br.nilInstance, errs.NewNotImplementedError(errs.NewDalError("BaseRepository.Create", "creator not applied", nil))
 	}
 
 	if br.callbacks.ValidateCreate != nil {
 		if err := br.callbacks.ValidateCreate(entity); err != nil {
-			return nil, errs.NewDalError("BaseRepository.Create", "validate create", err)
+			return br.nilInstance, errs.NewDalError("BaseRepository.Create", "validate create", err)
 		}
 	}
 
 	if br.callbacks.BeforeCreate != nil {
 		if err := br.callbacks.BeforeCreate(entity); err != nil {
-			return nil, errs.NewDalError("BaseRepository.Create", "before create", err)
+			return br.nilInstance, errs.NewDalError("BaseRepository.Create", "before create", err)
 		}
 	}
 
@@ -193,7 +200,8 @@ func (br *BaseRepository[T, ID]) Create(ctx context.Context, entity *T) (*T, err
 			return errs.NewDalError("BaseRepository.Create", "create entity", err)
 		}
 
-		res, err = br.callbacks.RowScanner(row)
+		res = br.callbacks.NewEntityFactory()
+		err = br.callbacks.EntityScanner(row, res)
 		if err != nil {
 			if br.db.GetHelper().IsUniqueViolation(err) {
 				return errs.NewDalAlreadyExistsError(br.info.Entity, nil, err)
@@ -205,7 +213,7 @@ func (br *BaseRepository[T, ID]) Create(ctx context.Context, entity *T) (*T, err
 		return nil
 	})
 	if err != nil {
-		return nil, errs.NewDalError("BaseRepository.Create", "run in transaction", err)
+		return br.nilInstance, errs.NewDalError("BaseRepository.Create", "run in transaction", err)
 	}
 
 	if br.callbacks.AfterFind != nil {
@@ -215,20 +223,20 @@ func (br *BaseRepository[T, ID]) Create(ctx context.Context, entity *T) (*T, err
 	return res, nil
 }
 
-func (br *BaseRepository[T, ID]) Change(ctx context.Context, entity *T) (*T, error) {
+func (br *BaseRepository[T, ID]) Change(ctx context.Context, entity T) (T, error) {
 	if br.callbacks.Changer == nil {
-		return nil, errs.NewNotImplementedError(errs.NewDalError("BaseRepository.Change", "changer not applied", nil))
+		return br.nilInstance, errs.NewNotImplementedError(errs.NewDalError("BaseRepository.Change", "changer not applied", nil))
 	}
 
 	if br.callbacks.ValidateChange != nil {
 		if err := br.callbacks.ValidateChange(entity); err != nil {
-			return nil, errs.NewDalError("BaseRepository.Change", "validate change", err)
+			return br.nilInstance, errs.NewDalError("BaseRepository.Change", "validate change", err)
 		}
 	}
 
 	if br.callbacks.BeforeChange != nil {
 		if err := br.callbacks.BeforeChange(entity); err != nil {
-			return nil, errs.NewDalError("BaseRepository.Change", "before change", err)
+			return br.nilInstance, errs.NewDalError("BaseRepository.Change", "before change", err)
 		}
 	}
 
@@ -241,10 +249,11 @@ func (br *BaseRepository[T, ID]) Change(ctx context.Context, entity *T) (*T, err
 			return errs.NewDalError("BaseRepository.Change", "change entity", err)
 		}
 
-		res, err = br.callbacks.RowScanner(row)
+		res = br.callbacks.NewEntityFactory()
+		err = br.callbacks.EntityScanner(row, res)
 		if err != nil {
 			if br.db.GetHelper().IsUniqueViolation(err) {
-				return errs.NewDalAlreadyExistsError(br.info.Entity, (*entity).GetID(), err)
+				return errs.NewDalAlreadyExistsError(br.info.Entity, entity.GetID(), err)
 			}
 
 			return errs.NewDalError("BaseRepository.Change", "scan after change entity", err)
@@ -253,7 +262,7 @@ func (br *BaseRepository[T, ID]) Change(ctx context.Context, entity *T) (*T, err
 		return nil
 	})
 	if err != nil {
-		return nil, errs.NewDalError("BaseRepository.Change", "run in transaction", err)
+		return br.nilInstance, errs.NewDalError("BaseRepository.Change", "run in transaction", err)
 	}
 
 	if br.callbacks.AfterFind != nil {
@@ -313,7 +322,7 @@ func (br *BaseRepository[T, ID]) Close() error {
 	return nil
 }
 
-func (br *BaseRepository[T, ID]) getInfo() *EntityInfo {
+func (br *BaseRepository[T, ID]) GetInfo() *EntityInfo {
 	return br.info
 }
 

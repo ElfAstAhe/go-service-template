@@ -15,8 +15,8 @@ create table if not exists test (
     code varchar(50) not null,
     name varchar(100) null,
     description varchar(512) null,
-    created_at datetimetz not null default now(),
-    updated_at datetimetz not null default now(),
+    created_at  datetimetz not null default now(),
+    modified_at datetimetz not null default now(),
     constraint test_pk primary key (id),
     constraint test_uk unique (code)
 )

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package example.service;
+
+option go_package = "go-service-template/grpc/example-service";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service ExampleService {
+  // find
+  rpc Find (ExampleServiceFindRequest) returns (ExampleServiceInstanceResponse);
+  // list paging
+  rpc List (ExampleServiceListRequest) returns (ExampleServiceInstancesResponse);
+  // save
+  rpc Save (ExampleServiceSaveRequest) returns (ExampleServiceInstanceResponse);
+  // delete
+  rpc Delete (ExampleServiceDeleteRequest) returns (google.protobuf.Empty);
+}
+
+message ExampleServiceFindRequest {
+  string id = 1;
+}
+
+message ExampleServiceSaveRequest {
+  Test instance = 2;
+}
+
+message ExampleServiceDeleteRequest {
+  string id = 1;
+}
+
+message ExampleServiceInstanceResponse {
+  Test instance = 1;
+}
+
+message Test {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp modified_at = 6;
+}
+
+message ExampleServiceListRequest {
+  uint32 offset = 1;
+  uint32 limit = 2;
+}
+
+message ExampleServiceInstancesResponse {
+  uint32 offset = 1;
+  uint32 limit = 2;
+  repeated Test data = 3;
+}
