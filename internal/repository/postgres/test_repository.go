@@ -139,11 +139,11 @@ func NewTestRepository(db db.DB) (*TestRepositoryImpl, error) {
 		WithEntityScanner(res.entityScanner).
 		WithNewEntityFactory(domain.NewEmptyTest).
 		WithValidateCreate(res.validateCreate).
-		WithCreator(res.creator).
 		WithBeforeCreate(res.beforeCreate).
+		WithCreator(res.creator).
 		WithValidateChange(res.validateChange).
-		WithChanger(res.changer).
 		WithBeforeChange(res.beforeChange).
+		WithChanger(res.changer).
 		Build()
 	if err != nil {
 		return nil, errs.NewCommonError("error create test repo callbacks", err)

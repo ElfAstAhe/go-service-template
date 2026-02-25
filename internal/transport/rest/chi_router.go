@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/hellofresh/health-go/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swagh "github.com/swaggo/http-swagger"
 )
 
@@ -48,6 +49,8 @@ func NewAppChiRouter(
 	res.router.Mount("/swagger/", swagh.WrapHandler)
 	// mount status
 	res.router.Mount("/status", res.health.Handler())
+	// mount metrics
+	res.router.Mount("/metrics", promhttp.Handler())
 
 	// setup routes
 	res.setupRoutes()

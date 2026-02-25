@@ -29,7 +29,6 @@ type BaseRepository[T domain.Entity[ID], ID any] struct {
 	callbacks     *BaseRepositoryCallbacks[T, ID]
 }
 
-//goland:noinspection GoResourceLeak
 func NewBaseRepository[T domain.Entity[ID], ID any](
 	db db.DB,
 	info *EntityInfo,
@@ -136,6 +135,7 @@ func (br *BaseRepository[T, ID]) prepareList() (string, error) {
 	return sqlList, nil
 }
 
+//goland:noinspection GoUnhandledErrorResult
 func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string, params ...any) ([]T, error) {
 	rows, err := br.db.GetDB().QueryContext(ctx, sqlReq, params...)
 	if err != nil {
@@ -163,7 +163,7 @@ func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string
 			}
 		}
 		// yeld метод постобработки строки не вернул entity, нет данных - нет добавления
-		if entity == nil {
+		if any(entity) == nil {
 			continue
 		}
 
