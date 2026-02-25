@@ -49,6 +49,7 @@ const (
 	FlagGRPCTimeout          string = "grpc-timeout"
 	FlagGRPCKeepAliveTime    string = "grpc-keep-alive-time"
 	FlagGRPCKeepAliveTimeout string = "grpc-keep-alive-timeout"
+	FlagGRPCShutdownTimeout  string = "grpc-shutdown-timeout"
 )
 
 // http config flags
