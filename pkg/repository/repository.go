@@ -16,10 +16,9 @@ import (
 
 // BaseRepository базовая реализация CRUD репозитория
 type BaseRepository[T domain.Entity[ID], ID any] struct {
-	onceFind   sync.Once
-	onceDelete sync.Once
-	db         db.DB
-	info       *EntityInfo
+	mu   sync.Mutex
+	db   db.DB
+	info *EntityInfo
 
 	nilInstance T
 
@@ -59,7 +58,7 @@ func (br *BaseRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
 	// res, err := br.callbacks.RowScanner(br.findStmt.QueryRowContext(ctx, id))
 	err := br.callbacks.EntityScanner(row, res)
 	if err != nil {
-		if errors.As(err, &sql.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return br.nilInstance, errs.NewDalNotFoundError(br.info.Entity, id, err)
 		}
 
@@ -74,17 +73,23 @@ func (br *BaseRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
 }
 
 func (br *BaseRepository[T, ID]) prepareFind() error {
-	var err error = nil
-	br.onceFind.Do(func() {
+	if br.findStmt == nil {
+		br.mu.Lock()
+		defer br.mu.Unlock()
+		if br.findStmt != nil {
+			return nil
+		}
+
+		var err error = nil
 		if br.queryBuilders == nil {
-			err = errs.NewDalError("BaseRepository.prepareFind", "query builders not applied", nil)
+			return errs.NewDalError("BaseRepository.prepareFind", "query builders not applied", nil)
 		}
 		if br.queryBuilders.findBuilder == nil {
-			err = errs.NewDalError("BaseRepository.prepareFind", "query find builder not applied", nil)
+			return errs.NewDalError("BaseRepository.prepareFind", "query find builder not applied", nil)
 		}
 		sqlFind := br.queryBuilders.findBuilder()
 		if strings.TrimSpace(sqlFind) == "" {
-			err = errs.NewDalError("BaseRepository.prepareFind", "query find empty", nil)
+			return errs.NewDalError("BaseRepository.prepareFind", "query find empty", nil)
 		}
 
 		queryCtx, queryCancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -92,11 +97,8 @@ func (br *BaseRepository[T, ID]) prepareFind() error {
 
 		br.findStmt, err = br.db.GetDB().PrepareContext(queryCtx, br.queryBuilders.GetFind()())
 		if err != nil {
-			err = errs.NewDalError("BaseRepository.prepareFind", "prepare find stmt", err)
+			return errs.NewDalError("BaseRepository.prepareFind", "prepare find stmt", err)
 		}
-	})
-	if err != nil {
-		return errs.NewDalError("BaseRepository.prepareFind", "prepare find ", err)
 	}
 
 	return nil
@@ -288,17 +290,23 @@ func (br *BaseRepository[T, ID]) Delete(ctx context.Context, id ID) error {
 }
 
 func (br *BaseRepository[T, ID]) prepareDelete() error {
-	var err error = nil
-	br.onceDelete.Do(func() {
+	if br.deleteStmt == nil {
+		br.mu.Lock()
+		defer br.mu.Unlock()
+		if br.deleteStmt != nil {
+			return nil
+		}
+
+		var err error = nil
 		if br.queryBuilders == nil {
-			err = errs.NewDalError("BaseRepository.prepareDelete", "query builders not applied", nil)
+			return errs.NewDalError("BaseRepository.prepareDelete", "query builders not applied", nil)
 		}
-		if br.queryBuilders.findBuilder == nil {
-			err = errs.NewDalError("BaseRepository.prepareDelete", "query find builder not applied", nil)
+		if br.queryBuilders.deleteBuilder == nil {
+			return errs.NewDalError("BaseRepository.prepareDelete", "query delete builder not applied", nil)
 		}
-		sqlFind := br.queryBuilders.findBuilder()
-		if strings.TrimSpace(sqlFind) == "" {
-			err = errs.NewDalError("BaseRepository.prepareDelete", "query delete empty", nil)
+		sqlDelete := br.queryBuilders.deleteBuilder()
+		if strings.TrimSpace(sqlDelete) == "" {
+			return errs.NewDalError("BaseRepository.prepareDelete", "query delete empty", nil)
 		}
 
 		queryCtx, queryCancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -306,15 +314,26 @@ func (br *BaseRepository[T, ID]) prepareDelete() error {
 
 		br.deleteStmt, err = br.db.GetDB().PrepareContext(queryCtx, br.queryBuilders.GetDelete()())
 		if err != nil {
-			err = errs.NewDalError("BaseRepository.prepareDelete", "prepare delete stmt", err)
+			return errs.NewDalError("BaseRepository.prepareDelete", "prepare delete stmt", err)
 		}
-	})
+	}
 
 	return nil
 }
 
 func (br *BaseRepository[T, ID]) Close() error {
-	massErrors := errors.Join(br.findStmt.Close(), br.deleteStmt.Close())
+	br.mu.Lock()
+	defer br.mu.Unlock()
+
+	var errsArr []error
+	if br.findStmt != nil {
+		errsArr = append(errsArr, br.findStmt.Close())
+	}
+	if br.deleteStmt != nil {
+		errsArr = append(errsArr, br.deleteStmt.Close())
+	}
+
+	massErrors := errors.Join(errsArr...)
 	if massErrors != nil {
 		return errs.NewDalError("BaseRepository.Close", "close resources", massErrors)
 	}
