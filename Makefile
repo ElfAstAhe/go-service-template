@@ -33,10 +33,10 @@ gen-http-client:
 	swagger generate client -f ./docs/swagger.json -A goph-keeper -t pkg/client/rest
 
 # Сборка проекта с прокидыванием переменных
-build: gen-swagger
-	go build -ldflags "-X '$(MODULE_NAME)/internal/app/server/config.Version=$(VERSION)' \
-    -X '$(MODULE_NAME)/internal/app/server/config.Stage=$(STAGE)' \
-	-X '$(MODULE_NAME)/internal/app/server/config.BuildTime=$(BUILD_TIME)'" \
+#build: gen-swagger
+build:
+	go build -ldflags "-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
+	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
 
 #	go build -ldflags "-X '$(MODULE_NAME)/internal/app/client/config.Version=$(VERSION)' \

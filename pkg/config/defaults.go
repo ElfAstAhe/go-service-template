@@ -27,13 +27,15 @@ const (
 
 // gRPC defaults
 const (
-	DefaultGRPCAddress string        = "localhost:50051"
-	DefaultGRPCTimeout time.Duration = 5 * time.Second
+	DefaultGRPCAddress         string        = "localhost:50051"
+	DefaultGRPCTimeout         time.Duration = 5 * time.Second
+	DefaultGRPCShutdownTimeout time.Duration = 15 * time.Second
 )
 
 const (
-	KeyGRPCAddress string = "grpc.address"
-	KeyGRPCTimeout string = "grpc.timeout"
+	KeyGRPCAddress         string = "grpc.address"
+	KeyGRPCTimeout         string = "grpc.timeout"
+	KeyGRPCShutdownTimeout string = "grpc.shutdown_timeout"
 )
 
 // logger defaults

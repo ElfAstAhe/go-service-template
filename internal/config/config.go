@@ -16,9 +16,9 @@ type Config struct {
 	App  *AppConfig       `mapstructure:"app"`
 	Auth *conf.AuthConfig `mapstructure:"auth"`
 	HTTP *conf.HTTPConfig `mapstructure:"http"`
-	//    GRPC  *GRPCConfig  `mapstructure:"grpc"`
-	Log *conf.LogConfig `mapstructure:"log"`
-	DB  *conf.DBConfig  `mapstructure:"db"` // <-- Универсальное имя
+	GRPC *conf.GRPCConfig `mapstructure:"grpc"`
+	Log  *conf.LogConfig  `mapstructure:"log"`
+	DB   *conf.DBConfig   `mapstructure:"db"` // <-- Универсальное имя
 	//    Redis *RedisConfig `mapstructure:"redis"`
 }
 
@@ -133,6 +133,7 @@ func applyDefaults(v *viper.Viper) {
 	// gRPC
 	v.SetDefault(conf.KeyGRPCAddress, conf.DefaultGRPCAddress)
 	v.SetDefault(conf.KeyGRPCTimeout, conf.DefaultGRPCTimeout)
+	v.SetDefault(conf.KeyGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout)
 
 	// DB
 	v.SetDefault(conf.KeyDBMaxOpenConns, conf.DefaultDBMaxOpenConns)
@@ -179,6 +180,7 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	res.Duration(FlagGRPCTimeout, conf.DefaultGRPCTimeout, "gRPC timeout")
 	res.Duration(FlagGRPCKeepAliveTime, 0, "gRPC keep alive timeout")
 	res.Duration(FlagGRPCKeepAliveTimeout, 0, "gRPC keep alive timeout")
+	res.Duration(FlagGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout, "gRPC shutdown timeout")
 
 	// DB
 	res.String(FlagDBDSN, "", "database dsn")

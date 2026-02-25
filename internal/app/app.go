@@ -8,10 +8,12 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	_ "expvar"
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
+	"github.com/ElfAstAhe/go-service-template/internal/domain"
 	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
@@ -38,6 +40,8 @@ type App struct {
 
 	// checkers
 	health *health.Health
+	// repo
+	testRepo domain.TestRepository
 	// http
 	httpRouter transport.HTTPRouter
 	httpServer *http.Server
@@ -184,8 +188,9 @@ func (app *App) Close() error {
 
 // gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c) + остальные сигналы OS на закрытие
 func (app *App) gracefulShutdown() {
-	log := app.logger.GetLogger("App.gracefulShutdown")
 	defer app.wg.Done()
+
+	log := app.logger.GetLogger("App.gracefulShutdown")
 	// channel
 	sig := make(chan os.Signal, 1)
 	// register channel signals
@@ -204,17 +209,47 @@ func (app *App) gracefulShutdown() {
 		}
 	}
 
-	ctxTimed, _ := context.WithTimeout(context.Background(), app.config.HTTP.ShutdownTimeout)
+	var shutdownWg sync.WaitGroup
 
-	// stop http
-	log.Info("shutdown http server...")
-	if err := app.httpServer.Shutdown(ctxTimed); err != nil {
-		log.Warnf("shutdown http server with error [%v]", err)
-	}
-	log.Info("shutdown http server complete")
+	shutdownWg.Add(1)
+	go func() { // stop HTTP
+		defer shutdownWg.Done()
 
-	// stop gRPC
-	log.Info("shutdown gRPC server...")
-	//app.grpcServer.GracefulStop()
-	log.Info("shutdown gRPC server complete")
+		ctxTimed, cancelTimed := context.WithTimeout(context.Background(), app.config.HTTP.ShutdownTimeout)
+		defer cancelTimed()
+
+		// stop http
+		log.Info("shutdown http server...")
+		if err := app.httpServer.Shutdown(ctxTimed); err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				log.Error("http server shutdown timed out (force close)")
+			} else {
+				log.Warnf("shutdown http server with error [%v]", err)
+			}
+		}
+		log.Info("shutdown http server complete")
+	}()
+
+	shutdownWg.Add(1)
+	go func() { // stop gRPC
+		defer shutdownWg.Done()
+
+		log.Info("shutdown gRPC server...")
+
+		doneChan := make(chan struct{})
+		go func() {
+			app.grpcServer.GracefulStop()
+			close(doneChan)
+		}()
+		select {
+		case <-doneChan:
+			log.Info("shutdown gRPC server complete")
+		case <-time.After(app.config.HTTP.ShutdownTimeout):
+			log.Error("gRPC graceful shutdown timed out: forcing stop")
+			app.grpcServer.Stop()
+		}
+	}()
+
+	// Ожидаем завершения остановки всех серверов
+	shutdownWg.Wait()
 }

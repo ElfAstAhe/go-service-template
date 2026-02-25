@@ -4,7 +4,9 @@ import (
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
+	"github.com/ElfAstAhe/go-service-template/internal/repository"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
+	"github.com/ElfAstAhe/go-service-template/internal/transport/rest"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	migrations "github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
 	"github.com/hellofresh/health-go/v5"
@@ -43,9 +45,16 @@ func (app *App) migrateDB() error {
 }
 
 func (app *App) initDependencies() error {
-	// ToDo: implement
+	var err error
+	// test repo
+	app.testRepo, err = postgres.NewTestRepository(app.db)
+	if err != nil {
+		return errs.NewCommonError("create test repository", err)
+	}
+	// metrics test repo
+	app.testRepo = repository.NewTestMetricsRepository(app.testRepo)
 
-	return errs.NewNotImplementedError(nil)
+	return nil
 }
 
 func (app *App) initStartupServices() error {
@@ -82,9 +91,9 @@ func (app *App) initHealth() error {
 }
 
 func (app *App) initHTTPRouter() error {
-	// ToDo: implement
+	app.httpRouter = rest.NewAppChiRouter(app.config.HTTP, app.logger, app.health, nil, nil)
 
-	return errs.NewNotImplementedError(nil)
+	return nil
 }
 
 func (app *App) initHTTPServer() error {
