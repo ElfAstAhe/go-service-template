@@ -1,7 +1,6 @@
 package rest
 
 import (
-	_ "expvar"
 	"net/http"
 
 	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
