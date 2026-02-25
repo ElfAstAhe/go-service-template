@@ -11,6 +11,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
+//goland:noinspection GoUnhandledErrorResult
 func main() {
 	// 1. Загрузка конфигурации
 	cfg, err := config.Load()
@@ -32,7 +33,7 @@ func main() {
 	zapLogger.Info("app init")
 	if err := application.Init(); err != nil {
 		zapLogger.Errorf("app init failed [%v]", err)
-		defer application.Close()
+		application.Close()
 
 		panic(fmt.Errorf("app initialization failed: %v", err))
 	}
