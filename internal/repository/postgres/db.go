@@ -3,16 +3,17 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/config"
+	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	"github.com/ElfAstAhe/go-service-template/pkg/helper"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type PgDB struct {
-	db     *sql.DB
-	conf   *config.DBConfig
-	helper helper.DBHelper
+	db   *sql.DB
+	conf *config.DBConfig
 }
 
 func NewPgDB(conf *config.DBConfig) (*PgDB, error) {
@@ -34,9 +35,8 @@ func NewPgDB(conf *config.DBConfig) (*PgDB, error) {
 	}
 
 	return &PgDB{
-		db:     pg,
-		conf:   conf,
-		helper: helper.NewPostgresDBHelper(),
+		db:   pg,
+		conf: conf,
 	}, nil
 }
 
@@ -52,10 +52,23 @@ func (pgdb *PgDB) GetDSN() string {
 	return pgdb.conf.DSN
 }
 
-func (pgdb *PgDB) GetHelper() helper.DBHelper {
-	return pgdb.helper
-}
-
 func (pgdb *PgDB) Close() error {
 	return pgdb.db.Close()
+}
+
+func (pgdb *PgDB) GetQuerier(ctx context.Context) db.Querier {
+	if tx := db.GetTx(ctx); tx != nil {
+		return tx
+	}
+
+	return pgdb.db
+}
+
+func (pgdb *PgDB) IsUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505" // Код ошибки unique_violation в PostgreSQL
+	}
+
+	return false
 }

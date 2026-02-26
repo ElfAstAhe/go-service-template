@@ -6,56 +6,56 @@ import (
 	"errors"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	"github.com/ElfAstAhe/go-service-template/pkg/helper"
 )
 
 // BaseRepository базовая реализация CRUD репозитория
 type BaseRepository[T domain.Entity[ID], ID any] struct {
-	mu   sync.Mutex
-	db   db.DB
-	info *EntityInfo
+	mu          sync.Mutex
+	exec        db.Executor
+	errDecipher db.ErrorDecipher
+	tm          db.TransactionManager
+	info        *EntityInfo
 
 	nilInstance T
-
-	findStmt   *sql.Stmt
-	deleteStmt *sql.Stmt
 
 	queryBuilders *BaseQueryBuilders
 	callbacks     *BaseRepositoryCallbacks[T, ID]
 }
 
 func NewBaseRepository[T domain.Entity[ID], ID any](
-	db db.DB,
+	exec db.Executor,
+	errDecipher db.ErrorDecipher,
 	info *EntityInfo,
 	queryBuilders *BaseQueryBuilders,
 	callbacks *BaseRepositoryCallbacks[T, ID],
 ) (*BaseRepository[T, ID], error) {
 	return &BaseRepository[T, ID]{
-		db:            db,
+		exec:          exec,
+		errDecipher:   errDecipher,
 		info:          info,
-		findStmt:      nil,
-		deleteStmt:    nil,
 		queryBuilders: queryBuilders,
 		callbacks:     callbacks,
 	}, nil
 }
 
 func (br *BaseRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
-	if err := br.prepareFind(); err != nil {
-		return br.nilInstance, errs.NewNotImplementedError(err)
+	// Получаем querier (либо транзакция, либо БД)
+	querier := br.exec.GetQuerier(ctx)
+
+	sqlFind, err := br.prepareFind()
+	if err != nil {
+		return br.nilInstance, err
 	}
 
-	row := br.findStmt.QueryRowContext(ctx, id)
-
+	row := querier.QueryRowContext(ctx, sqlFind, id)
 	res := br.callbacks.NewEntityFactory()
 
 	// res, err := br.callbacks.RowScanner(br.findStmt.QueryRowContext(ctx, id))
-	err := br.callbacks.EntityScanner(row, res)
+	err = br.callbacks.EntityScanner(row, res)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return br.nilInstance, errs.NewDalNotFoundError(br.info.Entity, id, err)
@@ -71,36 +71,19 @@ func (br *BaseRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
 	return res, nil
 }
 
-func (br *BaseRepository[T, ID]) prepareFind() error {
-	if br.findStmt == nil {
-		br.mu.Lock()
-		defer br.mu.Unlock()
-		if br.findStmt != nil {
-			return nil
-		}
-
-		var err error = nil
-		if br.queryBuilders == nil {
-			return errs.NewDalError("BaseRepository.prepareFind", "query builders not applied", nil)
-		}
-		if br.queryBuilders.findBuilder == nil {
-			return errs.NewDalError("BaseRepository.prepareFind", "query find builder not applied", nil)
-		}
-		sqlFind := br.queryBuilders.findBuilder()
-		if strings.TrimSpace(sqlFind) == "" {
-			return errs.NewDalError("BaseRepository.prepareFind", "query find empty", nil)
-		}
-
-		queryCtx, queryCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer queryCancel()
-
-		br.findStmt, err = br.db.GetDB().PrepareContext(queryCtx, br.queryBuilders.GetFind()())
-		if err != nil {
-			return errs.NewDalError("BaseRepository.prepareFind", "prepare find stmt", err)
-		}
+func (br *BaseRepository[T, ID]) prepareFind() (string, error) {
+	if br.queryBuilders == nil {
+		return "", errs.NewDalError("BaseRepository.prepareFind", "query builders not applied", nil)
+	}
+	if br.queryBuilders.findBuilder == nil {
+		return "", errs.NewDalError("BaseRepository.prepareFind", "query find builder not applied", nil)
+	}
+	sqlFind := br.queryBuilders.findBuilder()
+	if strings.TrimSpace(sqlFind) == "" {
+		return "", errs.NewNotImplementedError(errs.NewDalError("BaseRepository.prepareFind", "query find empty", nil))
 	}
 
-	return nil
+	return sqlFind, nil
 }
 
 func (br *BaseRepository[T, ID]) List(ctx context.Context, limit, offset int) ([]T, error) {
@@ -137,7 +120,9 @@ func (br *BaseRepository[T, ID]) prepareList() (string, error) {
 
 //goland:noinspection GoUnhandledErrorResult
 func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string, params ...any) ([]T, error) {
-	rows, err := br.db.GetDB().QueryContext(ctx, sqlReq, params...)
+	querier := br.exec.GetQuerier(ctx)
+
+	rows, err := querier.QueryContext(ctx, sqlReq, params...)
 	if err != nil {
 		return nil, errs.NewDalError("BaseRepository.List", "query", err)
 	}
@@ -149,6 +134,7 @@ func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string
 			return nil, errs.NewDalError("BaseRepository.InternalList", "check context", err)
 		}
 
+		addEntity := true
 		entity := br.callbacks.NewEntityFactory()
 
 		err = br.callbacks.EntityScanner(rows, entity)
@@ -157,13 +143,13 @@ func (br *BaseRepository[T, ID]) InternalList(ctx context.Context, sqlReq string
 		}
 
 		if br.callbacks.AfterListYield != nil {
-			entity, err = br.callbacks.AfterListYield(entity)
+			entity, addEntity, err = br.callbacks.AfterListYield(entity)
 			if err != nil {
 				return nil, errs.NewDalError("BaseRepository.InternalList", "post scan processing", err)
 			}
 		}
 		// yeld метод постобработки строки не вернул entity, нет данных - нет добавления
-		if any(entity) == nil {
+		if any(entity) == nil || !addEntity {
 			continue
 		}
 
@@ -193,29 +179,21 @@ func (br *BaseRepository[T, ID]) Create(ctx context.Context, entity T) (T, error
 		}
 	}
 
-	res := br.callbacks.NewEntityFactory()
-	// выполнение
-	err := br.db.GetHelper().RunInTx(ctx, br.db.GetDB(), func(ctx context.Context, tx *sql.Tx) error {
-		var err error
-		row, err := br.callbacks.Creator(ctx, tx, entity)
-		if err != nil {
-			return errs.NewDalError("BaseRepository.Create", "create entity", err)
-		}
+	querier := br.exec.GetQuerier(ctx)
 
-		res = br.callbacks.NewEntityFactory()
-		err = br.callbacks.EntityScanner(row, res)
-		if err != nil {
-			if br.db.GetHelper().IsUniqueViolation(err) {
-				return errs.NewDalAlreadyExistsError(br.info.Entity, nil, err)
-			}
-
-			return errs.NewDalError("BaseRepository.Create", "scan after create entity", err)
-		}
-
-		return nil
-	})
+	row, err := br.callbacks.Creator(ctx, querier, entity)
 	if err != nil {
-		return br.nilInstance, errs.NewDalError("BaseRepository.Create", "run in transaction", err)
+		return br.nilInstance, errs.NewDalError("BaseRepository.Create", "create entity", err)
+	}
+
+	res := br.callbacks.NewEntityFactory()
+	err = br.callbacks.EntityScanner(row, res)
+	if err != nil {
+		if br.errDecipher.IsUniqueViolation(err) {
+			return br.nilInstance, errs.NewDalAlreadyExistsError(br.info.Entity, nil, err)
+		}
+
+		return br.nilInstance, errs.NewDalError("BaseRepository.Create", "scan after create entity", err)
 	}
 
 	if br.callbacks.AfterFind != nil {
@@ -242,29 +220,21 @@ func (br *BaseRepository[T, ID]) Change(ctx context.Context, entity T) (T, error
 		}
 	}
 
-	res := br.callbacks.NewEntityFactory()
-	// выполнение
-	err := br.db.GetHelper().RunInTx(ctx, br.db.GetDB(), func(ctx context.Context, tx *sql.Tx) error {
-		var err error
-		row, err := br.callbacks.Changer(ctx, tx, entity)
-		if err != nil {
-			return errs.NewDalError("BaseRepository.Change", "change entity", err)
-		}
+	querier := br.exec.GetQuerier(ctx)
 
-		res = br.callbacks.NewEntityFactory()
-		err = br.callbacks.EntityScanner(row, res)
-		if err != nil {
-			if br.db.GetHelper().IsUniqueViolation(err) {
-				return errs.NewDalAlreadyExistsError(br.info.Entity, entity.GetID(), err)
-			}
-
-			return errs.NewDalError("BaseRepository.Change", "scan after change entity", err)
-		}
-
-		return nil
-	})
+	row, err := br.callbacks.Changer(ctx, querier, entity)
 	if err != nil {
-		return br.nilInstance, errs.NewDalError("BaseRepository.Change", "run in transaction", err)
+		return br.nilInstance, errs.NewDalError("BaseRepository.Change", "change entity", err)
+	}
+
+	res := br.callbacks.NewEntityFactory()
+	err = br.callbacks.EntityScanner(row, res)
+	if err != nil {
+		if br.errDecipher.IsUniqueViolation(err) {
+			return br.nilInstance, errs.NewDalAlreadyExistsError(br.info.Entity, entity.GetID(), err)
+		}
+
+		return br.nilInstance, errs.NewDalError("BaseRepository.Change", "scan after change entity", err)
 	}
 
 	if br.callbacks.AfterFind != nil {
@@ -275,69 +245,46 @@ func (br *BaseRepository[T, ID]) Change(ctx context.Context, entity T) (T, error
 }
 
 func (br *BaseRepository[T, ID]) Delete(ctx context.Context, id ID) error {
-	if err := br.prepareDelete(); err != nil {
+	// Получаем querier (либо транзакция, либо БД)
+	querier := br.exec.GetQuerier(ctx)
+
+	sqlDelete, err := br.prepareDelete()
+	if err != nil {
 		return errs.NewNotImplementedError(err)
 	}
 
-	err := br.db.GetHelper().ExecStmt(ctx, br.deleteStmt, func(err error) (string, any, error) {
-		return br.info.Entity, id, err
-	}, id)
+	res, err := querier.ExecContext(ctx, sqlDelete, id)
 	if err != nil {
-		return errs.NewDalError("BaseRepository.Delete", "delete row", err)
+		return errs.NewDalError("BaseRepository.Delete", "exec context", err)
+	}
+	// проверяем
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return errs.NewDalError("BaseRepository.Delete", "rows affected", err)
+	}
+	if !(rowsAffected > 0) {
+		return errs.NewDalNotFoundError(br.info.Entity, id, nil)
 	}
 
 	return nil
 }
 
-func (br *BaseRepository[T, ID]) prepareDelete() error {
-	if br.deleteStmt == nil {
-		br.mu.Lock()
-		defer br.mu.Unlock()
-		if br.deleteStmt != nil {
-			return nil
-		}
-
-		var err error = nil
-		if br.queryBuilders == nil {
-			return errs.NewDalError("BaseRepository.prepareDelete", "query builders not applied", nil)
-		}
-		if br.queryBuilders.deleteBuilder == nil {
-			return errs.NewDalError("BaseRepository.prepareDelete", "query delete builder not applied", nil)
-		}
-		sqlDelete := br.queryBuilders.deleteBuilder()
-		if strings.TrimSpace(sqlDelete) == "" {
-			return errs.NewDalError("BaseRepository.prepareDelete", "query delete empty", nil)
-		}
-
-		queryCtx, queryCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer queryCancel()
-
-		br.deleteStmt, err = br.db.GetDB().PrepareContext(queryCtx, br.queryBuilders.GetDelete()())
-		if err != nil {
-			return errs.NewDalError("BaseRepository.prepareDelete", "prepare delete stmt", err)
-		}
+func (br *BaseRepository[T, ID]) prepareDelete() (string, error) {
+	if br.queryBuilders == nil {
+		return "", errs.NewDalError("BaseRepository.prepareDelete", "query builders not applied", nil)
+	}
+	if br.queryBuilders.deleteBuilder == nil {
+		return "", errs.NewDalError("BaseRepository.prepareDelete", "query delete builder not applied", nil)
+	}
+	sqlDelete := br.queryBuilders.deleteBuilder()
+	if strings.TrimSpace(sqlDelete) == "" {
+		return "", errs.NewDalError("BaseRepository.prepareDelete", "query delete empty", nil)
 	}
 
-	return nil
+	return sqlDelete, nil
 }
 
 func (br *BaseRepository[T, ID]) Close() error {
-	br.mu.Lock()
-	defer br.mu.Unlock()
-
-	var errsArr []error
-	if br.findStmt != nil {
-		errsArr = append(errsArr, br.findStmt.Close())
-	}
-	if br.deleteStmt != nil {
-		errsArr = append(errsArr, br.deleteStmt.Close())
-	}
-
-	massErrors := errors.Join(errsArr...)
-	if massErrors != nil {
-		return errs.NewDalError("BaseRepository.Close", "close resources", massErrors)
-	}
-
 	return nil
 }
 
@@ -345,12 +292,12 @@ func (br *BaseRepository[T, ID]) GetInfo() *EntityInfo {
 	return br.info
 }
 
-func (br *BaseRepository[T, ID]) GetDB() db.DB {
-	return br.db
+func (br *BaseRepository[T, ID]) GetExecutor() db.Executor {
+	return br.exec
 }
 
-func (br *BaseRepository[T, ID]) GetDBHelper() helper.DBHelper {
-	return br.db.GetHelper()
+func (br *BaseRepository[T, ID]) GetErrDecipher() db.ErrorDecipher {
+	return br.errDecipher
 }
 
 func (br *BaseRepository[T, ID]) GetQueryBuilders() *BaseQueryBuilders {
