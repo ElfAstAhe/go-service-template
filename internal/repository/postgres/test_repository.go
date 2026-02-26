@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"sync"
-	"time"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
@@ -109,11 +107,9 @@ where
 
 type TestRepositoryImpl struct {
 	*repository.BaseRepository[*domain.Test, string]
-	mu             sync.Mutex
-	findByCodeStmt *sql.Stmt
 }
 
-func NewTestRepository(db db.DB) (*TestRepositoryImpl, error) {
+func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRepositoryImpl, error) {
 	// new instance
 	res := &TestRepositoryImpl{}
 	// sql builders
@@ -150,7 +146,8 @@ func NewTestRepository(db db.DB) (*TestRepositoryImpl, error) {
 	}
 	// base crud
 	base, err := repository.NewBaseRepository[*domain.Test, string](
-		db,
+		executor,
+		decipher,
 		repository.NewEntityInfo("test", "Test"),
 		queryBuilders,
 		callbacks,
@@ -165,11 +162,9 @@ func NewTestRepository(db db.DB) (*TestRepositoryImpl, error) {
 }
 
 func (tr *TestRepositoryImpl) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
-	if err := tr.prepareFindByCode(); err != nil {
-		return nil, errs.NewNotImplementedError(err)
-	}
+	querier := tr.GetExecutor().GetQuerier(ctx)
 
-	row := tr.findByCodeStmt.QueryRowContext(ctx, code)
+	row := querier.QueryRowContext(ctx, sqlTestFindByCode, code)
 
 	res := tr.GetCallbacks().NewEntityFactory()
 
@@ -187,28 +182,6 @@ func (tr *TestRepositoryImpl) FindByCode(ctx context.Context, code string) (*dom
 	}
 
 	return res, nil
-}
-
-func (tr *TestRepositoryImpl) prepareFindByCode() error {
-	if tr.findByCodeStmt == nil {
-		tr.mu.Lock()
-		defer tr.mu.Unlock()
-		if tr.findByCodeStmt != nil {
-			return nil
-		}
-
-		var err error = nil
-
-		queryCtx, queryCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer queryCancel()
-
-		tr.findByCodeStmt, err = tr.GetDB().GetDB().PrepareContext(queryCtx, sqlTestFindByCode)
-		if err != nil {
-			return errs.NewDalError("TestRepository.prepareFindByCode", "prepare find by code stmt", err)
-		}
-	}
-
-	return nil
 }
 
 func (tr *TestRepositoryImpl) entityScanner(scanner repository.Scannable, dest *domain.Test) error {
@@ -231,8 +204,8 @@ func (tr *TestRepositoryImpl) beforeCreate(entity *domain.Test) error {
 	return nil
 }
 
-func (tr *TestRepositoryImpl) creator(ctx context.Context, tx *sql.Tx, entity *domain.Test) (*sql.Row, error) {
-	return tx.QueryRowContext(ctx, tr.GetQueryBuilders().GetCreate()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.CreatedAt, entity.ModifiedAt), nil
+func (tr *TestRepositoryImpl) creator(ctx context.Context, querier db.Querier, entity *domain.Test) (*sql.Row, error) {
+	return querier.QueryRowContext(ctx, tr.GetQueryBuilders().GetCreate()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.CreatedAt, entity.ModifiedAt), nil
 }
 
 func (tr *TestRepositoryImpl) validateChange(entity *domain.Test) error {
@@ -243,8 +216,8 @@ func (tr *TestRepositoryImpl) validateChange(entity *domain.Test) error {
 	return entity.ValidateChange()
 }
 
-func (tr *TestRepositoryImpl) changer(ctx context.Context, tx *sql.Tx, entity *domain.Test) (*sql.Row, error) {
-	return tx.QueryRowContext(ctx, tr.GetQueryBuilders().GetChange()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.ModifiedAt), nil
+func (tr *TestRepositoryImpl) changer(ctx context.Context, querier db.Querier, entity *domain.Test) (*sql.Row, error) {
+	return querier.QueryRowContext(ctx, tr.GetQueryBuilders().GetChange()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.ModifiedAt), nil
 }
 
 func (tr *TestRepositoryImpl) beforeChange(entity *domain.Test) error {
@@ -256,19 +229,5 @@ func (tr *TestRepositoryImpl) beforeChange(entity *domain.Test) error {
 }
 
 func (tr *TestRepositoryImpl) Close() error {
-	tr.mu.Lock()
-	defer tr.mu.Unlock()
-
-	var errsArr []error
-	if tr.findByCodeStmt != nil {
-		errsArr = append(errsArr, tr.findByCodeStmt.Close())
-	}
-	errsArr = append(errsArr, tr.BaseRepository.Close())
-
-	massErrs := errors.Join(errsArr...)
-	if massErrs != nil {
-		return errs.NewDalError("TestRepositoryImpl.Close", "close resources", massErrs)
-	}
-
 	return nil
 }

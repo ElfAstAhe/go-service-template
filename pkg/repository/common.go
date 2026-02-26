@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 )
 
@@ -18,13 +19,13 @@ type Scannable interface {
 type (
 	EntityScannerFunc[T domain.Entity[ID], ID any]  func(scanner Scannable, dest T) error
 	AfterFindFunc[T domain.Entity[ID], ID any]      func(T) (T, error)
-	AfterListYieldFunc[T domain.Entity[ID], ID any] func(T) (T, error)
+	AfterListYieldFunc[T domain.Entity[ID], ID any] func(T) (T, bool, error)
 	NewEntityFactory[T domain.Entity[ID], ID any]   func() T
 	ValidateEntityFunc[T domain.Entity[ID], ID any] func(T) error
 	BeforeCreateFunc[T domain.Entity[ID], ID any]   func(T) error
 	BeforeChangeFunc[T domain.Entity[ID], ID any]   func(T) error
-	CreatorFunc[T domain.Entity[ID], ID any]        func(context.Context, *sql.Tx, T) (*sql.Row, error)
-	ChangerFunc[T domain.Entity[ID], ID any]        func(context.Context, *sql.Tx, T) (*sql.Row, error)
+	CreatorFunc[T domain.Entity[ID], ID any]        func(context.Context, db.Querier, T) (*sql.Row, error)
+	ChangerFunc[T domain.Entity[ID], ID any]        func(context.Context, db.Querier, T) (*sql.Row, error)
 )
 
 type EntityInfo struct {

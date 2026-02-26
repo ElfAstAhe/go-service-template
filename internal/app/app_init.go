@@ -47,7 +47,7 @@ func (app *App) migrateDB() error {
 func (app *App) initDependencies() error {
 	var err error
 	// test repo
-	app.testRepo, err = postgres.NewTestRepository(app.db)
+	app.testRepo, err = postgres.NewTestRepository(app.db, app.db)
 	if err != nil {
 		return errs.NewCommonError("create test repository", err)
 	}
