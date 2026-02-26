@@ -32,6 +32,11 @@ gen-http-client:
 #	oapi-codegen -package client -generate client docs/swagger.json > pkg/client/rest/api_client.gen.go
 	swagger generate client -f ./docs/swagger.json -A goph-keeper -t pkg/client/rest
 
+
+gen-mocks:
+# Генерирует моки для всех интерфейсов в указанной папке
+	mockery
+
 # Сборка проекта с прокидыванием переменных
 #build: gen-swagger
 build:

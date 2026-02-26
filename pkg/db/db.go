@@ -5,8 +5,6 @@ import (
 	"database/sql"
 )
 
-type NotFoundInfo func(error) (string, any, error)
-
 type Executor interface {
 	GetQuerier(ctx context.Context) Querier
 }
