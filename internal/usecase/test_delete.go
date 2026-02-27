@@ -13,28 +13,24 @@ type TestDeleteUseCase interface {
 	Delete(context.Context, string) error
 }
 
-type TestDeleteUseCaseImpl struct {
+type TestDeleteInteractor struct {
 	tm   usecase.TransactionManager
 	repo domain.TestRepository
 }
 
-func NewTestDeleteUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestDeleteUseCaseImpl {
-	return &TestDeleteUseCaseImpl{
+func NewTestDeleteUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestDeleteInteractor {
+	return &TestDeleteInteractor{
 		tm:   tm,
 		repo: repo,
 	}
 }
 
-func (td *TestDeleteUseCaseImpl) Delete(ctx context.Context, id string) error {
+func (td *TestDeleteInteractor) Delete(ctx context.Context, id string) error {
 	err := td.tm.WithinTransaction(ctx, nil, func(ctx context.Context) error {
-		if err := td.repo.Delete(ctx, id); err != nil {
-			return errs.NewBllError("TestDeleteUseCaseImpl.Delete", "run in transaction", err)
-		}
-
-		return nil
+		return td.repo.Delete(ctx, id)
 	})
 	if err != nil {
-		return errs.NewBllError("TestDeleteUseCaseImpl.Delete", fmt.Sprintf("delete test model id [%s] failed", id), err)
+		return errs.NewBllError("TestDeleteInteractor.Delete", fmt.Sprintf("delete test model id [%s] failed", id), err)
 	}
 
 	return nil

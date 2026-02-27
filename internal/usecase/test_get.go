@@ -12,20 +12,20 @@ type TestGetUseCase interface {
 	Get(ctx context.Context, id string) (*domain.Test, error)
 }
 
-type TestGetUseCaseImpl struct {
+type TestGetInteractor struct {
 	repo domain.TestRepository
 }
 
-func NewTestGetUseCase(repo domain.TestRepository) *TestGetUseCaseImpl {
-	return &TestGetUseCaseImpl{
+func NewTestGetUseCase(repo domain.TestRepository) *TestGetInteractor {
+	return &TestGetInteractor{
 		repo: repo,
 	}
 }
 
-func (tg *TestGetUseCaseImpl) Get(ctx context.Context, id string) (*domain.Test, error) {
+func (tg *TestGetInteractor) Get(ctx context.Context, id string) (*domain.Test, error) {
 	res, err := tg.repo.Find(ctx, id)
 	if err != nil {
-		return nil, errs.NewBllError("TestGetUseCaseImpl", fmt.Sprintf("find test model id [%s] failed", id), err)
+		return nil, errs.NewBllError("TestGetInteractor", fmt.Sprintf("find test model id [%s] failed", id), err)
 	}
 
 	return res, nil

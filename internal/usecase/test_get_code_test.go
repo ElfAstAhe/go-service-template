@@ -51,7 +51,7 @@ func TestTestGetByCodeUseCase_Get(t *testing.T) {
 			// prepare
 			mRepo := new(mocks2.MockTestRepository)
 			tt.prepareMocks(mRepo)
-			uc := NewTestGetCodeUseCase(mRepo)
+			uc := NewTestGetByCodeUseCase(mRepo)
 
 			// act
 			actual, err := uc.Get(ctx, tt.input)

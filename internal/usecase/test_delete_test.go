@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestTestGetUseCade_Get(t *testing.T) {
+func TestTestGetUseCase_Delete(t *testing.T) {
 	// prepare
 	inputSuccess := "1"
 	inputFail := "2"
@@ -76,6 +76,7 @@ func TestTestGetUseCade_Get(t *testing.T) {
 			}
 
 			mRepo.AssertExpectations(t)
+			mTM.AssertExpectations(t)
 		})
 	}
 }

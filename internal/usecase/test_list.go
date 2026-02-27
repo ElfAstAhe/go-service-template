@@ -12,17 +12,17 @@ type TestListUseCase interface {
 	List(ctx context.Context, limit, offset int) ([]*domain.Test, error)
 }
 
-type TestListUseCaseImpl struct {
+type TestListInteractor struct {
 	repo domain.TestRepository
 }
 
-func NewTestListUseCase(repo domain.TestRepository) *TestListUseCaseImpl {
-	return &TestListUseCaseImpl{
+func NewTestListUseCase(repo domain.TestRepository) *TestListInteractor {
+	return &TestListInteractor{
 		repo: repo,
 	}
 }
 
-func (tl *TestListUseCaseImpl) List(ctx context.Context, limit, offset int) ([]*domain.Test, error) {
+func (tl *TestListInteractor) List(ctx context.Context, limit, offset int) ([]*domain.Test, error) {
 	res, err := tl.repo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, errs.NewBllError("TestListUseCase.List", fmt.Sprintf("list test data with limit [%v] and offset [%v] failed", limit, offset), err)

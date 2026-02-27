@@ -13,19 +13,19 @@ type TestSaveUseCase interface {
 	Save(context.Context, *domain.Test) (*domain.Test, error)
 }
 
-type TestSaveUseCaseImpl struct {
+type TestSaveInteractor struct {
 	tm   usecase.TransactionManager
 	repo domain.TestRepository
 }
 
-func NewTestSaveUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestSaveUseCaseImpl {
-	return &TestSaveUseCaseImpl{
+func NewTestSaveUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestSaveInteractor {
+	return &TestSaveInteractor{
 		tm:   tm,
 		repo: repo,
 	}
 }
 
-func (ts *TestSaveUseCaseImpl) Save(ctx context.Context, model *domain.Test) (*domain.Test, error) {
+func (ts *TestSaveInteractor) Save(ctx context.Context, model *domain.Test) (*domain.Test, error) {
 	var res *domain.Test
 	err := ts.tm.WithinTransaction(ctx, nil, func(ctx context.Context) error {
 		var txErr error
@@ -35,7 +35,7 @@ func (ts *TestSaveUseCaseImpl) Save(ctx context.Context, model *domain.Test) (*d
 			res, txErr = ts.repo.Change(ctx, model)
 		}
 		if txErr != nil {
-			return errs.NewBllError("TestSaveUseCase.Save", "run in transaction", txErr)
+			return txErr
 		}
 
 		return nil
