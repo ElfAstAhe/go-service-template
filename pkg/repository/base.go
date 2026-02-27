@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
-	"sync"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
@@ -14,7 +13,6 @@ import (
 
 // BaseRepository базовая реализация CRUD репозитория
 type BaseRepository[T domain.Entity[ID], ID any] struct {
-	mu          sync.Mutex
 	exec        db.Executor
 	errDecipher db.ErrorDecipher
 	tm          db.TransactionManager
