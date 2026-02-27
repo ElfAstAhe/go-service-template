@@ -14,6 +14,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
+	"github.com/ElfAstAhe/go-service-template/internal/usecase"
 	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
@@ -40,11 +41,30 @@ type App struct {
 
 	// checkers
 	health *health.Health
-	// repo
+
+	// tx
+	tm db.TransactionManager
+
+	// repositories
+	// test repo
 	testRepo domain.TestRepository
+
+	// use cases
+	// test get
+	testGetUC usecase.TestGetUseCase
+	// test get by code
+	testGetByCodeUC usecase.TestGetByCodeUseCase
+	// test list
+	testListUC usecase.TestListUseCase
+	// test save
+	testSaveUC usecase.TestSaveUseCase
+	// test delete
+	testDeleteUC usecase.TestDeleteUseCase
+
 	// http
 	httpRouter transport.HTTPRouter
 	httpServer *http.Server
+
 	// gRPC
 	grpcServer *grpc.Server
 }
@@ -176,7 +196,7 @@ func (app *App) WaitForStop() {
 //		panic(errs.NewAppCommonError("app close failed", err))
 //	}
 func (app *App) Close() error {
-	log := app.logger.GetLogger("bootstrap close")
+	log := app.logger.GetLogger("App.Close")
 
 	log.Info("close test repository")
 	if err := app.testRepo.Close(); err != nil {

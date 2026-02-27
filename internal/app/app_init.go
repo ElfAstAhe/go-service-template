@@ -7,17 +7,13 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/repository"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/internal/transport/rest"
+	"github.com/ElfAstAhe/go-service-template/internal/usecase"
+	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	migrations "github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
 	"github.com/hellofresh/health-go/v5"
 	healthPg "github.com/hellofresh/health-go/v5/checks/pgx5"
 )
-
-func (app *App) initHelpers() error {
-	// ToDo: implement helper initialization
-
-	return errs.NewNotImplementedError(nil)
-}
 
 func (app *App) initDB() error {
 	var err error
@@ -45,6 +41,35 @@ func (app *App) migrateDB() error {
 }
 
 func (app *App) initDependencies() error {
+	// tx
+	app.tm = db.NewTxManager(app.db)
+
+	// helpers
+	if err := app.initHealth(); err != nil {
+		return errs.NewCommonError("init helpers", err)
+	}
+
+	// repositories
+	if err := app.initRepositories(); err != nil {
+		return errs.NewCommonError("init repositories", err)
+	}
+
+	// use cases
+	if err := app.initUseCases(); err != nil {
+		return errs.NewCommonError("init use cases", err)
+	}
+
+	return nil
+}
+
+func (app *App) initHelpers() error {
+	// here initialize any helpers
+	// ..
+
+	return nil
+}
+
+func (app *App) initRepositories() error {
 	var err error
 	// test repo
 	app.testRepo, err = postgres.NewTestRepository(app.db, app.db)
@@ -57,10 +82,26 @@ func (app *App) initDependencies() error {
 	return nil
 }
 
-func (app *App) initStartupServices() error {
-	// ToDo: implement
+func (app *App) initUseCases() error {
+	// test get
+	app.testGetUC = usecase.NewTestGetUseCase(app.testRepo)
+	// test get by code
+	app.testGetByCodeUC = usecase.NewTestGetCodeUseCase(app.testRepo)
+	// list
+	app.testListUC = usecase.NewTestListUseCase(app.testRepo)
+	// save
+	app.testSaveUC = usecase.NewTestSaveUseCase(app.tm, app.testRepo)
+	// test delete
+	app.testDeleteUC = usecase.NewTestDeleteUseCase(app.tm, app.testRepo)
 
-	return errs.NewNotImplementedError(nil)
+	return nil
+}
+
+func (app *App) initStartupServices() error {
+	// here initialize any startup services (workers, observers, etc.)
+	// ..
+
+	return nil
 }
 
 func (app *App) initHealth() error {
