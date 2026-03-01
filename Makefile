@@ -1,6 +1,7 @@
 # Переменные для сборки
 PROTO_PATH=api/proto/example-service/v1
 PROTO_OUT=pkg/api/grpc/example/v1
+OPEN_API_OUT=pkg/api/http/example/v1
 MODULE_NAME=github.com/ElfAstAhe/go-service-template
 SERVER_BINARY_NAME=example-service
 SERVER_BUILD_DIR=./cmd/example-service
@@ -25,13 +26,13 @@ gen-swagger:
 		-g $(SERVER_BUILD_DIR)/main.go \
 		--parseDependency \
 		--parseInternal \
-		--exclude pkg/client/rest
+		--exclude pkg/api
 #	swag init -g cmd/server/main.go
 
 gen-http-client:
 #	oapi-codegen -package client -generate client docs/swagger.json > pkg/client/rest/api_client.gen.go
-	swagger generate client -f ./docs/swagger.json -A goph-keeper -t pkg/client/rest
-
+	mkdir -p $(OPEN_API_OUT)
+	swagger generate client -f ./docs/swagger.json -A go-service-template -t $(OPEN_API_OUT)
 
 gen-mocks:
 # Генерирует моки для всех интерфейсов в указанной папке

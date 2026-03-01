@@ -14,6 +14,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
+	"github.com/ElfAstAhe/go-service-template/internal/facade"
 	"github.com/ElfAstAhe/go-service-template/internal/usecase"
 	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
@@ -60,6 +61,9 @@ type App struct {
 	testSaveUC usecase.TestSaveUseCase
 	// test delete
 	testDeleteUC usecase.TestDeleteUseCase
+
+	// facade
+	testFacade facade.TestFacade
 
 	// http
 	httpRouter transport.HTTPRouter

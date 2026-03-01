@@ -6,6 +6,9 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/facade/dto"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	_ "github.com/ElfAstAhe/go-service-template/internal/facade/dto"
+	_ "github.com/ElfAstAhe/go-service-template/internal/transport"
 )
 
 func (cr *AppChiRouter) putAPITest(rw http.ResponseWriter, r *http.Request) {

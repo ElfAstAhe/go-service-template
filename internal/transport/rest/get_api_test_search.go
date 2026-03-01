@@ -5,6 +5,9 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/go-chi/chi/v5/middleware"
+
+	_ "github.com/ElfAstAhe/go-service-template/internal/facade/dto"
+	_ "github.com/ElfAstAhe/go-service-template/internal/transport"
 )
 
 func (cr *AppChiRouter) getAPITestSearch(rw http.ResponseWriter, r *http.Request) {

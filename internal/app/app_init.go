@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
+	"github.com/ElfAstAhe/go-service-template/internal/facade"
 	"github.com/ElfAstAhe/go-service-template/internal/repository"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/internal/transport/rest"
@@ -59,6 +60,11 @@ func (app *App) initDependencies() error {
 		return errs.NewCommonError("init use cases", err)
 	}
 
+	// facades
+	if err := app.initFacades(); err != nil {
+		return errs.NewCommonError("init facades", err)
+	}
+
 	return nil
 }
 
@@ -86,13 +92,20 @@ func (app *App) initUseCases() error {
 	// test get
 	app.testGetUC = usecase.NewTestGetUseCase(app.testRepo)
 	// test get by code
-	app.testGetByCodeUC = usecase.NewTestGetCodeUseCase(app.testRepo)
+	app.testGetByCodeUC = usecase.NewTestGetByCodeUseCase(app.testRepo)
 	// list
 	app.testListUC = usecase.NewTestListUseCase(app.testRepo)
 	// save
 	app.testSaveUC = usecase.NewTestSaveUseCase(app.tm, app.testRepo)
 	// test delete
 	app.testDeleteUC = usecase.NewTestDeleteUseCase(app.tm, app.testRepo)
+
+	return nil
+}
+
+func (app *App) initFacades() error {
+	// test facade
+	app.testFacade = facade.NewTestFacade(app.testGetUC, app.testGetByCodeUC, app.testListUC, app.testSaveUC, app.testDeleteUC)
 
 	return nil
 }
@@ -132,7 +145,7 @@ func (app *App) initHealth() error {
 }
 
 func (app *App) initHTTPRouter() error {
-	app.httpRouter = rest.NewAppChiRouter(app.config.HTTP, app.logger, app.health, nil, nil)
+	app.httpRouter = rest.NewAppChiRouter(app.config.HTTP, app.logger, app.health, nil, nil, app.testFacade)
 
 	return nil
 }
