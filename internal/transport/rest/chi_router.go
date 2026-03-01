@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 
+	"github.com/ElfAstAhe/go-service-template/internal/facade"
 	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/transport"
@@ -15,12 +16,13 @@ import (
 )
 
 type AppChiRouter struct {
-	router  *chi.Mux
-	log     logger.Logger
-	config  *conf.HTTPConfig
-	health  *health.Health
-	healthz transport.HealthzFunc
-	readyz  transport.ReadyzFunc
+	router     *chi.Mux
+	log        logger.Logger
+	config     *conf.HTTPConfig
+	health     *health.Health
+	healthz    transport.HealthzFunc
+	readyz     transport.ReadyzFunc
+	testFacade facade.TestFacade
 }
 
 func NewAppChiRouter(
@@ -29,14 +31,16 @@ func NewAppChiRouter(
 	health *health.Health,
 	healthz transport.HealthzFunc,
 	readyz transport.ReadyzFunc,
+	testFacade facade.TestFacade,
 ) *AppChiRouter {
 	res := &AppChiRouter{
-		router:  chi.NewRouter(),
-		log:     logger,
-		config:  config,
-		health:  health,
-		healthz: healthz,
-		readyz:  readyz,
+		router:     chi.NewRouter(),
+		log:        logger,
+		config:     config,
+		health:     health,
+		healthz:    healthz,
+		readyz:     readyz,
+		testFacade: testFacade,
 	}
 
 	// setup middleware
@@ -90,6 +94,14 @@ func (cr *AppChiRouter) setupRoutes() {
 
 	// api
 	cr.router.Route("/api", func(r chi.Router) {
+		r.Route("/test", func(r chi.Router) {
+			r.Get("/{id}", cr.getAPITest)
+			r.Get("/search", cr.getAPITestSearch)
+			r.Get("/", cr.getAPITestList)
+			r.Post("/", cr.postAPITest)
+			r.Put("/{id}", cr.putAPITest)
+			r.Delete("/{id}", cr.deleteAPITest)
+		})
 		/*
 			// auth sub-router
 			r.Route("/auth", func(r chi.Router) {

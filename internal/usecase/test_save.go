@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	"github.com/ElfAstAhe/go-service-template/internal/domain/errs"
+	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
 	usecase "github.com/ElfAstAhe/go-service-template/pkg/db"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
 type TestSaveUseCase interface {
@@ -41,7 +43,14 @@ func (ts *TestSaveInteractor) Save(ctx context.Context, model *domain.Test) (*do
 		return nil
 	})
 	if err != nil {
-		return nil, errs.NewBllError("TestSaveUseCase.Save", fmt.Sprintf("save test model id [%v] failed", model.GetID()), err)
+		if errors.As(err, new(*errs.DalNotFoundError)) {
+			return nil, domerrs.NewBllNotFoundError("TestSaveUseCase.Save", "Test", model.Code, err)
+		}
+		if errors.As(err, new(*errs.DalAlreadyExistsError)) {
+			return nil, domerrs.NewBllUniqueError("TestSaveUseCase.Save", "Test", model.Code, err)
+		}
+
+		return nil, domerrs.NewBllError("TestSaveUseCase.Save", fmt.Sprintf("save test model id [%v] failed", model.GetID()), err)
 	}
 
 	return res, nil

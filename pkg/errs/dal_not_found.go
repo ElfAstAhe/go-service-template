@@ -11,7 +11,7 @@ type DalNotFoundError struct {
 	Err    error  // Исходная ошибка из драйвера БД (опционально)
 }
 
-var ErrDalNotFound *DalNotFoundError
+var _ error = (*DalNotFoundError)(nil)
 
 func NewDalNotFoundError(entity string, value any, err error) *DalNotFoundError {
 	return &DalNotFoundError{

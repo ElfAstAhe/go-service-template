@@ -10,7 +10,7 @@ type BllError struct {
 	err error
 }
 
-var ErrBll *BllError
+var _ error = (*BllError)(nil)
 
 func NewBllError(op string, msg string, err error) *BllError {
 	return &BllError{

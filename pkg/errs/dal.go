@@ -11,7 +11,7 @@ type DalError struct {
 	err error
 }
 
-var ErrDal *DalError
+var _ error = (*DalError)(nil)
 
 func NewDalError(op, msg string, err error) *DalError {
 	return &DalError{op: op, msg: msg, err: err}

@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	"github.com/ElfAstAhe/go-service-template/internal/domain/errs"
+	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
 	usecase "github.com/ElfAstAhe/go-service-template/pkg/db"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
 type TestDeleteUseCase interface {
@@ -30,7 +32,11 @@ func (td *TestDeleteInteractor) Delete(ctx context.Context, id string) error {
 		return td.repo.Delete(ctx, id)
 	})
 	if err != nil {
-		return errs.NewBllError("TestDeleteInteractor.Delete", fmt.Sprintf("delete test model id [%s] failed", id), err)
+		if errors.As(err, new(*errs.DalNotFoundError)) {
+			return domerrs.NewBllNotFoundError("TestDeleteInteractor.Delete", "Test", id, err)
+		}
+
+		return domerrs.NewBllError("TestDeleteInteractor.Delete", fmt.Sprintf("delete test model id [%s] failed", id), err)
 	}
 
 	return nil

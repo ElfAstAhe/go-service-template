@@ -1,6 +1,6 @@
 # Переменные для сборки
-PROTO_PATH=api/proto
-PROTO_OUT=api/grpc
+PROTO_PATH=api/proto/example-service/v1
+PROTO_OUT=pkg/api/grpc/example/v1
 MODULE_NAME=github.com/ElfAstAhe/go-service-template
 SERVER_BINARY_NAME=example-service
 SERVER_BUILD_DIR=./cmd/example-service

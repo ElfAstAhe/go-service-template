@@ -1,13 +1,15 @@
 package errs
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type MiddleWareError struct {
 	msg string
 	err error
 }
 
-var ErrMiddleWare *MiddleWareError
+var _ error = (*MiddleWareError)(nil)
 
 func NewMiddleWareError(msg string, err error) *MiddleWareError {
 	return &MiddleWareError{

@@ -12,7 +12,7 @@ type DBMigrationError struct {
 	line int
 }
 
-var ErrDBMigration *DBMigrationError
+var _ error = (*DBMigrationError)(nil)
 
 func NewDBMigrationError(msg string, err error) *DBMigrationError {
 	dm := &DBMigrationError{

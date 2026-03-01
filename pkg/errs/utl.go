@@ -10,7 +10,7 @@ type UtlError struct {
 	err error
 }
 
-var ErrUtils *UtlError
+var _ error = (*UtlError)(nil)
 
 func NewUtlError(op, msg string, err error) *UtlError {
 	return &UtlError{

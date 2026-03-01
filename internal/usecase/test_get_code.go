@@ -2,10 +2,12 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	"github.com/ElfAstAhe/go-service-template/internal/domain/errs"
+	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
 type TestGetByCodeUseCase interface {
@@ -23,7 +25,11 @@ func NewTestGetByCodeUseCase(repo domain.TestRepository) *TestGetByCodeInteracto
 func (tgc *TestGetByCodeInteractor) Get(ctx context.Context, code string) (*domain.Test, error) {
 	res, err := tgc.repo.FindByCode(ctx, code)
 	if err != nil {
-		return nil, errs.NewBllError("TestGetByCodeInteractor.Get", fmt.Sprintf("find test model code [%s] failed", code), err)
+		if errors.As(err, new(*errs.DalNotFoundError)) {
+			return nil, domerrs.NewBllNotFoundError("TestGetByCodeInteractor.Get", "Test", code, err)
+		}
+
+		return nil, domerrs.NewBllError("TestGetByCodeInteractor.Get", fmt.Sprintf("find test model code [%s] failed", code), err)
 	}
 
 	return res, nil

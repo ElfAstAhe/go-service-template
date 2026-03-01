@@ -9,8 +9,6 @@ type ConfigError struct {
 	err error
 }
 
-var ErrConfig *ConfigError
-
 // Гарантируем соответствие интерфейсу на этапе компиляции
 var _ error = (*ConfigError)(nil)
 
