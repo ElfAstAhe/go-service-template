@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// TestDTO представляет Test model
 type TestDTO struct {
 	ID           string    `json:"id,omitempty"`
 	Code         string    `json:"code,omitempty"`
@@ -11,4 +12,4 @@ type TestDTO struct {
 	Description  string    `json:"description,omitempty"`
 	RegisteredAt time.Time `json:"registered_at,omitempty"`
 	UpdatedAt    time.Time `json:"updated_at,omitempty"`
-}
+} // @name TestDTO

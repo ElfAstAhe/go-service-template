@@ -10,6 +10,18 @@ import (
 	_ "github.com/ElfAstAhe/go-service-template/internal/transport"
 )
 
+// postAPITest godoc
+// @Summary      Создание новых тестовых данных
+// @Description  Сохраняет новые тестовые данные
+// @Tags         test
+// @Accept       json
+// @Produce      json
+// @Param        input  body      TestDTO  true  "Тестовые данные"
+// @Success      201    {object}  TestDTO
+// @Failure      400    {object}  ErrorDTO
+// @Failure      409    {object}  ErrorDTO
+// @Failure      500    "Внутренняя ошибка сервера (пустое тело)"
+// @Router       /api/test [post]
 func (cr *AppChiRouter) postAPITest(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Debugf("postAPITest start, requestID [%s]", middleware.GetReqID(r.Context()))
 	defer cr.log.Debugf("postAPITest finish, requestID [%s]", middleware.GetReqID(r.Context()))

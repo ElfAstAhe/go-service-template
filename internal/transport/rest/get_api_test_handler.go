@@ -10,6 +10,16 @@ import (
 	_ "github.com/ElfAstAhe/go-service-template/internal/transport"
 )
 
+// getAPITest godoc
+// @Summary      Получить
+// @Description  Удаляет запись по её ID (Soft Delete)
+// @Tags         test
+// @Produce      json
+// @Param        id   path      string  true  "ID записи" format(string)
+// @Success      200  {object}  TestDTO "Тестовые данные"
+// @Failure      404  {object}  ErrorDTO "Запись не найдена"
+// @Failure      500  "Внутренняя ошибка сервера (пустое тело)"
+// @Router       /api/test/{id} [get]
 func (cr *AppChiRouter) getAPITest(rw http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 

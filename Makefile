@@ -26,7 +26,9 @@ gen-swagger:
 		-g $(SERVER_BUILD_DIR)/main.go \
 		--parseDependency \
 		--parseInternal \
-		--exclude pkg/api
+		--exclude ./pkg/api \
+		-o docs \
+		--parseDepth 3
 #	swag init -g cmd/server/main.go
 
 gen-http-client:

@@ -11,6 +11,20 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
+// @title           Example Service API
+// @version         1.0
+// @description     Тестовый сервис
+// @termsOfService  Free use
+
+// @contact.name   API Support
+// @contact.url    https://github.com/ElfAstAhe/go-service-template
+// @contact.email  elf.ast.ahe@gmail.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org
+
+// @BasePath  /
+//
 //goland:noinspection GoUnhandledErrorResult
 func main() {
 	// 1. Загрузка конфигурации
