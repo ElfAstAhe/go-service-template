@@ -42,7 +42,7 @@ gen-mocks:
 
 # Сборка проекта с прокидыванием переменных
 #build: gen-swagger
-build:
+build: gen-proto gen-swagger gen-http-client
 	go build -ldflags "-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
 	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
