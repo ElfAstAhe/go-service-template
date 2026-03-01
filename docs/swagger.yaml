@@ -1,0 +1,216 @@
+basePath: /
+definitions:
+  ErrorDTO:
+    description: Error dto
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  TestDTO:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registered_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
+info:
+  contact:
+    email: elf.ast.ahe@gmail.com
+    name: API Support
+    url: https://github.com/ElfAstAhe/go-service-template
+  description: Тестовый сервис
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org
+  termsOfService: Free use
+  title: Example Service API
+  version: "1.0"
+paths:
+  /api/test:
+    get:
+      description: Удаляет запись по её ID (Soft Delete)
+      parameters:
+      - description: limit row count, max 1000
+        format: int
+        in: query
+        name: limit
+        type: integer
+      - description: offset, min 0, max n
+        format: int
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Набор тестовых данных
+          schema:
+            items:
+              $ref: '#/definitions/TestDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Получить
+      tags:
+      - test
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет новые тестовые данные
+      parameters:
+      - description: Тестовые данные
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/TestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/TestDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Создание новых тестовых данных
+      tags:
+      - test
+  /api/test/{id}:
+    delete:
+      description: Удаляет запись по её ID
+      parameters:
+      - description: ID записи
+        format: string
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Запись успешно удалена, тело ответа отсутствует
+        "404":
+          description: Запись не найдена
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Удаление тестовых данных
+      tags:
+      - test
+    get:
+      description: Удаляет запись по её ID (Soft Delete)
+      parameters:
+      - description: ID записи
+        format: string
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Тестовые данные
+          schema:
+            $ref: '#/definitions/TestDTO'
+        "404":
+          description: Запись не найдена
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Получить
+      tags:
+      - test
+    put:
+      consumes:
+      - application/json
+      description: Изменяет тестовые данные
+      parameters:
+      - description: ID записи
+        format: string
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Тестовые данные
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/TestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TestDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Изменение тестовых данных
+      tags:
+      - test
+  /api/test/search:
+    get:
+      description: Удаляет запись по её ID (Soft Delete)
+      parameters:
+      - description: code записи
+        format: string
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Тестовые данные
+          schema:
+            $ref: '#/definitions/TestDTO'
+        "404":
+          description: Запись не найдена
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Получить
+      tags:
+      - test
+swagger: "2.0"
