@@ -53,7 +53,7 @@ func (tf *TestFacadeImpl) Get(ctx context.Context, id string) (*dto.TestDTO, err
 		return nil, err
 	}
 
-	return mapper.TestModelToDto(model), nil
+	return mapper.MapTestModelToDto(model), nil
 }
 
 func (tf *TestFacadeImpl) GetByCode(ctx context.Context, code string) (*dto.TestDTO, error) {
@@ -66,7 +66,7 @@ func (tf *TestFacadeImpl) GetByCode(ctx context.Context, code string) (*dto.Test
 		return nil, err
 	}
 
-	return mapper.TestModelToDto(model), nil
+	return mapper.MapTestModelToDto(model), nil
 }
 
 func (tf *TestFacadeImpl) List(ctx context.Context, limit, offset int) ([]*dto.TestDTO, error) {
@@ -79,7 +79,7 @@ func (tf *TestFacadeImpl) List(ctx context.Context, limit, offset int) ([]*dto.T
 		return nil, err
 	}
 
-	return mapper.TestModelsToDtos(models), nil
+	return mapper.MapTestModelsToDtos(models), nil
 }
 
 func (tf *TestFacadeImpl) validateList(limit, offset int) error {
@@ -101,7 +101,7 @@ func (tf *TestFacadeImpl) Create(ctx context.Context, test *dto.TestDTO) (*dto.T
 		return nil, errs.NewInvalidArgumentError("test", "must not be empty")
 	}
 
-	model := mapper.TestDtoToModel(test)
+	model := mapper.MapTestDtoToModel(test)
 	model.ID = ""
 
 	var err error
@@ -110,7 +110,7 @@ func (tf *TestFacadeImpl) Create(ctx context.Context, test *dto.TestDTO) (*dto.T
 		return nil, err
 	}
 
-	return mapper.TestModelToDto(model), nil
+	return mapper.MapTestModelToDto(model), nil
 }
 
 func (tf *TestFacadeImpl) Change(ctx context.Context, id string, test *dto.TestDTO) (*dto.TestDTO, error) {
@@ -118,7 +118,7 @@ func (tf *TestFacadeImpl) Change(ctx context.Context, id string, test *dto.TestD
 		return nil, errs.NewInvalidArgumentError("test", "must not be empty")
 	}
 
-	model := mapper.TestDtoToModel(test)
+	model := mapper.MapTestDtoToModel(test)
 	model.ID = id
 	var err error
 	model, err = tf.saveUC.Save(ctx, model)
@@ -126,7 +126,7 @@ func (tf *TestFacadeImpl) Change(ctx context.Context, id string, test *dto.TestD
 		return nil, err
 	}
 
-	return mapper.TestModelToDto(model), nil
+	return mapper.MapTestModelToDto(model), nil
 }
 
 func (tf *TestFacadeImpl) Delete(ctx context.Context, id string) error {

@@ -5,7 +5,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/facade/dto"
 )
 
-func TestDtoToModel(testDTO *dto.TestDTO) *domain.Test {
+func MapTestDtoToModel(testDTO *dto.TestDTO) *domain.Test {
 	if testDTO == nil {
 		return nil
 	}
@@ -22,7 +22,7 @@ func TestDtoToModel(testDTO *dto.TestDTO) *domain.Test {
 	return res
 }
 
-func TestModelToDto(model *domain.Test) *dto.TestDTO {
+func MapTestModelToDto(model *domain.Test) *dto.TestDTO {
 	if model == nil {
 		return nil
 	}
@@ -38,7 +38,7 @@ func TestModelToDto(model *domain.Test) *dto.TestDTO {
 	return res
 }
 
-func TestModelsToDtos(models []*domain.Test) []*dto.TestDTO {
+func MapTestModelsToDtos(models []*domain.Test) []*dto.TestDTO {
 	if len(models) == 0 {
 		return make([]*dto.TestDTO, 0)
 	}
@@ -46,7 +46,7 @@ func TestModelsToDtos(models []*domain.Test) []*dto.TestDTO {
 	res := make([]*dto.TestDTO, len(models))
 
 	for i, model := range models {
-		res[i] = TestModelToDto(model)
+		res[i] = MapTestModelToDto(model)
 	}
 
 	return res
