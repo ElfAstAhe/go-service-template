@@ -74,22 +74,22 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	cr.router.Use(otelchi.Middleware(cr.telemetryConfig.ServiceName, otelchi.WithChiRoutes(cr.router)))
 	// metrics
 	cr.router.Use(mware.HTTPMetricsMiddleware)
-	// recoverer
-	cr.router.Use(middleware.Recoverer)
-	// timeout
-	cr.router.Use(middleware.Timeout(cr.config.ReadTimeout))
-	// jwt auth extractor - extract user info from token
-	// .. cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.authHelper, cr.jwtHTTPHelper, logger).Handle)
 	// requestID
 	cr.router.Use(middleware.RequestID)
 	// realIP
 	cr.router.Use(middleware.RealIP)
+	// recoverer
+	cr.router.Use(middleware.Recoverer)
+	// timeout
+	cr.router.Use(middleware.Timeout(cr.config.ReadTimeout))
 	// compress (add any content-types)
 	cr.router.Use(mware.NewHTTPCompress(logger,
 		"application/json", "plain/text",
 	).Handle)
 	// decompress
 	cr.router.Use(mware.NewHTTPDecompress(int64(cr.config.MaxRequestBodySize), logger).Handle)
+	// jwt auth extractor - extract user info from token
+	// .. cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.authHelper, cr.jwtHTTPHelper, logger).Handle)
 	// income/outcome logger
 	cr.router.Use(mware.NewHTTPRequestLogger(logger).Handle)
 }
