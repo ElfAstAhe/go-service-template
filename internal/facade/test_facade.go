@@ -89,7 +89,7 @@ func (tf *TestFacadeImpl) validateList(limit, offset int) error {
 	if offset < 0 {
 		return errs.NewInvalidArgumentError("offset", "must be greater or equal than 0")
 	}
-	if limit > 1000 {
+	if limit > DefaultMaxListLimit {
 		return errs.NewInvalidArgumentError("limit", "must be less or equal than 1000")
 	}
 

@@ -107,7 +107,8 @@ func (h *JWTHelper) ExtractTokenFromString(tokenString string) (*jwt.Token, erro
 	})
 
 	if err != nil {
-		if !errors.As(err, &errs.ErrUtlJWT) {
+		var errUtlJWT *errs.UtlJWTError
+		if !errors.As(err, &errUtlJWT) {
 			return nil, errs.NewUtlJWTError("error parse jwt", err)
 		}
 
