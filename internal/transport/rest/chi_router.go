@@ -12,21 +12,24 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/hellofresh/health-go/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/riandyrn/otelchi"
 	swagh "github.com/swaggo/http-swagger"
 )
 
 type AppChiRouter struct {
-	router     *chi.Mux
-	log        logger.Logger
-	config     *conf.HTTPConfig
-	health     *health.Health
-	healthz    transport.HealthzFunc
-	readyz     transport.ReadyzFunc
-	testFacade facade.TestFacade
+	router          *chi.Mux
+	log             logger.Logger
+	config          *conf.HTTPConfig
+	telemetryConfig *conf.TelemetryConfig
+	health          *health.Health
+	healthz         transport.HealthzFunc
+	readyz          transport.ReadyzFunc
+	testFacade      facade.TestFacade
 }
 
 func NewAppChiRouter(
 	config *conf.HTTPConfig,
+	telemetryConfig *conf.TelemetryConfig,
 	logger logger.Logger,
 	health *health.Health,
 	healthz transport.HealthzFunc,
@@ -34,13 +37,14 @@ func NewAppChiRouter(
 	testFacade facade.TestFacade,
 ) *AppChiRouter {
 	res := &AppChiRouter{
-		router:     chi.NewRouter(),
-		log:        logger,
-		config:     config,
-		health:     health,
-		healthz:    healthz,
-		readyz:     readyz,
-		testFacade: testFacade,
+		router:          chi.NewRouter(),
+		log:             logger,
+		config:          config,
+		telemetryConfig: telemetryConfig,
+		health:          health,
+		healthz:         healthz,
+		readyz:          readyz,
+		testFacade:      testFacade,
 	}
 
 	// setup middleware
@@ -66,6 +70,14 @@ func (cr *AppChiRouter) GetRouter() http.Handler {
 }
 
 func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
+	// tracing
+	cr.router.Use(otelchi.Middleware(cr.telemetryConfig.ServiceName, otelchi.WithChiRoutes(cr.router)))
+	// metrics
+	cr.router.Use(mware.HTTPMetricsMiddleware)
+	// recoverer
+	cr.router.Use(middleware.Recoverer)
+	// timeout
+	cr.router.Use(middleware.Timeout(cr.config.ReadTimeout))
 	// jwt auth extractor - extract user info from token
 	// .. cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.authHelper, cr.jwtHTTPHelper, logger).Handle)
 	// requestID
@@ -80,10 +92,6 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	cr.router.Use(mware.NewHTTPDecompress(int64(cr.config.MaxRequestBodySize), logger).Handle)
 	// income/outcome logger
 	cr.router.Use(mware.NewHTTPRequestLogger(logger).Handle)
-	// recoverer
-	cr.router.Use(middleware.Recoverer)
-	// timeout
-	cr.router.Use(middleware.Timeout(cr.config.ReadTimeout))
 }
 
 func (cr *AppChiRouter) setupRoutes() {

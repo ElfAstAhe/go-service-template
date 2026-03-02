@@ -79,6 +79,15 @@ const (
 	FlagRedisDB       string = "redis-db"
 )
 
+// telemetry
+const (
+	FlagTelemetryEnabled          string = "telemetry-enabled"
+	FlagTelemetryServiceName      string = "telemetry-service-name"
+	FlagTelemetryExporterEndpoint string = "telemetry-exporter-endpoint"
+	FlagTelemetrySampleRate       string = "telemetry-sample-rate"
+	FlagTelemetryTimeout          string = "telemetry-timeout"
+)
+
 // EnvConfig - файл конфигурации
 const EnvConfig string = "CONFIG_PATH"
 

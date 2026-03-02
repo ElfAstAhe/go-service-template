@@ -13,12 +13,13 @@ import (
 
 // Config — корневой объект
 type Config struct {
-	App  *AppConfig       `mapstructure:"app"`
-	Auth *conf.AuthConfig `mapstructure:"auth"`
-	HTTP *conf.HTTPConfig `mapstructure:"http"`
-	GRPC *conf.GRPCConfig `mapstructure:"grpc"`
-	Log  *conf.LogConfig  `mapstructure:"log"`
-	DB   *conf.DBConfig   `mapstructure:"db"` // <-- Универсальное имя
+	App       *AppConfig            `mapstructure:"app"`
+	Auth      *conf.AuthConfig      `mapstructure:"auth"`
+	HTTP      *conf.HTTPConfig      `mapstructure:"http"`
+	GRPC      *conf.GRPCConfig      `mapstructure:"grpc"`
+	Log       *conf.LogConfig       `mapstructure:"log"`
+	DB        *conf.DBConfig        `mapstructure:"db"` // <-- Универсальное имя
+	Telemetry *conf.TelemetryConfig `mapstructure:"telemetry"`
 	//    Redis *RedisConfig `mapstructure:"redis"`
 }
 
@@ -29,13 +30,15 @@ var (
 	AppBuildTime string
 )
 
-func NewConfig(app *AppConfig, auth *conf.AuthConfig, HTTP *conf.HTTPConfig, log *conf.LogConfig, db *conf.DBConfig) *Config {
+func NewConfig(app *AppConfig, auth *conf.AuthConfig, HTTP *conf.HTTPConfig, GRPC *conf.GRPCConfig, log *conf.LogConfig, db *conf.DBConfig, telemetry *conf.TelemetryConfig) *Config {
 	return &Config{
-		App:  app,
-		Auth: auth,
-		HTTP: HTTP,
-		Log:  log,
-		DB:   db,
+		App:       app,
+		Auth:      auth,
+		HTTP:      HTTP,
+		GRPC:      GRPC,
+		Log:       log,
+		DB:        db,
+		Telemetry: telemetry,
 	}
 }
 
@@ -44,8 +47,10 @@ func NewDefaultConfig() *Config {
 		NewDefaultAppConfig(),
 		conf.NewDefaultAuthConfig(),
 		conf.NewDefaultHTTPConfig(),
+		conf.NewDefaultGRPCConfig(),
 		conf.NewDefaultLogConfig(),
 		conf.NewDefaultDBConfig(),
+		conf.NewDefaultTelemetryConfig(),
 	)
 }
 
@@ -145,6 +150,12 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault(conf.KeyLogLevel, conf.DefaultLogLevel)
 	v.SetDefault(conf.KeyLogFormat, conf.DefaultLogFormat)
 
+	// Telemetry
+	v.SetDefault(conf.KeyTelemetryEnabled, conf.DefaultTelemetryEnabled)
+	v.SetDefault(conf.KeyTelemetryExporterEndpoint, conf.DefaultTelemetryExporterEndpoint)
+	v.SetDefault(conf.KeyTelemetrySampleRate, conf.DefaultTelemetrySampleRate)
+	v.SetDefault(conf.KeyTelemetryTimeout, conf.DefaultTelemetryTimeout)
+
 	// ... и так далее для всех критичных полей
 }
 
@@ -192,6 +203,13 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	// Log
 	res.String(FlagLogLevel, conf.DefaultLogLevel, "log level")
 	res.String(FlagLogFormat, conf.DefaultLogFormat, "log format")
+
+	// Telemetry
+	res.Bool(FlagTelemetryEnabled, conf.DefaultTelemetryEnabled, "telemetry enabled")
+	res.String(FlagTelemetryServiceName, "", "telemetry service name")
+	res.String(FlagTelemetryExporterEndpoint, conf.DefaultTelemetryExporterEndpoint, "telemetry exporter endpoint")
+	res.Float64(FlagTelemetrySampleRate, conf.DefaultTelemetrySampleRate, "telemetry sample rate")
+	res.Duration(FlagTelemetryTimeout, conf.DefaultTelemetryTimeout, "telemetry timeout")
 
 	// Добавь остальные pflag.String/Int/Duration для GRPC, Redis, etc. ...
 	// ..

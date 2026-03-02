@@ -63,11 +63,7 @@ func main() {
 
 	// app close
 	zapLogger.Info("app close")
-	if err := application.Close(); err != nil {
-		zapLogger.Errorf("app close error [%v]", err)
-
-		panic(fmt.Errorf("app close failed: %v", err))
-	}
+	application.Close()
 
 	zapLogger.Info("app shutdown")
 }

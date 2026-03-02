@@ -15,10 +15,10 @@ type ExampleGRPCService struct {
 	pb.UnimplementedExampleServiceServer
 	testFacade facade.TestFacade
 	log        logger.Logger
-	config     conf.GRPCConfig
+	config     *conf.GRPCConfig
 }
 
-func NewExampleGRPCService(config conf.GRPCConfig, testFacade facade.TestFacade, logger logger.Logger) *ExampleGRPCService {
+func NewExampleGRPCService(config *conf.GRPCConfig, testFacade facade.TestFacade, logger logger.Logger) *ExampleGRPCService {
 	return &ExampleGRPCService{
 		testFacade: testFacade,
 		log:        logger.GetLogger("example gRPC service"),

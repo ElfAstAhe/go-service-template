@@ -63,3 +63,19 @@ const (
 	KeyDBConnMaxIdleLifetime string = "db.conn_max_idle_lifetime"
 	KeyDBConnTimeout         string = "db.conn_timeout"
 )
+
+// Telemetry defaults
+const (
+	DefaultTelemetryEnabled          bool          = false
+	DefaultTelemetryExporterEndpoint string        = "localhost:4317"
+	DefaultTelemetrySampleRate       float64       = 1.0
+	DefaultTelemetryTimeout          time.Duration = 5 * time.Second
+)
+
+const (
+	KeyTelemetryEnabled          string = "telemetry.enabled"
+	KeyTelemetryServiceName      string = "telemetry.service.name"
+	KeyTelemetryExporterEndpoint string = "telemetry.exporter_endpoint"
+	KeyTelemetrySampleRate       string = "telemetry.sample_rate"
+	KeyTelemetryTimeout          string = "telemetry.timeout"
+)

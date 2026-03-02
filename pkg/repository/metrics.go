@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
-	"github.com/ElfAstAhe/go-service-template/pkg/metrics"
+	"github.com/ElfAstAhe/go-service-template/pkg/infra/metrics"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 

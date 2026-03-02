@@ -4,11 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/XSAM/otelsql"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/xo/dburl"
+	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 )
 
 type PgDB struct {
@@ -22,6 +26,43 @@ func NewPgDB(conf *config.DBConfig) (*PgDB, error) {
 		return nil, err
 	}
 
+	appDB, err := setupDB(pg, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return appDB, nil
+}
+
+func NewPgDBTracing(conf *config.DBConfig) (*PgDB, error) {
+	u, err := dburl.Parse(conf.DSN)
+	if err != nil {
+		return nil, errs.NewDalError("NewPgDBTracing", "parse DSN", err)
+	}
+	// Вместо sql.Open("postgres", ...) делаем:
+	pg, err := otelsql.Open("postgres", conf.DSN,
+		otelsql.WithAttributes(
+			semconv.DBSystemNamePostgreSQL,
+			semconv.DBSystemNameKey.String(u.Path),
+		),
+		// Включаем трейсинг всех запросов к БД
+		otelsql.WithSpanOptions(otelsql.SpanOptions{
+			Ping: true, // Трейсить даже проверки связи (healthchecks)
+		}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open otel sql: %w", err)
+	}
+
+	appDB, err := setupDB(pg, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return appDB, nil
+}
+
+func setupDB(pg *sql.DB, conf *config.DBConfig) (*PgDB, error) {
 	pg.SetMaxOpenConns(conf.MaxOpenConns)
 	pg.SetMaxIdleConns(conf.MaxIdleConns)
 	pg.SetConnMaxIdleTime(conf.ConnMaxIdleLifetime)
@@ -29,7 +70,7 @@ func NewPgDB(conf *config.DBConfig) (*PgDB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), conf.ConnTimeout)
 	defer cancel()
 
-	err = pg.PingContext(ctx)
+	err := pg.PingContext(ctx)
 	if err != nil {
 		return nil, errs.NewDalError("NewPgDB", "ping db connection", err)
 	}
