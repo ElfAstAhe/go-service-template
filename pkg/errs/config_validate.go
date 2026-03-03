@@ -11,8 +11,6 @@ type ConfigValidateError struct {
 	err   error
 }
 
-var ErrConfigValidate *ConfigValidateError
-
 // Гарантируем соответствие интерфейсу на этапе компиляции
 var _ error = (*ConfigValidateError)(nil)
 

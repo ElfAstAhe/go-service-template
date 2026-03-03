@@ -10,6 +10,8 @@ import "google/protobuf/timestamp.proto";
 service ExampleService {
   // find
   rpc Find (ExampleServiceFindRequest) returns (ExampleServiceInstanceResponse);
+  // find by code
+  rpc FindByCode(ExampleServiceFindByCodeRequest) returns (ExampleServiceInstanceResponse);
   // list paging
   rpc List (ExampleServiceListRequest) returns (ExampleServiceInstancesResponse);
   // save
@@ -20,6 +22,10 @@ service ExampleService {
 
 message ExampleServiceFindRequest {
   string id = 1;
+}
+
+message ExampleServiceFindByCodeRequest {
+  string code = 1;
 }
 
 message ExampleServiceSaveRequest {

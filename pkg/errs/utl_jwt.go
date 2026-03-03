@@ -9,7 +9,7 @@ type UtlJWTError struct {
 	err     error
 }
 
-var ErrUtlJWT *UtlJWTError
+var _ error = (*UtlJWTError)(nil)
 
 func NewUtlJWTError(msg string, err error) *UtlJWTError {
 	return &UtlJWTError{
@@ -19,7 +19,15 @@ func NewUtlJWTError(msg string, err error) *UtlJWTError {
 }
 
 func (e *UtlJWTError) Error() string {
-	return fmt.Sprintf("jwt util error with message [%s] with error [%v]", e.message, e.err)
+	msg := "UTL: jwt error"
+	if e.message != "" {
+		msg = fmt.Sprintf("%s: %s", msg, e.message)
+	}
+	if e.err != nil {
+		msg = fmt.Sprintf("%s: %v", msg, e.err)
+	}
+
+	return msg
 }
 
 func (e *UtlJWTError) Unwrap() error {

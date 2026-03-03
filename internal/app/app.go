@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,9 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
+	"github.com/ElfAstAhe/go-service-template/internal/facade"
+	grpcsvc "github.com/ElfAstAhe/go-service-template/internal/transport/grpc"
+	"github.com/ElfAstAhe/go-service-template/internal/usecase"
 	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
@@ -31,6 +35,8 @@ type App struct {
 	config *config.Config
 	// logging
 	logger logger.Logger
+	// telemetry
+	telemetryShutdown func(ctx context.Context) error
 
 	// DB
 	db db.DB
@@ -40,13 +46,36 @@ type App struct {
 
 	// checkers
 	health *health.Health
-	// repo
+
+	// tx
+	tm db.TransactionManager
+
+	// repositories
+	// test repo
 	testRepo domain.TestRepository
+
+	// use cases
+	// test get
+	testGetUC usecase.TestGetUseCase
+	// test get by code
+	testGetByCodeUC usecase.TestGetByCodeUseCase
+	// test list
+	testListUC usecase.TestListUseCase
+	// test save
+	testSaveUC usecase.TestSaveUseCase
+	// test delete
+	testDeleteUC usecase.TestDeleteUseCase
+
+	// facade
+	testFacade facade.TestFacade
+
 	// http
 	httpRouter transport.HTTPRouter
 	httpServer *http.Server
+
 	// gRPC
-	grpcServer *grpc.Server
+	grpcExampleService *grpcsvc.ExampleGRPCService
+	grpcServer         *grpc.Server
 }
 
 func NewApp(config *config.Config, logger logger.Logger) *App {
@@ -81,6 +110,16 @@ func (app *App) Init() error {
 		return err
 	}
 
+	log.Info("init telemetry")
+	if err := app.initTelemetry(); err != nil {
+		return err
+	}
+
+	log.Info("init metrics")
+	if err := app.initMetrics(); err != nil {
+		return err
+	}
+
 	log.Info("init dependencies")
 	if err := app.initDependencies(); err != nil {
 		return err
@@ -103,6 +142,11 @@ func (app *App) Init() error {
 
 	log.Info("init http server")
 	if err := app.initHTTPServer(); err != nil {
+		return err
+	}
+
+	log.Info("init gRPC service")
+	if err := app.initGRPCService(); err != nil {
 		return err
 	}
 
@@ -132,17 +176,17 @@ func (app *App) Run() error {
 
 		return nil
 	})
-	//// gRPC
-	//eg.Go(func() error {
-	//    if err := app.launchGRPCServer(); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
-	//        log.Errorf("Error starting gRPC server with error [%v]", err)
-	//
-	//        return err
-	//    }
-	//
-	//    return nil
-	//})
-	//
+	// gRPC
+	eg.Go(func() error {
+		if err := app.launchGRPCServer(); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			log.Errorf("Error starting gRPC server with error [%v]", err)
+
+			return err
+		}
+
+		return nil
+	})
+
 	return eg.Wait()
 }
 
@@ -157,6 +201,17 @@ func (app *App) launchHTTPServer() error {
 	log.Info("enable http")
 
 	return app.httpServer.ListenAndServe()
+}
+
+func (app *App) launchGRPCServer() error {
+	log := app.logger.GetLogger("App.launchGRPCServer")
+	ls, err := net.Listen("tcp", app.config.GRPC.Address)
+	if err != nil {
+		return err
+	}
+	log.Info("start gRPC server")
+
+	return app.grpcServer.Serve(ls)
 }
 
 // Stop - метод остановки приложения
@@ -175,20 +230,36 @@ func (app *App) WaitForStop() {
 //
 //		panic(errs.NewAppCommonError("app close failed", err))
 //	}
-func (app *App) Close() error {
-	log := app.logger.GetLogger("bootstrap close")
+func (app *App) Close() {
+	log := app.logger.GetLogger("App.Close")
 
 	log.Info("close test repository")
-	if err := app.testRepo.Close(); err != nil {
-		return err
+	if app.testRepo != nil {
+		if err := app.testRepo.Close(); err != nil {
+			log.Errorf("failed to close repository [%v]", err)
+		}
 	}
 
 	log.Info("close db connection")
-	if err := app.db.Close(); err != nil {
-		return err
+	if app.db != nil {
+		if err := app.db.Close(); err != nil {
+			log.Errorf("failed to close db [%v]", err)
+		}
 	}
 
-	return nil
+	log.Info("close telemetry service")
+	if app.telemetryShutdown != nil {
+		log.Info("shutting down telemetry batcher...")
+		// Используем свежий контекст, так как app.ctx может быть уже отменен
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := app.telemetryShutdown(ctx); err != nil {
+			log.Errorf("telemetry shutdown error: [%v]", err)
+		} else {
+			log.Info("telemetry flushed and closed")
+		}
+	}
 }
 
 // gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c) + остальные сигналы OS на закрытие
@@ -203,22 +274,16 @@ func (app *App) gracefulShutdown() {
 	// awaiting signal
 	select {
 	case <-sig:
-		{
-			app.cancel()
-			break
-		}
+		app.cancel()
 	case <-app.ctx.Done():
-		{
-			signal.Stop(sig)
-			break
-		}
+		signal.Stop(sig)
 	}
 
-	var shutdownWg sync.WaitGroup
+	var srvShutdownWg sync.WaitGroup
 
-	shutdownWg.Add(1)
+	srvShutdownWg.Add(1)
 	go func() { // stop HTTP
-		defer shutdownWg.Done()
+		defer srvShutdownWg.Done()
 
 		ctxTimed, cancelTimed := context.WithTimeout(context.Background(), app.config.HTTP.ShutdownTimeout)
 		defer cancelTimed()
@@ -235,9 +300,9 @@ func (app *App) gracefulShutdown() {
 		log.Info("shutdown http server complete")
 	}()
 
-	shutdownWg.Add(1)
+	srvShutdownWg.Add(1)
 	go func() { // stop gRPC
-		defer shutdownWg.Done()
+		defer srvShutdownWg.Done()
 
 		log.Info("shutdown gRPC server...")
 
@@ -249,12 +314,12 @@ func (app *App) gracefulShutdown() {
 		select {
 		case <-doneChan:
 			log.Info("shutdown gRPC server complete")
-		case <-time.After(app.config.HTTP.ShutdownTimeout):
+		case <-time.After(app.config.GRPC.ShutdownTimeout):
 			log.Error("gRPC graceful shutdown timed out: forcing stop")
 			app.grpcServer.Stop()
 		}
 	}()
 
 	// Ожидаем завершения остановки всех серверов
-	shutdownWg.Wait()
+	srvShutdownWg.Wait()
 }

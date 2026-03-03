@@ -12,7 +12,7 @@ type CommonError struct {
 	line int
 }
 
-var ErrCommon *CommonError
+var _ error = (*CommonError)(nil)
 
 func NewCommonError(msg string, err error) *CommonError {
 	e := &CommonError{

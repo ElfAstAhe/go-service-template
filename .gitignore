@@ -32,3 +32,4 @@ go.work.sum
 .vscode/
 /cmd/server/server
 /token.txt
+/vendor/

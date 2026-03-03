@@ -9,7 +9,7 @@ type UtlCipherError struct {
 	err     error
 }
 
-var ErrUtlCipher *UtlCipherError
+var _ error = (*UtlCipherError)(nil)
 
 func NewUtlCipherError(msg string, err error) *UtlCipherError {
 	return &UtlCipherError{

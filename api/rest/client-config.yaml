@@ -1,0 +1,11 @@
+# api/rest/client-config.yaml
+package: client
+generate:
+  models: true
+  client: true
+  embedded-spec: false # Не вшивать swagger в бинарник клиента
+output: pkg/api/http/example/v1/client.gen.go
+
+# Правим нейминг типов, если oapi-codegen всё еще пытается умничать
+import-mapping:
+# Если нужно переиспользовать внешние типы

@@ -9,7 +9,7 @@ type UtlAuthError struct {
 	err     error
 }
 
-var ErrUtlAuth *UtlAuthError
+var _ error = (*UtlAuthError)(nil)
 
 func NewUtlAuthError(message string, err error) *UtlAuthError {
 	return &UtlAuthError{

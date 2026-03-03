@@ -1,12 +1,14 @@
 package errs
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type NotImplementedError struct {
 	err error
 }
 
-var ErrNotImplemented *NotImplementedError
+var _ error = (*NotImplementedError)(nil)
 
 func NewNotImplementedError(err error) *NotImplementedError {
 	return &NotImplementedError{err: err}

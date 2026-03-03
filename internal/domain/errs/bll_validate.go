@@ -1,6 +1,8 @@
 package errs
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type BllValidateError struct {
 	op  string
@@ -8,7 +10,7 @@ type BllValidateError struct {
 	err error
 }
 
-var ErrBllValidate *BllValidateError
+var _ error = (*BllValidateError)(nil)
 
 func NewBllValidateError(op string, msg string, err error) *BllValidateError {
 	return &BllValidateError{

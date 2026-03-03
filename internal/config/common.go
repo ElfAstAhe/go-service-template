@@ -35,6 +35,7 @@ const (
 // DB config flags
 const (
 	FlagDBDSN             string = "db-dsn"
+	FlagDBDriver          string = "db-driver"
 	FlagDBMaxOpenConns    string = "db-max-open-conns"
 	FlagDBMaxIdleConns    string = "db-max-idle-conns"
 	FlagDBMaxIdleLifetime string = "db-max-idle-lifetime"
@@ -46,6 +47,7 @@ const (
 	FlagGRPCAddress          string = "grpc-address"
 	FlagGRPCMaxConnIdle      string = "grpc-max-conn-idle"
 	FlagGRPCMaxConnAge       string = "grpc-max-conn-age"
+	FlagGRPCMaxConnAgeGrace  string = "grpc-max-conn-age-grace"
 	FlagGRPCTimeout          string = "grpc-timeout"
 	FlagGRPCKeepAliveTime    string = "grpc-keep-alive-time"
 	FlagGRPCKeepAliveTimeout string = "grpc-keep-alive-timeout"
@@ -77,6 +79,15 @@ const (
 	FlagRedisPort     string = "redis-port"
 	FlagRedisPassword string = "redis-password"
 	FlagRedisDB       string = "redis-db"
+)
+
+// telemetry
+const (
+	FlagTelemetryEnabled          string = "telemetry-enabled"
+	FlagTelemetryServiceName      string = "telemetry-service-name"
+	FlagTelemetryExporterEndpoint string = "telemetry-exporter-endpoint"
+	FlagTelemetrySampleRate       string = "telemetry-sample-rate"
+	FlagTelemetryTimeout          string = "telemetry-timeout"
 )
 
 // EnvConfig - файл конфигурации

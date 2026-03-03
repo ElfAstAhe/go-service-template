@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="example-service" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="go-service-template" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="--config-path &quot;./example-service.json&quot; --db-driver &quot;postgres&quot; --db-dsn &quot;postgres://test:password@localhost:5432/test?sslmode=disable&amp;search_path=example_service&quot;" />
+    <kind value="FILE" />
+    <package value="github.com/ElfAstAhe/go-service-template/cmd/example-service" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/example-service/main.go" />
+    <output_directory value="$PROJECT_DIR$/cmd" />
+    <method v="2" />
+  </configuration>
+</component>

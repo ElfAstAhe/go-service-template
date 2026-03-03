@@ -28,7 +28,7 @@ func NewDBConfig(driver, dsn string, maxOpenConns, maxIdleConns int, connMaxIdle
 }
 
 func NewDefaultDBConfig() *DBConfig {
-	return NewDBConfig("", "", DefaultDBMaxOpenConns, DefaultDBMaxIdleConns, DefaultDBConnMaxIdleLifetime, DefaultDBConnTimeout)
+	return NewDBConfig(DefaultDBDriver, DefaultDBDSN, DefaultDBMaxOpenConns, DefaultDBMaxIdleConns, DefaultDBConnMaxIdleLifetime, DefaultDBConnTimeout)
 }
 
 func (dbc *DBConfig) Validate() error {

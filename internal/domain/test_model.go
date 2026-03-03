@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain/errs"
+	"github.com/google/uuid"
 )
 
 type Test struct {
@@ -43,7 +44,15 @@ func (t *Test) IsExists() bool {
 }
 
 func (t *Test) BeforeCreate() error {
-	t.CreatedAt = time.Now()
+	newID, err := uuid.NewRandom()
+	if err != nil {
+		return errs.NewBllError("Test.BeforeCreate", "generate new id", err)
+	}
+
+	t.ID = newID.String()
+	if t.CreatedAt.IsZero() {
+		t.CreatedAt = time.Now()
+	}
 	t.ModifiedAt = time.Now()
 
 	return nil
@@ -57,10 +66,10 @@ func (t *Test) BeforeChange() error {
 
 func (t *Test) ValidateCreate() error {
 	if t.ID != "" {
-		return errs.NewBllValidateError("", "ID should be empty", nil)
+		return errs.NewBllValidateError("Test.ValidateCreate", "ID should be empty", nil)
 	}
 	if t.Code == "" {
-		return errs.NewBllValidateError("", "Code should be set", nil)
+		return errs.NewBllValidateError("Test.ValidateCreate", "Code should be set", nil)
 	}
 
 	return nil
@@ -68,10 +77,10 @@ func (t *Test) ValidateCreate() error {
 
 func (t *Test) ValidateChange() error {
 	if t.ID == "" {
-		return errs.NewBllValidateError("", "ID should be set", nil)
+		return errs.NewBllValidateError("Test.ValidateChange", "ID should be set", nil)
 	}
 	if t.Code == "" {
-		return errs.NewBllValidateError("", "Code should be set", nil)
+		return errs.NewBllValidateError("Test.ValidateChange", "Code should be set", nil)
 	}
 
 	return nil
