@@ -28,42 +28,46 @@ import (
 //goland:noinspection GoUnhandledErrorResult
 func main() {
 	// 1. Загрузка конфигурации
+	log.Println("MAIN: init config")
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		log.Fatalf("MAIN: failed to load config: %v", err)
 	}
 
 	// 2. Инициализация логгера
+	log.Println("MAIN: init logger")
 	zapLogger, err := logger.NewZapLogger(cfg.Log.Level, cfg.Log.FilePath)
 	if err != nil {
-		log.Fatalf("failed to init logger: %v", err)
+		log.Fatalf("MAIN: failed to init logger: %v", err)
 	}
 	defer zapLogger.Close()
 
-	// 3. Создание и инициализация приложения
+	// 3. Создание приложения
+	zapLogger.Info("MAIN: create application")
 	application := app.NewApp(cfg, zapLogger)
 
-	// app initialization
-	zapLogger.Info("app init")
+	// 4. Инициализация приложения
+	zapLogger.Info("MAIN: init application")
 	if err := application.Init(); err != nil {
-		zapLogger.Errorf("app init failed [%v]", err)
+		zapLogger.Errorf("MAIN: failed application initialization [%v]", err)
 		application.Close()
 
-		panic(fmt.Errorf("app initialization failed: %v", err))
+		panic(fmt.Errorf("MAIN: failed application initialization: %v", err))
 	}
 
-	// app run
-	zapLogger.Info("app run")
+	// 5. Запуск приложения
+	zapLogger.Info("MAIN: run application")
 	if err := application.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		application.Stop()
-		zapLogger.Errorf("app run error [%v]", err)
+		zapLogger.Errorf("MAIN: run application error [%v]", err)
 	}
 
+	// 6. Ожидание завершения приложения
 	application.WaitForStop()
 
-	// app close
-	zapLogger.Info("app close")
+	// 7. Освобождение ресурсов
+	zapLogger.Info("MAIN: close application")
 	application.Close()
 
-	zapLogger.Info("app shutdown")
+	zapLogger.Info("MAIN: shutdown application")
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
@@ -23,12 +22,12 @@ type PgDB struct {
 func NewPgDB(conf *config.DBConfig) (*PgDB, error) {
 	pg, err := sql.Open("pgx", conf.DSN)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewDalError("NewPgDB", "failed to open pgx db", err)
 	}
 
 	appDB, err := setupDB(pg, conf)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewDalError("NewPgDB", "failed setup db connection", err)
 	}
 
 	return appDB, nil
@@ -51,12 +50,12 @@ func NewPgDBTracing(conf *config.DBConfig) (*PgDB, error) {
 		}),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open otel sql: %w", err)
+		return nil, errs.NewDalError("NewPgDBTracing", "failed to open otel pgx db", err)
 	}
 
 	appDB, err := setupDB(pg, conf)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewDalError("NewPgDBTracing", "failed setup db connection", err)
 	}
 
 	return appDB, nil
@@ -72,7 +71,7 @@ func setupDB(pg *sql.DB, conf *config.DBConfig) (*PgDB, error) {
 
 	err := pg.PingContext(ctx)
 	if err != nil {
-		return nil, errs.NewDalError("NewPgDB", "ping db connection", err)
+		return nil, errs.NewDalError("setupDB", "ping db connection", err)
 	}
 
 	return &PgDB{

@@ -24,7 +24,7 @@ func (ac *AppConfig) Validate() error {
 		return errs.NewConfigValidateError("app", "env", "must not be empty", nil)
 	}
 
-	if ac.Env.Exists() {
+	if !ac.Env.Exists() {
 		return errs.NewConfigValidateError("app", "env", "env value not match", nil)
 	}
 

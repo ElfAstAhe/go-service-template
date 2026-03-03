@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -58,7 +59,7 @@ func (c *Config) Validate() error {
 	validators := []interface {
 		Validate() error
 	}{
-		c.App, c.Auth, c.HTTP, c.Log, c.DB,
+		c.App, c.Auth, c.HTTP, c.GRPC, c.Log, c.DB, c.Telemetry,
 	}
 
 	for _, validator := range validators {
@@ -80,12 +81,12 @@ func Load() (*Config, error) {
 	// 2. Настройка Флагов (pflag для длинных имен --port)
 	pFlagSet, err := initFLags()
 	if err != nil {
-		return nil, errs.NewConfigError("error init flags", err)
+		return nil, errs.NewConfigError("failed init flags", err)
 	}
 
 	// Привязываем все флаги к Viper
 	if err := v.BindPFlags(pFlagSet); err != nil {
-		return nil, errs.NewConfigError("failed to bind pflags", err)
+		return nil, errs.NewConfigError("failed to bind pFlags", err)
 	}
 
 	// 3. Настройка Переменных окружения (ENV)
@@ -105,7 +106,7 @@ func Load() (*Config, error) {
 
 	if err := v.ReadInConfig(); err != nil {
 		// Если файла нет — это предупреждение, но не фатальная ошибка (могут быть ENV)
-		fmt.Printf("Warning: config file not found: %s\n", cfgFile)
+		log.Printf("WARN: config file not found [%s]\n", cfgFile)
 	}
 
 	// 6. Маппинг в структуру
@@ -160,6 +161,19 @@ func applyDefaults(v *viper.Viper) {
 }
 
 func initFLags() (res *pflag.FlagSet, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			// Проверяем, является ли r ошибкой
+			recoveryErr, ok := r.(error)
+			if !ok {
+				// Если это строка или что-то другое, приводим к виду error вручную
+				recoveryErr = errs.NewConfigError(fmt.Sprintf("panic [%v] recovery", r), nil)
+			}
+			res = nil
+			err = errs.NewConfigError("parse cli flags panic", recoveryErr)
+		}
+	}()
+
 	res = pflag.NewFlagSet("cmd flags", pflag.PanicOnError)
 
 	// Используем константы Flag...
@@ -198,7 +212,7 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	res.Int(FlagDBMaxOpenConns, conf.DefaultDBMaxOpenConns, "db max open connections")
 	res.Int(FlagDBMaxIdleConns, conf.DefaultDBMaxIdleConns, "db max idle connections")
 	res.Duration(FlagDBMaxIdleLifetime, conf.DefaultDBConnMaxIdleLifetime, "db max idle connection lifetime")
-	res.Duration(FlagDBConnTimeout, conf.DefaultDBConnTimeout, "db connection timeout")
+	res.Duration(FlagDBConnTimeout, conf.DefaultDBConnTimeout, "db connection timeout)")
 
 	// Log
 	res.String(FlagLogLevel, conf.DefaultLogLevel, "log level")
@@ -216,18 +230,9 @@ func initFLags() (res *pflag.FlagSet, err error) {
 
 	// Парсинг
 	err = res.Parse(os.Args[1:])
-	defer func() {
-		if r := recover(); r != nil {
-			// Проверяем, является ли r ошибкой
-			recoveryErr, ok := r.(error)
-			if !ok {
-				// Если это строка или что-то другое, приводим к виду error вручную
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-			res = nil
-			err = errs.NewConfigError("parse cli flags panic", recoveryErr)
-		}
-	}()
+	if err != nil {
+		return nil, err
+	}
 
 	return res, err
 }
