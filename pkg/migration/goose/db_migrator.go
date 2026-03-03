@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -36,7 +37,18 @@ func (g *GooseDBMigrator) Initialize() error {
 	return nil
 }
 
-func (g *GooseDBMigrator) Up() error {
+func (g *GooseDBMigrator) Up() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			// Проверяем, является ли r ошибкой
+			recoveryErr, ok := r.(error)
+			if !ok {
+				// Если это строка или что-то другое, приводим к виду error вручную
+				recoveryErr = errs.NewConfigError(fmt.Sprintf("panic [%v] recovery", r), nil)
+			}
+			err = errs.NewDBMigrationError("migrate up panic", recoveryErr)
+		}
+	}()
 	if err := goose.UpContext(g.ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate up", err)
 	}
@@ -44,7 +56,18 @@ func (g *GooseDBMigrator) Up() error {
 	return nil
 }
 
-func (g *GooseDBMigrator) Down() error {
+func (g *GooseDBMigrator) Down() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			// Проверяем, является ли r ошибкой
+			recoveryErr, ok := r.(error)
+			if !ok {
+				// Если это строка или что-то другое, приводим к виду error вручную
+				recoveryErr = errs.NewConfigError(fmt.Sprintf("panic [%v] recovery", r), nil)
+			}
+			err = errs.NewDBMigrationError("migrate up panic", recoveryErr)
+		}
+	}()
 	if err := goose.DownContext(g.ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate down", err)
 	}

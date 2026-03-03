@@ -2,12 +2,12 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/internal/app"
 	"github.com/ElfAstAhe/go-service-template/internal/config"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
@@ -52,7 +52,7 @@ func main() {
 		zapLogger.Errorf("MAIN: failed application initialization [%v]", err)
 		application.Close()
 
-		panic(fmt.Errorf("MAIN: failed application initialization: %v", err))
+		panic(errs.NewCommonError("MAIN: failed application initialization", err))
 	}
 
 	// 5. Запуск приложения
