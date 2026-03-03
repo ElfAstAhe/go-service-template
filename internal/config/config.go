@@ -110,7 +110,7 @@ func Load() (*Config, error) {
 
 	// 4. Настройка Переменных окружения (ENV)
 	// Используем твой механизм AutomaticEnv
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	v.AutomaticEnv()
 
 	// 5. Поддержка ENV для пути к конфигу
