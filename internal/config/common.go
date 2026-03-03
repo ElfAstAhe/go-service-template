@@ -35,6 +35,7 @@ const (
 // DB config flags
 const (
 	FlagDBDSN             string = "db-dsn"
+	FlagDBDriver          string = "db-driver"
 	FlagDBMaxOpenConns    string = "db-max-open-conns"
 	FlagDBMaxIdleConns    string = "db-max-idle-conns"
 	FlagDBMaxIdleLifetime string = "db-max-idle-lifetime"

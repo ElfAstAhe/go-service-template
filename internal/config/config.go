@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -19,7 +20,7 @@ type Config struct {
 	HTTP      *conf.HTTPConfig      `mapstructure:"http"`
 	GRPC      *conf.GRPCConfig      `mapstructure:"grpc"`
 	Log       *conf.LogConfig       `mapstructure:"log"`
-	DB        *conf.DBConfig        `mapstructure:"db"` // <-- Универсальное имя
+	DB        *conf.DBConfig        `mapstructure:"db"`
 	Telemetry *conf.TelemetryConfig `mapstructure:"telemetry"`
 	//    Redis *RedisConfig `mapstructure:"redis"`
 }
@@ -102,23 +103,23 @@ func Load() (*Config, error) {
 		return nil, errs.NewConfigError("failed init flags", err)
 	}
 
-	// Привязываем все флаги к Viper
-	if err := v.BindPFlags(pFlagSet); err != nil {
-		return nil, errs.NewConfigError("failed to bind pFlags", err)
+	// 3. Привязываем все флаги к Viper
+	if err := bindFlags(pFlagSet, v); err != nil {
+		return nil, err
 	}
 
-	// 3. Настройка Переменных окружения (ENV)
+	// 4. Настройка Переменных окружения (ENV)
 	// Используем твой механизм AutomaticEnv
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
-	// 4. Поддержка ENV для пути к конфигу
+	// 5. Поддержка ENV для пути к конфигу
 	err = v.BindEnv(FlagConfig, EnvConfig)
 	if err != nil {
 		return nil, errs.NewConfigError("failed to bind env", err)
 	}
 
-	// 5. Чтение файла конфигурации
+	// 6. Чтение файла конфигурации
 	cfgFile := v.GetString(FlagConfig)
 	v.SetConfigFile(cfgFile)
 
@@ -127,13 +128,13 @@ func Load() (*Config, error) {
 		log.Printf("WARN: config file not found [%s]\n", cfgFile)
 	}
 
-	// 6. Маппинг в структуру
+	// 7. Маппинг в структуру
 	var cfg = NewEmptyConfig()
 	if err := v.Unmarshal(cfg); err != nil {
 		return nil, errs.NewConfigError("failed to unmarshal config struct", err)
 	}
 
-	// 7. Итоговая валидация по всем слоям
+	// 8. Итоговая валидация по всем слоям
 	if err := cfg.Validate(); err != nil {
 		return nil, errs.NewConfigError("config validation failed", err)
 	}
@@ -141,6 +142,7 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+//goland:noinspection DuplicatedCode
 func applyDefaults(v *viper.Viper) {
 	// App
 	v.SetDefault(keyAppEnv, defaultAppEnv)
@@ -165,6 +167,8 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault(conf.KeyGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout)
 
 	// DB
+	v.SetDefault(conf.KeyDBDriver, conf.DefaultDBDriver)
+	v.SetDefault(conf.KeyDBDSN, conf.DefaultDBDSN)
 	v.SetDefault(conf.KeyDBMaxOpenConns, conf.DefaultDBMaxOpenConns)
 	v.SetDefault(conf.KeyDBMaxIdleConns, conf.DefaultDBMaxIdleConns)
 	v.SetDefault(conf.KeyDBConnMaxIdleLifetime, conf.DefaultDBConnMaxIdleLifetime)
@@ -232,7 +236,8 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	res.Duration(FlagGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout, "gRPC shutdown timeout")
 
 	// DB
-	res.String(FlagDBDSN, "", "database dsn")
+	res.String(FlagDBDSN, conf.DefaultDBDSN, "database dsn")
+	res.String(FlagDBDriver, conf.DefaultDBDriver, "database driver name/alias")
 	res.Int(FlagDBMaxOpenConns, conf.DefaultDBMaxOpenConns, "db max open connections")
 	res.Int(FlagDBMaxIdleConns, conf.DefaultDBMaxIdleConns, "db max idle connections")
 	res.Duration(FlagDBMaxIdleLifetime, conf.DefaultDBConnMaxIdleLifetime, "db max idle connection lifetime")
@@ -249,7 +254,7 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	res.Float64(FlagTelemetrySampleRate, conf.DefaultTelemetrySampleRate, "telemetry sample rate")
 	res.Duration(FlagTelemetryTimeout, conf.DefaultTelemetryTimeout, "telemetry timeout")
 
-	// Добавь остальные pflag.String/Int/Duration для GRPC, Redis, etc. ...
+	// Добавь остальные pflag.String/Int/Duration для Redis, etc. ...
 	// ..
 
 	// Парсинг
@@ -259,4 +264,57 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	}
 
 	return res, err
+}
+
+func bindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
+	err := errors.Join(
+		// App
+		v.BindPFlag(keyAppEnv, flags.Lookup(FlagAppEnv)),
+		// Auth
+		v.BindPFlag(conf.KeyAuthJWTSecret, flags.Lookup(FlagAuthJWTSecret)),
+		v.BindPFlag(conf.KeyAuthAccessTokenTTL, flags.Lookup(FlagAuthAccessTokenTTL)),
+		v.BindPFlag(conf.KeyAuthRefreshTokenTTL, flags.Lookup(FlagAuthRefreshTokenTTL)),
+		v.BindPFlag(conf.KeyAuthRSAPrivateKeyPath, flags.Lookup(FlagAuthRSAPrivateKeyPath)),
+		v.BindPFlag(conf.KeyAuthMasterPasswordSalt, flags.Lookup(FlagAuthMasterPasswordSalt)),
+		// HTTP
+		v.BindPFlag(conf.KeyHTTPAddress, flags.Lookup(FlagHTTPAddress)),
+		v.BindPFlag(conf.KeyHTTPReadTimeout, flags.Lookup(FlagHTTPReadTimeout)),
+		v.BindPFlag(conf.KeyHTTPWriteTimeout, flags.Lookup(FlagHTTPWriteTimeout)),
+		v.BindPFlag(conf.KeyHTTPIdleTimeout, flags.Lookup(FlagHTTPIdleTimeout)),
+		v.BindPFlag(conf.KeyHTTPShutdownTimeout, flags.Lookup(FlagHTTPShutdownTimeout)),
+		v.BindPFlag(conf.KeyHTTPPrivateKeyPath, flags.Lookup(FlagHTTPPrivateKeyPath)),
+		v.BindPFlag(conf.KeyHTTPCertificatePath, flags.Lookup(FlagHTTPCertificatePath)),
+		v.BindPFlag(conf.KeyHTTPSecure, flags.Lookup(FlagHTTPSecure)),
+		v.BindPFlag(conf.KeyHTTPMaxRequestBodySize, flags.Lookup(FlagHTTPMaxRequestBodySize)),
+		// gRPC
+		v.BindPFlag(conf.KeyGRPCAddress, flags.Lookup(FlagGRPCAddress)),
+		v.BindPFlag(conf.KeyGRPCMaxConnIdle, flags.Lookup(FlagGRPCMaxConnIdle)),
+		v.BindPFlag(conf.KeyGRPCMaxConnAge, flags.Lookup(FlagGRPCMaxConnAge)),
+		v.BindPFlag(conf.KeyGRPCMaxConnAgeGrace, flags.Lookup(FlagGRPCMaxConnAgeGrace)),
+		v.BindPFlag(conf.KeyGRPCTimeout, flags.Lookup(FlagGRPCTimeout)),
+		v.BindPFlag(conf.KeyGRPCKeepAliveTime, flags.Lookup(FlagGRPCKeepAliveTime)),
+		v.BindPFlag(conf.KeyGRPCKeepAliveTimeout, flags.Lookup(FlagGRPCKeepAliveTimeout)),
+		v.BindPFlag(conf.KeyGRPCShutdownTimeout, flags.Lookup(FlagGRPCShutdownTimeout)),
+		// Log
+		v.BindPFlag(conf.KeyLogLevel, flags.Lookup(FlagLogLevel)),
+		v.BindPFlag(conf.KeyLogFormat, flags.Lookup(FlagLogFormat)),
+		// DB
+		v.BindPFlag(conf.KeyDBDriver, flags.Lookup(FlagDBDriver)),
+		v.BindPFlag(conf.KeyDBDSN, flags.Lookup(FlagDBDSN)),
+		v.BindPFlag(conf.KeyDBMaxOpenConns, flags.Lookup(FlagDBMaxOpenConns)),
+		v.BindPFlag(conf.KeyDBMaxIdleConns, flags.Lookup(FlagDBMaxIdleConns)),
+		v.BindPFlag(conf.KeyDBConnMaxIdleLifetime, flags.Lookup(FlagDBMaxIdleLifetime)),
+		v.BindPFlag(conf.KeyDBConnTimeout, flags.Lookup(FlagDBConnTimeout)),
+		// Telemetry
+		v.BindPFlag(conf.KeyTelemetryEnabled, flags.Lookup(FlagTelemetryEnabled)),
+		v.BindPFlag(conf.KeyTelemetryExporterEndpoint, flags.Lookup(FlagTelemetryExporterEndpoint)),
+		v.BindPFlag(conf.KeyTelemetryServiceName, flags.Lookup(FlagTelemetryServiceName)),
+		v.BindPFlag(conf.KeyTelemetrySampleRate, flags.Lookup(FlagTelemetrySampleRate)),
+		v.BindPFlag(conf.KeyTelemetryTimeout, flags.Lookup(FlagTelemetryTimeout)),
+	)
+	if err != nil {
+		return errs.NewConfigError("bind flags with keys", err)
+	}
+
+	return nil
 }

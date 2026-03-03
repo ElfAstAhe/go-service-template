@@ -17,11 +17,13 @@ const (
 
 const (
 	KeyHTTPAddress            string = "http.address"
-	KeyHTTPSecure             string = "http.secure"
 	KeyHTTPReadTimeout        string = "http.read_timeout"
 	KeyHTTPWriteTimeout       string = "http.write_timeout"
 	KeyHTTPIdleTimeout        string = "http.idle_timeout"
 	KeyHTTPShutdownTimeout    string = "http.shutdown_timeout"
+	KeyHTTPPrivateKeyPath     string = "http.private_key_path"
+	KeyHTTPCertificatePath    string = "http.certificate_path"
+	KeyHTTPSecure             string = "http.secure"
 	KeyHTTPMaxRequestBodySize string = "http.max_request_body_size"
 )
 
@@ -64,6 +66,8 @@ const (
 
 // DB defaults (only pool settings)
 const (
+	DefaultDBDriver              string        = ""
+	DefaultDBDSN                 string        = ""
 	DefaultDBMaxOpenConns        int           = 32
 	DefaultDBMaxIdleConns        int           = 4
 	DefaultDBConnMaxIdleLifetime time.Duration = 60 * time.Second
@@ -71,6 +75,8 @@ const (
 )
 
 const (
+	KeyDBDriver              string = "db.driver"
+	KeyDBDSN                 string = "db.dsn"
 	KeyDBMaxOpenConns        string = "db.max_open_conns"
 	KeyDBMaxIdleConns        string = "db.max_idle_conns"
 	KeyDBConnMaxIdleLifetime string = "db.conn_max_idle_lifetime"
@@ -87,8 +93,17 @@ const (
 
 const (
 	KeyTelemetryEnabled          string = "telemetry.enabled"
-	KeyTelemetryServiceName      string = "telemetry.service.name"
+	KeyTelemetryServiceName      string = "telemetry.service_name"
 	KeyTelemetryExporterEndpoint string = "telemetry.exporter_endpoint"
 	KeyTelemetrySampleRate       string = "telemetry.sample_rate"
 	KeyTelemetryTimeout          string = "telemetry.timeout"
+)
+
+// Auth
+const (
+	KeyAuthJWTSecret          string = "auth.jwt_secret"
+	KeyAuthAccessTokenTTL     string = "auth.access_token_ttl"
+	KeyAuthRefreshTokenTTL    string = "auth.refresh_token_ttl"
+	KeyAuthRSAPrivateKeyPath  string = "auth.rsa_private_key_path"
+	KeyAuthMasterPasswordSalt string = "auth.master_password_salt"
 )
