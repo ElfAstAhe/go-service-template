@@ -73,14 +73,14 @@ func (app *App) initTelemetry() error {
 func (app *App) initMetrics() error {
 	// Регистрация стандартных метрик Go (Memory, Goroutines, GC, Stack)
 	// Они автоматически полетят в prometheus.DefaultRegisterer
-	if err := prometheus.Register(collectors.NewGoCollector()); err != nil {
-		return errs.NewCommonError("failed to register go run-time collector", err)
-	}
+	//if err := prometheus.Register(collectors.NewGoCollector()); err != nil {
+	//    return errs.NewCommonError("failed to register go run-time collector", err)
+	//}
 
 	// Регистрация метрик процесса (CPU, Open FDs, Threads)
-	if err := prometheus.Register(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})); err != nil {
-		return errs.NewCommonError("failed to register process collector", err)
-	}
+	//if err := prometheus.Register(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})); err != nil {
+	//	return errs.NewCommonError("failed to register process collector", err)
+	//}
 
 	if app.db != nil {
 		if err := prometheus.Register(collectors.NewDBStatsCollector(app.db.GetDB(), config.AppName)); err != nil {
