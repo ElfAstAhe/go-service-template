@@ -218,10 +218,11 @@ func (app *App) initGRPCService() error {
 func (app *App) initGRPCServer() error {
 	// Настраиваем KeepAlive на основе твоего GRPCConfig
 	kasp := keepalive.ServerParameters{
-		MaxConnectionIdle: app.config.GRPC.MaxConnIdle,
-		MaxConnectionAge:  app.config.GRPC.MaxConnAge,
-		Time:              app.config.GRPC.KeepAliveTime,
-		Timeout:           app.config.GRPC.KeepAliveTimeout,
+		MaxConnectionIdle:     app.config.GRPC.MaxConnIdle,
+		MaxConnectionAge:      app.config.GRPC.MaxConnAge,
+		MaxConnectionAgeGrace: app.config.GRPC.MaxConnAgeGrace,
+		Time:                  app.config.GRPC.KeepAliveTime,
+		Timeout:               app.config.GRPC.KeepAliveTimeout,
 	}
 	// Метрики
 	srvMetrics := grpcprom.NewServerMetrics(

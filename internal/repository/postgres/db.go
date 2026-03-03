@@ -10,6 +10,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/XSAM/otelsql"
 	"github.com/jackc/pgx/v5/pgconn"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/xo/dburl"
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 )
