@@ -55,11 +55,29 @@ func NewDefaultConfig() *Config {
 	)
 }
 
+func NewEmptyConfig() *Config {
+	return &Config{
+		App:       &AppConfig{},
+		Auth:      &conf.AuthConfig{},
+		HTTP:      &conf.HTTPConfig{},
+		GRPC:      &conf.GRPCConfig{},
+		Log:       &conf.LogConfig{},
+		DB:        &conf.DBConfig{},
+		Telemetry: &conf.TelemetryConfig{},
+	}
+}
+
 func (c *Config) Validate() error {
 	validators := []interface {
 		Validate() error
 	}{
-		c.App, c.Auth, c.HTTP, c.GRPC, c.Log, c.DB, c.Telemetry,
+		c.App,
+		//		c.Auth,
+		c.HTTP,
+		c.GRPC,
+		c.Log,
+		c.DB,
+		c.Telemetry,
 	}
 
 	for _, validator := range validators {
@@ -110,8 +128,8 @@ func Load() (*Config, error) {
 	}
 
 	// 6. Маппинг в структуру
-	var cfg Config
-	if err := v.Unmarshal(&cfg); err != nil {
+	var cfg = NewEmptyConfig()
+	if err := v.Unmarshal(cfg); err != nil {
 		return nil, errs.NewConfigError("failed to unmarshal config struct", err)
 	}
 
@@ -120,7 +138,7 @@ func Load() (*Config, error) {
 		return nil, errs.NewConfigError("config validation failed", err)
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
 
 func applyDefaults(v *viper.Viper) {
@@ -138,7 +156,12 @@ func applyDefaults(v *viper.Viper) {
 
 	// gRPC
 	v.SetDefault(conf.KeyGRPCAddress, conf.DefaultGRPCAddress)
+	v.SetDefault(conf.KeyGRPCMaxConnIdle, conf.DefaultGRPCMaxConnIdle)
+	v.SetDefault(conf.KeyGRPCMaxConnAge, conf.DefaultGRPCMaxConnAge)
+	v.SetDefault(conf.KeyGRPCMaxConnAgeGrace, conf.DefaultGRPCMaxConnAgeGrace)
 	v.SetDefault(conf.KeyGRPCTimeout, conf.DefaultGRPCTimeout)
+	v.SetDefault(conf.KeyGRPCKeepAliveTime, conf.DefaultGRPCKeepAliveTime)
+	v.SetDefault(conf.KeyGRPCKeepAliveTimeout, conf.DefaultGRPCKeepAliveTimeout)
 	v.SetDefault(conf.KeyGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout)
 
 	// DB
@@ -200,11 +223,12 @@ func initFLags() (res *pflag.FlagSet, err error) {
 
 	// gRPC
 	res.String(FlagGRPCAddress, conf.DefaultGRPCAddress, "gRPC address")
-	res.Duration(FlagGRPCMaxConnIdle, 0, "gRPC max connection idle timeout")
-	res.Duration(FlagGRPCMaxConnAge, 0, "gRPC max connection age timeout")
+	res.Duration(FlagGRPCMaxConnIdle, conf.DefaultGRPCMaxConnIdle, "gRPC max connection idle timeout")
+	res.Duration(FlagGRPCMaxConnAge, conf.DefaultGRPCMaxConnAge, "gRPC max connection age timeout")
+	res.Duration(FlagGRPCMaxConnAgeGrace, conf.DefaultGRPCMaxConnAgeGrace, "gRPC max connection age grace timeout")
 	res.Duration(FlagGRPCTimeout, conf.DefaultGRPCTimeout, "gRPC timeout")
-	res.Duration(FlagGRPCKeepAliveTime, 0, "gRPC keep alive timeout")
-	res.Duration(FlagGRPCKeepAliveTimeout, 0, "gRPC keep alive timeout")
+	res.Duration(FlagGRPCKeepAliveTime, conf.DefaultGRPCKeepAliveTime, "gRPC keep alive timeout")
+	res.Duration(FlagGRPCKeepAliveTimeout, conf.DefaultGRPCKeepAliveTimeout, "gRPC keep alive timeout")
 	res.Duration(FlagGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout, "gRPC shutdown timeout")
 
 	// DB

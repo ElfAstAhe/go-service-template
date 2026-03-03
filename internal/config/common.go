@@ -46,6 +46,7 @@ const (
 	FlagGRPCAddress          string = "grpc-address"
 	FlagGRPCMaxConnIdle      string = "grpc-max-conn-idle"
 	FlagGRPCMaxConnAge       string = "grpc-max-conn-age"
+	FlagGRPCMaxConnAgeGrace  string = "grpc-max-conn-age-grace"
 	FlagGRPCTimeout          string = "grpc-timeout"
 	FlagGRPCKeepAliveTime    string = "grpc-keep-alive-time"
 	FlagGRPCKeepAliveTimeout string = "grpc-keep-alive-timeout"

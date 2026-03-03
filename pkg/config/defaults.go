@@ -27,15 +27,28 @@ const (
 
 // gRPC defaults
 const (
-	DefaultGRPCAddress         string        = "localhost:50051"
-	DefaultGRPCTimeout         time.Duration = 5 * time.Second
-	DefaultGRPCShutdownTimeout time.Duration = 15 * time.Second
+	DefaultGRPCAddress string = "localhost:50051"
+	// DefaultGRPCMaxConnIdle - Даем соединениям «отдохнуть», но не убиваем их сразу
+	DefaultGRPCMaxConnIdle time.Duration = 5 * time.Minute
+	// DefaultGRPCMaxConnAge - Ротируем соединения раз в 20 минут для балансировки трафика
+	DefaultGRPCMaxConnAge time.Duration = 20 * time.Minute
+	// DefaultGRPCMaxConnAgeGrace - Grace-период, чтобы старые запросы успели довариться при закрытии коннекта
+	DefaultGRPCMaxConnAgeGrace  time.Duration = 1 * time.Minute
+	DefaultGRPCTimeout          time.Duration = 5 * time.Second
+	DefaultGRPCKeepAliveTime    time.Duration = 2 * time.Minute
+	DefaultGRPCKeepAliveTimeout time.Duration = 20 * time.Second
+	DefaultGRPCShutdownTimeout  time.Duration = 15 * time.Second
 )
 
 const (
-	KeyGRPCAddress         string = "grpc.address"
-	KeyGRPCTimeout         string = "grpc.timeout"
-	KeyGRPCShutdownTimeout string = "grpc.shutdown_timeout"
+	KeyGRPCAddress          string = "grpc.address"
+	KeyGRPCMaxConnIdle      string = "grpc.max-conn-idle"
+	KeyGRPCMaxConnAge       string = "grpc.max-conn-age"
+	KeyGRPCMaxConnAgeGrace  string = "grpc.max-conn-age-grace"
+	KeyGRPCTimeout          string = "grpc.timeout"
+	KeyGRPCKeepAliveTime    string = "grpc.keep-alive-time"
+	KeyGRPCKeepAliveTimeout string = "grpc.keep-alive-timeout"
+	KeyGRPCShutdownTimeout  string = "grpc.shutdown_timeout"
 )
 
 // logger defaults

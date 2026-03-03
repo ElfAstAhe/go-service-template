@@ -274,22 +274,16 @@ func (app *App) gracefulShutdown() {
 	// awaiting signal
 	select {
 	case <-sig:
-		{
-			app.cancel()
-			break
-		}
+		app.cancel()
 	case <-app.ctx.Done():
-		{
-			signal.Stop(sig)
-			break
-		}
+		signal.Stop(sig)
 	}
 
-	var shutdownWg sync.WaitGroup
+	var srvShutdownWg sync.WaitGroup
 
-	shutdownWg.Add(1)
+	srvShutdownWg.Add(1)
 	go func() { // stop HTTP
-		defer shutdownWg.Done()
+		defer srvShutdownWg.Done()
 
 		ctxTimed, cancelTimed := context.WithTimeout(context.Background(), app.config.HTTP.ShutdownTimeout)
 		defer cancelTimed()
@@ -306,9 +300,9 @@ func (app *App) gracefulShutdown() {
 		log.Info("shutdown http server complete")
 	}()
 
-	shutdownWg.Add(1)
+	srvShutdownWg.Add(1)
 	go func() { // stop gRPC
-		defer shutdownWg.Done()
+		defer srvShutdownWg.Done()
 
 		log.Info("shutdown gRPC server...")
 
@@ -320,12 +314,12 @@ func (app *App) gracefulShutdown() {
 		select {
 		case <-doneChan:
 			log.Info("shutdown gRPC server complete")
-		case <-time.After(app.config.HTTP.ShutdownTimeout):
+		case <-time.After(app.config.GRPC.ShutdownTimeout):
 			log.Error("gRPC graceful shutdown timed out: forcing stop")
 			app.grpcServer.Stop()
 		}
 	}()
 
 	// Ожидаем завершения остановки всех серверов
-	shutdownWg.Wait()
+	srvShutdownWg.Wait()
 }
