@@ -1,0 +1,81 @@
+### POST create test model
+POST http://localhost:8080/api/test
+Content-Type: application/json
+
+{
+  "code": "test002",
+  "name": "test name 002",
+  "description": "test description 002"
+}
+###
+#{
+#  "id": "439afa42-4a60-47a2-a7c9-3ead6958da9e",
+#  "code": "test001",
+#  "name": "test name 001",
+#  "description": "test description 001",
+#  "registered_at": "2026-03-04T10:06:07.826921+03:00",
+#  "updated_at": "2026-03-04T10:06:07.826921+03:00"
+#}
+
+#{
+#  "id": "3b1c5c7f-9f6b-4595-9493-feb5e82bf3fe",
+#  "code": "test001",
+#  "name": "test name 001",
+#  "description": "test description 001",
+#  "registered_at": "2026-03-04T10:13:36.29803+03:00",
+#  "updated_at": "2026-03-04T10:13:36.29803+03:00"
+#}
+
+### GET get test model
+#GET http://localhost:8080/api/test/439afa42-4a60-47a2-a7c9-3ead6958da9e
+GET http://localhost:8080/api/test/3b1c5c7f-9f6b-4595-9493-feb5e82bf3fe
+###
+#{
+#  "id": "3b1c5c7f-9f6b-4595-9493-feb5e82bf3fe",
+#  "code": "test001",
+#  "name": "test name 001",
+#  "description": "test description 001",
+#  "registered_at": "2026-03-04T10:13:36.29803+03:00",
+#  "updated_at": "2026-03-04T10:13:36.29803+03:00"
+#}
+
+# GET list test models
+GET http://localhost:8080/api/test?limit=100&offset=0
+###
+#[
+#{
+#    "id": "3b1c5c7f-9f6b-4595-9493-feb5e82bf3fe",
+#    "code": "test001",
+#    "name": "test name 001",
+#    "description": "test description 001",
+#"registered_at": "2026-03-04T10:13:36.29803+03:00",
+#"updated_at": "2026-03-04T10:13:36.29803+03:00"
+#}
+#]
+
+### PUT change test model
+#PUT http://localhost:8080/api/test/439afa42-4a60-47a2-a7c9-3ead6958da9e
+PUT http://localhost:8080/api/test/3b1c5c7f-9f6b-4595-9493-feb5e82bf3fe
+Content-Type: application/json
+
+{
+  "id": "3b1c5c7f-9f6b-4595-9493-feb5e82bf3fe",
+  "code": "test001",
+  "name": "test name 001 change",
+  "description": "test description 001 changed",
+  "registered_at": "2026-03-04T10:06:07.826921+03:00"
+}
+###
+#{
+#  "id": "439afa42-4a60-47a2-a7c9-3ead6958da9e",
+#  "code": "test001",
+#  "name": "test name 001 change",
+#  "description": "test description 001 changed",
+#  "registered_at": "2026-03-04T10:06:07.826921+03:00",
+#  "updated_at": "2026-03-04T10:08:58.735822+03:00"
+#}
+
+### DELETE remove test model
+#DELETE http://localhost:8080/api/test/439afa42-4a60-47a2-a7c9-3ead6958da9e
+DELETE http://localhost:8080/api/test/73397c8b-7f7b-4a0d-9bbc-8808157a6156
+###
