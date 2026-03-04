@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/internal/app"
@@ -27,47 +26,61 @@ import (
 //
 //goland:noinspection GoUnhandledErrorResult
 func main() {
+	var err error
+	// 0. startup logger
+	var startupLogger logger.Logger
+	startupLogger, err = logger.NewZapLogger("info", "")
+	if err != nil {
+		panic(err)
+	}
+	defer startupLogger.Close()
+	startupLogger = startupLogger.GetLogger("main")
+
 	// 1. Загрузка конфигурации
-	log.Println("MAIN: init config")
+	startupLogger.Info("init config")
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("MAIN: failed to load config: %v", err)
+		startupLogger.Errorf("failed to load config: %v", err)
+
+		panic(err)
 	}
 
 	// 2. Инициализация логгера
-	log.Println("MAIN: init logger")
+	startupLogger.Info("init logger")
 	zapLogger, err := logger.NewZapLogger(cfg.Log.Level, cfg.Log.FilePath)
 	if err != nil {
-		log.Fatalf("MAIN: failed to init logger: %v", err)
+		startupLogger.Errorf("failed to init logger: %v", err)
+
+		panic(err)
 	}
 	defer zapLogger.Close()
 
 	// 3. Создание приложения
-	zapLogger.Info("MAIN: create application")
+	startupLogger.Info("create application")
 	application := app.NewApp(cfg, zapLogger)
 
 	// 4. Инициализация приложения
-	zapLogger.Info("MAIN: init application")
+	startupLogger.Info("init application")
 	if err := application.Init(); err != nil {
-		zapLogger.Errorf("MAIN: failed application initialization [%v]", err)
+		startupLogger.Errorf("failed application initialization [%v]", err)
 		application.Close()
 
-		panic(errs.NewCommonError("MAIN: failed application initialization", err))
+		panic(errs.NewCommonError("failed application initialization", err))
 	}
 
 	// 5. Запуск приложения
-	zapLogger.Info("MAIN: run application")
+	startupLogger.Info("run application")
 	if err := application.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		application.Stop()
-		zapLogger.Errorf("MAIN: run application error [%v]", err)
+		startupLogger.Errorf("run application error [%v]", err)
 	}
 
 	// 6. Ожидание завершения приложения
 	application.WaitForStop()
 
 	// 7. Освобождение ресурсов
-	zapLogger.Info("MAIN: close application")
+	startupLogger.Info("close application")
 	application.Close()
 
-	zapLogger.Info("MAIN: shutdown application")
+	startupLogger.Info("shutdown application")
 }
