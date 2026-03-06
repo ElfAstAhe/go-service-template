@@ -15,7 +15,6 @@ import (
 type BaseRepository[T domain.Entity[ID], ID any] struct {
 	exec        db.Executor
 	errDecipher db.ErrorDecipher
-	tm          db.TransactionManager
 	info        *EntityInfo
 
 	nilInstance T
