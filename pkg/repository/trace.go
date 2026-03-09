@@ -11,22 +11,22 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type BaseTraceRepository[T domain.Entity[ID], ID any] struct {
-	repository domain.Repository[T, ID]
+type BaseCRUDTraceRepository[T domain.Entity[ID], ID any] struct {
+	repository domain.CrudRepository[T, ID]
 	repoName   string
 	tracer     trace.Tracer
 	nilEntity  T
 }
 
-func NewBaseTraceRepository[T domain.Entity[ID], ID any](repositoryName string, repository domain.Repository[T, ID]) *BaseTraceRepository[T, ID] {
-	return &BaseTraceRepository[T, ID]{
+func NewBaseCRUDTraceRepository[T domain.Entity[ID], ID any](repositoryName string, repository domain.CrudRepository[T, ID]) *BaseCRUDTraceRepository[T, ID] {
+	return &BaseCRUDTraceRepository[T, ID]{
 		repository: repository,
 		repoName:   repositoryName,
 		tracer:     otel.GetTracerProvider().Tracer(repositoryName),
 	}
 }
 
-func (btr *BaseTraceRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
+func (btr *BaseCRUDTraceRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
 	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Find", btr.repoName))
 	span.SetAttributes(attribute.String("param.id", fmt.Sprintf("%v", id)))
 	defer span.End()
@@ -43,7 +43,7 @@ func (btr *BaseTraceRepository[T, ID]) Find(ctx context.Context, id ID) (T, erro
 	return res, nil
 }
 
-func (btr *BaseTraceRepository[T, ID]) List(ctx context.Context, limit, offset int) ([]T, error) {
+func (btr *BaseCRUDTraceRepository[T, ID]) List(ctx context.Context, limit, offset int) ([]T, error) {
 	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.List", btr.repoName))
 	span.SetAttributes(attribute.Int("param.limit", limit))
 	span.SetAttributes(attribute.Int("param.offset", offset))
@@ -61,7 +61,7 @@ func (btr *BaseTraceRepository[T, ID]) List(ctx context.Context, limit, offset i
 	return res, nil
 }
 
-func (btr *BaseTraceRepository[T, ID]) Create(ctx context.Context, entity T) (T, error) {
+func (btr *BaseCRUDTraceRepository[T, ID]) Create(ctx context.Context, entity T) (T, error) {
 	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Create", btr.repoName))
 	span.SetAttributes(attribute.String("param.entity_id", fmt.Sprintf("%v", entity.GetID())))
 	defer span.End()
@@ -78,7 +78,7 @@ func (btr *BaseTraceRepository[T, ID]) Create(ctx context.Context, entity T) (T,
 	return res, nil
 }
 
-func (btr *BaseTraceRepository[T, ID]) Change(ctx context.Context, entity T) (T, error) {
+func (btr *BaseCRUDTraceRepository[T, ID]) Change(ctx context.Context, entity T) (T, error) {
 	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Change", btr.repoName))
 	span.SetAttributes(attribute.String("param.entity_id", fmt.Sprintf("%v", entity.GetID())))
 	defer span.End()
@@ -95,7 +95,7 @@ func (btr *BaseTraceRepository[T, ID]) Change(ctx context.Context, entity T) (T,
 	return res, nil
 }
 
-func (btr *BaseTraceRepository[T, ID]) Delete(ctx context.Context, id ID) error {
+func (btr *BaseCRUDTraceRepository[T, ID]) Delete(ctx context.Context, id ID) error {
 	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Delete", btr.repoName))
 	span.SetAttributes(attribute.String("param.id", fmt.Sprintf("%v", id)))
 	defer span.End()
@@ -112,14 +112,10 @@ func (btr *BaseTraceRepository[T, ID]) Delete(ctx context.Context, id ID) error 
 	return nil
 }
 
-func (btr *BaseTraceRepository[T, ID]) Close() error {
-	return btr.repository.Close()
-}
-
-func (btr *BaseTraceRepository[T, ID]) GetRepositoryName() string {
+func (btr *BaseCRUDTraceRepository[T, ID]) GetRepositoryName() string {
 	return btr.repoName
 }
 
-func (btr *BaseTraceRepository[T, ID]) GetTracer() trace.Tracer {
+func (btr *BaseCRUDTraceRepository[T, ID]) GetTracer() trace.Tracer {
 	return btr.tracer
 }

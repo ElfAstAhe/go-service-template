@@ -11,19 +11,19 @@ import (
 )
 
 type TestTraceRepository struct {
-	*repository.BaseTraceRepository[*domain.Test, string]
+	*repository.BaseCRUDTraceRepository[*domain.Test, string]
 	repo domain.TestRepository
 }
 
 func NewTestTraceRepository(repo domain.TestRepository) *TestTraceRepository {
 	return &TestTraceRepository{
-		BaseTraceRepository: repository.NewBaseTraceRepository("TestRepository", repo),
-		repo:                repo,
+		BaseCRUDTraceRepository: repository.NewBaseCRUDTraceRepository("TestRepository", repo),
+		repo:                    repo,
 	}
 }
 
 func (ttr *TestTraceRepository) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
-	ctx, span := ttr.GetTracer().Start(ctx, fmt.Sprintf("%s.FindByCode", ttr.BaseTraceRepository.GetRepositoryName()))
+	ctx, span := ttr.GetTracer().Start(ctx, fmt.Sprintf("%s.FindByCode", ttr.BaseCRUDTraceRepository.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.code", code))
 	defer span.End()
 

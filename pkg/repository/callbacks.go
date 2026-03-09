@@ -6,7 +6,7 @@ import (
 
 // BaseRepositoryCallbacks набор методов обратного вызова пост/пред обработки, валидаторов и мэперов
 type BaseRepositoryCallbacks[T domain.Entity[ID], ID any] struct {
-	EntityScanner func(scanner Scannable, entity T) error
+	EntityScanner EntityScannerFunc[T, ID]
 
 	NewEntityFactory NewEntityFactory[T, ID]
 	AfterFind        AfterFindFunc[T, ID]

@@ -233,13 +233,6 @@ func (app *App) WaitForStop() {
 func (app *App) Close() {
 	log := app.logger.GetLogger("App.Close")
 
-	log.Info("close test repository")
-	if app.testRepo != nil {
-		if err := app.testRepo.Close(); err != nil {
-			log.Errorf("failed to close repository [%v]", err)
-		}
-	}
-
 	log.Info("close db connection")
 	if app.db != nil {
 		if err := app.db.Close(); err != nil {

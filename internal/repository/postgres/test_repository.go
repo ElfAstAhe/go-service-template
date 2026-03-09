@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
@@ -106,14 +105,14 @@ where
 )
 
 type TestRepositoryImpl struct {
-	*repository.BaseRepository[*domain.Test, string]
+	*repository.BaseCRUDRepository[*domain.Test, string]
 }
 
 func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRepositoryImpl, error) {
 	// new instance
 	res := &TestRepositoryImpl{}
 	// sql builders
-	queryBuilders := repository.NewBaseQueryBuildersBuilder().NewInstance().
+	queryBuilders := repository.NewBaseCRUDQueryBuildersBuilder().NewInstance().
 		WithFind(func() string {
 			return sqlTestFind
 		}).
@@ -145,7 +144,7 @@ func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRe
 		return nil, errs.NewCommonError("error create test repo callbacks", err)
 	}
 	// base crud
-	base, err := repository.NewBaseRepository[*domain.Test, string](
+	base, err := repository.NewBaseCRUDRepository[*domain.Test, string](
 		executor,
 		decipher,
 		repository.NewEntityInfo("test", "Test"),
@@ -156,39 +155,20 @@ func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRe
 		return nil, errs.NewCommonError("error create TestRepository", err)
 	}
 
-	res.BaseRepository = base
+	res.BaseCRUDRepository = base
 
 	return res, nil
 }
 
 func (tr *TestRepositoryImpl) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
-	querier := tr.GetExecutor().GetQuerier(ctx)
-
-	row := querier.QueryRowContext(ctx, sqlTestFindByCode, code)
-
-	res := tr.GetCallbacks().NewEntityFactory()
-
-	err := tr.GetCallbacks().EntityScanner(row, res)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errs.NewDalNotFoundError(tr.GetInfo().Entity, code, err)
-		}
-
-		return nil, errs.NewDalError("TestRepositoryImpl.FindByCode", "get row", err)
-	}
-
-	if tr.GetCallbacks().AfterFind != nil {
-		return tr.GetCallbacks().AfterFind(res)
-	}
-
-	return res, nil
+	return tr.GetHelper().Get(ctx, sqlTestFindByCode, code)
 }
 
-func (tr *TestRepositoryImpl) entityScanner(scanner repository.Scannable, dest *domain.Test) error {
+func (tr *TestRepositoryImpl) entityScanner(scanner repository.Scannable, dest *domain.Test, params ...any) error {
 	return scanner.Scan(&dest.ID, &dest.Code, &dest.Name, &dest.Description, &dest.CreatedAt, &dest.ModifiedAt)
 }
 
-func (tr *TestRepositoryImpl) validateCreate(entity *domain.Test) error {
+func (tr *TestRepositoryImpl) validateCreate(entity *domain.Test, params ...any) error {
 	if entity == nil {
 		return errs.NewInvalidArgumentError("entity", "test entity is nil")
 	}
@@ -196,7 +176,7 @@ func (tr *TestRepositoryImpl) validateCreate(entity *domain.Test) error {
 	return entity.ValidateCreate()
 }
 
-func (tr *TestRepositoryImpl) beforeCreate(entity *domain.Test) error {
+func (tr *TestRepositoryImpl) beforeCreate(entity *domain.Test, params ...any) error {
 	if err := entity.BeforeCreate(); err != nil {
 		return errs.NewDalError("TestRepository.beforeCreate", "before create entity", err)
 	}
@@ -204,11 +184,11 @@ func (tr *TestRepositoryImpl) beforeCreate(entity *domain.Test) error {
 	return nil
 }
 
-func (tr *TestRepositoryImpl) creator(ctx context.Context, querier db.Querier, entity *domain.Test) (*sql.Row, error) {
+func (tr *TestRepositoryImpl) creator(ctx context.Context, querier db.Querier, entity *domain.Test, params ...any) (*sql.Row, error) {
 	return querier.QueryRowContext(ctx, tr.GetQueryBuilders().GetCreate()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.CreatedAt, entity.ModifiedAt), nil
 }
 
-func (tr *TestRepositoryImpl) validateChange(entity *domain.Test) error {
+func (tr *TestRepositoryImpl) validateChange(entity *domain.Test, params ...any) error {
 	if entity == nil {
 		return errs.NewInvalidArgumentError("entity", "test entity is nil")
 	}
@@ -216,18 +196,14 @@ func (tr *TestRepositoryImpl) validateChange(entity *domain.Test) error {
 	return entity.ValidateChange()
 }
 
-func (tr *TestRepositoryImpl) changer(ctx context.Context, querier db.Querier, entity *domain.Test) (*sql.Row, error) {
+func (tr *TestRepositoryImpl) changer(ctx context.Context, querier db.Querier, entity *domain.Test, params ...any) (*sql.Row, error) {
 	return querier.QueryRowContext(ctx, tr.GetQueryBuilders().GetChange()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.ModifiedAt), nil
 }
 
-func (tr *TestRepositoryImpl) beforeChange(entity *domain.Test) error {
+func (tr *TestRepositoryImpl) beforeChange(entity *domain.Test, params ...any) error {
 	if err := entity.BeforeChange(); err != nil {
 		return errs.NewDalError("TestRepository.beforeChange", "before change entity", err)
 	}
 
-	return nil
-}
-
-func (tr *TestRepositoryImpl) Close() error {
 	return nil
 }
