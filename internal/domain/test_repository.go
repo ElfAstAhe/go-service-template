@@ -7,7 +7,7 @@ import (
 )
 
 type TestRepository interface {
-	domain.Repository[*Test, string]
+	domain.CrudRepository[*Test, string]
 
 	FindByCode(ctx context.Context, code string) (*Test, error)
 }
