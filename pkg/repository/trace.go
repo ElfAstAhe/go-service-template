@@ -112,10 +112,6 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Delete(ctx context.Context, id ID) er
 	return nil
 }
 
-func (btr *BaseCRUDTraceRepository[T, ID]) Close() error {
-	return btr.repository.Close()
-}
-
 func (btr *BaseCRUDTraceRepository[T, ID]) GetRepositoryName() string {
 	return btr.repoName
 }

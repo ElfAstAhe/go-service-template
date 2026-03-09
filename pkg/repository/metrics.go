@@ -61,14 +61,6 @@ func (bmr *BaseCRUDMetricsRepository[T, ID]) Delete(ctx context.Context, id ID) 
 	return bmr.repository.Delete(ctx, id)
 }
 
-func (bmr *BaseCRUDMetricsRepository[T, ID]) Close() (err error) {
-	defer func(start time.Time) {
-		metrics.ObserveRepositoryOp(bmr.repoName, "Close", err, start)
-	}(time.Now())
-
-	return bmr.repository.Close()
-}
-
 func (bmr *BaseCRUDMetricsRepository[T, ID]) GetRepositoryName() string {
 	return bmr.repoName
 }

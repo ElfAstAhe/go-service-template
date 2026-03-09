@@ -102,7 +102,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAll(ctx context.Context, own
 	return bor.GetHelper().List(ctx, sqlList, ownerID)
 }
 
-func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAll(OwnerID OwnerID) error {
+func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAll(ownerID OwnerID) error {
 	return nil
 }
 
