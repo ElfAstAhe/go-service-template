@@ -1,6 +1,6 @@
 package domain
 
-type Entity[ID any] interface {
+type Entity[ID comparable] interface {
 	GetID() ID
 	SetID(id ID)
 

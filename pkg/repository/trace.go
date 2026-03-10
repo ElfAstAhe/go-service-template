@@ -11,14 +11,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type BaseCRUDTraceRepository[T domain.Entity[ID], ID any] struct {
+type BaseCRUDTraceRepository[T domain.Entity[ID], ID comparable] struct {
 	repository domain.CrudRepository[T, ID]
 	repoName   string
 	tracer     trace.Tracer
 	nilEntity  T
 }
 
-func NewBaseCRUDTraceRepository[T domain.Entity[ID], ID any](repositoryName string, repository domain.CrudRepository[T, ID]) *BaseCRUDTraceRepository[T, ID] {
+func NewBaseCRUDTraceRepository[T domain.Entity[ID], ID comparable](repositoryName string, repository domain.CrudRepository[T, ID]) *BaseCRUDTraceRepository[T, ID] {
 	return &BaseCRUDTraceRepository[T, ID]{
 		repository: repository,
 		repoName:   repositoryName,

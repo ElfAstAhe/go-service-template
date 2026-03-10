@@ -8,11 +8,11 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
-type OwnedHelper[T domain.Entity[ID], ID any, OwnerID comparable] struct {
+type OwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
 	*Helper[T, ID]
 }
 
-func newOwnedHelper[T domain.Entity[ID], ID any, OwnerID comparable](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *BaseRepositoryCallbacks[T, ID], info *EntityInfo) *OwnedHelper[T, ID, OwnerID] {
+func newOwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *BaseRepositoryCallbacks[T, ID], info *EntityInfo) *OwnedHelper[T, ID, OwnerID] {
 	return &OwnedHelper[T, ID, OwnerID]{
 		Helper: newHelper[T, ID](exec, errDecipher, callbacks, info),
 	}
