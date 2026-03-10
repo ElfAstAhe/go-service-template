@@ -10,15 +10,20 @@ import (
 )
 
 type BaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable] struct {
-	repository domain.CrudRepository[T, ID]
+	repository domain.CRUDRepository[T, ID]
 	repoName   string
 }
 
-func NewBaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable](repository domain.CrudRepository[T, ID]) *BaseCRUDMetricsRepository[T, ID] {
-	return &BaseCRUDMetricsRepository[T, ID]{
+func NewBaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable](repoName string, repository domain.CRUDRepository[T, ID]) *BaseCRUDMetricsRepository[T, ID] {
+	res := &BaseCRUDMetricsRepository[T, ID]{
 		repository: repository,
-		repoName:   utils.GetTypeName(repository),
+		repoName:   repoName,
 	}
+	if repoName == "" {
+		res.repoName = utils.GetTypeName(repository)
+	}
+
+	return res
 }
 
 func (bmr *BaseCRUDMetricsRepository[T, ID]) Find(ctx context.Context, id ID) (res T, err error) {
