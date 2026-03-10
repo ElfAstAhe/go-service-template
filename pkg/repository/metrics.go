@@ -9,12 +9,12 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-type BaseCRUDMetricsRepository[T domain.Entity[ID], ID any] struct {
+type BaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable] struct {
 	repository domain.CrudRepository[T, ID]
 	repoName   string
 }
 
-func NewBaseCRUDMetricsRepository[T domain.Entity[ID], ID any](repository domain.CrudRepository[T, ID]) *BaseCRUDMetricsRepository[T, ID] {
+func NewBaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable](repository domain.CrudRepository[T, ID]) *BaseCRUDMetricsRepository[T, ID] {
 	return &BaseCRUDMetricsRepository[T, ID]{
 		repository: repository,
 		repoName:   utils.GetTypeName(repository),

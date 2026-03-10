@@ -10,7 +10,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
-type Helper[T domain.Entity[ID], ID any] struct {
+type Helper[T domain.Entity[ID], ID comparable] struct {
 	exec        db.Executor
 	errDecipher db.ErrorDecipher
 	info        *EntityInfo
@@ -18,7 +18,7 @@ type Helper[T domain.Entity[ID], ID any] struct {
 	callbacks   *BaseRepositoryCallbacks[T, ID]
 }
 
-func newHelper[T domain.Entity[ID], ID any](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *BaseRepositoryCallbacks[T, ID], info *EntityInfo) *Helper[T, ID] {
+func newHelper[T domain.Entity[ID], ID comparable](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *BaseRepositoryCallbacks[T, ID], info *EntityInfo) *Helper[T, ID] {
 	return &Helper[T, ID]{
 		exec:        exec,
 		errDecipher: errDecipher,

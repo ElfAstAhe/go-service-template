@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
@@ -9,23 +10,55 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
-// BaseOwnedRepository one to many or many to many (logic one to many) base implementation repository
-type BaseOwnedRepository[T domain.Entity[ID], ID any, OwnerID comparable] struct {
-	queryBuilders *BaseOwnedQueryBuilders
-	helper        *OwnedHelper[T, ID, OwnerID]
+type OwnedSaveStrategyManager[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
+	strategies map[LinkStrategy]OwnedSaveFunc[T, ID, OwnerID]
 }
 
-func NewBaseOwnedRepository[T domain.Entity[ID], ID any, OwnerID comparable](
+func (ossm *OwnedSaveStrategyManager[T, ID, OwnerID]) Execute(ctx context.Context, strategy LinkStrategy, ownerID OwnerID, owned []T) ([]T, error) {
+	if method, ok := ossm.strategies[strategy]; ok {
+		return method(ctx, ownerID, owned)
+	}
+
+	return nil, errs.NewDalError("OwnedSaveStrategyManager.Execute", fmt.Sprintf("unknown link strategy [%v]", strategy), nil)
+}
+
+// BaseOwnedRepository one to many or many to many (logic one to many) base implementation repository
+type BaseOwnedRepository[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
+	queryBuilders *BaseOwnedQueryBuilders
+	helper        *OwnedHelper[T, ID, OwnerID]
+	linkStrategy  LinkStrategy
+	ownedSaveSM   *OwnedSaveStrategyManager[T, ID, OwnerID]
+}
+
+func NewBaseOwnedRepository[T domain.Entity[ID], ID comparable, OwnerID comparable](
 	exec db.Executor,
 	errDecipher db.ErrorDecipher,
 	info *EntityInfo,
 	queryBuilders *BaseOwnedQueryBuilders,
 	callbacks *BaseRepositoryCallbacks[T, ID],
+	linkStrategy LinkStrategy,
+	ownedSaveSM *OwnedSaveStrategyManager[T, ID, OwnerID],
 ) (*BaseOwnedRepository[T, ID, OwnerID], error) {
-	return &BaseOwnedRepository[T, ID, OwnerID]{
+	res := &BaseOwnedRepository[T, ID, OwnerID]{
 		queryBuilders: queryBuilders,
 		helper:        newOwnedHelper[T, ID, OwnerID](exec, errDecipher, callbacks, info),
-	}, nil
+		linkStrategy:  linkStrategy,
+		ownedSaveSM:   ownedSaveSM,
+	}
+	if ownedSaveSM == nil {
+		res.ownedSaveSM = res.buildDefaultSaveStrategies()
+	}
+
+	return res, nil
+}
+
+func (bor *BaseOwnedRepository[T, ID, OwnerID]) buildDefaultSaveStrategies() *OwnedSaveStrategyManager[T, ID, OwnerID] {
+	return &OwnedSaveStrategyManager[T, ID, OwnerID]{
+		strategies: map[LinkStrategy]OwnedSaveFunc[T, ID, OwnerID]{
+			LinkStrategyOneToMany:  bor.saveOneToMany,
+			LinkStrategyManyToMany: bor.saveManyToMany,
+		},
+	}
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) Find(ctx context.Context, ownerID OwnerID, id ID) (T, error) {
@@ -158,6 +191,41 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareListAllByOwners() (string
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) Save(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
+	return bor.ownedSaveSM.Execute(ctx, bor.linkStrategy, ownerID, owned)
+}
+
+func (bor *BaseOwnedRepository[T, ID, OwnerID]) saveManyToMany(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
+	res := make([]T, 0, len(owned))
+
+	// удаляем
+	if err := bor.DeleteAll(ctx, ownerID); err != nil {
+		return nil, err
+	}
+	// создаём
+	for _, ownedItem := range owned {
+		item, err := bor.Create(ctx, ownerID, ownedItem)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, item)
+	}
+
+	return res, nil
+}
+
+func (bor *BaseOwnedRepository[T, ID, OwnerID]) saveOneToMany(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
+	// подготавливаем список к удалению
+	deleteIDs, err := bor.prepareDeleteList(ctx, ownerID, owned)
+	if err != nil {
+		return nil, err
+	}
+	// удаляем
+	for _, deleteID := range deleteIDs {
+		if err := bor.Delete(ctx, ownerID, deleteID); err != nil {
+			return nil, err
+		}
+	}
+	// сохраняем новые и существующие
 	res := make([]T, 0, len(owned))
 	for _, ownedItem := range owned {
 		var saved T
@@ -174,6 +242,28 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Save(ctx context.Context, ownerI
 			}
 		}
 		res = append(res, saved)
+	}
+
+	return res, nil
+}
+
+func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDeleteList(ctx context.Context, ownerID OwnerID, newItems []T) ([]ID, error) {
+	// подготавливаем map
+	newMap := make(map[ID]struct{}, len(newItems))
+	for _, item := range newItems {
+		if item.IsExists() {
+			newMap[item.GetID()] = struct{}{}
+		}
+	}
+	existItems, err := bor.ListAll(ctx, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]ID, 0, len(existItems))
+	for _, item := range existItems {
+		if _, ok := newMap[item.GetID()]; !ok {
+			res = append(res, item.GetID())
+		}
 	}
 
 	return res, nil

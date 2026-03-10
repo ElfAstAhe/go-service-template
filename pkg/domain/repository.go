@@ -5,7 +5,7 @@ import (
 )
 
 // CrudRepository repository with simple crud methods for nonowned instances
-type CrudRepository[T Entity[ID], ID any] interface {
+type CrudRepository[T Entity[ID], ID comparable] interface {
 	Find(ctx context.Context, id ID) (T, error)
 
 	List(ctx context.Context, limit, offset int) ([]T, error)
@@ -17,7 +17,7 @@ type CrudRepository[T Entity[ID], ID any] interface {
 }
 
 // OwnedRepository repository with simple crud methods for owned instances
-type OwnedRepository[T Entity[ID], ID any, OwnerID comparable] interface {
+type OwnedRepository[T Entity[ID], ID comparable, OwnerID comparable] interface {
 	Find(ctx context.Context, ownerID OwnerID, id ID) (T, error)
 
 	List(ctx context.Context, ownerID OwnerID, limit, offset int) ([]T, error)

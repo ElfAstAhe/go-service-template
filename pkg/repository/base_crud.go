@@ -10,12 +10,12 @@ import (
 )
 
 // BaseCRUDRepository базовая реализация CRUD репозитория
-type BaseCRUDRepository[T domain.Entity[ID], ID any] struct {
+type BaseCRUDRepository[T domain.Entity[ID], ID comparable] struct {
 	queryBuilders *BaseCRUDQueryBuilders
 	helper        *Helper[T, ID]
 }
 
-func NewBaseCRUDRepository[T domain.Entity[ID], ID any](
+func NewBaseCRUDRepository[T domain.Entity[ID], ID comparable](
 	exec db.Executor,
 	errDecipher db.ErrorDecipher,
 	info *EntityInfo,

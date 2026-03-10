@@ -1,6 +1,6 @@
 package domain
 
-func EntitiesToIDList[T Entity[ID], ID any](src []T) []ID {
+func EntitiesToIDList[T Entity[ID], ID comparable](src []T) []ID {
 	res := make([]ID, len(src))
 	if len(res) == 0 {
 		return res
