@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -19,15 +20,20 @@ type BaseCRUDTraceRepository[T domain.Entity[ID], ID comparable] struct {
 }
 
 func NewBaseCRUDTraceRepository[T domain.Entity[ID], ID comparable](repositoryName string, repository domain.CRUDRepository[T, ID]) *BaseCRUDTraceRepository[T, ID] {
-	return &BaseCRUDTraceRepository[T, ID]{
+	res := &BaseCRUDTraceRepository[T, ID]{
 		repository: repository,
 		repoName:   repositoryName,
-		tracer:     otel.GetTracerProvider().Tracer(repositoryName),
 	}
+	if res.repoName == "" {
+		res.repoName = utils.GetTypeName(repository)
+	}
+	res.tracer = otel.GetTracerProvider().Tracer(res.repoName)
+
+	return res
 }
 
 func (btr *BaseCRUDTraceRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
-	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Find", btr.repoName))
+	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Find", btr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.id", fmt.Sprintf("%v", id)))
 	defer span.End()
 
@@ -37,16 +43,18 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Find(ctx context.Context, id ID) (T, 
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
-		return btr.nilEntity, err
+		return btr.GetNilEntity(), err
 	}
 
 	return res, nil
 }
 
 func (btr *BaseCRUDTraceRepository[T, ID]) List(ctx context.Context, limit, offset int) ([]T, error) {
-	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.List", btr.repoName))
-	span.SetAttributes(attribute.Int("param.limit", limit))
-	span.SetAttributes(attribute.Int("param.offset", offset))
+	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.List", btr.GetRepositoryName()))
+	span.SetAttributes(
+		attribute.Int("param.limit", limit),
+		attribute.Int("param.offset", offset),
+	)
 	defer span.End()
 
 	res, err := btr.repository.List(ctx, limit, offset)
@@ -62,7 +70,7 @@ func (btr *BaseCRUDTraceRepository[T, ID]) List(ctx context.Context, limit, offs
 }
 
 func (btr *BaseCRUDTraceRepository[T, ID]) Create(ctx context.Context, entity T) (T, error) {
-	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Create", btr.repoName))
+	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Create", btr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.entity_id", fmt.Sprintf("%v", entity.GetID())))
 	defer span.End()
 
@@ -72,14 +80,14 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Create(ctx context.Context, entity T)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
-		return btr.nilEntity, err
+		return btr.GetNilEntity(), err
 	}
 
 	return res, nil
 }
 
 func (btr *BaseCRUDTraceRepository[T, ID]) Change(ctx context.Context, entity T) (T, error) {
-	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Change", btr.repoName))
+	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Change", btr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.entity_id", fmt.Sprintf("%v", entity.GetID())))
 	defer span.End()
 
@@ -89,14 +97,14 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Change(ctx context.Context, entity T)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
-		return btr.nilEntity, err
+		return btr.GetNilEntity(), err
 	}
 
 	return res, nil
 }
 
 func (btr *BaseCRUDTraceRepository[T, ID]) Delete(ctx context.Context, id ID) error {
-	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Delete", btr.repoName))
+	ctx, span := btr.tracer.Start(ctx, fmt.Sprintf("%s.Delete", btr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.id", fmt.Sprintf("%v", id)))
 	defer span.End()
 
@@ -118,4 +126,8 @@ func (btr *BaseCRUDTraceRepository[T, ID]) GetRepositoryName() string {
 
 func (btr *BaseCRUDTraceRepository[T, ID]) GetTracer() trace.Tracer {
 	return btr.tracer
+}
+
+func (btr *BaseCRUDTraceRepository[T, ID]) GetNilEntity() T {
+	return btr.nilEntity
 }
