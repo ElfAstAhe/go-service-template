@@ -12,13 +12,13 @@ import (
 )
 
 type BaseCRUDTraceRepository[T domain.Entity[ID], ID comparable] struct {
-	repository domain.CrudRepository[T, ID]
+	repository domain.CRUDRepository[T, ID]
 	repoName   string
 	tracer     trace.Tracer
 	nilEntity  T
 }
 
-func NewBaseCRUDTraceRepository[T domain.Entity[ID], ID comparable](repositoryName string, repository domain.CrudRepository[T, ID]) *BaseCRUDTraceRepository[T, ID] {
+func NewBaseCRUDTraceRepository[T domain.Entity[ID], ID comparable](repositoryName string, repository domain.CRUDRepository[T, ID]) *BaseCRUDTraceRepository[T, ID] {
 	return &BaseCRUDTraceRepository[T, ID]{
 		repository: repository,
 		repoName:   repositoryName,

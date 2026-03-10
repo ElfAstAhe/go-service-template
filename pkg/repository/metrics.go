@@ -10,11 +10,11 @@ import (
 )
 
 type BaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable] struct {
-	repository domain.CrudRepository[T, ID]
+	repository domain.CRUDRepository[T, ID]
 	repoName   string
 }
 
-func NewBaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable](repository domain.CrudRepository[T, ID]) *BaseCRUDMetricsRepository[T, ID] {
+func NewBaseCRUDMetricsRepository[T domain.Entity[ID], ID comparable](repository domain.CRUDRepository[T, ID]) *BaseCRUDMetricsRepository[T, ID] {
 	return &BaseCRUDMetricsRepository[T, ID]{
 		repository: repository,
 		repoName:   utils.GetTypeName(repository),

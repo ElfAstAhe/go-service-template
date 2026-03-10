@@ -4,8 +4,8 @@ import (
 	"context"
 )
 
-// CrudRepository repository with simple crud methods for nonowned instances
-type CrudRepository[T Entity[ID], ID comparable] interface {
+// CRUDRepository repository with simple crud methods for nonowned instances
+type CRUDRepository[T Entity[ID], ID comparable] interface {
 	Find(ctx context.Context, id ID) (T, error)
 
 	List(ctx context.Context, limit, offset int) ([]T, error)
