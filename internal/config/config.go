@@ -25,7 +25,7 @@ type Config struct {
 	//    Redis *RedisConfig `mapstructure:"redis"`
 }
 
-// link params
+// linker params
 var (
 	AppName      string
 	AppVersion   string

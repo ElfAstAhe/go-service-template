@@ -154,7 +154,7 @@ func (ae AppEnv) Exists() bool {
 	return appEnvs.Contains(ae)
 }
 
-type appEnvList map[AppEnv]bool
+type appEnvList map[AppEnv]struct{}
 
 func (ae appEnvList) Contains(env AppEnv) bool {
 	_, ok := ae[env]
@@ -169,8 +169,8 @@ const (
 	AppEnvTest        AppEnv = "test"
 )
 
-var appEnvs appEnvList = map[AppEnv]bool{
-	AppEnvProduction:  false,
-	AppEnvDevelopment: false,
-	AppEnvTest:        false,
+var appEnvs appEnvList = map[AppEnv]struct{}{
+	AppEnvProduction:  {},
+	AppEnvDevelopment: {},
+	AppEnvTest:        {},
 }
