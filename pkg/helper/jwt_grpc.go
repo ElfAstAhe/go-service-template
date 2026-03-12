@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc/metadata"
 )
 
