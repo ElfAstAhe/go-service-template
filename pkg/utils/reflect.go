@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// GetTypeName возвращает наименование типа хоть в каком-либо виде
 func GetTypeName(instance any) string {
 	if instance == nil {
 		return "nil"
@@ -34,4 +35,24 @@ func GetTypeName(instance any) string {
 	}
 
 	return res
+}
+
+// IsNil определяет, является ли параметр nil по значению
+//
+// Параметры:
+//   - val: любое значение
+//
+// Например: интерфейс после присвоения, допустим структуры, уже точно не будет nil, даже если значение структуры nil
+func IsNil(val any) bool {
+	if val == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(val)
+	switch v.Kind() {
+	case reflect.Pointer, reflect.Map, reflect.Slice, reflect.Chan, reflect.Interface, reflect.Func:
+		return v.IsNil()
+	default:
+		return false
+	}
 }
