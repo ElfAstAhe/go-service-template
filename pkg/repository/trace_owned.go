@@ -5,35 +5,33 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
+	"github.com/ElfAstAhe/go-service-template/pkg/infra/telemetry"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 )
 
 type BaseOwnedTraceRepository[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
+	*telemetry.BaseTelemetry
 	repository domain.OwnedRepository[T, ID, OwnerID]
-	repoName   string
-	tracer     trace.Tracer
 	nilEntity  T
 }
 
 func NewBaseOwnedTraceRepository[T domain.Entity[ID], ID comparable, OwnerID comparable](repoName string, repository domain.OwnedRepository[T, ID, OwnerID]) *BaseOwnedTraceRepository[T, ID, OwnerID] {
 	res := &BaseOwnedTraceRepository[T, ID, OwnerID]{
 		repository: repository,
-		repoName:   repoName,
 	}
-	if repoName == "" {
-		res.repoName = utils.GetTypeName(repository)
+	tracerName := repoName
+	if tracerName == "" {
+		tracerName = utils.GetTypeName(repository)
 	}
-	res.tracer = otel.GetTracerProvider().Tracer(res.repoName)
+	res.BaseTelemetry = telemetry.NewBaseTelemetry(tracerName)
 
 	return res
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Find(ctx context.Context, ownerID OwnerID, id ID) (T, error) {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.Find", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.Find", otr.GetRepositoryName()))
 	span.SetAttributes(
 		attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)),
 		attribute.String("param.id", fmt.Sprintf("%v", id)),
@@ -53,7 +51,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Find(ctx context.Context, o
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) List(ctx context.Context, ownerID OwnerID, limit, offset int) ([]T, error) {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.List", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.List", otr.GetRepositoryName()))
 	span.SetAttributes(
 		attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)),
 		attribute.Int("param.limit", limit),
@@ -74,7 +72,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) List(ctx context.Context, o
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) ListAll(ctx context.Context, ownerID OwnerID) ([]T, error) {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.ListAll", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.ListAll", otr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)))
 	defer span.End()
 
@@ -91,7 +89,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) ListAll(ctx context.Context
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) ListAllByOwners(ctx context.Context, ownerIDs ...OwnerID) (map[OwnerID][]T, error) {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.ListAllByOwners", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.ListAllByOwners", otr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.owner_ids", fmt.Sprintf("%v", ownerIDs)))
 	defer span.End()
 
@@ -108,7 +106,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) ListAllByOwners(ctx context
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Save(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.Save", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.Save", otr.GetRepositoryName()))
 	span.SetAttributes(
 		attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)),
 		attribute.Int("param.owner_cnt", len(owned)),
@@ -128,7 +126,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Save(ctx context.Context, o
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Create(ctx context.Context, ownerID OwnerID, entity T) (T, error) {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.Create", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.Create", otr.GetRepositoryName()))
 	span.SetAttributes(
 		attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)),
 		attribute.String("param.entity_id", fmt.Sprintf("%v", entity.GetID())),
@@ -148,7 +146,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Create(ctx context.Context,
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Change(ctx context.Context, ownerID OwnerID, entity T) (T, error) {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.Change", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.Change", otr.GetRepositoryName()))
 	span.SetAttributes(
 		attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)),
 		attribute.String("param.entity_id", fmt.Sprintf("%v", entity.GetID())),
@@ -168,7 +166,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Change(ctx context.Context,
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) DeleteAll(ctx context.Context, ownerID OwnerID) error {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.DeleteAll", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.DeleteAll", otr.GetRepositoryName()))
 	span.SetAttributes(
 		attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)),
 	)
@@ -187,7 +185,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) DeleteAll(ctx context.Conte
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Delete(ctx context.Context, ownerID OwnerID, id ID) error {
-	ctx, span := otr.tracer.Start(ctx, fmt.Sprintf("%s.Delete", otr.GetRepositoryName()))
+	ctx, span := otr.StartSpan(ctx, fmt.Sprintf("%s.Delete", otr.GetRepositoryName()))
 	span.SetAttributes(
 		attribute.String("param.owner_id", fmt.Sprintf("%v", ownerID)),
 		attribute.String("param.id", fmt.Sprintf("%v", id)),
@@ -206,12 +204,8 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Delete(ctx context.Context,
 	return nil
 }
 
-func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) GetTracer() trace.Tracer {
-	return otr.tracer
-}
-
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) GetRepositoryName() string {
-	return otr.repoName
+	return otr.GetTracerName()
 }
 
 func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) GetNilEntity() T {
