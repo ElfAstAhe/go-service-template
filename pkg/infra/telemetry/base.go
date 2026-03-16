@@ -15,6 +15,7 @@ type BaseTelemetry struct {
 func NewBaseTelemetry(name string) *BaseTelemetry {
 	return &BaseTelemetry{
 		tracer: otel.GetTracerProvider().Tracer(name),
+		name:   name,
 	}
 }
 
