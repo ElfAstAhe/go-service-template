@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/config"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -25,7 +26,7 @@ func SetupOTel(ctx context.Context, cfg *config.TelemetryConfig) (func(context.C
 		otlptracegrpc.WithInsecure(), // Для начала без TLS
 	)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewCommonError("create trace exporter failed", err)
 	}
 
 	// 2. Ресурс (описываем наш сервис)
@@ -35,7 +36,7 @@ func SetupOTel(ctx context.Context, cfg *config.TelemetryConfig) (func(context.C
 		),
 	)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewCommonError("create trace resource description failed", err)
 	}
 
 	// 3. TracerProvider (мозг системы)
