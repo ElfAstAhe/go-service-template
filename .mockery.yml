@@ -19,6 +19,12 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/domain:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/utils:
+    config:
+      all: true
+  github.com/ElfAstAhe/go-service-template/pkg/helper:
+    config:
+      all: true
   github.com/ElfAstAhe/go-service-template/internal/domain:
     config:
       all: true
