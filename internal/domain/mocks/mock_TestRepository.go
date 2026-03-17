@@ -106,50 +106,6 @@ func (_c *MockTestRepository_Change_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
-// Close provides a mock function for the type MockTestRepository
-func (_mock *MockTestRepository) Close() error {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for Close")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func() error); ok {
-		r0 = returnFunc()
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockTestRepository_Close_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Close'
-type MockTestRepository_Close_Call struct {
-	*mock.Call
-}
-
-// Close is a helper method to define mock.On call
-func (_e *MockTestRepository_Expecter) Close() *MockTestRepository_Close_Call {
-	return &MockTestRepository_Close_Call{Call: _e.mock.On("Close")}
-}
-
-func (_c *MockTestRepository_Close_Call) Run(run func()) *MockTestRepository_Close_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockTestRepository_Close_Call) Return(err error) *MockTestRepository_Close_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockTestRepository_Close_Call) RunAndReturn(run func() error) *MockTestRepository_Close_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Create provides a mock function for the type MockTestRepository
 func (_mock *MockTestRepository) Create(ctx context.Context, entity *domain.Test) (*domain.Test, error) {
 	ret := _mock.Called(ctx, entity)

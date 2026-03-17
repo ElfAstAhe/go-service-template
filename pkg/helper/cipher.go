@@ -15,17 +15,26 @@ var (
 	CipherPrefix = []byte(CipherStringPrefix)
 )
 
-type CipherHelper struct {
+type Cipher interface {
+	EncryptString(string) string
+	DecryptString(string) string
+	EncryptBinary([]byte) []byte
+	DecryptBinary([]byte) []byte
+	IsStringEncrypted(string) bool
+	IsEncrypted([]byte) bool
+}
+
+type CipherImpl struct {
 	cipher utils.Cipher
 }
 
-func NewCipherHelper(cipher utils.Cipher) *CipherHelper {
-	return &CipherHelper{
+func NewCipherHelper(cipher utils.Cipher) *CipherImpl {
+	return &CipherImpl{
 		cipher: cipher,
 	}
 }
 
-func (ch *CipherHelper) EncryptString(s string) string {
+func (ch *CipherImpl) EncryptString(s string) string {
 	if s == "" || ch.IsStringEncrypted(s) {
 		return s
 	}
@@ -40,7 +49,7 @@ func (ch *CipherHelper) EncryptString(s string) string {
 	return CipherStringPrefix + res
 }
 
-func (ch *CipherHelper) DecryptString(s string) string {
+func (ch *CipherImpl) DecryptString(s string) string {
 	if s == "" || !ch.IsStringEncrypted(s) {
 		return s
 	}
@@ -61,7 +70,7 @@ func (ch *CipherHelper) DecryptString(s string) string {
 	return res
 }
 
-func (ch *CipherHelper) EncryptBinary(data []byte) []byte {
+func (ch *CipherImpl) EncryptBinary(data []byte) []byte {
 	if ch.IsEncrypted(data) {
 		return data
 	}
@@ -81,7 +90,7 @@ func (ch *CipherHelper) EncryptBinary(data []byte) []byte {
 	return res
 }
 
-func (ch *CipherHelper) DecryptBinary(data []byte) []byte {
+func (ch *CipherImpl) DecryptBinary(data []byte) []byte {
 	if !ch.IsEncrypted(data) {
 		return data
 	}
@@ -97,11 +106,11 @@ func (ch *CipherHelper) DecryptBinary(data []byte) []byte {
 	return res
 }
 
-func (ch *CipherHelper) IsStringEncrypted(s string) bool {
+func (ch *CipherImpl) IsStringEncrypted(s string) bool {
 	return strings.HasPrefix(s, CipherStringPrefix)
 }
 
-func (ch *CipherHelper) IsEncrypted(data []byte) bool {
+func (ch *CipherImpl) IsEncrypted(data []byte) bool {
 	prefixLen := len(CipherPrefix)
 
 	// Проверяем, что данных достаточно, чтобы в них физически мог быть префикс
