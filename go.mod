@@ -24,6 +24,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
+	github.com/teserakt-io/golang-ed25519 v0.0.0-20210104091850-3888c087a4c8
 	github.com/xo/dburl v0.24.2
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0
 	go.opentelemetry.io/otel v1.42.0
@@ -31,6 +32,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.42.0
 	go.opentelemetry.io/otel/trace v1.42.0
 	go.uber.org/zap v1.27.1
+	golang.org/x/crypto v0.49.0
 	golang.org/x/sync v0.20.0
 	google.golang.org/grpc v1.79.2
 	google.golang.org/protobuf v1.36.11
@@ -96,7 +98,7 @@ require (
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260311181403-84a4fc48630c // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260311181403-84a4fc48630c // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260316180232-0b37fe3546d5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260316180232-0b37fe3546d5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

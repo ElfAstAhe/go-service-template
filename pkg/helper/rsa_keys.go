@@ -16,6 +16,10 @@ const (
 	RSAKey4096 = 4096
 )
 
+type RSAKeys interface {
+	Keys[*rsa.PrivateKey, *rsa.PublicKey]
+}
+
 type RSAKeysHelper struct {
 	bits int // 2048 или 4096
 }
