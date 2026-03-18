@@ -32,7 +32,15 @@ var (
 	AppBuildTime string
 )
 
-func NewConfig(app *AppConfig, auth *conf.AuthConfig, HTTP *conf.HTTPConfig, GRPC *conf.GRPCConfig, log *conf.LogConfig, db *conf.DBConfig, telemetry *conf.TelemetryConfig) *Config {
+func NewConfig(
+	app *AppConfig,
+	auth *conf.AuthConfig,
+	HTTP *conf.HTTPConfig,
+	GRPC *conf.GRPCConfig,
+	log *conf.LogConfig,
+	db *conf.DBConfig,
+	telemetry *conf.TelemetryConfig,
+) *Config {
 	return &Config{
 		App:       app,
 		Auth:      auth,

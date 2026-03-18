@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	DefaultJWTSigningMethodName  string = "HS256"
-	DefaultJWTExpirationDuration        = 30 * time.Minute
-	DefaultJWTIssuer             string = "go-service-template"
+	DefaultJWTSigningMethodName  string        = "HS256"
+	DefaultJWTExpirationDuration time.Duration = 15 * time.Minute
+	DefaultJWTIssuer             string        = "go-service-template"
 )
 
 const (
@@ -28,7 +28,7 @@ var (
 type TokenIDBuilder func() string
 
 type AppClaims struct {
-	jwt.RegisteredClaims
+	*jwt.RegisteredClaims
 	Admin       bool     `json:"admin,omitempty"`
 	SubjectID   string   `json:"subject_id,omitempty"`
 	SubjectType string   `json:"subject_type,omitempty"`
@@ -46,7 +46,7 @@ func NewAppClaims(
 	roles ...string,
 ) *AppClaims {
 	return &AppClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
 			ID:        tokenIDBuilder(),
 			Issuer:    issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -62,7 +62,7 @@ func NewAppClaims(
 
 func NewEmptyAppClaims() *AppClaims {
 	return &AppClaims{
-		RegisteredClaims: jwt.RegisteredClaims{},
+		RegisteredClaims: &jwt.RegisteredClaims{},
 		Roles:            make([]string, 0),
 	}
 }
@@ -75,7 +75,13 @@ type JWTHelper struct {
 	tokenIDBuilder     TokenIDBuilder
 }
 
-func NewJWTHelper(issuer string, signingMethod jwt.SigningMethod, secretKey string, expirationDuration time.Duration, tokenIDBuilder TokenIDBuilder) *JWTHelper {
+func NewJWTHelper(
+	issuer string,
+	signingMethod jwt.SigningMethod,
+	secretKey string,
+	expirationDuration time.Duration,
+	tokenIDBuilder TokenIDBuilder,
+) *JWTHelper {
 	return &JWTHelper{
 		issuer:             issuer,
 		signingMethod:      signingMethod,
@@ -111,7 +117,7 @@ func (h *JWTHelper) ExtractTokenFromString(tokenString string) (*jwt.Token, erro
 	if err != nil {
 		var errUtlJWT *errs.UtlJWTError
 		if !errors.As(err, &errUtlJWT) {
-			return nil, errs.NewUtlJWTError("error parse jwt", err)
+			return nil, errs.NewUtlJWTError("parse jwt failed", err)
 		}
 
 		return nil, err
@@ -138,7 +144,7 @@ func (h *JWTHelper) BuildClaims(subjectID, subject, subjectType string, admin bo
 func (h *JWTHelper) BuildToken(subjectID, subject, subjectType string, admin bool, roles ...string) (*jwt.Token, error) {
 	claims, err := h.BuildClaims(subjectID, subject, subjectType, admin, roles...)
 	if err != nil {
-		return nil, errs.NewUtlJWTError("error building claims", err)
+		return nil, errs.NewUtlJWTError("build claims failed", err)
 	}
 
 	return jwt.NewWithClaims(h.signingMethod, claims), nil
@@ -151,7 +157,7 @@ func (h *JWTHelper) BuildTokenStr(token *jwt.Token) (string, error) {
 
 	res, err := token.SignedString([]byte(h.secretKey))
 	if err != nil {
-		return "", errs.NewUtlJWTError("error signing token", err)
+		return "", errs.NewUtlJWTError("sign token failed", err)
 	}
 
 	return res, nil
@@ -160,7 +166,7 @@ func (h *JWTHelper) BuildTokenStr(token *jwt.Token) (string, error) {
 func (h *JWTHelper) BuildTokenString(subjectID, subject, subjectType string, admin bool, roles ...string) (string, error) {
 	token, err := h.BuildToken(subjectID, subject, subjectType, admin, roles...)
 	if err != nil {
-		return "", errs.NewUtlJWTError("error building token", err)
+		return "", errs.NewUtlJWTError("building token failed", err)
 	}
 
 	return h.BuildTokenStr(token)
