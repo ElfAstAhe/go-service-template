@@ -68,14 +68,16 @@ func NewEmptyAppClaims() *AppClaims {
 }
 
 type JWTHelper struct {
+	issuer             string
 	signingMethod      jwt.SigningMethod
 	secretKey          string
 	expirationDuration time.Duration
 	tokenIDBuilder     TokenIDBuilder
 }
 
-func NewJWTHelper(signingMethod jwt.SigningMethod, secretKey string, expirationDuration time.Duration, tokenIDBuilder TokenIDBuilder) *JWTHelper {
+func NewJWTHelper(issuer string, signingMethod jwt.SigningMethod, secretKey string, expirationDuration time.Duration, tokenIDBuilder TokenIDBuilder) *JWTHelper {
 	return &JWTHelper{
+		issuer:             issuer,
 		signingMethod:      signingMethod,
 		secretKey:          secretKey,
 		expirationDuration: expirationDuration,
@@ -84,7 +86,7 @@ func NewJWTHelper(signingMethod jwt.SigningMethod, secretKey string, expirationD
 }
 
 func NewDefaultJWTHelper(secretKey string) *JWTHelper {
-	return NewJWTHelper(DefaultJWTSigningMethod, secretKey, DefaultJWTExpirationDuration, defaultTokenIDBuilder)
+	return NewJWTHelper(DefaultJWTIssuer, DefaultJWTSigningMethod, secretKey, DefaultJWTExpirationDuration, defaultTokenIDBuilder)
 }
 
 func (h *JWTHelper) ExtractClaims(token *jwt.Token) (*AppClaims, error) {
@@ -130,7 +132,7 @@ func (h *JWTHelper) BuildClaims(subjectID, subject, subjectType string, admin bo
 		return nil, errs.NewInvalidArgumentError("subject", "subject is empty")
 	}
 
-	return NewAppClaims(subjectID, subject, subjectType, admin, h.buildTokenID, DefaultJWTIssuer, h.expirationDuration, roles...), nil
+	return NewAppClaims(subjectID, subject, subjectType, admin, h.buildTokenID, h.issuer, h.expirationDuration, roles...), nil
 }
 
 func (h *JWTHelper) BuildToken(subjectID, subject, subjectType string, admin bool, roles ...string) (*jwt.Token, error) {
