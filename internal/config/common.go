@@ -26,6 +26,7 @@ const (
 // Auth config flags
 const (
 	FlagAuthJWTSecret          string = "auth-jwt-secret"
+	FlagAuthJWTSigningMethod   string = "auth-jwt-signing-method"
 	FlagAuthAccessTokenTTL     string = "auth-access-token-ttl"
 	FlagAuthRefreshTokenTTL    string = "auth-refresh-token-ttl"
 	FlagAuthRSAPrivateKeyPath  string = "auth-rsa-private-key-path"
@@ -95,11 +96,12 @@ const EnvConfig string = "CONFIG_PATH"
 
 // Auth config envs
 const (
-	EnvAuthJWTSecret       string = "AUTH_JWT_SECRET"
-	EnvAuthAccessTokenTTL  string = "AUTH_ACCESS_TOKEN_TTL"
-	EnvAuthRefreshTokenTTL string = "AUTH_REFRESH_TOKEN_TTL"
-	EnvAuthRSAPrivateKey   string = "AUTH_RSAPRIVATE_KEY"
-	EnvAuthMasterPassword  string = "AUTH_MASTER_PASSWORD"
+	EnvAuthJWTSecret        string = "AUTH_JWT_SECRET"
+	EnvAuthJWTSigningMethod string = "AUTH_JWT_SIGNING_METHOD"
+	EnvAuthAccessTokenTTL   string = "AUTH_ACCESS_TOKEN_TTL"
+	EnvAuthRefreshTokenTTL  string = "AUTH_REFRESH_TOKEN_TTL"
+	EnvAuthRSAPrivateKey    string = "AUTH_RSAPRIVATE_KEY"
+	EnvAuthMasterPassword   string = "AUTH_MASTER_PASSWORD"
 )
 
 // DB config envs

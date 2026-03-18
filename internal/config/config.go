@@ -32,7 +32,15 @@ var (
 	AppBuildTime string
 )
 
-func NewConfig(app *AppConfig, auth *conf.AuthConfig, HTTP *conf.HTTPConfig, GRPC *conf.GRPCConfig, log *conf.LogConfig, db *conf.DBConfig, telemetry *conf.TelemetryConfig) *Config {
+func NewConfig(
+	app *AppConfig,
+	auth *conf.AuthConfig,
+	HTTP *conf.HTTPConfig,
+	GRPC *conf.GRPCConfig,
+	log *conf.LogConfig,
+	db *conf.DBConfig,
+	telemetry *conf.TelemetryConfig,
+) *Config {
 	return &Config{
 		App:       app,
 		Auth:      auth,
@@ -147,6 +155,11 @@ func applyDefaults(v *viper.Viper) {
 	// App
 	v.SetDefault(keyAppEnv, defaultAppEnv)
 
+	// Auth
+	v.SetDefault(conf.KeyAuthJWTSigningMethod, conf.DefaultAuthSigningMethod)
+	v.SetDefault(conf.KeyAuthAccessTokenTTL, conf.DefaultAuthAccessTokenTTL)
+	v.SetDefault(conf.KeyAuthRefreshTokenTTL, conf.DefaultAuthRefreshTokenTTL)
+
 	// HTTP
 	v.SetDefault(conf.KeyHTTPAddress, conf.DefaultHTTPAddress)
 	v.SetDefault(conf.KeyHTTPReadTimeout, conf.DefaultHTTPReadTimeout)
@@ -209,8 +222,9 @@ func initFLags() (res *pflag.FlagSet, err error) {
 
 	// Auth
 	res.String(FlagAuthJWTSecret, "", "JWT secret")
-	res.Duration(FlagAuthAccessTokenTTL, 0, "JWT token TTL")
-	res.Duration(FlagAuthRefreshTokenTTL, 0, "JWT refresh TTL")
+	res.String(FlagAuthJWTSigningMethod, conf.DefaultAuthSigningMethod, "JWT signing method")
+	res.Duration(FlagAuthAccessTokenTTL, conf.DefaultAuthAccessTokenTTL, "JWT access token TTL")
+	res.Duration(FlagAuthRefreshTokenTTL, conf.DefaultAuthRefreshTokenTTL, "JWT refresh token TTL")
 	res.String(FlagAuthRSAPrivateKeyPath, "", "RSA private key path")
 	res.String(FlagAuthMasterPasswordSalt, "", "master password salt")
 
@@ -272,6 +286,7 @@ func bindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 		v.BindPFlag(keyAppEnv, flags.Lookup(FlagAppEnv)),
 		// Auth
 		v.BindPFlag(conf.KeyAuthJWTSecret, flags.Lookup(FlagAuthJWTSecret)),
+		v.BindPFlag(conf.KeyAuthJWTSigningMethod, flags.Lookup(FlagAuthJWTSigningMethod)),
 		v.BindPFlag(conf.KeyAuthAccessTokenTTL, flags.Lookup(FlagAuthAccessTokenTTL)),
 		v.BindPFlag(conf.KeyAuthRefreshTokenTTL, flags.Lookup(FlagAuthRefreshTokenTTL)),
 		v.BindPFlag(conf.KeyAuthRSAPrivateKeyPath, flags.Lookup(FlagAuthRSAPrivateKeyPath)),

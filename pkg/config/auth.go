@@ -19,6 +19,7 @@ type AuthConfig struct {
 
 func NewAuthConfig(
 	JWTSecret string,
+	JWTSigningMethod string,
 	accessTokenTTL time.Duration,
 	refreshTokenTTL time.Duration,
 	RSAPrivateKeyPath string,
@@ -26,6 +27,7 @@ func NewAuthConfig(
 ) *AuthConfig {
 	return &AuthConfig{
 		JWTSecret:          JWTSecret,
+		JWTSigningMethod:   JWTSigningMethod,
 		AccessTokenTTL:     accessTokenTTL,
 		RefreshTokenTTL:    refreshTokenTTL,
 		RSAPrivateKeyPath:  RSAPrivateKeyPath,
@@ -34,7 +36,7 @@ func NewAuthConfig(
 }
 
 func NewDefaultAuthConfig() *AuthConfig {
-	return NewAuthConfig("", 0, 0, "", "")
+	return NewAuthConfig("", DefaultAuthSigningMethod, DefaultAuthAccessTokenTTL, DefaultAuthRefreshTokenTTL, "", "")
 }
 
 func (ac *AuthConfig) Validate() error {
