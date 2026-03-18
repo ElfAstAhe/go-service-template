@@ -99,9 +99,16 @@ const (
 	KeyTelemetryTimeout          string = "telemetry.timeout"
 )
 
+const (
+	DefaultAuthSigningMethod   string        = "HS256"
+	DefaultAuthAccessTokenTTL  time.Duration = 15 * time.Minute
+	DefaultAuthRefreshTokenTTL time.Duration = 24 * time.Hour
+)
+
 // Auth
 const (
 	KeyAuthJWTSecret          string = "auth.jwt_secret"
+	KeyAuthJWTSigningMethod   string = "auth.jwt_signing_method"
 	KeyAuthAccessTokenTTL     string = "auth.access_token_ttl"
 	KeyAuthRefreshTokenTTL    string = "auth.refresh_token_ttl"
 	KeyAuthRSAPrivateKeyPath  string = "auth.rsa_private_key_path"
