@@ -10,6 +10,7 @@ import (
 // AuthConfig — секреты для JWT и безопасности
 type AuthConfig struct {
 	JWTSecret          string        `mapstructure:"jwt_secret"`
+	JWTSigningMethod   string        `mapstructure:"jwt_signing_method"`
 	AccessTokenTTL     time.Duration `mapstructure:"access_token_ttl"`
 	RefreshTokenTTL    time.Duration `mapstructure:"refresh_token_ttl"`
 	RSAPrivateKeyPath  string        `mapstructure:"rsa_private_key_path"`
