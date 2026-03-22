@@ -41,7 +41,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Find(ctx context.Context, o
 
 	res, err := otr.repository.Find(ctx, ownerID, id)
 	if err != nil {
-		span.AddEvent("find_failed")
+		span.AddEvent("Find_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -63,7 +63,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) List(ctx context.Context, o
 
 	res, err := otr.repository.List(ctx, ownerID, limit, offset)
 	if err != nil {
-		span.AddEvent("list_failed")
+		span.AddEvent("List_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -81,7 +81,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) ListAll(ctx context.Context
 
 	res, err := otr.repository.ListAll(ctx, ownerID)
 	if err != nil {
-		span.AddEvent("list_all_failed")
+		span.AddEvent("ListAll_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -99,7 +99,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) ListAllByOwners(ctx context
 
 	res, err := otr.repository.ListAllByOwners(ctx, ownerIDs...)
 	if err != nil {
-		span.AddEvent("list_all_by_owners_failed")
+		span.AddEvent("ListAllByOwners_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -120,7 +120,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Save(ctx context.Context, o
 
 	res, err := otr.repository.Save(ctx, ownerID, owned)
 	if err != nil {
-		span.AddEvent("save_failed")
+		span.AddEvent("Save_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -141,7 +141,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Create(ctx context.Context,
 
 	res, err := otr.repository.Create(ctx, ownerID, entity)
 	if err != nil {
-		span.AddEvent("create_failed")
+		span.AddEvent("Create_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -162,7 +162,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Change(ctx context.Context,
 
 	res, err := otr.repository.Change(ctx, ownerID, entity)
 	if err != nil {
-		span.AddEvent("change_failed")
+		span.AddEvent("Change_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -182,7 +182,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) DeleteAll(ctx context.Conte
 
 	err := otr.repository.DeleteAll(ctx, ownerID)
 	if err != nil {
-		span.AddEvent("delete_all_failed")
+		span.AddEvent("DeleteAll_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -203,7 +203,7 @@ func (otr *BaseOwnedTraceRepository[T, ID, OwnerID]) Delete(ctx context.Context,
 
 	err := otr.repository.Delete(ctx, ownerID, id)
 	if err != nil {
-		span.AddEvent("delete_failed")
+		span.AddEvent("Delete_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 

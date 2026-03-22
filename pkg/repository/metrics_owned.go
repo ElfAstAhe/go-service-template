@@ -50,12 +50,12 @@ func (omr *BaseOwnedMetricsRepository[T, ID, OwnerID]) ListAll(ctx context.Conte
 	return omr.repository.ListAll(ctx, ownerID)
 }
 
-func (omr *BaseOwnedMetricsRepository[T, ID, OwnerID]) ListAllByOwners(ctx context.Context, ownerIDs OwnerID) (res map[OwnerID][]T, err error) {
+func (omr *BaseOwnedMetricsRepository[T, ID, OwnerID]) ListAllByOwners(ctx context.Context, ownerIDs ...OwnerID) (res map[OwnerID][]T, err error) {
 	defer func(start time.Time) {
 		metrics.ObserveRepositoryOp(omr.repoName, "ListAllByOwners", err, start)
 	}(time.Now())
 
-	return omr.repository.ListAllByOwners(ctx, ownerIDs)
+	return omr.repository.ListAllByOwners(ctx, ownerIDs...)
 }
 
 func (omr *BaseOwnedMetricsRepository[T, ID, OwnerID]) Save(ctx context.Context, ownerID OwnerID, owned []T) (res []T, err error) {
