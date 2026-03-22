@@ -345,12 +345,20 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDeleteAll() (string, erro
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) Delete(ctx context.Context, ownerID OwnerID, id ID) error {
+	if err := bor.ValidateDelete(ownerID); err != nil {
+		return errs.NewDalError("BaseOwnedRepository.Delete", "validate delete", err)
+	}
+
 	sqlDelete, err := bor.prepareDelete()
 	if err != nil {
 		return err
 	}
 
 	return bor.GetHelper().Delete(ctx, sqlDelete, id)
+}
+
+func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateDelete(ownerID OwnerID) error {
+	return nil
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDelete() (string, error) {
