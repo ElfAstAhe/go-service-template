@@ -38,7 +38,7 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Find(ctx context.Context, id ID) (T, 
 
 	res, err := btr.repository.Find(ctx, id)
 	if err != nil {
-		span.AddEvent("find_failed")
+		span.AddEvent("Find_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -59,7 +59,7 @@ func (btr *BaseCRUDTraceRepository[T, ID]) List(ctx context.Context, limit, offs
 
 	res, err := btr.repository.List(ctx, limit, offset)
 	if err != nil {
-		span.AddEvent("list_failed")
+		span.AddEvent("List_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -77,7 +77,7 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Create(ctx context.Context, entity T)
 
 	res, err := btr.repository.Create(ctx, entity)
 	if err != nil {
-		span.AddEvent("create_failed")
+		span.AddEvent("Create_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -95,7 +95,7 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Change(ctx context.Context, entity T)
 
 	res, err := btr.repository.Change(ctx, entity)
 	if err != nil {
-		span.AddEvent("change_failed")
+		span.AddEvent("Change_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
@@ -113,7 +113,7 @@ func (btr *BaseCRUDTraceRepository[T, ID]) Delete(ctx context.Context, id ID) er
 
 	err := btr.repository.Delete(ctx, id)
 	if err != nil {
-		span.AddEvent("delete_failed")
+		span.AddEvent("Delete_failed")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
