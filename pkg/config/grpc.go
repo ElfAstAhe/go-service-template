@@ -8,15 +8,15 @@ import (
 
 // GRPCConfig — настройки gRPC сервера
 type GRPCConfig struct {
-	Address         string        `mapstructure:"address"`
-	MaxConnIdle     time.Duration `mapstructure:"max_conn_idle"`
-	MaxConnAge      time.Duration `mapstructure:"max_conn_age"`
-	MaxConnAgeGrace time.Duration `mapstructure:"max_conn_age_grace"`
-	Timeout         time.Duration `mapstructure:"timeout"`
+	Address         string        `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty"`
+	MaxConnIdle     time.Duration `mapstructure:"max_conn_idle" json:"max_conn_idle,omitempty" yaml:"max_conn_idle,omitempty"`
+	MaxConnAge      time.Duration `mapstructure:"max_conn_age" json:"max_conn_age,omitempty" yaml:"max_conn_age,omitempty"`
+	MaxConnAgeGrace time.Duration `mapstructure:"max_conn_age_grace" json:"max_conn_age_grace,omitempty" yaml:"max_conn_age_grace,omitempty"`
+	Timeout         time.Duration `mapstructure:"timeout" json:"timeout,omitempty" yaml:"timeout,omitempty"`
 	// Настройки KeepAlive важны, чтобы соединения не "протухали" за балансировщиками
-	KeepAliveTime    time.Duration `mapstructure:"keep_alive_time"`
-	KeepAliveTimeout time.Duration `mapstructure:"keep_alive_timeout"`
-	ShutdownTimeout  time.Duration `mapstructure:"shutdown_timeout"`
+	KeepAliveTime    time.Duration `mapstructure:"keep_alive_time" json:"keep_alive_time,omitempty" yaml:"keep_alive_time,omitempty"`
+	KeepAliveTimeout time.Duration `mapstructure:"keep_alive_timeout" json:"keep_alive_timeout,omitempty" yaml:"keep_alive_timeout,omitempty"`
+	ShutdownTimeout  time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"`
 }
 
 func NewGRPCConfig(

@@ -6,7 +6,7 @@ import (
 
 // AppConfig — метаданные сервиса
 type AppConfig struct {
-	Env AppEnv `mapstructure:"env"` // dev, prod, test
+	Env AppEnv `mapstructure:"env" json:"env,omitempty" yaml:"env,omitempty"` // dev, prod, test
 }
 
 func NewAppConfig(env AppEnv) *AppConfig {

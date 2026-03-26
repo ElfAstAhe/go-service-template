@@ -6,9 +6,9 @@ import (
 
 // LogConfig — уровни и формат логирования
 type LogConfig struct {
-	Level    string `mapstructure:"level"`  // debug, info, warn, error
-	Format   string `mapstructure:"format"` // json, console
-	FilePath string `mapstructure:"file_path"`
+	Level    string `mapstructure:"level" json:"level,omitempty" yaml:"level,omitempty"`    // debug, info, warn, error
+	Format   string `mapstructure:"format" json:"format,omitempty" yaml:"format,omitempty"` // json, console
+	FilePath string `mapstructure:"file_path" json:"file_path,omitempty" yaml:"file_path,omitempty,"`
 }
 
 func NewLogConfig(level, format string, filePath string) *LogConfig {
