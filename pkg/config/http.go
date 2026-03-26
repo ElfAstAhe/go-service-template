@@ -9,15 +9,15 @@ import (
 
 // HTTPConfig — настройки сервера и таймауты
 type HTTPConfig struct {
-	Address            string        `mapstructure:"address"`
-	ReadTimeout        time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout       time.Duration `mapstructure:"write_timeout"`
-	IdleTimeout        time.Duration `mapstructure:"idle_timeout"`
-	ShutdownTimeout    time.Duration `mapstructure:"shutdown_timeout"`
-	PrivateKeyPath     string        `mapstructure:"private_key_path"`
-	CertificatePath    string        `mapstructure:"certificate_path"`
-	Secure             bool          `mapstructure:"secure"`
-	MaxRequestBodySize int           `mapstructure:"max_request_body_size"`
+	Address            string        `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty"`
+	ReadTimeout        time.Duration `mapstructure:"read_timeout" json:"read_timeout,omitempty" yaml:"read_timeout,omitempty"`
+	WriteTimeout       time.Duration `mapstructure:"write_timeout" json:"write_timeout,omitempty" yaml:"write_timeout,omitempty"`
+	IdleTimeout        time.Duration `mapstructure:"idle_timeout" json:"idle_timeout,omitempty" yaml:"idle_timeout,omitempty"`
+	ShutdownTimeout    time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"`
+	PrivateKeyPath     string        `mapstructure:"private_key_path" json:"private_key_path,omitempty" yaml:"private_key_path,omitempty"`
+	CertificatePath    string        `mapstructure:"certificate_path" json:"certificate_path,omitempty" yaml:"certificate_path,omitempty"`
+	Secure             bool          `mapstructure:"secure" json:"secure,omitempty" yaml:"secure,omitempty"`
+	MaxRequestBodySize int           `mapstructure:"max_request_body_size" json:"max_request_body_size,omitempty" yaml:"max_request_body_size,omitempty"`
 }
 
 func NewHTTPConfig(

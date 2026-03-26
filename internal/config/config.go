@@ -15,13 +15,13 @@ import (
 
 // Config — корневой объект
 type Config struct {
-	App       *AppConfig            `mapstructure:"app"`
-	Auth      *conf.AuthConfig      `mapstructure:"auth"`
-	HTTP      *conf.HTTPConfig      `mapstructure:"http"`
-	GRPC      *conf.GRPCConfig      `mapstructure:"grpc"`
-	Log       *conf.LogConfig       `mapstructure:"log"`
-	DB        *conf.DBConfig        `mapstructure:"db"`
-	Telemetry *conf.TelemetryConfig `mapstructure:"telemetry"`
+	App       *AppConfig            `mapstructure:"app" json:"app,omitempty" yaml:"app,omitempty"`
+	Auth      *conf.AuthConfig      `mapstructure:"auth" json:"auth,omitempty" yaml:"auth,omitempty"`
+	HTTP      *conf.HTTPConfig      `mapstructure:"http" json:"http,omitempty" yaml:"http,omitempty"`
+	GRPC      *conf.GRPCConfig      `mapstructure:"grpc" json:"grpc,omitempty" yaml:"grpc,omitempty"`
+	Log       *conf.LogConfig       `mapstructure:"log" json:"log,omitempty" yaml:"log,omitempty"`
+	DB        *conf.DBConfig        `mapstructure:"db" json:"db,omitempty" yaml:"db,omitempty"`
+	Telemetry *conf.TelemetryConfig `mapstructure:"telemetry" json:"telemetry,omitempty" yaml:"telemetry,omitempty"`
 	//    Redis *RedisConfig `mapstructure:"redis"`
 }
 
