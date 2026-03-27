@@ -26,7 +26,7 @@ type Scannable interface {
 
 // Callback методы базового репозитория
 type (
-	EntityScannerFunc[T domain.Entity[ID], ID comparable]  func(scanner Scannable, dest T, params ...any) error
+	EntityScannerFunc[T domain.Entity[ID], ID comparable]  func(scanner Scannable, sourceLabel string, dest T, params ...any) error
 	AfterFindFunc[T domain.Entity[ID], ID comparable]      func(T, ...any) (T, error)
 	AfterListYieldFunc[T domain.Entity[ID], ID comparable] func(T, ...any) (T, bool, error)
 	NewEntityFactory[T domain.Entity[ID], ID comparable]   func() T

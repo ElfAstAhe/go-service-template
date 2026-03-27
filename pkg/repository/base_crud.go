@@ -9,6 +9,13 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+const (
+	SourceLabelFind   string = "find"
+	SourceLabelList   string = "list"
+	SourceLabelCreate string = "create"
+	SourceLabelChange string = "change"
+)
+
 // BaseCRUDRepository базовая реализация CRUD репозитория
 type BaseCRUDRepository[T domain.Entity[ID], ID comparable] struct {
 	queryBuilders *BaseCRUDQueryBuilders
@@ -34,7 +41,7 @@ func (br *BaseCRUDRepository[T, ID]) Find(ctx context.Context, id ID) (T, error)
 		return br.GetHelper().GetNilInstance(), err
 	}
 
-	return br.GetHelper().Get(ctx, sqlFind, id)
+	return br.GetHelper().Get(ctx, SourceLabelFind, sqlFind, id)
 }
 
 func (br *BaseCRUDRepository[T, ID]) prepareFind() (string, error) {
@@ -61,7 +68,7 @@ func (br *BaseCRUDRepository[T, ID]) List(ctx context.Context, limit, offset int
 		return nil, err
 	}
 
-	return br.GetHelper().List(ctx, sqlList, limit, offset)
+	return br.GetHelper().List(ctx, SourceLabelList, sqlList, limit, offset)
 }
 
 func (br *BaseCRUDRepository[T, ID]) ValidateList(limit, offset int) error {
@@ -95,7 +102,7 @@ func (br *BaseCRUDRepository[T, ID]) Create(ctx context.Context, entity T) (T, e
 		return br.GetHelper().GetNilInstance(), err
 	}
 
-	return br.GetHelper().Create(ctx, entity)
+	return br.GetHelper().Create(ctx, SourceLabelCreate, entity)
 }
 
 func (br *BaseCRUDRepository[T, ID]) internalValidateCreate(entity T) error {
@@ -117,7 +124,7 @@ func (br *BaseCRUDRepository[T, ID]) Change(ctx context.Context, entity T) (T, e
 		return br.GetHelper().GetNilInstance(), err
 	}
 
-	return br.GetHelper().Change(ctx, entity)
+	return br.GetHelper().Change(ctx, SourceLabelChange, entity)
 }
 
 func (br *BaseCRUDRepository[T, ID]) internalValidateChange(entity T) error {
