@@ -10,6 +10,11 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+const (
+	SourceLabelListAll         string = "list_all"
+	SourceLabelListAllByOwners string = "list_all_by_owners"
+)
+
 type OwnedSaveStrategyManager[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
 	strategies map[LinkStrategy]OwnedSaveFunc[T, ID, OwnerID]
 }
@@ -67,7 +72,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Find(ctx context.Context, ownerI
 		return bor.GetHelper().GetNilInstance(), err
 	}
 
-	return bor.GetHelper().Get(ctx, sqlFind, ownerID, id)
+	return bor.GetHelper().Get(ctx, SourceLabelFind, sqlFind, ownerID, id)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareFind() (string, error) {
@@ -94,7 +99,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) List(ctx context.Context, ownerI
 		return nil, err
 	}
 
-	return bor.GetHelper().List(ctx, sqlList, ownerID, limit, offset)
+	return bor.GetHelper().List(ctx, SourceLabelList, sqlList, ownerID, limit, offset)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateList(ownerID OwnerID, limit, offset int) error {
@@ -132,7 +137,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAll(ctx context.Context, own
 		return nil, err
 	}
 
-	return bor.GetHelper().List(ctx, sqlList, ownerID)
+	return bor.GetHelper().List(ctx, SourceLabelListAll, sqlList, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAll(ownerID OwnerID) error {
@@ -163,7 +168,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAllByOwners(ctx context.Cont
 		return nil, err
 	}
 
-	return bor.GetHelper().ListByOwners(ctx, sqlListAllByOwners, ownerIDs)
+	return bor.GetHelper().ListByOwners(ctx, SourceLabelListAllByOwners, sqlListAllByOwners, ownerIDs)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAllByOwners(ownerIDs ...OwnerID) error {
@@ -269,7 +274,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Create(ctx context.Context, owne
 		return bor.GetHelper().GetNilInstance(), err
 	}
 
-	return bor.GetHelper().Create(ctx, entity, ownerID)
+	return bor.GetHelper().Create(ctx, SourceLabelCreate, entity, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) internalValidateCreate(ownerID OwnerID, entity T) error {
@@ -291,7 +296,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Change(ctx context.Context, owne
 		return bor.GetHelper().GetNilInstance(), err
 	}
 
-	return bor.GetHelper().Change(ctx, entity)
+	return bor.GetHelper().Change(ctx, SourceLabelChange, entity)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) internalValidateChange(ownerID OwnerID, entity T) error {

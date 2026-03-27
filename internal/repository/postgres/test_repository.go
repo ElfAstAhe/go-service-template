@@ -164,7 +164,7 @@ func (tr *TestRepositoryImpl) FindByCode(ctx context.Context, code string) (*dom
 	return tr.GetHelper().Get(ctx, sqlTestFindByCode, code)
 }
 
-func (tr *TestRepositoryImpl) entityScanner(scanner repository.Scannable, dest *domain.Test, params ...any) error {
+func (tr *TestRepositoryImpl) entityScanner(scanner repository.Scannable, sourceLabel string, dest *domain.Test, params ...any) error {
 	return scanner.Scan(&dest.ID, &dest.Code, &dest.Name, &dest.Description, &dest.CreatedAt, &dest.ModifiedAt)
 }
 
