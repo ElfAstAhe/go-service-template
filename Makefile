@@ -54,7 +54,7 @@ build: gen-proto gen-swagger gen-http-client
 
 # Запуск проекта (сначала соберет, потом запустит)
 run: build
-	./bin/$(SERVER_BINARY_NAME) -http-address "localhost:8080" -database-dsn "postgres://user:password@localhost:5432/test?sslmode=disable&search_path=test_schema" -jwt-secret-key "jwt-key" -cipher-key "12345"
+	./bin/$(SERVER_BINARY_NAME) --db-driver "postgres" --db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service"
 
 # Запуск тестов
 test:
