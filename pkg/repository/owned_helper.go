@@ -37,7 +37,7 @@ func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sqlReq 
 		var ownerID OwnerID
 		entity := oh.GetCallbacks().NewEntityFactory()
 
-		err = oh.GetCallbacks().EntityScanner(rows, entity, ownerID)
+		err = oh.GetCallbacks().EntityScanner(rows, entity, &ownerID)
 		if err != nil {
 			return nil, errs.NewDalError("OwnedHelper.ListByOwners", "scan rows", err)
 		}
