@@ -163,12 +163,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAllByOwners(ctx context.Cont
 		return nil, err
 	}
 
-	params := make([]any, 0, len(ownerIDs))
-	for _, param := range ownerIDs {
-		params = append(params, param)
-	}
-
-	return bor.GetHelper().ListByOwners(ctx, sqlListAllByOwners, params...)
+	return bor.GetHelper().ListByOwners(ctx, sqlListAllByOwners, ownerIDs)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAllByOwners(ownerIDs ...OwnerID) error {
