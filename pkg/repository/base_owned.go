@@ -210,7 +210,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) saveManyToMany(ctx context.Conte
 		res = append(res, item)
 	}
 
-	return res, nil
+	return bor.ListAll(ctx, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) saveOneToMany(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
