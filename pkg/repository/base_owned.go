@@ -79,10 +79,10 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareFind() (string, error) {
 	if bor.queryBuilders == nil {
 		return "", errs.NewDalError("BaseOwnedRepository.prepareFind", "query builders not applied", nil)
 	}
-	if bor.queryBuilders.findBuilder == nil {
+	if bor.queryBuilders.GetFind() == nil {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareFind", "query find builder not applied", nil))
 	}
-	sqlFind := bor.queryBuilders.findBuilder()
+	sqlFind := bor.queryBuilders.GetFind()()
 	if strings.TrimSpace(sqlFind) == "" {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareFind", "query find empty", nil))
 	}
@@ -322,7 +322,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) DeleteAll(ctx context.Context, o
 		return err
 	}
 
-	return bor.GetHelper().Delete(ctx, sqlDeleteAll, ownerID)
+	return bor.GetHelper().DeleteNoCheck(ctx, sqlDeleteAll, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateDeleteAll(ownerID OwnerID) error {
@@ -333,10 +333,10 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDeleteAll() (string, erro
 	if bor.GetQueryBuilders() == nil {
 		return "", errs.NewDalError("BaseOwnedRepository.prepareDeleteAll", "query builders not applied", nil)
 	}
-	if bor.GetQueryBuilders().deleteBuilder == nil {
+	if bor.GetQueryBuilders().GetDeleteAll() == nil {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDeleteAll", "query delete all builder not applied", nil))
 	}
-	sqlDeleteAll := bor.GetQueryBuilders().deleteBuilder()
+	sqlDeleteAll := bor.GetQueryBuilders().GetDeleteAll()()
 	if strings.TrimSpace(sqlDeleteAll) == "" {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDeleteAll", "query delete all empty", nil))
 	}
@@ -365,10 +365,10 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDelete() (string, error) 
 	if bor.GetQueryBuilders() == nil {
 		return "", errs.NewDalError("BaseOwnedRepository.prepareDelete", "query builders not applied", nil)
 	}
-	if bor.GetQueryBuilders().deleteBuilder == nil {
+	if bor.GetQueryBuilders().GetDelete() == nil {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDelete", "query delete builder not applied", nil))
 	}
-	sqlDelete := bor.GetQueryBuilders().deleteBuilder()
+	sqlDelete := bor.GetQueryBuilders().GetDelete()()
 	if strings.TrimSpace(sqlDelete) == "" {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDelete", "query delete empty", nil))
 	}

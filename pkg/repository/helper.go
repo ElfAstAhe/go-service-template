@@ -193,3 +193,14 @@ func (h *Helper[T, ID]) Delete(ctx context.Context, sqlReq string, params ...any
 
 	return nil
 }
+
+func (h *Helper[T, ID]) DeleteNoCheck(ctx context.Context, sqlReq string, params ...any) error {
+	// Получаем querier (либо транзакция, либо БД)
+	querier := h.GetExecutor().GetQuerier(ctx)
+	_, err := querier.ExecContext(ctx, sqlReq, params...)
+	if err != nil {
+		return errs.NewDalError("Helper.DeleteNoCheck", "exec context", err)
+	}
+
+	return nil
+}
