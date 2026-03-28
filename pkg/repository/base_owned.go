@@ -195,21 +195,19 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Save(ctx context.Context, ownerI
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) saveManyToMany(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
-	res := make([]T, 0, len(owned))
-
 	// удаляем
 	if err := bor.DeleteAll(ctx, ownerID); err != nil {
 		return nil, err
 	}
 	// создаём
 	for _, ownedItem := range owned {
-		item, err := bor.Create(ctx, ownerID, ownedItem)
+		_, err := bor.Create(ctx, ownerID, ownedItem)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, item)
 	}
 
+	// возвращаем запросом полного списка в разрезе владельца
 	return bor.ListAll(ctx, ownerID)
 }
 
