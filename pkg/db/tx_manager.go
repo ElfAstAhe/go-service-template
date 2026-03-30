@@ -16,6 +16,8 @@ type TxManager struct {
 	db DB
 }
 
+var _ TransactionManager = (*TxManager)(nil)
+
 func NewTxManager(db DB) *TxManager {
 	return &TxManager{
 		db: db,

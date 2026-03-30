@@ -20,6 +20,8 @@ type TestDeleteInteractor struct {
 	repo domain.TestRepository
 }
 
+var _ TestDeleteUseCase = (*TestDeleteInteractor)(nil)
+
 func NewTestDeleteUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestDeleteInteractor {
 	return &TestDeleteInteractor{
 		tm:   tm,

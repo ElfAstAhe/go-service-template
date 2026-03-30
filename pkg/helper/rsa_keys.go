@@ -24,6 +24,9 @@ type RSAKeysHelper struct {
 	bits int // 2048 или 4096
 }
 
+var _ Keys[*rsa.PrivateKey, *rsa.PublicKey] = (*RSAKeysHelper)(nil)
+var _ RSAKeys = (*RSAKeysHelper)(nil)
+
 func NewRSAKeysHelper(bits int) *RSAKeysHelper {
 	return &RSAKeysHelper{
 		bits: bits,

@@ -18,6 +18,8 @@ type ExampleGRPCService struct {
 	config     *conf.GRPCConfig
 }
 
+var _ pb.ExampleServiceServer = (*ExampleGRPCService)(nil)
+
 func NewExampleGRPCService(config *conf.GRPCConfig, testFacade facade.TestFacade, logger logger.Logger) *ExampleGRPCService {
 	return &ExampleGRPCService{
 		testFacade: testFacade,

@@ -108,6 +108,8 @@ type TestRepositoryImpl struct {
 	*repository.BaseCRUDRepository[*domain.Test, string]
 }
 
+var _ domain.TestRepository = (*TestRepositoryImpl)(nil)
+
 func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRepositoryImpl, error) {
 	// new instance
 	res := &TestRepositoryImpl{}

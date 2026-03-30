@@ -16,6 +16,8 @@ type TestListInteractor struct {
 	repo domain.TestRepository
 }
 
+var _ TestListUseCase = (*TestListInteractor)(nil)
+
 func NewTestListUseCase(repo domain.TestRepository) *TestListInteractor {
 	return &TestListInteractor{
 		repo: repo,

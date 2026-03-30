@@ -20,6 +20,8 @@ type TestSaveInteractor struct {
 	repo domain.TestRepository
 }
 
+var _ TestSaveUseCase = (*TestSaveInteractor)(nil)
+
 func NewTestSaveUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestSaveInteractor {
 	return &TestSaveInteractor{
 		tm:   tm,

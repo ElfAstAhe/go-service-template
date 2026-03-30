@@ -27,6 +27,8 @@ type TestFacadeImpl struct {
 	deleteUC    usecase.TestDeleteUseCase
 }
 
+var _ TestFacade = (*TestFacadeImpl)(nil)
+
 func NewTestFacade(
 	getUC usecase.TestGetUseCase,
 	getByCodeUC usecase.TestGetByCodeUseCase,

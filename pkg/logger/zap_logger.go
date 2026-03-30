@@ -13,6 +13,8 @@ type ZapLogger struct {
 	logger *zap.Logger
 }
 
+var _ Logger = (*ZapLogger)(nil)
+
 func NewStartupZapLogger() *ZapLogger {
 	zapLevel := zap.NewAtomicLevelAt(zap.InfoLevel)
 

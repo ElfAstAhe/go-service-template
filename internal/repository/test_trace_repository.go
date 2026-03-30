@@ -15,6 +15,8 @@ type TestTraceRepository struct {
 	repo domain.TestRepository
 }
 
+var _ domain.TestRepository = (*TestTraceRepository)(nil)
+
 func NewTestTraceRepository(repo domain.TestRepository) *TestTraceRepository {
 	return &TestTraceRepository{
 		BaseCRUDTraceRepository: repository.NewBaseCRUDTraceRepository("TestRepository", repo),
