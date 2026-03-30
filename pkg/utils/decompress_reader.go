@@ -26,6 +26,10 @@ type DecompressReader struct {
 	decompressor     io.Reader
 }
 
+var _ io.Reader = (*DecompressReader)(nil)
+var _ io.Closer = (*DecompressReader)(nil)
+var _ io.ReadCloser = (*DecompressReader)(nil)
+
 func NewDecompressReader(encoding string, compressedSource io.ReadCloser) (*DecompressReader, error) {
 	dec, err := decompressorFactory(encoding, compressedSource)
 	if err != nil {

@@ -9,6 +9,8 @@ import (
 
 type SHA256Hash struct{}
 
+var _ Cipher = (*SHA256Hash)(nil)
+
 func NewSHA256Hash() *SHA256Hash {
 	return &SHA256Hash{}
 }

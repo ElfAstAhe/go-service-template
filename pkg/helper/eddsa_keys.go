@@ -18,6 +18,9 @@ type EdDSAKeysHelper struct {
 	// Здесь не нужны биты, так как алгоритм фиксирован
 }
 
+var _ Keys[ed25519.PrivateKey, ed25519.PublicKey] = (*EdDSAKeysHelper)(nil)
+var _ EdDSAKeys = (*EdDSAKeysHelper)(nil)
+
 func NewEdDSAKeysHelper() *EdDSAKeysHelper {
 	return &EdDSAKeysHelper{}
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -11,11 +12,25 @@ import (
 )
 
 const (
+	DefaultHeaderName   string = "Authorization"
 	DefaultCookieName   string = "Authorization"
 	DefaultMetadataName string = "Authorization"
 )
 
-type Helper struct {
+type Helper interface {
+	SubjectFromToken(token *jwt.Token) (*Subject, error)
+	SubjectFromTokenString(tokenString string) (*Subject, error)
+	SubjectFromContext(ctx context.Context) (*Subject, error)
+	SubjectFromHTTPRequest(request *http.Request) (*Subject, error)
+	SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error)
+	SubjectFromGRPCContext(gRPCCtx context.Context) (*Subject, error)
+	HasSubjectInContext(ctx context.Context) bool
+	TokenFromSubject(subject *Subject) (*jwt.Token, error)
+	TokenStringFromSubjet(subject *Subject) (string, error)
+}
+
+type HelperImpl struct {
+	headerName    string
 	cookieName    string
 	metadataName  string
 	jwtHelper     *helper.JWTHelper
@@ -23,13 +38,17 @@ type Helper struct {
 	jwtGRPCHelper *helper.JWTGRPCHelper
 }
 
-func NewAuthHelper(
+var _ Helper = (*HelperImpl)(nil)
+
+func NewHelper(
+	headerName string,
 	cookieName, metadataName string,
 	jwtHelper *helper.JWTHelper,
 	jwtHTTPHelper *helper.JWTHTTPHelper,
 	jwtGRPCHelper *helper.JWTGRPCHelper,
-) *Helper {
-	return &Helper{
+) *HelperImpl {
+	return &HelperImpl{
+		headerName:    headerName,
 		cookieName:    cookieName,
 		metadataName:  metadataName,
 		jwtHelper:     jwtHelper,
@@ -38,23 +57,23 @@ func NewAuthHelper(
 	}
 }
 
-func NewDefaultAuthHelper(secretKey string) *Helper {
+func NewDefaultHelper(secretKey string) *HelperImpl {
 	jwtHelper := helper.NewDefaultJWTHelper(secretKey)
 	jwtHTTPHelper := helper.NewJWTHTTPHelper(jwtHelper)
 	jwtGRPCHelper := helper.NewJWTGRPCHelper(jwtHelper)
 
-	return NewDefaultAuthHelperEx(jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
+	return NewDefaultHelperEx(jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
 }
 
-func NewDefaultAuthHelperEx(
+func NewDefaultHelperEx(
 	jwtHelper *helper.JWTHelper,
 	jwtHTTPHelper *helper.JWTHTTPHelper,
 	jwtGRPCHelper *helper.JWTGRPCHelper,
-) *Helper {
-	return NewAuthHelper(DefaultCookieName, DefaultMetadataName, jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
+) *HelperImpl {
+	return NewHelper(DefaultHeaderName, DefaultCookieName, DefaultMetadataName, jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
 }
 
-func (ah *Helper) SubjectFromToken(token *jwt.Token) (*Subject, error) {
+func (ah *HelperImpl) SubjectFromToken(token *jwt.Token) (*Subject, error) {
 	if token == nil {
 		return nil, errs.NewInvalidArgumentError("token", "nil jwt token")
 	}
@@ -67,7 +86,7 @@ func (ah *Helper) SubjectFromToken(token *jwt.Token) (*Subject, error) {
 	return NewSubject(claims.SubjectID, claims.Subject, SubjectType(claims.SubjectType), claims.Roles, nil), nil
 }
 
-func (ah *Helper) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
+func (ah *HelperImpl) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
 	if subject == nil {
 		return nil, errs.NewInvalidArgumentError("subject", "nil user info")
 	}
@@ -75,7 +94,7 @@ func (ah *Helper) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
 	return ah.jwtHelper.BuildToken(subject.ID, subject.Name, string(subject.Type), false, ah.tokenRolesFromSubject(subject)...)
 }
 
-func (ah *Helper) tokenRolesFromSubject(subject *Subject) []string {
+func (ah *HelperImpl) tokenRolesFromSubject(subject *Subject) []string {
 	res := make([]string, 0, len(subject.Roles))
 	for key, _ := range subject.Roles {
 		res = append(res, key)
@@ -84,7 +103,7 @@ func (ah *Helper) tokenRolesFromSubject(subject *Subject) []string {
 	return res
 }
 
-func (ah *Helper) TokenStringFromSubjet(subject *Subject) (string, error) {
+func (ah *HelperImpl) TokenStringFromSubjet(subject *Subject) (string, error) {
 	token, err := ah.TokenFromSubject(subject)
 	if err != nil {
 		return "", err
@@ -93,7 +112,7 @@ func (ah *Helper) TokenStringFromSubjet(subject *Subject) (string, error) {
 	return ah.jwtHelper.BuildTokenStr(token)
 }
 
-func (ah *Helper) SubjectFromTokenString(tokenString string) (*Subject, error) {
+func (ah *HelperImpl) SubjectFromTokenString(tokenString string) (*Subject, error) {
 	token, err := ah.jwtHelper.ExtractTokenFromString(tokenString)
 	if err != nil {
 		return nil, errs.NewUtlAuthError("extract token", err)
@@ -102,7 +121,7 @@ func (ah *Helper) SubjectFromTokenString(tokenString string) (*Subject, error) {
 	return ah.SubjectFromToken(token)
 }
 
-func (ah *Helper) SubjectFromContext(ctx context.Context) (*Subject, error) {
+func (ah *HelperImpl) SubjectFromContext(ctx context.Context) (*Subject, error) {
 	res := FromContext(ctx)
 	if res != nil {
 		return res, nil
@@ -111,7 +130,7 @@ func (ah *Helper) SubjectFromContext(ctx context.Context) (*Subject, error) {
 	return nil, errs.NewUtlAuthError("user info not found", nil)
 }
 
-func (ah *Helper) HasSubjectInContext(ctx context.Context) bool {
+func (ah *HelperImpl) HasSubjectInContext(ctx context.Context) bool {
 	userInfo, err := ah.SubjectFromContext(ctx)
 	if err != nil {
 		return false
@@ -120,10 +139,18 @@ func (ah *Helper) HasSubjectInContext(ctx context.Context) bool {
 	return userInfo != nil
 }
 
-func (ah *Helper) SubjectFromHTTPRequest(request *http.Request) (*Subject, error) {
-	tokenString, err := ah.jwtHTTPHelper.ExtractTokenStringFromRequestCookie(ah.cookieName, request)
-	if err != nil {
-		return nil, errs.NewUtlAuthError("extract token string", err)
+func (ah *HelperImpl) SubjectFromHTTPRequest(request *http.Request) (*Subject, error) {
+	cookieTokenString, cookieErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestCookie(ah.cookieName, request)
+	headerTokenString, headerErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestHeader(ah.headerName, request)
+	if cookieErr != nil && headerErr != nil {
+		return nil, errs.NewUtlAuthError("extract token string", errors.Join(cookieErr, headerErr))
+	}
+
+	var tokenString string
+	if cookieErr == nil && cookieTokenString != "" {
+		tokenString = cookieTokenString
+	} else if headerErr == nil && headerTokenString != "" {
+		tokenString = headerTokenString
 	}
 
 	userInfo, err := ah.SubjectFromTokenString(tokenString)
@@ -134,7 +161,7 @@ func (ah *Helper) SubjectFromHTTPRequest(request *http.Request) (*Subject, error
 	return userInfo, nil
 }
 
-func (ah *Helper) SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error) {
+func (ah *HelperImpl) SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error) {
 	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromMetadata(ah.metadataName, md)
 	if err != nil {
 		return nil, errs.NewUtlAuthError("extract token string", err)
@@ -148,7 +175,7 @@ func (ah *Helper) SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error) {
 	return userInfo, nil
 }
 
-func (ah *Helper) UserInfoFromGRPCContext(gRPCCtx context.Context) (*Subject, error) {
+func (ah *HelperImpl) SubjectFromGRPCContext(gRPCCtx context.Context) (*Subject, error) {
 	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromContext(ah.metadataName, gRPCCtx)
 	if err != nil {
 		return nil, errs.NewUtlAuthError("extract token string", err)

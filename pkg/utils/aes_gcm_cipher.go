@@ -15,6 +15,8 @@ type AesGcmCipher struct {
 	gcm cipher.AEAD
 }
 
+var _ Cipher = (*AesGcmCipher)(nil)
+
 // NewAesGcmCipher - aes/gcm util constructor
 func NewAesGcmCipher(key []byte) (*AesGcmCipher, error) {
 	block, err := aes.NewCipher(key)

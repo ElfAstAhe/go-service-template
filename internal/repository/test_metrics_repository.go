@@ -14,6 +14,8 @@ type TestMetricsRepository struct {
 	repo domain.TestRepository
 }
 
+var _ domain.TestRepository = (*TestMetricsRepository)(nil)
+
 func NewTestMetricsRepository(repo domain.TestRepository) *TestMetricsRepository {
 	return &TestMetricsRepository{
 		BaseCRUDMetricsRepository: repository.NewBaseCRUDMetricsRepository("TestRepository", repo),

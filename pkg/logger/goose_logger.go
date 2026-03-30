@@ -1,9 +1,15 @@
 package logger
 
+import (
+	"github.com/pressly/goose/v3"
+)
+
 // GooseLogger is implementation of goose.Logger interface
 type GooseLogger struct {
 	log Logger
 }
+
+var _ goose.Logger = (*GooseLogger)(nil)
 
 func NewGooseLogger(log Logger) *GooseLogger {
 	return &GooseLogger{
