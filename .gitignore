@@ -33,5 +33,5 @@ go.work.sum
 /cmd/server/server
 /token.txt
 /vendor/
-/.run/example-service.run.xml
 /.run/
+/bin/

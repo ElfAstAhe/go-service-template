@@ -47,14 +47,14 @@ func (h *Helper[T, ID]) GetCallbacks() *BaseRepositoryCallbacks[T, ID] {
 	return h.callbacks
 }
 
-func (h *Helper[T, ID]) Get(ctx context.Context, sqlReq string, params ...any) (T, error) {
+func (h *Helper[T, ID]) Get(ctx context.Context, sourceLabel string, sqlReq string, params ...any) (T, error) {
 	// Получаем querier (либо транзакция, либо БД)
 	querier := h.exec.GetQuerier(ctx)
 
 	row := querier.QueryRowContext(ctx, sqlReq, params...)
 	res := h.callbacks.NewEntityFactory()
 
-	err := h.callbacks.EntityScanner(row, res)
+	err := h.callbacks.EntityScanner(row, sourceLabel, res)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return h.nilInstance, errs.NewDalNotFoundError(h.info.Entity, params, err)
@@ -70,7 +70,7 @@ func (h *Helper[T, ID]) Get(ctx context.Context, sqlReq string, params ...any) (
 	return res, nil
 }
 
-func (h *Helper[T, ID]) List(ctx context.Context, sqlReq string, params ...any) ([]T, error) {
+func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq string, params ...any) ([]T, error) {
 	querier := h.GetExecutor().GetQuerier(ctx)
 
 	rows, err := querier.QueryContext(ctx, sqlReq, params...)
@@ -88,7 +88,7 @@ func (h *Helper[T, ID]) List(ctx context.Context, sqlReq string, params ...any) 
 		addEntity := true
 		entity := h.GetCallbacks().NewEntityFactory()
 
-		err = h.GetCallbacks().EntityScanner(rows, entity, params...)
+		err = h.GetCallbacks().EntityScanner(rows, sourceLabel, entity, params...)
 		if err != nil {
 			return nil, errs.NewDalError("Helper.List", "scan rows", err)
 		}
@@ -113,7 +113,7 @@ func (h *Helper[T, ID]) List(ctx context.Context, sqlReq string, params ...any) 
 	return res, nil
 }
 
-func (h *Helper[T, ID]) Create(ctx context.Context, entity T, params ...any) (T, error) {
+func (h *Helper[T, ID]) Create(ctx context.Context, sourceLabel string, entity T, params ...any) (T, error) {
 	if h.GetCallbacks().BeforeCreate != nil {
 		if err := h.GetCallbacks().BeforeCreate(entity, params...); err != nil {
 			return h.GetNilInstance(), errs.NewDalError("Helper.Create", "before create", err)
@@ -128,7 +128,7 @@ func (h *Helper[T, ID]) Create(ctx context.Context, entity T, params ...any) (T,
 	}
 
 	res := h.GetCallbacks().NewEntityFactory()
-	err = h.GetCallbacks().EntityScanner(row, res, params...)
+	err = h.GetCallbacks().EntityScanner(row, sourceLabel, res, params...)
 	if err != nil {
 		if h.errDecipher.IsUniqueViolation(err) {
 			return h.GetNilInstance(), errs.NewDalAlreadyExistsError(h.GetInfo().Entity, entity.GetID(), err)
@@ -144,7 +144,7 @@ func (h *Helper[T, ID]) Create(ctx context.Context, entity T, params ...any) (T,
 	return res, nil
 }
 
-func (h *Helper[T, ID]) Change(ctx context.Context, entity T, params ...any) (T, error) {
+func (h *Helper[T, ID]) Change(ctx context.Context, sourceLabel string, entity T, params ...any) (T, error) {
 	if h.GetCallbacks().BeforeChange != nil {
 		if err := h.GetCallbacks().BeforeChange(entity, params...); err != nil {
 			return h.GetNilInstance(), errs.NewDalError("Helper.Change", "before change", err)
@@ -159,7 +159,7 @@ func (h *Helper[T, ID]) Change(ctx context.Context, entity T, params ...any) (T,
 	}
 
 	res := h.GetCallbacks().NewEntityFactory()
-	err = h.GetCallbacks().EntityScanner(row, res, params...)
+	err = h.GetCallbacks().EntityScanner(row, sourceLabel, res, params...)
 	if err != nil {
 		if h.errDecipher.IsUniqueViolation(err) {
 			return h.GetNilInstance(), errs.NewDalAlreadyExistsError(h.GetInfo().Entity, entity.GetID(), err)
@@ -189,6 +189,17 @@ func (h *Helper[T, ID]) Delete(ctx context.Context, sqlReq string, params ...any
 	}
 	if !(rowsAffected > 0) {
 		return errs.NewDalNotFoundError(h.GetInfo().Entity, params, nil)
+	}
+
+	return nil
+}
+
+func (h *Helper[T, ID]) DeleteNoCheck(ctx context.Context, sqlReq string, params ...any) error {
+	// Получаем querier (либо транзакция, либо БД)
+	querier := h.GetExecutor().GetQuerier(ctx)
+	_, err := querier.ExecContext(ctx, sqlReq, params...)
+	if err != nil {
+		return errs.NewDalError("Helper.DeleteNoCheck", "exec context", err)
 	}
 
 	return nil

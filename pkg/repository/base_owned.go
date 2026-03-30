@@ -10,6 +10,11 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+const (
+	SourceLabelListAll         string = "list_all"
+	SourceLabelListAllByOwners string = "list_all_by_owners"
+)
+
 type OwnedSaveStrategyManager[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
 	strategies map[LinkStrategy]OwnedSaveFunc[T, ID, OwnerID]
 }
@@ -67,17 +72,17 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Find(ctx context.Context, ownerI
 		return bor.GetHelper().GetNilInstance(), err
 	}
 
-	return bor.GetHelper().Get(ctx, sqlFind, ownerID, id)
+	return bor.GetHelper().Get(ctx, SourceLabelFind, sqlFind, ownerID, id)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareFind() (string, error) {
 	if bor.queryBuilders == nil {
 		return "", errs.NewDalError("BaseOwnedRepository.prepareFind", "query builders not applied", nil)
 	}
-	if bor.queryBuilders.findBuilder == nil {
+	if bor.queryBuilders.GetFind() == nil {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareFind", "query find builder not applied", nil))
 	}
-	sqlFind := bor.queryBuilders.findBuilder()
+	sqlFind := bor.queryBuilders.GetFind()()
 	if strings.TrimSpace(sqlFind) == "" {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareFind", "query find empty", nil))
 	}
@@ -94,7 +99,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) List(ctx context.Context, ownerI
 		return nil, err
 	}
 
-	return bor.GetHelper().List(ctx, sqlList, ownerID, limit, offset)
+	return bor.GetHelper().List(ctx, SourceLabelList, sqlList, ownerID, limit, offset)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateList(ownerID OwnerID, limit, offset int) error {
@@ -132,7 +137,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAll(ctx context.Context, own
 		return nil, err
 	}
 
-	return bor.GetHelper().List(ctx, sqlList, ownerID)
+	return bor.GetHelper().List(ctx, SourceLabelListAll, sqlList, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAll(ownerID OwnerID) error {
@@ -163,12 +168,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAllByOwners(ctx context.Cont
 		return nil, err
 	}
 
-	params := make([]any, 0, len(ownerIDs))
-	for _, param := range ownerIDs {
-		params = append(params, param)
-	}
-
-	return bor.GetHelper().ListByOwners(ctx, sqlListAllByOwners, params...)
+	return bor.GetHelper().ListByOwners(ctx, SourceLabelListAllByOwners, sqlListAllByOwners, ownerIDs)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAllByOwners(ownerIDs ...OwnerID) error {
@@ -195,22 +195,20 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Save(ctx context.Context, ownerI
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) saveManyToMany(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
-	res := make([]T, 0, len(owned))
-
 	// удаляем
 	if err := bor.DeleteAll(ctx, ownerID); err != nil {
 		return nil, err
 	}
 	// создаём
 	for _, ownedItem := range owned {
-		item, err := bor.Create(ctx, ownerID, ownedItem)
+		_, err := bor.Create(ctx, ownerID, ownedItem)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, item)
 	}
 
-	return res, nil
+	// возвращаем запросом полного списка в разрезе владельца
+	return bor.ListAll(ctx, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) saveOneToMany(ctx context.Context, ownerID OwnerID, owned []T) ([]T, error) {
@@ -274,7 +272,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Create(ctx context.Context, owne
 		return bor.GetHelper().GetNilInstance(), err
 	}
 
-	return bor.GetHelper().Create(ctx, entity, ownerID)
+	return bor.GetHelper().Create(ctx, SourceLabelCreate, entity, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) internalValidateCreate(ownerID OwnerID, entity T) error {
@@ -296,7 +294,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Change(ctx context.Context, owne
 		return bor.GetHelper().GetNilInstance(), err
 	}
 
-	return bor.GetHelper().Change(ctx, entity)
+	return bor.GetHelper().Change(ctx, SourceLabelChange, entity)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) internalValidateChange(ownerID OwnerID, entity T) error {
@@ -322,7 +320,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) DeleteAll(ctx context.Context, o
 		return err
 	}
 
-	return bor.GetHelper().Delete(ctx, sqlDeleteAll, ownerID)
+	return bor.GetHelper().DeleteNoCheck(ctx, sqlDeleteAll, ownerID)
 }
 
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateDeleteAll(ownerID OwnerID) error {
@@ -333,10 +331,10 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDeleteAll() (string, erro
 	if bor.GetQueryBuilders() == nil {
 		return "", errs.NewDalError("BaseOwnedRepository.prepareDeleteAll", "query builders not applied", nil)
 	}
-	if bor.GetQueryBuilders().deleteBuilder == nil {
+	if bor.GetQueryBuilders().GetDeleteAll() == nil {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDeleteAll", "query delete all builder not applied", nil))
 	}
-	sqlDeleteAll := bor.GetQueryBuilders().deleteBuilder()
+	sqlDeleteAll := bor.GetQueryBuilders().GetDeleteAll()()
 	if strings.TrimSpace(sqlDeleteAll) == "" {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDeleteAll", "query delete all empty", nil))
 	}
@@ -365,10 +363,10 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDelete() (string, error) 
 	if bor.GetQueryBuilders() == nil {
 		return "", errs.NewDalError("BaseOwnedRepository.prepareDelete", "query builders not applied", nil)
 	}
-	if bor.GetQueryBuilders().deleteBuilder == nil {
+	if bor.GetQueryBuilders().GetDelete() == nil {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDelete", "query delete builder not applied", nil))
 	}
-	sqlDelete := bor.GetQueryBuilders().deleteBuilder()
+	sqlDelete := bor.GetQueryBuilders().GetDelete()()
 	if strings.TrimSpace(sqlDelete) == "" {
 		return "", errs.NewNotImplementedError(errs.NewDalError("BaseOwnedRepository.prepareDelete", "query delete empty", nil))
 	}

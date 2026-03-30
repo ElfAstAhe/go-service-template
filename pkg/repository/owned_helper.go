@@ -8,6 +8,11 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+const (
+	EntityScannerSourceLabelListAll      string = "list_all"
+	EntityScannerSourceLabelListByOwners string = "list_by_owners"
+)
+
 type OwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
 	*Helper[T, ID]
 }
@@ -18,7 +23,7 @@ func newOwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable](exec
 	}
 }
 
-func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sqlReq string, params ...any) (map[OwnerID][]T, error) {
+func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sourceLabel string, sqlReq string, params ...any) (map[OwnerID][]T, error) {
 	querier := oh.GetExecutor().GetQuerier(ctx)
 
 	rows, err := querier.QueryContext(ctx, sqlReq, params...)
@@ -37,7 +42,7 @@ func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sqlReq 
 		var ownerID OwnerID
 		entity := oh.GetCallbacks().NewEntityFactory()
 
-		err = oh.GetCallbacks().EntityScanner(rows, entity, ownerID)
+		err = oh.GetCallbacks().EntityScanner(rows, sourceLabel, entity, &ownerID)
 		if err != nil {
 			return nil, errs.NewDalError("OwnedHelper.ListByOwners", "scan rows", err)
 		}

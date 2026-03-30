@@ -8,12 +8,12 @@ import (
 
 // DBConfig — настройки основной реляционной базы данных
 type DBConfig struct {
-	Driver              string        `mapstructure:"driver"` // postgres, mysql, etc.
-	DSN                 string        `mapstructure:"dsn"`
-	MaxOpenConns        int           `mapstructure:"max_open_conns"`
-	MaxIdleConns        int           `mapstructure:"max_idle_conns"`
-	ConnMaxIdleLifetime time.Duration `mapstructure:"conn_max_idle_lifetime"`
-	ConnTimeout         time.Duration `mapstructure:"conn_timeout"`
+	Driver              string        `mapstructure:"driver" json:"driver,omitempty" yaml:"driver,omitempty"` // postgres, mysql, etc.
+	DSN                 string        `mapstructure:"dsn" json:"dsn,omitempty" yaml:"dsn,omitempty"`
+	MaxOpenConns        int           `mapstructure:"max_open_conns" json:"max_open_conns,omitempty" yaml:"max_open_conns,omitempty"`
+	MaxIdleConns        int           `mapstructure:"max_idle_conns" json:"max_idle_conns,omitempty" yaml:"max_idle_conns,omitempty"`
+	ConnMaxIdleLifetime time.Duration `mapstructure:"conn_max_idle_lifetime" json:"conn_max_idle_lifetime,omitempty" yaml:"conn_max_idle_lifetime,omitempty"`
+	ConnTimeout         time.Duration `mapstructure:"conn_timeout" json:"conn_timeout,omitempty" yaml:"conn_timeout,omitempty"`
 }
 
 func NewDBConfig(driver, dsn string, maxOpenConns, maxIdleConns int, connMaxIdleLifetime, ConnTimeout time.Duration) *DBConfig {

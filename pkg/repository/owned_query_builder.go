@@ -39,7 +39,7 @@ func (bq *BaseOwnedQueryBuilders) GetChange() QueryBuilderFunc {
 	return bq.changeBuilder
 }
 
-func (bq *BaseOwnedQueryBuilders) DeleteAll() QueryBuilderFunc {
+func (bq *BaseOwnedQueryBuilders) GetDeleteAll() QueryBuilderFunc {
 	return bq.deleteAllBuilder
 }
 
@@ -101,6 +101,12 @@ func (bbo *BaseOwnedQueryBuildersBuilder) WithChange(change QueryBuilderFunc) *B
 
 func (bbo *BaseOwnedQueryBuildersBuilder) WithDelete(deleteBuilder QueryBuilderFunc) *BaseOwnedQueryBuildersBuilder {
 	bbo.instance.deleteBuilder = deleteBuilder
+
+	return bbo
+}
+
+func (bbo *BaseOwnedQueryBuildersBuilder) WithDeleteAll(deleteAllBuilder QueryBuilderFunc) *BaseOwnedQueryBuildersBuilder {
+	bbo.instance.deleteAllBuilder = deleteAllBuilder
 
 	return bbo
 }
