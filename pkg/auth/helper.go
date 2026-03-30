@@ -72,7 +72,16 @@ func (ah *Helper) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
 		return nil, errs.NewInvalidArgumentError("subject", "nil user info")
 	}
 
-	return ah.jwtHelper.BuildToken(subject.ID, subject.Name, string(subject.Type), false)
+	return ah.jwtHelper.BuildToken(subject.ID, subject.Name, string(subject.Type), false, ah.tokenRolesFromSubject(subject)...)
+}
+
+func (ah *Helper) tokenRolesFromSubject(subject *Subject) []string {
+	res := make([]string, 0, len(subject.Roles))
+	for key, _ := range subject.Roles {
+		res = append(res, key)
+	}
+
+	return res
 }
 
 func (ah *Helper) TokenStringFromSubjet(subject *Subject) (string, error) {
