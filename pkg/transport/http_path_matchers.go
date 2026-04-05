@@ -30,7 +30,17 @@ func NewHTTPPathMatchers(matchers []*HTTPPathMatcher) *HTTPPathMatchers {
 }
 
 func (hpm *HTTPPathMatchers) Match(method string, path string) bool {
-	return hpm.GetPathMatcher(method, path) != nil
+	pms, ok := hpm.WatchPaths[method]
+	if !ok {
+		return false
+	}
+	for _, pm := range pms {
+		if pm.Match(method, path) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (hpm *HTTPPathMatchers) GetPathMatcher(method string, path string) *HTTPPathMatcher {
