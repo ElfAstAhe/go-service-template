@@ -26,6 +26,9 @@ func NewHTTPPathMatcher(method, path, pattern string) *HTTPPathMatcher {
 }
 
 func (m *HTTPPathMatcher) Match(method string, path string) bool {
+	if m == nil {
+		return false
+	}
 	if m.matcher == nil {
 		return false
 	}
