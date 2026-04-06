@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 
+	_ "github.com/ElfAstAhe/go-service-template/docs"
 	"github.com/ElfAstAhe/go-service-template/internal/facade"
 	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
