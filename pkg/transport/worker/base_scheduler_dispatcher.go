@@ -10,7 +10,7 @@ import (
 )
 
 type JobHandler[D comparable] func(ctx context.Context, workerIndex int, data D) error
-type DispatcherDataProvider[D comparable] func(ctx context.Context) ([]D, error)
+type DispatcherDataProvider[D comparable] func(ctx context.Context, eventTime time.Time) ([]D, error)
 
 type BaseSchedulerDispatcherConfig struct {
 	*BaseSchedulerConfig
@@ -86,7 +86,7 @@ func (bsd *BaseSchedulerDispatcher[D]) dispatch(eventTime time.Time) error {
 		return errs.NewCommonError(fmt.Sprintf("failed %s dispatcher %s data provider not applied", bsd.GetName(), eventTime.Format(time.DateTime)), nil)
 	}
 
-	res, err := bsd.dataProvider(bsd.GetContext())
+	res, err := bsd.dataProvider(bsd.GetContext(), eventTime)
 	if err != nil {
 		return err
 	}
