@@ -15,7 +15,7 @@ type BaseSchedulerDispatcherConfig struct {
 	PoolConfig      *BasePoolConfig
 }
 
-func NewBaseSchedulerDispatcherConfig2(
+func NewBaseSchedulerDispatcherConfig(
 	schedulerConfig *BaseSchedulerConfig,
 	poolConfig *BasePoolConfig,
 ) *BaseSchedulerDispatcherConfig {
