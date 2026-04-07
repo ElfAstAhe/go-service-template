@@ -5,6 +5,11 @@
 package mocks
 
 import (
+	"context"
+	"sync"
+	"time"
+
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -35,17 +40,289 @@ func (_m *MockScheduler) EXPECT() *MockScheduler_Expecter {
 	return &MockScheduler_Expecter{mock: &_m.Mock}
 }
 
-// Start provides a mock function for the type MockScheduler
-func (_mock *MockScheduler) Start() error {
+// GetContext provides a mock function for the type MockScheduler
+func (_mock *MockScheduler) GetContext() context.Context {
 	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetContext")
+	}
+
+	var r0 context.Context
+	if returnFunc, ok := ret.Get(0).(func() context.Context); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(context.Context)
+		}
+	}
+	return r0
+}
+
+// MockScheduler_GetContext_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetContext'
+type MockScheduler_GetContext_Call struct {
+	*mock.Call
+}
+
+// GetContext is a helper method to define mock.On call
+func (_e *MockScheduler_Expecter) GetContext() *MockScheduler_GetContext_Call {
+	return &MockScheduler_GetContext_Call{Call: _e.mock.On("GetContext")}
+}
+
+func (_c *MockScheduler_GetContext_Call) Run(run func()) *MockScheduler_GetContext_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockScheduler_GetContext_Call) Return(context1 context.Context) *MockScheduler_GetContext_Call {
+	_c.Call.Return(context1)
+	return _c
+}
+
+func (_c *MockScheduler_GetContext_Call) RunAndReturn(run func() context.Context) *MockScheduler_GetContext_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetContextCancel provides a mock function for the type MockScheduler
+func (_mock *MockScheduler) GetContextCancel() context.CancelFunc {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetContextCancel")
+	}
+
+	var r0 context.CancelFunc
+	if returnFunc, ok := ret.Get(0).(func() context.CancelFunc); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(context.CancelFunc)
+		}
+	}
+	return r0
+}
+
+// MockScheduler_GetContextCancel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetContextCancel'
+type MockScheduler_GetContextCancel_Call struct {
+	*mock.Call
+}
+
+// GetContextCancel is a helper method to define mock.On call
+func (_e *MockScheduler_Expecter) GetContextCancel() *MockScheduler_GetContextCancel_Call {
+	return &MockScheduler_GetContextCancel_Call{Call: _e.mock.On("GetContextCancel")}
+}
+
+func (_c *MockScheduler_GetContextCancel_Call) Run(run func()) *MockScheduler_GetContextCancel_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockScheduler_GetContextCancel_Call) Return(cancelFunc context.CancelFunc) *MockScheduler_GetContextCancel_Call {
+	_c.Call.Return(cancelFunc)
+	return _c
+}
+
+func (_c *MockScheduler_GetContextCancel_Call) RunAndReturn(run func() context.CancelFunc) *MockScheduler_GetContextCancel_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetLogger provides a mock function for the type MockScheduler
+func (_mock *MockScheduler) GetLogger() logger.Logger {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLogger")
+	}
+
+	var r0 logger.Logger
+	if returnFunc, ok := ret.Get(0).(func() logger.Logger); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(logger.Logger)
+		}
+	}
+	return r0
+}
+
+// MockScheduler_GetLogger_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLogger'
+type MockScheduler_GetLogger_Call struct {
+	*mock.Call
+}
+
+// GetLogger is a helper method to define mock.On call
+func (_e *MockScheduler_Expecter) GetLogger() *MockScheduler_GetLogger_Call {
+	return &MockScheduler_GetLogger_Call{Call: _e.mock.On("GetLogger")}
+}
+
+func (_c *MockScheduler_GetLogger_Call) Run(run func()) *MockScheduler_GetLogger_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockScheduler_GetLogger_Call) Return(logger1 logger.Logger) *MockScheduler_GetLogger_Call {
+	_c.Call.Return(logger1)
+	return _c
+}
+
+func (_c *MockScheduler_GetLogger_Call) RunAndReturn(run func() logger.Logger) *MockScheduler_GetLogger_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetName provides a mock function for the type MockScheduler
+func (_mock *MockScheduler) GetName() string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetName")
+	}
+
+	var r0 string
+	if returnFunc, ok := ret.Get(0).(func() string); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	return r0
+}
+
+// MockScheduler_GetName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetName'
+type MockScheduler_GetName_Call struct {
+	*mock.Call
+}
+
+// GetName is a helper method to define mock.On call
+func (_e *MockScheduler_Expecter) GetName() *MockScheduler_GetName_Call {
+	return &MockScheduler_GetName_Call{Call: _e.mock.On("GetName")}
+}
+
+func (_c *MockScheduler_GetName_Call) Run(run func()) *MockScheduler_GetName_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockScheduler_GetName_Call) Return(s string) *MockScheduler_GetName_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockScheduler_GetName_Call) RunAndReturn(run func() string) *MockScheduler_GetName_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetWaitGroup provides a mock function for the type MockScheduler
+func (_mock *MockScheduler) GetWaitGroup() *sync.WaitGroup {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetWaitGroup")
+	}
+
+	var r0 *sync.WaitGroup
+	if returnFunc, ok := ret.Get(0).(func() *sync.WaitGroup); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sync.WaitGroup)
+		}
+	}
+	return r0
+}
+
+// MockScheduler_GetWaitGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetWaitGroup'
+type MockScheduler_GetWaitGroup_Call struct {
+	*mock.Call
+}
+
+// GetWaitGroup is a helper method to define mock.On call
+func (_e *MockScheduler_Expecter) GetWaitGroup() *MockScheduler_GetWaitGroup_Call {
+	return &MockScheduler_GetWaitGroup_Call{Call: _e.mock.On("GetWaitGroup")}
+}
+
+func (_c *MockScheduler_GetWaitGroup_Call) Run(run func()) *MockScheduler_GetWaitGroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockScheduler_GetWaitGroup_Call) Return(waitGroup *sync.WaitGroup) *MockScheduler_GetWaitGroup_Call {
+	_c.Call.Return(waitGroup)
+	return _c
+}
+
+func (_c *MockScheduler_GetWaitGroup_Call) RunAndReturn(run func() *sync.WaitGroup) *MockScheduler_GetWaitGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// IsRunning provides a mock function for the type MockScheduler
+func (_mock *MockScheduler) IsRunning() bool {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsRunning")
+	}
+
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func() bool); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	return r0
+}
+
+// MockScheduler_IsRunning_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsRunning'
+type MockScheduler_IsRunning_Call struct {
+	*mock.Call
+}
+
+// IsRunning is a helper method to define mock.On call
+func (_e *MockScheduler_Expecter) IsRunning() *MockScheduler_IsRunning_Call {
+	return &MockScheduler_IsRunning_Call{Call: _e.mock.On("IsRunning")}
+}
+
+func (_c *MockScheduler_IsRunning_Call) Run(run func()) *MockScheduler_IsRunning_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockScheduler_IsRunning_Call) Return(b bool) *MockScheduler_IsRunning_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockScheduler_IsRunning_Call) RunAndReturn(run func() bool) *MockScheduler_IsRunning_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Start provides a mock function for the type MockScheduler
+func (_mock *MockScheduler) Start(ctx context.Context) error {
+	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Start")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func() error); ok {
-		r0 = returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = returnFunc(ctx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -58,13 +335,20 @@ type MockScheduler_Start_Call struct {
 }
 
 // Start is a helper method to define mock.On call
-func (_e *MockScheduler_Expecter) Start() *MockScheduler_Start_Call {
-	return &MockScheduler_Start_Call{Call: _e.mock.On("Start")}
+//   - ctx context.Context
+func (_e *MockScheduler_Expecter) Start(ctx interface{}) *MockScheduler_Start_Call {
+	return &MockScheduler_Start_Call{Call: _e.mock.On("Start", ctx)}
 }
 
-func (_c *MockScheduler_Start_Call) Run(run func()) *MockScheduler_Start_Call {
+func (_c *MockScheduler_Start_Call) Run(run func(ctx context.Context)) *MockScheduler_Start_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -74,22 +358,22 @@ func (_c *MockScheduler_Start_Call) Return(err error) *MockScheduler_Start_Call 
 	return _c
 }
 
-func (_c *MockScheduler_Start_Call) RunAndReturn(run func() error) *MockScheduler_Start_Call {
+func (_c *MockScheduler_Start_Call) RunAndReturn(run func(ctx context.Context) error) *MockScheduler_Start_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Stop provides a mock function for the type MockScheduler
-func (_mock *MockScheduler) Stop() error {
-	ret := _mock.Called()
+func (_mock *MockScheduler) Stop(stopTimeOut time.Duration) error {
+	ret := _mock.Called(stopTimeOut)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Stop")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func() error); ok {
-		r0 = returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(time.Duration) error); ok {
+		r0 = returnFunc(stopTimeOut)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -102,13 +386,20 @@ type MockScheduler_Stop_Call struct {
 }
 
 // Stop is a helper method to define mock.On call
-func (_e *MockScheduler_Expecter) Stop() *MockScheduler_Stop_Call {
-	return &MockScheduler_Stop_Call{Call: _e.mock.On("Stop")}
+//   - stopTimeOut time.Duration
+func (_e *MockScheduler_Expecter) Stop(stopTimeOut interface{}) *MockScheduler_Stop_Call {
+	return &MockScheduler_Stop_Call{Call: _e.mock.On("Stop", stopTimeOut)}
 }
 
-func (_c *MockScheduler_Stop_Call) Run(run func()) *MockScheduler_Stop_Call {
+func (_c *MockScheduler_Stop_Call) Run(run func(stopTimeOut time.Duration)) *MockScheduler_Stop_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		var arg0 time.Duration
+		if args[0] != nil {
+			arg0 = args[0].(time.Duration)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -118,7 +409,7 @@ func (_c *MockScheduler_Stop_Call) Return(err error) *MockScheduler_Stop_Call {
 	return _c
 }
 
-func (_c *MockScheduler_Stop_Call) RunAndReturn(run func() error) *MockScheduler_Stop_Call {
+func (_c *MockScheduler_Stop_Call) RunAndReturn(run func(stopTimeOut time.Duration) error) *MockScheduler_Stop_Call {
 	_c.Call.Return(run)
 	return _c
 }

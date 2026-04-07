@@ -2,9 +2,12 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
@@ -27,8 +30,7 @@ func NewBaseSchedulerConfig(
 }
 
 type BaseScheduler struct {
-	parent context.Context
-	name   string
+	name string
 	// context
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -41,35 +43,43 @@ type BaseScheduler struct {
 	config *BaseSchedulerConfig
 	// logging
 	log logger.Logger
+	//
+	running *atomic.Bool
 }
 
 var _ Scheduler = (*BaseScheduler)(nil)
 
 func NewBaseScheduler(
 	name string,
-	parent context.Context,
 	timerDispatcher TimerDispatcher,
 	config *BaseSchedulerConfig,
 	log logger.Logger,
 ) *BaseScheduler {
-	return &BaseScheduler{
-		parent:          parent,
+	res := &BaseScheduler{
 		name:            name,
 		timerDispatcher: timerDispatcher,
 		config:          config,
 		log:             log.GetLogger(name),
+		running:         new(atomic.Bool),
 	}
+	res.running.Store(false)
+
+	return res
 }
 
-func (bs *BaseScheduler) Start() error {
-	bs.log.Debugf("starting %s scheduler dispatcher", bs.name)
-	defer bs.log.Debugf("started %s scheduler dispatcher", bs.name)
+func (bs *BaseScheduler) Start(ctx context.Context) error {
+	if !bs.running.CompareAndSwap(false, true) {
+		return errs.NewCommonError(fmt.Sprintf("scheduler %s already started", bs.GetName()), nil)
+	}
+
+	bs.GetLogger().Debugf("scheduler %s starting", bs.GetName())
+	defer bs.GetLogger().Debugf("scheduler %s started", bs.GetName())
 
 	// context
-	bs.ctx, bs.cancel = context.WithCancel(bs.parent)
+	bs.ctx, bs.cancel = context.WithCancel(ctx)
 	// timer
 	if bs.timer == nil {
-		bs.timer = time.NewTimer(bs.config.startInterval)
+		bs.timer = time.NewTimer(bs.GetConfig().startInterval)
 	} else {
 		if !bs.timer.Stop() {
 			select {
@@ -77,49 +87,73 @@ func (bs *BaseScheduler) Start() error {
 			default:
 			}
 		}
-		bs.timer.Reset(bs.config.startInterval)
+		bs.timer.Reset(bs.GetConfig().startInterval)
 	}
 	// dispatcher
-	bs.wg.Add(1)
+	bs.GetWaitGroup().Add(1)
 	go bs.timerEventListener()
 
 	return nil
 }
 
-func (bs *BaseScheduler) Stop() error {
+func (bs *BaseScheduler) Stop(stopTimeOut time.Duration) error {
+	if !bs.running.CompareAndSwap(true, false) {
+		return errs.NewCommonError(fmt.Sprintf("scheduler %s is not running", bs.GetName()), nil)
+	}
+
 	// timer
 	if bs.timer != nil {
-		bs.timer.Stop()
+		if !bs.timer.Stop() {
+			select {
+			case <-bs.timer.C:
+			default:
+			}
+		}
 	}
 	// cancel ctx
-	if bs.cancel != nil {
-		bs.cancel()
+	if bs.GetContextCancel() != nil {
+		bs.GetContextCancel()()
 	}
 
 	// waiting for stop
-	bs.wg.Wait()
+	stopChan := make(chan struct{})
+	go func() {
+		bs.GetWaitGroup().Wait()
+		close(stopChan)
+	}()
+	bs.GetLogger().Debugf("scheduler %s waiting for workers to stop", bs.GetName())
+	select {
+	case <-stopChan:
+		bs.GetLogger().Debugf("scheduler %s stopped gracefully", bs.GetName())
+	case <-time.After(stopTimeOut):
+		bs.GetLogger().Debugf("scheduler %s stop timed out, force stopping", bs.GetName())
+	}
 
 	return nil
 }
 
 func (bs *BaseScheduler) timerEventListener() {
-	bs.log.Debugf("start %s timer event listener", bs.name)
-	defer bs.log.Debugf("finish %s timer event listener", bs.name)
-	defer bs.wg.Done()
+	bs.GetLogger().Debugf("scheduler %s timer event listener start", bs.GetName())
+	defer bs.GetLogger().Debugf("scheduler %s timer event listener finish", bs.GetName())
+	defer bs.GetWaitGroup().Done()
 
 	for {
 		select {
-		case <-bs.ctx.Done():
-			bs.log.Debugf("stop %s timer event listener by context", bs.name)
+		case <-bs.GetContext().Done():
+			bs.GetLogger().Debugf("scheduler %s context done, stop time event listener", bs.GetName())
 
 			return
 		case eventTime := <-bs.timer.C:
+			bs.GetLogger().Debugf("scheduler %s timer event listener, time event fired: %s", bs.GetName(), eventTime.Format(time.DateTime))
 			if bs.timerDispatcher != nil {
 				if err := bs.timerDispatcher(eventTime); err != nil {
-					bs.log.Errorf("dispatcher %s of timer event listener failed", bs.name)
+					bs.GetLogger().Errorf("scheduler %s time event %s dispatcher failed: %v", bs.GetName(), eventTime.Format(time.DateTime), err)
 				}
+			} else {
+				bs.GetLogger().Warnf("scheduler %s time event %s dispatcher not applied", bs.GetName(), eventTime.Format(time.DateTime))
 			}
-			bs.timer.Reset(bs.config.scheduleInterval)
+
+			bs.timer.Reset(bs.GetConfig().scheduleInterval)
 		}
 	}
 }
@@ -136,20 +170,20 @@ func (bs *BaseScheduler) GetContextCancel() context.CancelFunc {
 	return bs.cancel
 }
 
-func (bs *BaseScheduler) GetTimer() *time.Timer {
-	return bs.timer
+func (bs *BaseScheduler) GetWaitGroup() *sync.WaitGroup {
+	return &bs.wg
 }
 
 func (bs *BaseScheduler) GetLogger() logger.Logger {
 	return bs.log
 }
 
-func (bs *BaseScheduler) GetSchedulerConfig() *BaseSchedulerConfig {
-	return bs.config
+func (bs *BaseScheduler) IsRunning() bool {
+	return bs.running.Load()
 }
 
-func (bs *BaseScheduler) GetWaitGroup() *sync.WaitGroup {
-	return &bs.wg
+func (bs *BaseScheduler) GetTimer() *time.Timer {
+	return bs.timer
 }
 
 func (bs *BaseScheduler) GetConfig() *BaseSchedulerConfig {

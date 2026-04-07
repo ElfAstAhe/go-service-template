@@ -29,21 +29,21 @@ gen-swagger:
 		--exclude ./pkg/api \
 		-o docs \
 		--parseDepth 3
-#	swag init -g cmd/server/main.go
 
+# Генерация http client
 gen-http-client:
 #	oapi-codegen -package client -generate client docs/swagger.json > pkg/client/rest/api_client.gen.go
 	mkdir -p $(OPEN_API_OUT)
 	swagger generate client -f ./docs/swagger.json -A go-service-template -t $(OPEN_API_OUT)
 
+# Генерирует моки для интерфейсов в указанной папке, см. {project_root}/.mockery.yml конфиг
 gen-mocks:
-# Генерирует моки для всех интерфейсов в указанной папке
 	mockery
 
 # Сборка проекта с прокидыванием переменных
-#build: gen-swagger
-build: gen-proto gen-swagger gen-http-client
-	go build -ldflags "-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
+build: gen-proto gen-swagger gen-http-client gen-mocks
+	go build -ldflags \
+	"-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
 	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
 
