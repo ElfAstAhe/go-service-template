@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -35,6 +36,37 @@ func GetTypeName(instance any) string {
 	}
 
 	return res
+}
+
+func GetFullTypeName(instance any) string {
+	if instance == nil {
+		return "nil"
+	}
+
+	t := reflect.TypeOf(instance)
+
+	// Разыменовываем указатели любой вложенности
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+
+	// 1. Пытаемся получить имя и путь пакета (например, "domain.User")
+	name := t.Name()
+	pkg := t.PkgPath()
+
+	if name != "" {
+		if pkg != "" {
+			// Возвращаем вместе с путем пакета, чтобы избежать коллизий
+			// Можно использовать только последнюю часть пути через path.Base(pkg)
+			return fmt.Sprintf("%s.%s", pkg, name)
+		}
+
+		return name
+	}
+
+	// 2. Если имени нет (анонимная структура, слайс, мапа)
+	// t.String() вернет "[]domain.Audit" или "map[string]int"
+	return t.String()
 }
 
 // IsNil определяет, является ли параметр nil по значению
