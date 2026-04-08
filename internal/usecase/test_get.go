@@ -29,7 +29,7 @@ func NewTestGetUseCase(repo domain.TestRepository) *TestGetInteractor {
 func (tg *TestGetInteractor) Get(ctx context.Context, id string) (*domain.Test, error) {
 	res, err := tg.repo.Find(ctx, id)
 	if err != nil {
-		if errors.As(err, new(*errs.DalNotFoundError)) {
+		if _, ok := errors.AsType[*errs.DalNotFoundError](err); ok {
 			return nil, domerrs.NewBllNotFoundError("TestGetInteractor.Get", "Test", id, err)
 		}
 

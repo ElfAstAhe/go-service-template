@@ -34,7 +34,7 @@ func (td *TestDeleteInteractor) Delete(ctx context.Context, id string) error {
 		return td.repo.Delete(ctx, id)
 	})
 	if err != nil {
-		if errors.As(err, new(*errs.DalNotFoundError)) {
+		if _, ok := errors.AsType[*errs.DalNotFoundError](err); ok {
 			return domerrs.NewBllNotFoundError("TestDeleteInteractor.Delete", "Test", id, err)
 		}
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	mocks2 "github.com/ElfAstAhe/go-service-template/internal/domain/mocks"
+	dommocks "github.com/ElfAstAhe/go-service-template/internal/domain/mocks"
 	"github.com/ElfAstAhe/go-service-template/pkg/db/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,13 +20,13 @@ func TestTestGetUseCase_Delete(t *testing.T) {
 	tests := []struct {
 		name         string
 		input        string
-		prepareMocks func(mTM *mocks.MockTransactionManager, mRepo *mocks2.MockTestRepository)
+		prepareMocks func(mTM *mocks.MockTransactionManager, mRepo *dommocks.MockTestRepository)
 		expectedErr  string
 	}{
 		{
 			name:  "Success: entity delete",
 			input: inputSuccess,
-			prepareMocks: func(mTM *mocks.MockTransactionManager, mRepo *mocks2.MockTestRepository) {
+			prepareMocks: func(mTM *mocks.MockTransactionManager, mRepo *dommocks.MockTestRepository) {
 				// эмулируем успешную транзакцию
 				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).
@@ -42,7 +42,7 @@ func TestTestGetUseCase_Delete(t *testing.T) {
 		{
 			name:  "Error: delete failed ",
 			input: inputFail,
-			prepareMocks: func(mTM *mocks.MockTransactionManager, mRepo *mocks2.MockTestRepository) {
+			prepareMocks: func(mTM *mocks.MockTransactionManager, mRepo *dommocks.MockTestRepository) {
 				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("db error")).
 					Run(func(args mock.Arguments) {
@@ -59,7 +59,7 @@ func TestTestGetUseCase_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// prepare
-			mRepo := new(mocks2.MockTestRepository)
+			mRepo := new(dommocks.MockTestRepository)
 			mTM := new(mocks.MockTransactionManager)
 			tt.prepareMocks(mTM, mRepo)
 			uc := NewTestDeleteUseCase(mTM, mRepo)

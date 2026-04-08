@@ -45,10 +45,10 @@ func (ts *TestSaveInteractor) Save(ctx context.Context, model *domain.Test) (*do
 		return nil
 	})
 	if err != nil {
-		if errors.As(err, new(*errs.DalNotFoundError)) {
+		if _, ok := errors.AsType[*errs.DalNotFoundError](err); ok {
 			return nil, domerrs.NewBllNotFoundError("TestSaveUseCase.Save", "Test", model.Code, err)
 		}
-		if errors.As(err, new(*errs.DalAlreadyExistsError)) {
+		if _, ok := errors.AsType[*errs.DalAlreadyExistsError](err); ok {
 			return nil, domerrs.NewBllUniqueError("TestSaveUseCase.Save", "Test", model.Code, err)
 		}
 
