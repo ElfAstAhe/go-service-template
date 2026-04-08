@@ -27,7 +27,7 @@ func NewTestGetByCodeUseCase(repo domain.TestRepository) *TestGetByCodeInteracto
 func (tgc *TestGetByCodeInteractor) Get(ctx context.Context, code string) (*domain.Test, error) {
 	res, err := tgc.repo.FindByCode(ctx, code)
 	if err != nil {
-		if errors.As(err, new(*errs.DalNotFoundError)) {
+		if _, ok := errors.AsType[*errs.DalNotFoundError](err); ok {
 			return nil, domerrs.NewBllNotFoundError("TestGetByCodeInteractor.Get", "Test", code, err)
 		}
 

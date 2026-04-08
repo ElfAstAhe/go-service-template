@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	mocks2 "github.com/ElfAstAhe/go-service-template/internal/domain/mocks"
+	dommocks "github.com/ElfAstAhe/go-service-template/internal/domain/mocks"
 	"github.com/ElfAstAhe/go-service-template/pkg/db/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -24,14 +24,14 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 	tests := []struct {
 		name         string
 		input        *domain.Test
-		prepareMocks func(mRepo *mocks2.MockTestRepository, mTM *mocks.MockTransactionManager)
+		prepareMocks func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager)
 		expectedRes  *domain.Test
 		expectedErr  string // Подстрока ошибки для проверки
 	}{
 		{
 			name:  "Success: entity created",
 			input: inputCreate,
-			prepareMocks: func(mRepo *mocks2.MockTestRepository, mTM *mocks.MockTransactionManager) {
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
 				// Эмулируем успешную транзакцию
 				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).
@@ -48,7 +48,7 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 		{
 			name:  "Success: entity changed",
 			input: inputChange,
-			prepareMocks: func(mRepo *mocks2.MockTestRepository, mTM *mocks.MockTransactionManager) {
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
 				// эмулируем успешную транзакцию
 				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).
@@ -64,7 +64,7 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 		{
 			name:  "Error: repository failure create",
 			input: inputCreate,
-			prepareMocks: func(mRepo *mocks2.MockTestRepository, mTM *mocks.MockTransactionManager) {
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
 				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("db error")).
 					Run(func(args mock.Arguments) {
@@ -79,7 +79,7 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 		{
 			name:  "Error: repository failure change",
 			input: inputChange,
-			prepareMocks: func(mRepo *mocks2.MockTestRepository, mTM *mocks.MockTransactionManager) {
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
 				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("db error")).
 					Run(func(args mock.Arguments) {
@@ -96,7 +96,7 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// setup
-			mRepo := new(mocks2.MockTestRepository)
+			mRepo := new(dommocks.MockTestRepository)
 			mTM := new(mocks.MockTransactionManager)
 			tt.prepareMocks(mRepo, mTM)
 

@@ -106,8 +106,7 @@ func (pgdb *PgDB) GetQuerier(ctx context.Context) db.Querier {
 }
 
 func (pgdb *PgDB) IsUniqueViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
 		return pgErr.Code == "23505" // Код ошибки unique_violation в PostgreSQL
 	}
 
