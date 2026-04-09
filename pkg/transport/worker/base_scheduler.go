@@ -15,8 +15,8 @@ type TimerDispatcher func(eventTime time.Time) error
 
 type BaseSchedulerConfig struct {
 	// schedule
-	startInterval    time.Duration
-	scheduleInterval time.Duration
+	StartInterval    time.Duration
+	ScheduleInterval time.Duration
 }
 
 func NewBaseSchedulerConfig(
@@ -24,8 +24,8 @@ func NewBaseSchedulerConfig(
 	scheduleInterval time.Duration,
 ) *BaseSchedulerConfig {
 	return &BaseSchedulerConfig{
-		startInterval:    startInterval,
-		scheduleInterval: scheduleInterval,
+		StartInterval:    startInterval,
+		ScheduleInterval: scheduleInterval,
 	}
 }
 
@@ -79,7 +79,7 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 	bs.ctx, bs.cancel = context.WithCancel(ctx)
 	// timer
 	if bs.timer == nil {
-		bs.timer = time.NewTimer(bs.GetConfig().startInterval)
+		bs.timer = time.NewTimer(bs.GetConfig().StartInterval)
 	} else {
 		if !bs.timer.Stop() {
 			select {
@@ -87,7 +87,7 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 			default:
 			}
 		}
-		bs.timer.Reset(bs.GetConfig().startInterval)
+		bs.timer.Reset(bs.GetConfig().StartInterval)
 	}
 	// dispatcher
 	bs.GetWaitGroup().Add(1)
@@ -153,7 +153,7 @@ func (bs *BaseScheduler) timerEventListener() {
 				bs.GetLogger().Warnf("scheduler %s time event %s dispatcher not applied", bs.GetName(), eventTime.Format(time.DateTime))
 			}
 
-			bs.timer.Reset(bs.GetConfig().scheduleInterval)
+			bs.timer.Reset(bs.GetConfig().ScheduleInterval)
 		}
 	}
 }
