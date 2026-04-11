@@ -1,4 +1,4 @@
-package transport
+package http
 
 import (
 	"net/http"
@@ -52,8 +52,8 @@ func TestPMs_Match_CorrectData_AllCases(t *testing.T) {
 	})
 }
 
-func buildPMS() *HTTPPathMatchers {
-	pm1 := NewHTTPPathMatcher(http.MethodGet, "/", `^/[^/]*$`)
-	pm2 := NewHTTPPathMatcher(http.MethodPost, "/", `/$`)
-	return NewHTTPPathMatchers([]*HTTPPathMatcher{pm1, pm2})
+func buildPMS() *PathMatchers {
+	pm1 := NewPathMatcher(http.MethodGet, "/", `^/[^/]*$`)
+	pm2 := NewPathMatcher(http.MethodPost, "/", `/$`)
+	return NewHTTPPathMatchers([]*PathMatcher{pm1, pm2})
 }

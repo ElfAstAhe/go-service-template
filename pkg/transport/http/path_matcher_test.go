@@ -1,4 +1,4 @@
-package transport
+package http
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 func TestPathMatcher_CorrectData_AllCases(t *testing.T) {
 	// prepare
-	pm := NewHTTPPathMatcher(http.MethodGet, "/", `^/[^/]*$`)
+	pm := NewPathMatcher(http.MethodGet, "/", `^/[^/]*$`)
 	// act
 	t.Run("match", func(t *testing.T) {
 		// assert
@@ -22,7 +22,7 @@ func TestPathMatcher_CorrectData_AllCases(t *testing.T) {
 
 func TestPathMatcher_IncorrectData_AllCases(t *testing.T) {
 	// prepare
-	pm := NewHTTPPathMatcher(http.MethodGet, "/", `^/[^/]*$`)
+	pm := NewPathMatcher(http.MethodGet, "/", `^/[^/]*$`)
 	// act
 	t.Run("not match empty method", func(t *testing.T) {
 		assert.False(t, pm.Match("", "/123"))

@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func HTTPMetricsMiddleware(next http.Handler) http.Handler {
+func MetricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Обертка для перехвата статус-кода и размера ответа
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)

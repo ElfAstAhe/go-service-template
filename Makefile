@@ -47,14 +47,11 @@ build: gen-proto gen-swagger gen-http-client gen-mocks
 	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
 
-#	go build -ldflags "-X '$(MODULE_NAME)/internal/app/client/config.Version=$(VERSION)' \
-#    -X '$(MODULE_NAME)/internal/app/client/config.Stage=$(STAGE)' \
-#	-X '$(MODULE_NAME)/internal/app/client/config.BuildTime=$(BUILD_TIME)'" \
-#	-o ./bin/$(CLIENT_BINARY_NAME) $(CLIENT_BUILD_DIR)/main.go
-
 # Запуск проекта (сначала соберет, потом запустит)
 run: build
-	./bin/$(SERVER_BINARY_NAME) --db-driver "postgres" --db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service"
+	./bin/$(SERVER_BINARY_NAME) \
+		--db-driver "postgres" \
+		--db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service"
 
 # Запуск тестов
 test:

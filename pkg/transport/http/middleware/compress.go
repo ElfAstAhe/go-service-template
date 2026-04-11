@@ -17,15 +17,15 @@ const (
 	encodingBrotli = "br" // brotli
 )
 
-type HTTPCompress struct {
+type Compress struct {
 	compressor          *middleware.Compressor
 	allowedContentTypes []string
 	log                 logger.Logger
 }
 
-func NewHTTPCompress(logger logger.Logger, allowedContentTypes ...string) *HTTPCompress {
+func NewCompress(logger logger.Logger, allowedContentTypes ...string) *Compress {
 	// create instance
-	res := &HTTPCompress{
+	res := &Compress{
 		allowedContentTypes: allowedContentTypes,
 		log:                 logger.GetLogger("http_compress_middleware"),
 	}
@@ -35,7 +35,7 @@ func NewHTTPCompress(logger logger.Logger, allowedContentTypes ...string) *HTTPC
 	return res
 }
 
-func (hc *HTTPCompress) Handle(next http.Handler) http.Handler {
+func (hc *Compress) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hc.log.Debug("HTTPCompress.Handle start")
 		defer hc.log.Debug("HTTPCompress.Handle finish")
@@ -44,11 +44,11 @@ func (hc *HTTPCompress) Handle(next http.Handler) http.Handler {
 	})
 }
 
-func (hc *HTTPCompress) init() {
+func (hc *Compress) init() {
 	hc.compressor = middleware.NewCompressor(DefaultCompressionLevel, hc.allowedContentTypes...)
 	hc.compressor.SetEncoder(encodingBrotli, hc.brotliWriterFactory)
 }
 
-func (hc *HTTPCompress) brotliWriterFactory(w io.Writer, level int) io.Writer {
+func (hc *Compress) brotliWriterFactory(w io.Writer, level int) io.Writer {
 	return brotli.NewWriterLevel(w, level)
 }
