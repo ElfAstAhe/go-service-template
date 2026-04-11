@@ -7,8 +7,8 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/facade"
 	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	"github.com/ElfAstAhe/go-service-template/pkg/transport"
-	mware "github.com/ElfAstAhe/go-service-template/pkg/transport/middleware"
+	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
+	pkgmware "github.com/ElfAstAhe/go-service-template/pkg/transport/http/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/hellofresh/health-go/v5"
@@ -23,8 +23,8 @@ type AppChiRouter struct {
 	config          *conf.HTTPConfig
 	telemetryConfig *conf.TelemetryConfig
 	health          *health.Health
-	healthz         transport.HealthzFunc
-	readyz          transport.ReadyzFunc
+	healthz         pkghttp.HealthzFunc
+	readyz          pkghttp.ReadyzFunc
 	testFacade      facade.TestFacade
 }
 
@@ -33,8 +33,8 @@ func NewAppChiRouter(
 	telemetryConfig *conf.TelemetryConfig,
 	logger logger.Logger,
 	health *health.Health,
-	healthz transport.HealthzFunc,
-	readyz transport.ReadyzFunc,
+	healthz pkghttp.HealthzFunc,
+	readyz pkghttp.ReadyzFunc,
 	testFacade facade.TestFacade,
 ) *AppChiRouter {
 	res := &AppChiRouter{
@@ -74,9 +74,22 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// tracing
 	cr.router.Use(otelchi.Middleware(cr.telemetryConfig.ServiceName, otelchi.WithChiRoutes(cr.router)))
 	// metrics
-	cr.router.Use(mware.HTTPMetricsMiddleware)
-	// requestID
+	cr.router.Use(pkgmware.MetricsMiddleware)
+	// requestID (chi middleware)
 	cr.router.Use(middleware.RequestID)
+	// requestID (own implementation)
+	cr.router.Use(pkgmware.NewRequestIDExtractor([]string{
+		pkgmware.HeaderXRequestID,
+		pkgmware.HeaderXCorrelationID,
+		pkgmware.HeaderRequestID,
+	}).Handler)
+	// traceID (own implementation)
+	cr.router.Use(pkgmware.NewTraceIDExtractor([]string{
+		pkgmware.HeaderXCloudTraceContext,
+		pkgmware.HeaderTraceParent,
+		pkgmware.HeaderXTraceID,
+		pkgmware.HeaderTraceID,
+	}).Handler)
 	// realIP
 	cr.router.Use(middleware.RealIP)
 	// recoverer
@@ -84,15 +97,15 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// timeout
 	cr.router.Use(middleware.Timeout(cr.config.ReadTimeout))
 	// compress (add any content-types)
-	cr.router.Use(mware.NewHTTPCompress(logger,
+	cr.router.Use(pkgmware.NewCompress(logger,
 		"application/json", "plain/text",
 	).Handle)
 	// decompress
-	cr.router.Use(mware.NewHTTPDecompress(int64(cr.config.MaxRequestBodySize), logger).Handle)
+	cr.router.Use(pkgmware.NewDecompress(int64(cr.config.MaxRequestBodySize), logger).Handle)
 	// jwt auth extractor - extract user info from token
 	// .. cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.authHelper, cr.jwtHTTPHelper, logger).Handle)
 	// income/outcome logger
-	cr.router.Use(mware.NewHTTPRequestLogger(logger).Handle)
+	cr.router.Use(pkgmware.NewHTTPRequestLogger(logger).Handle)
 }
 
 func (cr *AppChiRouter) setupRoutes() {

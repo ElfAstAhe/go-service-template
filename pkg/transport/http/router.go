@@ -1,9 +1,9 @@
-package transport
+package http
 
 import (
 	"net/http"
 )
 
-type HTTPRouter interface {
+type Router interface {
 	GetRouter() http.Handler
 }

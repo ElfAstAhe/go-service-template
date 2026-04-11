@@ -8,19 +8,19 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-type HTTPDecompress struct {
+type Decompress struct {
 	maxRequestBodySize int64
 	log                logger.Logger
 }
 
-func NewHTTPDecompress(maxRequestBodySize int64, logger logger.Logger) *HTTPDecompress {
-	return &HTTPDecompress{
+func NewDecompress(maxRequestBodySize int64, logger logger.Logger) *Decompress {
+	return &Decompress{
 		maxRequestBodySize: maxRequestBodySize,
 		log:                logger.GetLogger("http_decompress_middleware"),
 	}
 }
 
-func (hd *HTTPDecompress) Handle(next http.Handler) http.Handler {
+func (hd *Decompress) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		hd.log.Debug("HTTPDecompress start")
 		defer hd.log.Debug("HTTPDecompress finish")

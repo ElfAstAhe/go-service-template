@@ -1,20 +1,20 @@
-package transport
+package http
 
 import (
 	"strings"
 )
 
-type HTTPPathMatchers struct {
-	WatchPaths map[string][]*HTTPPathMatcher
+type PathMatchers struct {
+	WatchPaths map[string][]*PathMatcher
 }
 
-func NewHTTPPathMatchers(matchers []*HTTPPathMatcher) *HTTPPathMatchers {
-	watchPaths := make(map[string][]*HTTPPathMatcher)
+func NewHTTPPathMatchers(matchers []*PathMatcher) *PathMatchers {
+	watchPaths := make(map[string][]*PathMatcher)
 
 	for _, matcher := range matchers {
 		slice, ok := watchPaths[matcher.Method]
 		if !ok {
-			slice = make([]*HTTPPathMatcher, 0)
+			slice = make([]*PathMatcher, 0)
 		}
 
 		if watchPathExists(slice, matcher.Method, matcher.Path) {
@@ -24,12 +24,12 @@ func NewHTTPPathMatchers(matchers []*HTTPPathMatcher) *HTTPPathMatchers {
 		watchPaths[matcher.Method] = append(slice, matcher)
 	}
 
-	return &HTTPPathMatchers{
+	return &PathMatchers{
 		WatchPaths: watchPaths,
 	}
 }
 
-func (hpm *HTTPPathMatchers) Match(method string, path string) bool {
+func (hpm *PathMatchers) Match(method string, path string) bool {
 	pms, ok := hpm.WatchPaths[method]
 	if !ok {
 		return false
@@ -43,7 +43,7 @@ func (hpm *HTTPPathMatchers) Match(method string, path string) bool {
 	return false
 }
 
-func (hpm *HTTPPathMatchers) GetPathMatcher(method string, path string) *HTTPPathMatcher {
+func (hpm *PathMatchers) GetPathMatcher(method string, path string) *PathMatcher {
 	slice, ok := hpm.WatchPaths[method]
 	if !ok {
 		return nil
@@ -58,7 +58,7 @@ func (hpm *HTTPPathMatchers) GetPathMatcher(method string, path string) *HTTPPat
 	return nil
 }
 
-func watchPathExists(src []*HTTPPathMatcher, method string, path string) bool {
+func watchPathExists(src []*PathMatcher, method string, path string) bool {
 	if strings.TrimSpace(path) == "" || strings.TrimSpace(method) == "" || len(src) == 0 {
 		return false
 	}

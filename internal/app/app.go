@@ -21,7 +21,7 @@ import (
 	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	"github.com/ElfAstAhe/go-service-template/pkg/transport"
+	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
 	"github.com/hellofresh/health-go/v5"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -70,7 +70,7 @@ type App struct {
 	testFacade facade.TestFacade
 
 	// http
-	httpRouter transport.HTTPRouter
+	httpRouter pkghttp.Router
 	httpServer *http.Server
 
 	// gRPC
