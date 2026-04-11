@@ -16,6 +16,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/infra/telemetry"
 	migrations "github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/grpc/interceptors"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/realip"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -216,6 +217,7 @@ func (app *App) initGRPCService() error {
 	return nil
 }
 
+//goland:noinspection DuplicatedCode
 func (app *App) initGRPCServer() error {
 	// Настраиваем KeepAlive на основе твоего GRPCConfig
 	kasp := keepalive.ServerParameters{
@@ -293,6 +295,17 @@ func (app *App) initGRPCServer() error {
 				grpcprom.WithExemplarFromContext(exemplarFromContext),
 				grpcprom.WithLabelsFromContext(labelsFromContext),
 			),
+			interceptors.RequestIDExtractorUSInterceptor([]string{
+				interceptors.MDXRequestID,
+				interceptors.MDXCorrelationID,
+				interceptors.MDRequestID,
+			}),
+			interceptors.TraceIDExtractorUSInterceptor([]string{
+				interceptors.MDXCloudTraceContext,
+				interceptors.MDTraceParent,
+				interceptors.MDXTraceID,
+				interceptors.MDTraceID,
+			}),
 			realip.UnaryServerInterceptorOpts(realIPOpts...),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
@@ -301,6 +314,17 @@ func (app *App) initGRPCServer() error {
 				grpcprom.WithExemplarFromContext(exemplarFromContext),
 				grpcprom.WithLabelsFromContext(labelsFromContext),
 			),
+			interceptors.RequestIDExtractorSSInterceptor([]string{
+				interceptors.MDXRequestID,
+				interceptors.MDXCorrelationID,
+				interceptors.MDRequestID,
+			}),
+			interceptors.TraceIDExtractorSSInterceptor([]string{
+				interceptors.MDXCloudTraceContext,
+				interceptors.MDTraceParent,
+				interceptors.MDXTraceID,
+				interceptors.MDTraceID,
+			}),
 			realip.StreamServerInterceptorOpts(realIPOpts...),
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
