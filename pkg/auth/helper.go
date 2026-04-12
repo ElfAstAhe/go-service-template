@@ -96,7 +96,7 @@ func (ah *HelperImpl) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
 
 func (ah *HelperImpl) tokenRolesFromSubject(subject *Subject) []string {
 	res := make([]string, 0, len(subject.Roles))
-	for key, _ := range subject.Roles {
+	for key := range subject.Roles {
 		res = append(res, key)
 	}
 

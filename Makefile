@@ -57,6 +57,10 @@ run: build
 test:
 	go test -v ./...
 
+# Запуск static check
+static-check:
+	staticcheck $$(go list ./... | grep -vE "pkg/api")
+
 # Очистка бинарников
 clean:
 	rm -rf ./bin/*

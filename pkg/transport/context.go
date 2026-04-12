@@ -12,15 +12,15 @@ type requestIDKey struct{}
 // traceIDKey ключ контекста с TraceID
 type traceIDKey struct{}
 
-var requestID = requestIDKey{}
-var traceID = traceIDKey{}
+var reqID = requestIDKey{}
+var trcID = traceIDKey{}
 
 func WithRequestID(ctx context.Context, requestID string) context.Context {
 	if utils.IsNil(ctx) {
 		return ctx
 	}
 
-	return context.WithValue(ctx, requestID, requestID)
+	return context.WithValue(ctx, reqID, requestID)
 }
 
 func WithTraceID(ctx context.Context, traceID string) context.Context {
@@ -28,7 +28,7 @@ func WithTraceID(ctx context.Context, traceID string) context.Context {
 		return ctx
 	}
 
-	return context.WithValue(ctx, traceID, traceID)
+	return context.WithValue(ctx, trcID, traceID)
 }
 
 func RequestID(ctx context.Context) string {
@@ -36,7 +36,7 @@ func RequestID(ctx context.Context) string {
 		return ""
 	}
 
-	res, ok := ctx.Value(requestID).(string)
+	res, ok := ctx.Value(reqID).(string)
 	if !ok {
 		return ""
 	}
@@ -49,7 +49,7 @@ func TraceID(ctx context.Context) string {
 		return ""
 	}
 
-	res, ok := ctx.Value(traceID).(string)
+	res, ok := ctx.Value(trcID).(string)
 	if !ok {
 		return ""
 	}
