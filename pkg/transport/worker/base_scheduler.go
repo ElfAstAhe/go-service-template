@@ -11,7 +11,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
-type TimerDispatcher func(eventTime time.Time) error
+type TimerDispatcher func(ctx context.Context, eventTime time.Time) error
 
 type BaseSchedulerConfig struct {
 	// schedule
@@ -146,7 +146,7 @@ func (bs *BaseScheduler) timerEventListener() {
 		case eventTime := <-bs.timer.C:
 			bs.GetLogger().Debugf("scheduler %s timer event listener, time event fired: %s", bs.GetName(), eventTime.Format(time.DateTime))
 			if bs.timerDispatcher != nil {
-				if err := bs.timerDispatcher(eventTime); err != nil {
+				if err := bs.timerDispatcher(bs.ctx, eventTime); err != nil {
 					bs.GetLogger().Errorf("scheduler %s time event %s dispatcher failed: %v", bs.GetName(), eventTime.Format(time.DateTime), err)
 				}
 			} else {

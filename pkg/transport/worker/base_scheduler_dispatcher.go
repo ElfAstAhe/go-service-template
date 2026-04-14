@@ -78,7 +78,7 @@ func (bsd *BaseSchedulerDispatcher[D]) Stop(stopTimeOut time.Duration) error {
 	return nil
 }
 
-func (bsd *BaseSchedulerDispatcher[D]) timerDispatcher(eventTime time.Time) error {
+func (bsd *BaseSchedulerDispatcher[D]) timerDispatcher(ctx context.Context, eventTime time.Time) error {
 	bsd.GetLogger().Debugf("scheduler dispatcher %s time event %s start", bsd.GetName(), eventTime.Format(time.DateTime))
 	defer bsd.GetLogger().Debugf("scheduler dispatcher %s time event %s finish", bsd.GetName(), eventTime.Format(time.DateTime))
 
@@ -93,7 +93,13 @@ func (bsd *BaseSchedulerDispatcher[D]) timerDispatcher(eventTime time.Time) erro
 	bsd.GetLogger().Debugf("scheduler dispatcher %s time event %s got %v data records", bsd.GetName(), eventTime.Format(time.DateTime), len(res))
 
 	for _, data := range res {
-		bsd.workerPool.Push(data)
+		select {
+		case <-ctx.Done():
+			bsd.GetLogger().Debugf("scheduler dispatcher %s time event %s break by context done", bsd.GetName(), eventTime.Format(time.DateTime))
+			break
+		default:
+			bsd.workerPool.Push(data)
+		}
 	}
 
 	return nil
