@@ -19,7 +19,7 @@ func TestShardStorage_Logic(t *testing.T) {
 
 	t.Run("power_of_two_optimization", func(t *testing.T) {
 		// 64 - это степень двойки
-		ss := cache.NewShardStorage[string, any](64, factory, 100, nil)
+		ss := cache.NewShardStorage[string](64, factory, 100, nil)
 
 		// Проверяем распределение: разные ключи должны попадать в разные шарды
 		key1 := "user_1"
@@ -36,7 +36,7 @@ func TestShardStorage_Logic(t *testing.T) {
 
 	t.Run("simple_modulo_index", func(t *testing.T) {
 		// 10 - не степень двойки
-		ss := cache.NewShardStorage[string, any](10, factory, 100, nil)
+		ss := cache.NewShardStorage[string](10, factory, 100, nil)
 
 		shard := ss.GetShard("any_key")
 		assert.NotNil(t, shard)
@@ -50,7 +50,7 @@ func TestShardStorage_Methods(t *testing.T) {
 	}
 
 	// Создаем сторадж с 1 шардом для простоты тестов методов
-	ss := cache.NewShardStorage[string, any](1, factory, 100, nil)
+	ss := cache.NewShardStorage[string](1, factory, 100, nil)
 
 	t.Run("Set_Get_Delete", func(t *testing.T) {
 		key := "test"
@@ -91,7 +91,7 @@ func TestShardStorage_Range_Stop(t *testing.T) {
 		return s
 	}
 
-	ss := cache.NewShardStorage[string, any](2, factory, 100, nil)
+	ss := cache.NewShardStorage[string](2, factory, 100, nil)
 
 	// Имитируем, что первый шард возвращает данные, а мы хотим остановиться
 	shards[0].On("Range", mock.Anything).Run(func(args mock.Arguments) {
@@ -114,13 +114,13 @@ func TestShardStorage_Concurrency_Real(t *testing.T) {
 	// Тест на реальных данных без моков для проверки Race Condition
 	shardCount := uint64(16)
 	factory := func(maxSize int, policy cache.EvictionPolicy[int]) cache.Storage[int] {
-		return cache.NewByteStorage[int](maxSize, policy)
+		return cache.NewRawStorage[int](maxSize, policy)
 	}
 
 	//    policy := cache.NewFIFOEvict[int]()
 	// policy := cache.NewLFUEvict[int]()
 	policy := cache.NewLRUEvict[int]()
-	ss := cache.NewShardStorage[int, any](shardCount, factory, 1000, policy)
+	ss := cache.NewShardStorage[int](shardCount, factory, 1000, policy)
 
 	wg := sync.WaitGroup{}
 	iterations := 1000

@@ -39,7 +39,7 @@ import (
 
 func TestRawStorage_Get_TriggersPolicy(t *testing.T) {
 	mPolicy := mocks.NewMockEvictionPolicy[string](t)
-	storage := cache.NewByteStorage[string](10, mPolicy)
+	storage := cache.NewRawStorage[string](10, mPolicy)
 
 	mPolicy.On("OnSet", "key").Return()
 	storage.Set("key", []byte("val"))
@@ -55,7 +55,7 @@ func TestRawStorage_Concurrency(t *testing.T) {
 	// Самый важный тест — на отсутствие race condition
 	// Используем реальную политику (например, FIFO), чтобы не мучиться с моками в гонках
 	policy := cache.NewFIFOEvict[int]()
-	storage := cache.NewByteStorage[int](100, policy)
+	storage := cache.NewRawStorage[int](100, policy)
 
 	const goroutines = 50
 	const opsPerGoro = 1000
@@ -92,7 +92,7 @@ func TestRawStorage_Concurrency(t *testing.T) {
 
 func TestRawStorage_Range_Break(t *testing.T) {
 	policy := cache.NewFIFOEvict[string]()
-	storage := cache.NewByteStorage[string](10, policy)
+	storage := cache.NewRawStorage[string](10, policy)
 
 	storage.Set("a", []byte("1"))
 	storage.Set("b", []byte("2"))

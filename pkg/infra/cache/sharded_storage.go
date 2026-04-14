@@ -18,7 +18,7 @@ type ShardStorage[K comparable] struct {
 	shardCount uint64
 }
 
-func NewShardStorage[K comparable, V any](
+func NewShardStorage[K comparable](
 	shardCount uint64,
 	shardFactory ShardFactory[K],
 	maxSize int,

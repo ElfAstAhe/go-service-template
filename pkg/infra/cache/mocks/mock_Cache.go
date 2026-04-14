@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	"context"
 	"time"
 
 	mock "github.com/stretchr/testify/mock"
@@ -35,6 +36,63 @@ type MockCache_Expecter[K comparable, V any] struct {
 
 func (_m *MockCache[K, V]) EXPECT() *MockCache_Expecter[K, V] {
 	return &MockCache_Expecter[K, V]{mock: &_m.Mock}
+}
+
+// CacheJanitor provides a mock function for the type MockCache
+func (_mock *MockCache[K, V]) CacheJanitor(ctx context.Context, eventTime time.Time) error {
+	ret := _mock.Called(ctx, eventTime)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CacheJanitor")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) error); ok {
+		r0 = returnFunc(ctx, eventTime)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockCache_CacheJanitor_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CacheJanitor'
+type MockCache_CacheJanitor_Call[K comparable, V any] struct {
+	*mock.Call
+}
+
+// CacheJanitor is a helper method to define mock.On call
+//   - ctx context.Context
+//   - eventTime time.Time
+func (_e *MockCache_Expecter[K, V]) CacheJanitor(ctx interface{}, eventTime interface{}) *MockCache_CacheJanitor_Call[K, V] {
+	return &MockCache_CacheJanitor_Call[K, V]{Call: _e.mock.On("CacheJanitor", ctx, eventTime)}
+}
+
+func (_c *MockCache_CacheJanitor_Call[K, V]) Run(run func(ctx context.Context, eventTime time.Time)) *MockCache_CacheJanitor_Call[K, V] {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 time.Time
+		if args[1] != nil {
+			arg1 = args[1].(time.Time)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockCache_CacheJanitor_Call[K, V]) Return(err error) *MockCache_CacheJanitor_Call[K, V] {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockCache_CacheJanitor_Call[K, V]) RunAndReturn(run func(ctx context.Context, eventTime time.Time) error) *MockCache_CacheJanitor_Call[K, V] {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Clear provides a mock function for the type MockCache

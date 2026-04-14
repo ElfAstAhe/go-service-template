@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"time"
 )
 
@@ -18,4 +19,6 @@ type Cache[K comparable, V any] interface {
 	// Служебные методы
 	Size() int
 	Clear()
+
+	CacheJanitor(ctx context.Context, eventTime time.Time) error
 }

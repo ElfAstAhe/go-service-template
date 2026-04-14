@@ -233,7 +233,7 @@ func TestCache_FullCycle_Integration(t *testing.T) {
 	// 1. Настройка: LRU кэш на 2 элемента с JSON кодеком
 	maxSize := 2
 	policy := cache.NewLRUEvict[string]()
-	storage := cache.NewByteStorage[string](maxSize, policy)
+	storage := cache.NewRawStorage[string](maxSize, policy)
 
 	factory := func() int { return 0 }
 	codec := cache.NewJSONCodec[int](factory)

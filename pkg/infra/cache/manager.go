@@ -32,71 +32,76 @@ func New[K comparable, V any](
 	}
 }
 
-func (c *Manager[K, V]) Get(key K) (V, bool, error) {
-	buf, ok := c.storage.Get(key)
+func (cm *Manager[K, V]) Get(key K) (V, bool, error) {
+	buf, ok := cm.storage.Get(key)
 	if !ok {
-		return c.nilValue, false, nil
+		return cm.nilValue, false, nil
 	}
 
-	envelope, err := c.codec.Unmarshal(buf)
+	envelope, err := cm.codec.Unmarshal(buf)
 	if err != nil {
-		return c.nilValue, false, errs.NewCommonError("unmarshal failed", err)
+		return cm.nilValue, false, errs.NewCommonError("unmarshal failed", err)
 	}
 
 	// Проверка TTL (ленивое удаление)
 	if envelope.DieAt > 0 && time.Now().UnixNano() > envelope.DieAt {
-		c.storage.Delete(key)
-		return c.nilValue, false, nil
+		cm.storage.Delete(key)
+		return cm.nilValue, false, nil
 	}
 
 	return envelope.Value, true, nil
 }
 
-func (c *Manager[K, V]) Set(key K, value V, ttl time.Duration) error {
-	buf, err := c.codec.Marshal(value, ttl)
+func (cm *Manager[K, V]) Set(key K, value V, ttl time.Duration) error {
+	buf, err := cm.codec.Marshal(value, ttl)
 	if err != nil {
 		return errs.NewCommonError("marshal failed", err)
 	}
 
-	c.storage.Set(key, buf)
+	cm.storage.Set(key, buf)
 
 	return nil
 }
 
-func (c *Manager[K, V]) Delete(key K) {
-	c.storage.Delete(key)
+func (cm *Manager[K, V]) Delete(key K) {
+	cm.storage.Delete(key)
 }
 
-func (c *Manager[K, V]) Size() int {
-	return c.storage.Len()
+func (cm *Manager[K, V]) Size() int {
+	return cm.storage.Len()
 }
 
-func (c *Manager[K, V]) Clear() {
-	c.storage.Clear()
+func (cm *Manager[K, V]) Clear() {
+	cm.storage.Clear()
 }
 
 // CacheJanitor вызывается планировщиком для периодической очистки просрочки
-func (c *Manager[K, V]) CacheJanitor(ctx context.Context, eventTime time.Time) error {
+func (cm *Manager[K, V]) CacheJanitor(ctx context.Context, eventTime time.Time) error {
 	now := eventTime.UnixNano()
 	var expiredKeys []K
+	if cm.janitorMaxSize > 0 {
+		expiredKeys = make([]K, 0, cm.janitorMaxSize)
+	} else {
+		expiredKeys = make([]K, 0)
+	}
 
 	var janitorCount int
 	// Собираем ключи для удаления, чтобы не блокировать storage надолго
-	c.storage.Range(func(key K, b []byte) bool {
-		// unmarshal
-		env, err := c.codec.Unmarshal(b)
-		// check for removal and add into removal list
-		if err == nil && env.DieAt > 0 && now > env.DieAt {
-			expiredKeys = append(expiredKeys, key)
-			janitorCount++
-		}
+	cm.storage.Range(func(key K, b []byte) bool {
 		// check for janitor max size
-		if c.janitorMaxSize > 0 && janitorCount >= c.janitorMaxSize {
+		if cm.janitorMaxSize > 0 && janitorCount >= cm.janitorMaxSize {
 			return false
 		}
 		// check context
 		if err := ctx.Err(); err != nil {
 			return false
+		}
+		// unmarshal
+		env, err := cm.codec.Unmarshal(b)
+		// check for removal and add into removal list
+		if err == nil && env != nil && env.DieAt > 0 && now > env.DieAt {
+			expiredKeys = append(expiredKeys, key)
+			janitorCount++
 		}
 
 		// approve next iteration
@@ -113,7 +118,7 @@ func (c *Manager[K, V]) CacheJanitor(ctx context.Context, eventTime time.Time) e
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			c.storage.Delete(k)
+			cm.storage.Delete(k)
 		}
 	}
 

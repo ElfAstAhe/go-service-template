@@ -11,7 +11,7 @@ type RawStorage[K comparable] struct {
 	maxSize int
 }
 
-func NewByteStorage[K comparable](maxSize int, policy EvictionPolicy[K]) *RawStorage[K] {
+func NewRawStorage[K comparable](maxSize int, policy EvictionPolicy[K]) *RawStorage[K] {
 	return &RawStorage[K]{
 		data:    make(map[K][]byte),
 		maxSize: maxSize,
