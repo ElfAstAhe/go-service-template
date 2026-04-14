@@ -28,6 +28,9 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/transport/worker:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/infra/cache:
+    config:
+      all: true
   github.com/ElfAstAhe/go-service-template/internal/domain:
     config:
       all: true
