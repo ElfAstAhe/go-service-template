@@ -2,9 +2,11 @@ package cache
 
 import (
 	"container/list"
+	"sync"
 )
 
 type FIFOEvict[K comparable] struct {
+	mu    sync.RWMutex
 	ll    *list.List
 	items map[K]*list.Element
 }
@@ -21,6 +23,9 @@ func (fif *FIFOEvict[K]) OnGet(key K) {
 }
 
 func (fif *FIFOEvict[K]) OnSet(key K) {
+	fif.mu.Lock()
+	defer fif.mu.Unlock()
+
 	// Если ключ уже есть, в классическом FIFO его позиция не меняется.
 	// Если ключа нет — добавляем в конец очереди (Front или Back — неважно, главное консистентность)
 	if _, ok := fif.items[key]; !ok {
@@ -29,6 +34,9 @@ func (fif *FIFOEvict[K]) OnSet(key K) {
 }
 
 func (fif *FIFOEvict[K]) OnRemove(key K) {
+	fif.mu.Lock()
+	defer fif.mu.Unlock()
+
 	if el, ok := fif.items[key]; ok {
 		fif.ll.Remove(el)
 		delete(fif.items, key)
@@ -36,6 +44,9 @@ func (fif *FIFOEvict[K]) OnRemove(key K) {
 }
 
 func (fif *FIFOEvict[K]) Reset() {
+	fif.mu.Lock()
+	defer fif.mu.Unlock()
+
 	fif.ll.Init()
 	clear(fif.items)
 }

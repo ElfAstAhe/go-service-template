@@ -107,22 +107,24 @@ func (_c *MockCodec_Marshal_Call[V]) RunAndReturn(run func(v V, ttl time.Duratio
 }
 
 // Unmarshal provides a mock function for the type MockCodec
-func (_mock *MockCodec[V]) Unmarshal(b []byte) (cache.Envelope[V], error) {
+func (_mock *MockCodec[V]) Unmarshal(b []byte) (*cache.Envelope[V], error) {
 	ret := _mock.Called(b)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Unmarshal")
 	}
 
-	var r0 cache.Envelope[V]
+	var r0 *cache.Envelope[V]
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func([]byte) (cache.Envelope[V], error)); ok {
+	if returnFunc, ok := ret.Get(0).(func([]byte) (*cache.Envelope[V], error)); ok {
 		return returnFunc(b)
 	}
-	if returnFunc, ok := ret.Get(0).(func([]byte) cache.Envelope[V]); ok {
+	if returnFunc, ok := ret.Get(0).(func([]byte) *cache.Envelope[V]); ok {
 		r0 = returnFunc(b)
 	} else {
-		r0 = ret.Get(0).(cache.Envelope[V])
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*cache.Envelope[V])
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func([]byte) error); ok {
 		r1 = returnFunc(b)
@@ -156,12 +158,12 @@ func (_c *MockCodec_Unmarshal_Call[V]) Run(run func(b []byte)) *MockCodec_Unmars
 	return _c
 }
 
-func (_c *MockCodec_Unmarshal_Call[V]) Return(envelope cache.Envelope[V], err error) *MockCodec_Unmarshal_Call[V] {
+func (_c *MockCodec_Unmarshal_Call[V]) Return(envelope *cache.Envelope[V], err error) *MockCodec_Unmarshal_Call[V] {
 	_c.Call.Return(envelope, err)
 	return _c
 }
 
-func (_c *MockCodec_Unmarshal_Call[V]) RunAndReturn(run func(b []byte) (cache.Envelope[V], error)) *MockCodec_Unmarshal_Call[V] {
+func (_c *MockCodec_Unmarshal_Call[V]) RunAndReturn(run func(b []byte) (*cache.Envelope[V], error)) *MockCodec_Unmarshal_Call[V] {
 	_c.Call.Return(run)
 	return _c
 }
