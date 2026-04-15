@@ -8,6 +8,7 @@ import (
 )
 
 type factoryConfig[K comparable, V any] struct {
+	l2             bool
 	shardCount     uint64
 	shardFactory   ShardFactory[K]
 	maxSize        int
@@ -45,6 +46,7 @@ type Option[K comparable, V any] func(config *factoryConfig[K, V])
 
 func defaultFactoryConfig[K comparable, V any]() *factoryConfig[K, V] {
 	return &factoryConfig[K, V]{
+		l2:         false,
 		shardCount: 1,
 		shardFactory: func(maxSize int, policy EvictionPolicy[K]) Storage[K] {
 			return NewRawStorage[K](maxSize, policy)
@@ -84,7 +86,19 @@ func CacheFactory[K comparable, V any](opts ...Option[K, V]) (Cache[K, V], error
 		return nil, errs.NewCommonError(fmt.Sprintf("invalid shard count [%d]", conf.shardCount), nil)
 	}
 
+	// L2 cache
+	if conf.l2 {
+		return NewL2[K, V](storage, conf.codec, conf.janitorMaxSize), nil
+	}
+
+	// cache
 	return New[K, V](storage, conf.codec, conf.janitorMaxSize), nil
+}
+
+func WithL2Cache[K comparable, V any]() Option[K, V] {
+	return func(config *factoryConfig[K, V]) {
+		config.l2 = true
+	}
 }
 
 func WithShardCount[K comparable, V any](shardCount uint64) Option[K, V] {

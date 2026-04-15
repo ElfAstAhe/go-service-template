@@ -5,6 +5,8 @@ import (
 	"encoding/gob"
 	"sync"
 	"time"
+
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 type GobCodec[V any] struct {
@@ -24,6 +26,9 @@ func NewGobCodec[V any](factory EmptyItemFactory[V]) *GobCodec[V] {
 }
 
 func (gc *GobCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
+	if utils.IsNil(value) {
+		return nil, nil
+	}
 	buf := gc.pool.Get().(*bytes.Buffer)
 	buf.Reset()
 	defer gc.pool.Put(buf)
@@ -47,6 +52,9 @@ func (gc *GobCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
 }
 
 func (gc *GobCodec[V]) Unmarshal(buf []byte) (*Envelope[V], error) {
+	if len(buf) == 0 {
+		return &Envelope[V]{}, nil
+	}
 	env := &Envelope[V]{
 		Value: gc.emptyItemFactory(),
 	}

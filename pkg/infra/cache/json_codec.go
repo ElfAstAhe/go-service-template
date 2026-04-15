@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"sync"
 	"time"
+
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 type JSONCodec[V any] struct {
@@ -24,6 +26,9 @@ func NewJSONCodec[V any](factory EmptyItemFactory[V]) *JSONCodec[V] {
 }
 
 func (jc *JSONCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
+	if utils.IsNil(value) {
+		return nil, nil
+	}
 	buf := jc.pool.Get().(*bytes.Buffer)
 	buf.Reset()
 	defer jc.pool.Put(buf)
@@ -47,6 +52,10 @@ func (jc *JSONCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
 }
 
 func (jc *JSONCodec[V]) Unmarshal(buf []byte) (*Envelope[V], error) {
+	if len(buf) == 0 {
+		return &Envelope[V]{}, nil
+	}
+
 	env := &Envelope[V]{
 		Value: jc.emptyItemFactory(),
 	}
