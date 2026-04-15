@@ -8,11 +8,6 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/infra/cache"
 )
 
-type BenchData struct {
-	ID    int    `json:"id"`
-	Value string `json:"value"`
-}
-
 // Бенчмарк для сравнения Lock Contention (Борьба за мьютекс)
 func BenchmarkStorage_Contention(b *testing.B) {
 	data := []byte("some-heavy-payload")
