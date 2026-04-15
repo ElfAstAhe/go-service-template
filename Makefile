@@ -40,8 +40,15 @@ gen-http-client:
 gen-mocks:
 	mockery
 
-# Сборка проекта с прокидыванием переменных
+# Сборка всего с прокидыванием переменных
 build: gen-proto gen-swagger gen-http-client gen-mocks
+	go build -ldflags \
+	"-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
+	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
+	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
+
+# Сборка проекта с прокидыванием переменных
+build-only: gen-proto gen-swagger gen-http-client
 	go build -ldflags \
 	"-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
 	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
@@ -56,6 +63,10 @@ run: build
 # Запуск тестов
 test:
 	go test -v ./...
+
+# Запуск бенчмарков (сюда добавляем все вызовы) или разные параметры под один пакет
+bench:
+	go test -bench=BenchmarkManager_FullCycle -benchmem ./pkg/infra/cache/test/...
 
 # Запуск static check
 static-check:
