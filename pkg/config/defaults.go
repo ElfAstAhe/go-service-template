@@ -86,6 +86,12 @@ const (
 	FlagTelemetryTimeout          string = "telemetry-timeout"
 )
 
+// runner defaults
+const (
+	DefaultRunnerStopTimeout  time.Duration = 15 * time.Second
+	DefaultRunnerCloseTimeout time.Duration = 5 * time.Second
+)
+
 // App defaults
 const (
 	DefaultAppEnv          AppEnv        = AppEnvDevelopment

@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
@@ -15,13 +16,20 @@ type BasePoolConfig struct {
 	WorkerCount     int
 	DataCapacity    int
 	CompleteProcess bool
+	StopTimeout     time.Duration
 }
 
-func NewBasePoolConfig(workerCount, dataCapacity int, completeProcess bool) *BasePoolConfig {
+func NewBasePoolConfig(
+	workerCount,
+	dataCapacity int,
+	completeProcess bool,
+	stopTimeout time.Duration,
+) *BasePoolConfig {
 	return &BasePoolConfig{
 		WorkerCount:     workerCount,
 		DataCapacity:    dataCapacity,
 		CompleteProcess: completeProcess,
+		StopTimeout:     stopTimeout,
 	}
 }
 
@@ -37,8 +45,9 @@ type BasePool[D any] struct {
 	running    *atomic.Bool
 }
 
-var _ Pool[string] = (*BasePool[string])(nil)
 var _ CommonWorker = (*BasePool[string])(nil)
+var _ Pool[string] = (*BasePool[string])(nil)
+var _ container.Runner = (*BasePool[string])(nil)
 
 func NewBasePool[D any](
 	name string,
@@ -79,7 +88,7 @@ func (bp *BasePool[D]) Start(ctx context.Context) error {
 	return nil
 }
 
-func (bp *BasePool[D]) Stop(stopTimeOut time.Duration) error {
+func (bp *BasePool[D]) Stop(stopCtx context.Context) error {
 	if !bp.running.CompareAndSwap(true, false) {
 		return errs.NewCommonError(fmt.Sprintf("worker pool %s not running", bp.GetName()), nil)
 	}
@@ -106,8 +115,10 @@ func (bp *BasePool[D]) Stop(stopTimeOut time.Duration) error {
 	select {
 	case <-stopChan:
 		bp.GetLogger().Debugf("worker pool %s stopped gracefully, all data processed", bp.GetName())
-	case <-time.After(stopTimeOut):
+	case <-time.After(bp.config.StopTimeout):
 		bp.GetLogger().Debugf("worker pool %s stop timed out, force stopping, some data not processed and will be lost", bp.GetName())
+	case <-stopCtx.Done():
+		bp.GetLogger().Debugf("worker pool %s stopped by stop context, force stopping, some data not processed and will be lost", bp.GetName())
 	}
 	if bp.GetContextCancel() != nil {
 		bp.GetContextCancel()()

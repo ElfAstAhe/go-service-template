@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
@@ -17,15 +18,18 @@ type BaseSchedulerConfig struct {
 	// schedule
 	StartInterval    time.Duration
 	ScheduleInterval time.Duration
+	StopTimeout      time.Duration
 }
 
 func NewBaseSchedulerConfig(
 	startInterval time.Duration,
 	scheduleInterval time.Duration,
+	stopTimeout time.Duration,
 ) *BaseSchedulerConfig {
 	return &BaseSchedulerConfig{
 		StartInterval:    startInterval,
 		ScheduleInterval: scheduleInterval,
+		StopTimeout:      stopTimeout,
 	}
 }
 
@@ -47,7 +51,9 @@ type BaseScheduler struct {
 	running *atomic.Bool
 }
 
+var _ CommonWorker = (*BaseScheduler)(nil)
 var _ Scheduler = (*BaseScheduler)(nil)
+var _ container.Runner = (*BaseScheduler)(nil)
 
 func NewBaseScheduler(
 	name string,
@@ -96,7 +102,7 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 	return nil
 }
 
-func (bs *BaseScheduler) Stop(stopTimeOut time.Duration) error {
+func (bs *BaseScheduler) Stop(stopCtx context.Context) error {
 	if !bs.running.CompareAndSwap(true, false) {
 		return errs.NewCommonError(fmt.Sprintf("scheduler %s is not running", bs.GetName()), nil)
 	}
@@ -125,8 +131,10 @@ func (bs *BaseScheduler) Stop(stopTimeOut time.Duration) error {
 	select {
 	case <-stopChan:
 		bs.GetLogger().Debugf("scheduler %s stopped gracefully", bs.GetName())
-	case <-time.After(stopTimeOut):
+	case <-time.After(bs.config.StopTimeout):
 		bs.GetLogger().Debugf("scheduler %s stop timed out, force stopping", bs.GetName())
+	case <-stopCtx.Done():
+		bs.GetLogger().Debugf("scheduler %s stopped by stop context, force stopping", bs.GetName())
 	}
 
 	return nil

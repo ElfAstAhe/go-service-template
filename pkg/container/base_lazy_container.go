@@ -18,9 +18,12 @@ type BaseLazyContainer struct {
 	providers  map[string]Provider
 }
 
-func NewBaseLazyContainer(name string) *BaseLazyContainer {
+func NewBaseLazyContainer(
+	name string,
+	orchestrator Orchestrator,
+) *BaseLazyContainer {
 	return &BaseLazyContainer{
-		BaseContainer: NewBaseContainer(name),
+		BaseContainer: NewBaseContainer(name, orchestrator),
 		names:         make(map[string]struct{}),
 		order:         make([]string, 0),
 		providers:     make(map[string]Provider),
@@ -72,7 +75,7 @@ func (blc *BaseLazyContainer) GetInstance(name string) (any, error) {
 	}
 
 	// 6. Регистрируем готовый результат (внутри BaseContainer свой Lock)
-	if regErr := blc.BaseContainer.RegisterInstance(name, res); regErr != nil {
+	if regErr := blc.RegisterInstance(name, res); regErr != nil {
 		return nil, regErr
 	}
 

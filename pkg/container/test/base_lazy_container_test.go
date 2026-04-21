@@ -13,7 +13,7 @@ import (
 )
 
 func TestBaseLazyContainer_LazyInitialization(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("test-ctn")
+	ctn := container.NewBaseLazyContainer("test-ctn", nil)
 
 	counter := 0
 	instanceName := "lazy-service"
@@ -50,7 +50,7 @@ func TestBaseLazyContainer_LazyInitialization(t *testing.T) {
 }
 
 func TestBaseLazyContainer_Concurrency(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("race-ctn")
+	ctn := container.NewBaseLazyContainer("race-ctn", nil)
 
 	var createCount int32
 	instanceName := "concurrent-service"
@@ -79,7 +79,7 @@ func TestBaseLazyContainer_Concurrency(t *testing.T) {
 }
 
 func TestBaseLazyContainer_Order(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("order-ctn")
+	ctn := container.NewBaseLazyContainer("order-ctn", nil)
 
 	names := []string{"first", "second", "third"}
 	for _, name := range names {
@@ -92,7 +92,7 @@ func TestBaseLazyContainer_Order(t *testing.T) {
 }
 
 func TestBaseLazyContainer_Unregister(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("clean-ctn")
+	ctn := container.NewBaseLazyContainer("clean-ctn", nil)
 	name := "to-delete"
 
 	_ = ctn.RegisterProvider(name, func(n string) (any, error) { return "val", nil })
@@ -115,7 +115,7 @@ func TestBaseLazyContainer_Unregister(t *testing.T) {
 }
 
 func TestBaseLazyContainer_ProviderError(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("err-ctn")
+	ctn := container.NewBaseLazyContainer("err-ctn", nil)
 	name := "flaky-service"
 
 	expectedErrText := "first time fail"
@@ -151,7 +151,7 @@ func TestBaseLazyContainer_ProviderError(t *testing.T) {
 }
 
 func TestBaseLazyContainer_OverrideLogic(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("override-ctn")
+	ctn := container.NewBaseLazyContainer("override-ctn", nil)
 	name := "service"
 
 	// 1. Сначала регистрируем готовый инстанс
@@ -175,7 +175,7 @@ func TestBaseLazyContainer_OverrideLogic(t *testing.T) {
 }
 
 func TestBaseLazyContainer_SelfDependency(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("deadlock-ctn")
+	ctn := container.NewBaseLazyContainer("deadlock-ctn", nil)
 
 	// Регистрируем А, который зависит от Б
 	_ = ctn.RegisterProvider("A", func(n string) (any, error) {
@@ -204,7 +204,7 @@ func TestBaseLazyContainer_SelfDependency(t *testing.T) {
 }
 
 func TestBaseLazyContainer_AllProvidersConsistency(t *testing.T) {
-	ctn := container.NewBaseLazyContainer("list-ctn")
+	ctn := container.NewBaseLazyContainer("list-ctn", nil)
 
 	_ = ctn.RegisterProvider("p1", func(n string) (any, error) { return 1, nil })
 	_ = ctn.RegisterProvider("p2", func(n string) (any, error) { return 2, nil })

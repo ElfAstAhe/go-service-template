@@ -7,7 +7,6 @@ package mocks
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	mock "github.com/stretchr/testify/mock"
@@ -364,16 +363,16 @@ func (_c *MockCommonWorker_Start_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // Stop provides a mock function for the type MockCommonWorker
-func (_mock *MockCommonWorker) Stop(stopTimeOut time.Duration) error {
-	ret := _mock.Called(stopTimeOut)
+func (_mock *MockCommonWorker) Stop(stopCtx context.Context) error {
+	ret := _mock.Called(stopCtx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Stop")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(time.Duration) error); ok {
-		r0 = returnFunc(stopTimeOut)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = returnFunc(stopCtx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -386,16 +385,16 @@ type MockCommonWorker_Stop_Call struct {
 }
 
 // Stop is a helper method to define mock.On call
-//   - stopTimeOut time.Duration
-func (_e *MockCommonWorker_Expecter) Stop(stopTimeOut interface{}) *MockCommonWorker_Stop_Call {
-	return &MockCommonWorker_Stop_Call{Call: _e.mock.On("Stop", stopTimeOut)}
+//   - stopCtx context.Context
+func (_e *MockCommonWorker_Expecter) Stop(stopCtx interface{}) *MockCommonWorker_Stop_Call {
+	return &MockCommonWorker_Stop_Call{Call: _e.mock.On("Stop", stopCtx)}
 }
 
-func (_c *MockCommonWorker_Stop_Call) Run(run func(stopTimeOut time.Duration)) *MockCommonWorker_Stop_Call {
+func (_c *MockCommonWorker_Stop_Call) Run(run func(stopCtx context.Context)) *MockCommonWorker_Stop_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 time.Duration
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(time.Duration)
+			arg0 = args[0].(context.Context)
 		}
 		run(
 			arg0,
@@ -409,7 +408,7 @@ func (_c *MockCommonWorker_Stop_Call) Return(err error) *MockCommonWorker_Stop_C
 	return _c
 }
 
-func (_c *MockCommonWorker_Stop_Call) RunAndReturn(run func(stopTimeOut time.Duration) error) *MockCommonWorker_Stop_Call {
+func (_c *MockCommonWorker_Stop_Call) RunAndReturn(run func(stopCtx context.Context) error) *MockCommonWorker_Stop_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -9,17 +9,20 @@ import (
 )
 
 type BaseContainer struct {
-	name      string
-	mu        sync.RWMutex
-	instances map[string]any
+	name         string
+	mu           sync.RWMutex
+	instances    map[string]any
+	orchestrator Orchestrator
 }
 
 func NewBaseContainer(
 	name string,
+	orchestrator Orchestrator,
 ) *BaseContainer {
 	return &BaseContainer{
-		name:      name,
-		instances: make(map[string]any),
+		name:         name,
+		instances:    make(map[string]any),
+		orchestrator: orchestrator,
 	}
 }
 
@@ -117,4 +120,8 @@ func (bc *BaseContainer) IsRegistered(name string) bool {
 	_, ok := bc.instances[name]
 
 	return ok
+}
+
+func (bc *BaseContainer) GetOrchestrator() Orchestrator {
+	return bc.orchestrator
 }

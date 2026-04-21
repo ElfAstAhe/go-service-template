@@ -134,7 +134,7 @@ func TestBaseApplication_RunnerFailure(t *testing.T) {
 	select {
 	case <-app.GetContext().Done():
 		// OK: контекст отменился из-за падения runner1
-	case <-time.After(time.Second * 2):
+	case <-time.After(app.GetConfig().StopTimeout):
 		t.Fatal("Application should have canceled context")
 	}
 }

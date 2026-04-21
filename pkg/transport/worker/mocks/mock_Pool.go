@@ -7,7 +7,6 @@ package mocks
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	mock "github.com/stretchr/testify/mock"
@@ -492,16 +491,16 @@ func (_c *MockPool_Start_Call[D]) RunAndReturn(run func(ctx context.Context) err
 }
 
 // Stop provides a mock function for the type MockPool
-func (_mock *MockPool[D]) Stop(stopTimeOut time.Duration) error {
-	ret := _mock.Called(stopTimeOut)
+func (_mock *MockPool[D]) Stop(stopCtx context.Context) error {
+	ret := _mock.Called(stopCtx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Stop")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(time.Duration) error); ok {
-		r0 = returnFunc(stopTimeOut)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = returnFunc(stopCtx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -514,16 +513,16 @@ type MockPool_Stop_Call[D any] struct {
 }
 
 // Stop is a helper method to define mock.On call
-//   - stopTimeOut time.Duration
-func (_e *MockPool_Expecter[D]) Stop(stopTimeOut interface{}) *MockPool_Stop_Call[D] {
-	return &MockPool_Stop_Call[D]{Call: _e.mock.On("Stop", stopTimeOut)}
+//   - stopCtx context.Context
+func (_e *MockPool_Expecter[D]) Stop(stopCtx interface{}) *MockPool_Stop_Call[D] {
+	return &MockPool_Stop_Call[D]{Call: _e.mock.On("Stop", stopCtx)}
 }
 
-func (_c *MockPool_Stop_Call[D]) Run(run func(stopTimeOut time.Duration)) *MockPool_Stop_Call[D] {
+func (_c *MockPool_Stop_Call[D]) Run(run func(stopCtx context.Context)) *MockPool_Stop_Call[D] {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 time.Duration
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(time.Duration)
+			arg0 = args[0].(context.Context)
 		}
 		run(
 			arg0,
@@ -537,7 +536,7 @@ func (_c *MockPool_Stop_Call[D]) Return(err error) *MockPool_Stop_Call[D] {
 	return _c
 }
 
-func (_c *MockPool_Stop_Call[D]) RunAndReturn(run func(stopTimeOut time.Duration) error) *MockPool_Stop_Call[D] {
+func (_c *MockPool_Stop_Call[D]) RunAndReturn(run func(stopCtx context.Context) error) *MockPool_Stop_Call[D] {
 	_c.Call.Return(run)
 	return _c
 }

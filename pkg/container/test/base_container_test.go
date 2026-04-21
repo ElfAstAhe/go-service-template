@@ -10,7 +10,7 @@ import (
 )
 
 func TestBaseContainer_Lifecycle(t *testing.T) {
-	c := container.NewBaseContainer("test-container")
+	c := container.NewBaseContainer("test-container", nil)
 
 	t.Run("Add_And_Get_Success", func(t *testing.T) {
 		instance := "hello-world"
@@ -54,7 +54,7 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 }
 
 func TestBaseContainer_Concurrency(t *testing.T) {
-	c := container.NewBaseContainer("concurrency-test")
+	c := container.NewBaseContainer("concurrency-test", nil)
 
 	const workers = 30
 	const iterations = 50

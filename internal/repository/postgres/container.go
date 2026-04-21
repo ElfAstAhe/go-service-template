@@ -24,11 +24,11 @@ type PgContainer struct {
 
 var _ container.Container = (*PgContainer)(nil)
 
-func NewContainer(conf *config.Config) *PgContainer {
+func NewContainer(orchestrator container.Orchestrator, conf *config.Config) *PgContainer {
 	res := &PgContainer{
 		conf: conf,
 	}
-	res.BaseLazyContainer = container.NewBaseLazyContainer(ContainerName)
+	res.BaseLazyContainer = container.NewBaseLazyContainer(ContainerName, orchestrator)
 
 	return res
 }
