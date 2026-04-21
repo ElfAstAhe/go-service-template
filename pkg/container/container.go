@@ -17,5 +17,5 @@ type Container interface {
 	GetInstance(name string) (any, error)
 	IsRegistered(name string) bool
 
-	AllInstances() map[string]any
+	AllNames() []string
 }

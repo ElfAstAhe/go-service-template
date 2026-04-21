@@ -141,6 +141,16 @@ func (blc *BaseLazyContainer) AllProviders() map[string]Provider {
 	return res
 }
 
+func (blc *BaseLazyContainer) AllNames() []string {
+	blc.mu.RLock()
+	defer blc.mu.RUnlock()
+
+	res := make([]string, len(blc.order))
+	copy(res, blc.order)
+
+	return res
+}
+
 func (blc *BaseLazyContainer) IsRegistered(name string) bool {
 	blc.mu.RLock()
 	defer blc.mu.RUnlock()

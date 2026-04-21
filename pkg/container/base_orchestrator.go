@@ -115,7 +115,7 @@ func (o *BaseOrchestrator) HasContainer(name string) bool {
 }
 
 // GetRunners — вспомогательный метод (пылесос)
-func (o *BaseOrchestrator) GetRunners() []Runner {
+func (o *BaseOrchestrator) GetRunners() ([]Runner, error) {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
@@ -123,13 +123,17 @@ func (o *BaseOrchestrator) GetRunners() []Runner {
 	for _, name := range o.regOrder {
 		ctn := o.items[name]
 		// Проходим по всем ГОТОВЫМ инстансам в контейнере
-		for _, inst := range ctn.AllInstances() {
+		for _, instName := range ctn.AllNames() {
+			inst, err := ctn.GetInstance(instName)
+			if err != nil {
+				return nil, errs.NewContainerError("orchestrator", fmt.Sprintf("get instance [%s] failed", instName), err)
+			}
 			if r, ok := inst.(Runner); ok {
 				res = append(res, r)
 			}
 		}
 	}
-	return res
+	return res, nil
 }
 
 func (o *BaseOrchestrator) validateName(op, name string) error {

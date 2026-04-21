@@ -37,48 +37,48 @@ func (_m *MockContainer) EXPECT() *MockContainer_Expecter {
 	return &MockContainer_Expecter{mock: &_m.Mock}
 }
 
-// AllInstances provides a mock function for the type MockContainer
-func (_mock *MockContainer) AllInstances() map[string]any {
+// AllNames provides a mock function for the type MockContainer
+func (_mock *MockContainer) AllNames() []string {
 	ret := _mock.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for AllInstances")
+		panic("no return value specified for AllNames")
 	}
 
-	var r0 map[string]any
-	if returnFunc, ok := ret.Get(0).(func() map[string]any); ok {
+	var r0 []string
+	if returnFunc, ok := ret.Get(0).(func() []string); ok {
 		r0 = returnFunc()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]any)
+			r0 = ret.Get(0).([]string)
 		}
 	}
 	return r0
 }
 
-// MockContainer_AllInstances_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AllInstances'
-type MockContainer_AllInstances_Call struct {
+// MockContainer_AllNames_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AllNames'
+type MockContainer_AllNames_Call struct {
 	*mock.Call
 }
 
-// AllInstances is a helper method to define mock.On call
-func (_e *MockContainer_Expecter) AllInstances() *MockContainer_AllInstances_Call {
-	return &MockContainer_AllInstances_Call{Call: _e.mock.On("AllInstances")}
+// AllNames is a helper method to define mock.On call
+func (_e *MockContainer_Expecter) AllNames() *MockContainer_AllNames_Call {
+	return &MockContainer_AllNames_Call{Call: _e.mock.On("AllNames")}
 }
 
-func (_c *MockContainer_AllInstances_Call) Run(run func()) *MockContainer_AllInstances_Call {
+func (_c *MockContainer_AllNames_Call) Run(run func()) *MockContainer_AllNames_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run()
 	})
 	return _c
 }
 
-func (_c *MockContainer_AllInstances_Call) Return(stringToV map[string]any) *MockContainer_AllInstances_Call {
-	_c.Call.Return(stringToV)
+func (_c *MockContainer_AllNames_Call) Return(strings []string) *MockContainer_AllNames_Call {
+	_c.Call.Return(strings)
 	return _c
 }
 
-func (_c *MockContainer_AllInstances_Call) RunAndReturn(run func() map[string]any) *MockContainer_AllInstances_Call {
+func (_c *MockContainer_AllNames_Call) RunAndReturn(run func() []string) *MockContainer_AllNames_Call {
 	_c.Call.Return(run)
 	return _c
 }

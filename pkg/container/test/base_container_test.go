@@ -84,17 +84,5 @@ func TestBaseContainer_Concurrency(t *testing.T) {
 	}
 
 	wg.Wait()
-	assert.Greater(t, len(c.AllInstances()), 0)
-}
-
-func TestBaseContainer_AllInstances_Isolation(t *testing.T) {
-	c := container.NewBaseContainer("isolation-test")
-	_ = c.RegisterInstance("a", 1)
-
-	all := c.AllInstances()
-	// Проверяем, что изменение копии не портит оригинал
-	all["b"] = 2
-
-	_, err := c.GetInstance("b")
-	assert.Error(t, err, "Should not find instance 'b' in container after modifying map copy")
+	assert.Greater(t, len(c.AllNames()), 0)
 }

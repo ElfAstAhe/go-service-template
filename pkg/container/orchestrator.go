@@ -11,6 +11,8 @@ type Orchestrator interface {
 	Register(container Container) error
 	Unregister(name string) error
 
-	GetContainer(name string) Container
+	GetContainer(name string) (Container, error)
 	HasContainer(name string) bool
+
+	AllContainers() []Container
 }

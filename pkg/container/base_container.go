@@ -86,7 +86,7 @@ func (bc *BaseContainer) GetInstance(name string) (any, error) {
 	return res, nil
 }
 
-func (bc *BaseContainer) AllInstances() map[string]any {
+func (bc *BaseContainer) AllNames() []string {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 	if len(bc.instances) == 0 {
@@ -94,9 +94,9 @@ func (bc *BaseContainer) AllInstances() map[string]any {
 	}
 
 	// make a map copy
-	res := make(map[string]any, len(bc.instances))
-	for key, val := range bc.instances {
-		res[key] = val
+	res := make([]string, 0, len(bc.instances))
+	for key, _ := range bc.instances {
+		res = append(res, key)
 	}
 
 	return res
