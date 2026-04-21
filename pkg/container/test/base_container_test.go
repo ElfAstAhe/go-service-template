@@ -1,26 +1,20 @@
-package container
+package test
 
 import (
 	"fmt"
 	"sync"
 	"testing"
 
-	"github.com/ElfAstAhe/go-service-template/pkg/logger/mocks"
+	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBaseContainer_Lifecycle(t *testing.T) {
-	// Создаем мок логгера через mockery
-	mockLog := mocks.NewMockLogger(t)
-
-	// Настраиваем логгер, так как конструктор BaseContainer зовет GetLogger
-	mockLog.On("GetLogger", "BaseContainer").Return(mockLog)
-
-	c := NewBaseContainer("test-container", mockLog)
+	c := container.NewBaseContainer("test-container")
 
 	t.Run("Add_And_Get_Success", func(t *testing.T) {
 		instance := "hello-world"
-		err := c.Add("key1", instance)
+		err := c.RegisterInstance("key1", instance)
 
 		assert.NoError(t, err)
 		res, err := c.GetInstance("key1")
@@ -29,7 +23,7 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 	})
 
 	t.Run("Add_Duplicate_Error", func(t *testing.T) {
-		err := c.Add("key1", "duplicate")
+		err := c.RegisterInstance("key1", "duplicate")
 		assert.Error(t, err)
 		// Проверяем тип ошибки, если у тебя используется errs.NewContainerError
 		assert.Contains(t, err.Error(), "already exists")
@@ -39,12 +33,12 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 		res, err := c.GetInstance("unknown")
 		assert.Error(t, err)
 		assert.Nil(t, res)
-		assert.Contains(t, err.Error(), "not found")
+		assert.Contains(t, err.Error(), "not registered")
 	})
 
 	t.Run("Remove_Instance", func(t *testing.T) {
-		_ = c.Add("to-delete", 123)
-		err := c.Remove("to-delete")
+		_ = c.RegisterInstance("to-delete", 123)
+		err := c.UnregisterInstance("to-delete")
 		assert.NoError(t, err)
 
 		_, err = c.GetInstance("to-delete")
@@ -52,7 +46,7 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 	})
 
 	t.Run("Validate_Empty_Name", func(t *testing.T) {
-		err := c.Add("", "something")
+		err := c.RegisterInstance("", "something")
 		assert.Error(t, err)
 		// Здесь должна сработать твоя commonValidate
 		assert.Contains(t, err.Error(), "name is empty")
@@ -60,10 +54,7 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 }
 
 func TestBaseContainer_Concurrency(t *testing.T) {
-	mockLog := mocks.NewMockLogger(t)
-	mockLog.On("GetLogger", "BaseContainer").Return(mockLog)
-
-	c := NewBaseContainer("concurrency-test", mockLog)
+	c := container.NewBaseContainer("concurrency-test")
 
 	const workers = 30
 	const iterations = 50
@@ -76,7 +67,7 @@ func TestBaseContainer_Concurrency(t *testing.T) {
 			defer wg.Done()
 			for j := 0; j < iterations; j++ {
 				key := fmt.Sprintf("w-%d-k-%d", workerID, j)
-				_ = c.Add(key, j)
+				_ = c.RegisterInstance(key, j)
 			}
 		}(i)
 	}
@@ -97,11 +88,8 @@ func TestBaseContainer_Concurrency(t *testing.T) {
 }
 
 func TestBaseContainer_AllInstances_Isolation(t *testing.T) {
-	mockLog := mocks.NewMockLogger(t)
-	mockLog.On("GetLogger", "BaseContainer").Return(mockLog)
-
-	c := NewBaseContainer("isolation-test", mockLog)
-	_ = c.Add("a", 1)
+	c := container.NewBaseContainer("isolation-test")
+	_ = c.RegisterInstance("a", 1)
 
 	all := c.AllInstances()
 	// Проверяем, что изменение копии не портит оригинал

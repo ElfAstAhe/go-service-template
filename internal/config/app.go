@@ -1,32 +1,37 @@
 package config
 
 import (
-	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"time"
+
+	"github.com/ElfAstAhe/go-service-template/pkg/config"
 )
 
-// AppConfig — метаданные сервиса
+// AppConfig — конфигурация приложения/сервиса
 type AppConfig struct {
-	Env AppEnv `mapstructure:"env" json:"env,omitempty" yaml:"env,omitempty"` // dev, prod, test
+	*config.AppConfig
 }
 
-func NewAppConfig(env AppEnv) *AppConfig {
+func NewAppConfig(
+	env config.AppEnv,
+	initTimeout time.Duration,
+	stopTimeout time.Duration,
+	closeTimeout time.Duration,
+) *AppConfig {
 	return &AppConfig{
-		Env: env,
+		AppConfig: &config.AppConfig{
+			Env:          env,
+			InitTimeout:  initTimeout,
+			StopTimeout:  stopTimeout,
+			CloseTimeout: closeTimeout,
+		},
 	}
 }
 
 func NewDefaultAppConfig() *AppConfig {
-	return NewAppConfig(defaultAppEnv)
-}
-
-func (ac *AppConfig) Validate() error {
-	if ac.Env == "" {
-		return errs.NewConfigValidateError("app", "env", "must not be empty", nil)
-	}
-
-	if !ac.Env.Exists() {
-		return errs.NewConfigValidateError("app", "env", "env value not match", nil)
-	}
-
-	return nil
+	return NewAppConfig(
+		config.DefaultAppEnv,
+		config.DefaultAppInitTimeout,
+		config.DefaultAppStopTimeout,
+		config.DefaultAppCloseTimeout,
+	)
 }

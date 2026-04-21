@@ -4,6 +4,103 @@ import (
 	"time"
 )
 
+// FlagConfig - файл конфигурации
+const FlagConfig = "config-path"
+
+// EnvConfig - файл конфигурации
+const EnvConfig string = "CONFIG_PATH"
+
+// App config flags
+const (
+	FlagAppEnv          string = "env"
+	FlagAppInitTimeout  string = "app-init-timeout"
+	FlagAppStopTimeout  string = "app-stop-timeout"
+	FlagAppCloseTimeout string = "app-close-timeout"
+)
+
+// Auth config flags
+const (
+	FlagAuthJWTSecret          string = "auth-jwt-secret"
+	FlagAuthJWTSigningMethod   string = "auth-jwt-signing-method"
+	FlagAuthAccessTokenTTL     string = "auth-access-token-ttl"
+	FlagAuthRefreshTokenTTL    string = "auth-refresh-token-ttl"
+	FlagAuthRSAPrivateKeyPath  string = "auth-rsa-private-key-path"
+	FlagAuthMasterPasswordSalt string = "auth-master-password-salt"
+)
+
+// DB config flags
+const (
+	FlagDBDSN             string = "db-dsn"
+	FlagDBDriver          string = "db-driver"
+	FlagDBMaxOpenConns    string = "db-max-open-conns"
+	FlagDBMaxIdleConns    string = "db-max-idle-conns"
+	FlagDBMaxIdleLifetime string = "db-max-idle-lifetime"
+	FlagDBConnTimeout     string = "db-conn-timeout"
+)
+
+// gRPC config flags
+const (
+	FlagGRPCAddress          string = "grpc-address"
+	FlagGRPCMaxConnIdle      string = "grpc-max-conn-idle"
+	FlagGRPCMaxConnAge       string = "grpc-max-conn-age"
+	FlagGRPCMaxConnAgeGrace  string = "grpc-max-conn-age-grace"
+	FlagGRPCTimeout          string = "grpc-timeout"
+	FlagGRPCKeepAliveTime    string = "grpc-keep-alive-time"
+	FlagGRPCKeepAliveTimeout string = "grpc-keep-alive-timeout"
+	FlagGRPCShutdownTimeout  string = "grpc-shutdown-timeout"
+)
+
+// http config flags
+const (
+	FlagHTTPAddress            string = "http-address"
+	FlagHTTPReadTimeout        string = "http-read-timeout"
+	FlagHTTPWriteTimeout       string = "http-write-timeout"
+	FlagHTTPIdleTimeout        string = "http-idle-timeout"
+	FlagHTTPShutdownTimeout    string = "http-shutdown-timeout"
+	FlagHTTPPrivateKeyPath     string = "http-private-key-path"
+	FlagHTTPCertificatePath    string = "http-certificate-path"
+	FlagHTTPSecure             string = "http-secure"
+	FlagHTTPMaxRequestBodySize string = "http-max-request-body-size"
+)
+
+// log config flags
+const (
+	FlagLogLevel  string = "log-level"
+	FlagLogFormat string = "log-format"
+)
+
+// redis config flags
+const (
+	FlagRedisHost     string = "redis-host"
+	FlagRedisPort     string = "redis-port"
+	FlagRedisPassword string = "redis-password"
+	FlagRedisDB       string = "redis-db"
+)
+
+// telemetry
+const (
+	FlagTelemetryEnabled          string = "telemetry-enabled"
+	FlagTelemetryServiceName      string = "telemetry-service-name"
+	FlagTelemetryExporterEndpoint string = "telemetry-exporter-endpoint"
+	FlagTelemetrySampleRate       string = "telemetry-sample-rate"
+	FlagTelemetryTimeout          string = "telemetry-timeout"
+)
+
+// App defaults
+const (
+	DefaultAppEnv          AppEnv        = AppEnvDevelopment
+	DefaultAppInitTimeout  time.Duration = 30 * time.Second
+	DefaultAppStopTimeout  time.Duration = 20 * time.Second
+	DefaultAppCloseTimeout time.Duration = 5 * time.Second
+)
+
+const (
+	KeyAppEnv          string = "app.env"
+	KeyAppInitTimeout  string = "app.init_timeout"
+	KeyAppStopTimeout  string = "app.stop_timeout"
+	KeyAppCloseTimeout string = "app.close_timeout"
+)
+
 // HTTP defaults
 const (
 	DefaultHTTPAddress            string        = "localhost:8080"

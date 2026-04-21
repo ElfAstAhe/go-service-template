@@ -1,8 +1,9 @@
-package container
+package test
 
 import (
 	"testing"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/container/mocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +19,7 @@ func TestGetInstance(t *testing.T) {
 
 		mockCtn.On("GetInstance", name).Return(expected, nil).Once()
 
-		res, err := GetInstance[string](mockCtn, name)
+		res, err := container.GetInstance[string](mockCtn, name)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected, res)
@@ -32,7 +33,7 @@ func TestGetInstance(t *testing.T) {
 
 		mockCtn.On("GetInstance", name).Return(expected, nil).Once()
 
-		res, err := GetInstance[*myStruct](mockCtn, name)
+		res, err := container.GetInstance[*myStruct](mockCtn, name)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected.ID, res.ID)
@@ -45,7 +46,7 @@ func TestGetInstance(t *testing.T) {
 		mockCtn.On("GetInstance", name).Return(instance, nil).Once()
 
 		// А мы пытаемся достать его как строку
-		res, err := GetInstance[string](mockCtn, name)
+		res, err := container.GetInstance[string](mockCtn, name)
 
 		assert.Error(t, err)
 		assert.Empty(t, res)
@@ -58,14 +59,14 @@ func TestGetInstance(t *testing.T) {
 		// Имитируем, что GetInstance вернул nil (через интерфейс)
 		mockCtn.On("GetInstance", name).Return(nil, nil).Once()
 
-		res, err := GetInstance[*testing.T](mockCtn, name)
+		res, err := container.GetInstance[*testing.T](mockCtn, name)
 
 		assert.NoError(t, err)
 		assert.Nil(t, res, "Should return typed nil without error if instance is nil")
 	})
 
 	t.Run("Error_ContainerNil", func(t *testing.T) {
-		res, err := GetInstance[string](nil, "any")
+		res, err := container.GetInstance[string](nil, "any")
 
 		assert.Error(t, err)
 		assert.Empty(t, res)
@@ -73,7 +74,7 @@ func TestGetInstance(t *testing.T) {
 	})
 
 	t.Run("Error_EmptyName", func(t *testing.T) {
-		res, err := GetInstance[string](mockCtn, "")
+		res, err := container.GetInstance[string](mockCtn, "")
 
 		assert.Error(t, err)
 		assert.Empty(t, res)
@@ -85,7 +86,7 @@ func TestGetInstance(t *testing.T) {
 		// Имитируем, что сам контейнер вернул ошибку (например, Not Found)
 		mockCtn.On("GetInstance", name).Return(nil, assert.AnError).Once()
 
-		res, err := GetInstance[string](mockCtn, name)
+		res, err := container.GetInstance[string](mockCtn, name)
 
 		assert.Error(t, err)
 		assert.Equal(t, assert.AnError, err)

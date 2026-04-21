@@ -89,10 +89,13 @@ func (c *Config) Validate() error {
 		c.Telemetry,
 	}
 
+	var validateErrs []error
 	for _, validator := range validators {
-		if err := validator.Validate(); err != nil {
-			return err
-		}
+		validateErrs = append(validateErrs, validator.Validate())
+	}
+	err := errors.Join(validateErrs...)
+	if err != nil {
+		return errs.NewConfigValidateError("config", "config", "all config validation failed", err)
 	}
 
 	return nil
@@ -122,13 +125,13 @@ func Load() (*Config, error) {
 	v.AutomaticEnv()
 
 	// 5. Поддержка ENV для пути к конфигу
-	err = v.BindEnv(FlagConfig, EnvConfig)
+	err = v.BindEnv(conf.FlagConfig, conf.EnvConfig)
 	if err != nil {
 		return nil, errs.NewConfigError("failed to bind env", err)
 	}
 
 	// 6. Чтение файла конфигурации
-	cfgFile := v.GetString(FlagConfig)
+	cfgFile := v.GetString(conf.FlagConfig)
 	v.SetConfigFile(cfgFile)
 
 	if err := v.ReadInConfig(); err != nil {
@@ -153,7 +156,10 @@ func Load() (*Config, error) {
 //goland:noinspection DuplicatedCode
 func applyDefaults(v *viper.Viper) {
 	// App
-	v.SetDefault(keyAppEnv, defaultAppEnv)
+	v.SetDefault(conf.KeyAppEnv, conf.DefaultAppEnv)
+	v.SetDefault(conf.KeyAppInitTimeout, conf.DefaultAppInitTimeout)
+	v.SetDefault(conf.KeyAppStopTimeout, conf.DefaultAppStopTimeout)
+	v.SetDefault(conf.KeyAppCloseTimeout, conf.DefaultAppCloseTimeout)
 
 	// Auth
 	v.SetDefault(conf.KeyAuthJWTSigningMethod, conf.DefaultAuthSigningMethod)
@@ -217,56 +223,59 @@ func initFLags() (res *pflag.FlagSet, err error) {
 	res = pflag.NewFlagSet("cmd flags", pflag.PanicOnError)
 
 	// Используем константы Flag...
-	res.String(FlagConfig, "config/config.yaml", "path to config file")
-	res.String(FlagAppEnv, string(defaultAppEnv), "application environment")
+	res.String(conf.FlagConfig, "config/config.yaml", "path to config file")
+	res.String(conf.FlagAppEnv, string(conf.DefaultAppEnv), "application environment")
+	res.Duration(conf.FlagAppInitTimeout, conf.DefaultAppInitTimeout, "application init timeout")
+	res.Duration(conf.FlagAppStopTimeout, conf.DefaultAppStopTimeout, "application stop timeout")
+	res.Duration(conf.FlagAppCloseTimeout, conf.DefaultAppCloseTimeout, "application close timeout")
 
 	// Auth
-	res.String(FlagAuthJWTSecret, "", "JWT secret")
-	res.String(FlagAuthJWTSigningMethod, conf.DefaultAuthSigningMethod, "JWT signing method")
-	res.Duration(FlagAuthAccessTokenTTL, conf.DefaultAuthAccessTokenTTL, "JWT access token TTL")
-	res.Duration(FlagAuthRefreshTokenTTL, conf.DefaultAuthRefreshTokenTTL, "JWT refresh token TTL")
-	res.String(FlagAuthRSAPrivateKeyPath, "", "RSA private key path")
-	res.String(FlagAuthMasterPasswordSalt, "", "master password salt")
+	res.String(conf.FlagAuthJWTSecret, "", "JWT secret")
+	res.String(conf.FlagAuthJWTSigningMethod, conf.DefaultAuthSigningMethod, "JWT signing method")
+	res.Duration(conf.FlagAuthAccessTokenTTL, conf.DefaultAuthAccessTokenTTL, "JWT access token TTL")
+	res.Duration(conf.FlagAuthRefreshTokenTTL, conf.DefaultAuthRefreshTokenTTL, "JWT refresh token TTL")
+	res.String(conf.FlagAuthRSAPrivateKeyPath, "", "RSA private key path")
+	res.String(conf.FlagAuthMasterPasswordSalt, "", "master password salt")
 
 	// HTTP
-	res.String(FlagHTTPAddress, conf.DefaultHTTPAddress, "http address")
-	res.Duration(FlagHTTPReadTimeout, conf.DefaultHTTPReadTimeout, "http read timeout")
-	res.Duration(FlagHTTPWriteTimeout, conf.DefaultHTTPWriteTimeout, "http write timeout")
-	res.Duration(FlagHTTPIdleTimeout, conf.DefaultHTTPIdleTimeout, "http idle timeout")
-	res.Duration(FlagHTTPShutdownTimeout, conf.DefaultHTTPShutdownTimeout, "http shutdown timeout")
-	res.String(FlagHTTPPrivateKeyPath, "", "http private key path")
-	res.String(FlagHTTPCertificatePath, "", "http certificate path")
-	res.Bool(FlagHTTPSecure, conf.DefaultHTTPSecure, "http secure mode")
-	res.Int(FlagHTTPMaxRequestBodySize, conf.DefaultHTTPMaxRequestBodySize, "http max request body size")
+	res.String(conf.FlagHTTPAddress, conf.DefaultHTTPAddress, "http address")
+	res.Duration(conf.FlagHTTPReadTimeout, conf.DefaultHTTPReadTimeout, "http read timeout")
+	res.Duration(conf.FlagHTTPWriteTimeout, conf.DefaultHTTPWriteTimeout, "http write timeout")
+	res.Duration(conf.FlagHTTPIdleTimeout, conf.DefaultHTTPIdleTimeout, "http idle timeout")
+	res.Duration(conf.FlagHTTPShutdownTimeout, conf.DefaultHTTPShutdownTimeout, "http shutdown timeout")
+	res.String(conf.FlagHTTPPrivateKeyPath, "", "http private key path")
+	res.String(conf.FlagHTTPCertificatePath, "", "http certificate path")
+	res.Bool(conf.FlagHTTPSecure, conf.DefaultHTTPSecure, "http secure mode")
+	res.Int(conf.FlagHTTPMaxRequestBodySize, conf.DefaultHTTPMaxRequestBodySize, "http max request body size")
 
 	// gRPC
-	res.String(FlagGRPCAddress, conf.DefaultGRPCAddress, "gRPC address")
-	res.Duration(FlagGRPCMaxConnIdle, conf.DefaultGRPCMaxConnIdle, "gRPC max connection idle timeout")
-	res.Duration(FlagGRPCMaxConnAge, conf.DefaultGRPCMaxConnAge, "gRPC max connection age timeout")
-	res.Duration(FlagGRPCMaxConnAgeGrace, conf.DefaultGRPCMaxConnAgeGrace, "gRPC max connection age grace timeout")
-	res.Duration(FlagGRPCTimeout, conf.DefaultGRPCTimeout, "gRPC timeout")
-	res.Duration(FlagGRPCKeepAliveTime, conf.DefaultGRPCKeepAliveTime, "gRPC keep alive timeout")
-	res.Duration(FlagGRPCKeepAliveTimeout, conf.DefaultGRPCKeepAliveTimeout, "gRPC keep alive timeout")
-	res.Duration(FlagGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout, "gRPC shutdown timeout")
+	res.String(conf.FlagGRPCAddress, conf.DefaultGRPCAddress, "gRPC address")
+	res.Duration(conf.FlagGRPCMaxConnIdle, conf.DefaultGRPCMaxConnIdle, "gRPC max connection idle timeout")
+	res.Duration(conf.FlagGRPCMaxConnAge, conf.DefaultGRPCMaxConnAge, "gRPC max connection age timeout")
+	res.Duration(conf.FlagGRPCMaxConnAgeGrace, conf.DefaultGRPCMaxConnAgeGrace, "gRPC max connection age grace timeout")
+	res.Duration(conf.FlagGRPCTimeout, conf.DefaultGRPCTimeout, "gRPC timeout")
+	res.Duration(conf.FlagGRPCKeepAliveTime, conf.DefaultGRPCKeepAliveTime, "gRPC keep alive timeout")
+	res.Duration(conf.FlagGRPCKeepAliveTimeout, conf.DefaultGRPCKeepAliveTimeout, "gRPC keep alive timeout")
+	res.Duration(conf.FlagGRPCShutdownTimeout, conf.DefaultGRPCShutdownTimeout, "gRPC shutdown timeout")
 
 	// DB
-	res.String(FlagDBDSN, conf.DefaultDBDSN, "database dsn")
-	res.String(FlagDBDriver, conf.DefaultDBDriver, "database driver name/alias")
-	res.Int(FlagDBMaxOpenConns, conf.DefaultDBMaxOpenConns, "db max open connections")
-	res.Int(FlagDBMaxIdleConns, conf.DefaultDBMaxIdleConns, "db max idle connections")
-	res.Duration(FlagDBMaxIdleLifetime, conf.DefaultDBConnMaxIdleLifetime, "db max idle connection lifetime")
-	res.Duration(FlagDBConnTimeout, conf.DefaultDBConnTimeout, "db connection timeout)")
+	res.String(conf.FlagDBDSN, conf.DefaultDBDSN, "database dsn")
+	res.String(conf.FlagDBDriver, conf.DefaultDBDriver, "database driver name/alias")
+	res.Int(conf.FlagDBMaxOpenConns, conf.DefaultDBMaxOpenConns, "db max open connections")
+	res.Int(conf.FlagDBMaxIdleConns, conf.DefaultDBMaxIdleConns, "db max idle connections")
+	res.Duration(conf.FlagDBMaxIdleLifetime, conf.DefaultDBConnMaxIdleLifetime, "db max idle connection lifetime")
+	res.Duration(conf.FlagDBConnTimeout, conf.DefaultDBConnTimeout, "db connection timeout)")
 
 	// Log
-	res.String(FlagLogLevel, conf.DefaultLogLevel, "log level")
-	res.String(FlagLogFormat, conf.DefaultLogFormat, "log format")
+	res.String(conf.FlagLogLevel, conf.DefaultLogLevel, "log level")
+	res.String(conf.FlagLogFormat, conf.DefaultLogFormat, "log format")
 
 	// Telemetry
-	res.Bool(FlagTelemetryEnabled, conf.DefaultTelemetryEnabled, "telemetry enabled")
-	res.String(FlagTelemetryServiceName, "", "telemetry service name")
-	res.String(FlagTelemetryExporterEndpoint, conf.DefaultTelemetryExporterEndpoint, "telemetry exporter endpoint")
-	res.Float64(FlagTelemetrySampleRate, conf.DefaultTelemetrySampleRate, "telemetry sample rate")
-	res.Duration(FlagTelemetryTimeout, conf.DefaultTelemetryTimeout, "telemetry timeout")
+	res.Bool(conf.FlagTelemetryEnabled, conf.DefaultTelemetryEnabled, "telemetry enabled")
+	res.String(conf.FlagTelemetryServiceName, "", "telemetry service name")
+	res.String(conf.FlagTelemetryExporterEndpoint, conf.DefaultTelemetryExporterEndpoint, "telemetry exporter endpoint")
+	res.Float64(conf.FlagTelemetrySampleRate, conf.DefaultTelemetrySampleRate, "telemetry sample rate")
+	res.Duration(conf.FlagTelemetryTimeout, conf.DefaultTelemetryTimeout, "telemetry timeout")
 
 	// Добавь остальные pflag.String/Int/Duration для Redis, etc. ...
 	// ..
@@ -283,49 +292,52 @@ func initFLags() (res *pflag.FlagSet, err error) {
 func bindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	err := errors.Join(
 		// App
-		v.BindPFlag(keyAppEnv, flags.Lookup(FlagAppEnv)),
+		v.BindPFlag(conf.KeyAppEnv, flags.Lookup(conf.FlagAppEnv)),
+		v.BindPFlag(conf.KeyAppInitTimeout, flags.Lookup(conf.FlagAppInitTimeout)),
+		v.BindPFlag(conf.KeyAppStopTimeout, flags.Lookup(conf.FlagAppStopTimeout)),
+		v.BindPFlag(conf.KeyAppCloseTimeout, flags.Lookup(conf.FlagAppCloseTimeout)),
 		// Auth
-		v.BindPFlag(conf.KeyAuthJWTSecret, flags.Lookup(FlagAuthJWTSecret)),
-		v.BindPFlag(conf.KeyAuthJWTSigningMethod, flags.Lookup(FlagAuthJWTSigningMethod)),
-		v.BindPFlag(conf.KeyAuthAccessTokenTTL, flags.Lookup(FlagAuthAccessTokenTTL)),
-		v.BindPFlag(conf.KeyAuthRefreshTokenTTL, flags.Lookup(FlagAuthRefreshTokenTTL)),
-		v.BindPFlag(conf.KeyAuthRSAPrivateKeyPath, flags.Lookup(FlagAuthRSAPrivateKeyPath)),
-		v.BindPFlag(conf.KeyAuthMasterPasswordSalt, flags.Lookup(FlagAuthMasterPasswordSalt)),
+		v.BindPFlag(conf.KeyAuthJWTSecret, flags.Lookup(conf.FlagAuthJWTSecret)),
+		v.BindPFlag(conf.KeyAuthJWTSigningMethod, flags.Lookup(conf.FlagAuthJWTSigningMethod)),
+		v.BindPFlag(conf.KeyAuthAccessTokenTTL, flags.Lookup(conf.FlagAuthAccessTokenTTL)),
+		v.BindPFlag(conf.KeyAuthRefreshTokenTTL, flags.Lookup(conf.FlagAuthRefreshTokenTTL)),
+		v.BindPFlag(conf.KeyAuthRSAPrivateKeyPath, flags.Lookup(conf.FlagAuthRSAPrivateKeyPath)),
+		v.BindPFlag(conf.KeyAuthMasterPasswordSalt, flags.Lookup(conf.FlagAuthMasterPasswordSalt)),
 		// HTTP
-		v.BindPFlag(conf.KeyHTTPAddress, flags.Lookup(FlagHTTPAddress)),
-		v.BindPFlag(conf.KeyHTTPReadTimeout, flags.Lookup(FlagHTTPReadTimeout)),
-		v.BindPFlag(conf.KeyHTTPWriteTimeout, flags.Lookup(FlagHTTPWriteTimeout)),
-		v.BindPFlag(conf.KeyHTTPIdleTimeout, flags.Lookup(FlagHTTPIdleTimeout)),
-		v.BindPFlag(conf.KeyHTTPShutdownTimeout, flags.Lookup(FlagHTTPShutdownTimeout)),
-		v.BindPFlag(conf.KeyHTTPPrivateKeyPath, flags.Lookup(FlagHTTPPrivateKeyPath)),
-		v.BindPFlag(conf.KeyHTTPCertificatePath, flags.Lookup(FlagHTTPCertificatePath)),
-		v.BindPFlag(conf.KeyHTTPSecure, flags.Lookup(FlagHTTPSecure)),
-		v.BindPFlag(conf.KeyHTTPMaxRequestBodySize, flags.Lookup(FlagHTTPMaxRequestBodySize)),
+		v.BindPFlag(conf.KeyHTTPAddress, flags.Lookup(conf.FlagHTTPAddress)),
+		v.BindPFlag(conf.KeyHTTPReadTimeout, flags.Lookup(conf.FlagHTTPReadTimeout)),
+		v.BindPFlag(conf.KeyHTTPWriteTimeout, flags.Lookup(conf.FlagHTTPWriteTimeout)),
+		v.BindPFlag(conf.KeyHTTPIdleTimeout, flags.Lookup(conf.FlagHTTPIdleTimeout)),
+		v.BindPFlag(conf.KeyHTTPShutdownTimeout, flags.Lookup(conf.FlagHTTPShutdownTimeout)),
+		v.BindPFlag(conf.KeyHTTPPrivateKeyPath, flags.Lookup(conf.FlagHTTPPrivateKeyPath)),
+		v.BindPFlag(conf.KeyHTTPCertificatePath, flags.Lookup(conf.FlagHTTPCertificatePath)),
+		v.BindPFlag(conf.KeyHTTPSecure, flags.Lookup(conf.FlagHTTPSecure)),
+		v.BindPFlag(conf.KeyHTTPMaxRequestBodySize, flags.Lookup(conf.FlagHTTPMaxRequestBodySize)),
 		// gRPC
-		v.BindPFlag(conf.KeyGRPCAddress, flags.Lookup(FlagGRPCAddress)),
-		v.BindPFlag(conf.KeyGRPCMaxConnIdle, flags.Lookup(FlagGRPCMaxConnIdle)),
-		v.BindPFlag(conf.KeyGRPCMaxConnAge, flags.Lookup(FlagGRPCMaxConnAge)),
-		v.BindPFlag(conf.KeyGRPCMaxConnAgeGrace, flags.Lookup(FlagGRPCMaxConnAgeGrace)),
-		v.BindPFlag(conf.KeyGRPCTimeout, flags.Lookup(FlagGRPCTimeout)),
-		v.BindPFlag(conf.KeyGRPCKeepAliveTime, flags.Lookup(FlagGRPCKeepAliveTime)),
-		v.BindPFlag(conf.KeyGRPCKeepAliveTimeout, flags.Lookup(FlagGRPCKeepAliveTimeout)),
-		v.BindPFlag(conf.KeyGRPCShutdownTimeout, flags.Lookup(FlagGRPCShutdownTimeout)),
+		v.BindPFlag(conf.KeyGRPCAddress, flags.Lookup(conf.FlagGRPCAddress)),
+		v.BindPFlag(conf.KeyGRPCMaxConnIdle, flags.Lookup(conf.FlagGRPCMaxConnIdle)),
+		v.BindPFlag(conf.KeyGRPCMaxConnAge, flags.Lookup(conf.FlagGRPCMaxConnAge)),
+		v.BindPFlag(conf.KeyGRPCMaxConnAgeGrace, flags.Lookup(conf.FlagGRPCMaxConnAgeGrace)),
+		v.BindPFlag(conf.KeyGRPCTimeout, flags.Lookup(conf.FlagGRPCTimeout)),
+		v.BindPFlag(conf.KeyGRPCKeepAliveTime, flags.Lookup(conf.FlagGRPCKeepAliveTime)),
+		v.BindPFlag(conf.KeyGRPCKeepAliveTimeout, flags.Lookup(conf.FlagGRPCKeepAliveTimeout)),
+		v.BindPFlag(conf.KeyGRPCShutdownTimeout, flags.Lookup(conf.FlagGRPCShutdownTimeout)),
 		// Log
-		v.BindPFlag(conf.KeyLogLevel, flags.Lookup(FlagLogLevel)),
-		v.BindPFlag(conf.KeyLogFormat, flags.Lookup(FlagLogFormat)),
+		v.BindPFlag(conf.KeyLogLevel, flags.Lookup(conf.FlagLogLevel)),
+		v.BindPFlag(conf.KeyLogFormat, flags.Lookup(conf.FlagLogFormat)),
 		// DB
-		v.BindPFlag(conf.KeyDBDriver, flags.Lookup(FlagDBDriver)),
-		v.BindPFlag(conf.KeyDBDSN, flags.Lookup(FlagDBDSN)),
-		v.BindPFlag(conf.KeyDBMaxOpenConns, flags.Lookup(FlagDBMaxOpenConns)),
-		v.BindPFlag(conf.KeyDBMaxIdleConns, flags.Lookup(FlagDBMaxIdleConns)),
-		v.BindPFlag(conf.KeyDBConnMaxIdleLifetime, flags.Lookup(FlagDBMaxIdleLifetime)),
-		v.BindPFlag(conf.KeyDBConnTimeout, flags.Lookup(FlagDBConnTimeout)),
+		v.BindPFlag(conf.KeyDBDriver, flags.Lookup(conf.FlagDBDriver)),
+		v.BindPFlag(conf.KeyDBDSN, flags.Lookup(conf.FlagDBDSN)),
+		v.BindPFlag(conf.KeyDBMaxOpenConns, flags.Lookup(conf.FlagDBMaxOpenConns)),
+		v.BindPFlag(conf.KeyDBMaxIdleConns, flags.Lookup(conf.FlagDBMaxIdleConns)),
+		v.BindPFlag(conf.KeyDBConnMaxIdleLifetime, flags.Lookup(conf.FlagDBMaxIdleLifetime)),
+		v.BindPFlag(conf.KeyDBConnTimeout, flags.Lookup(conf.FlagDBConnTimeout)),
 		// Telemetry
-		v.BindPFlag(conf.KeyTelemetryEnabled, flags.Lookup(FlagTelemetryEnabled)),
-		v.BindPFlag(conf.KeyTelemetryExporterEndpoint, flags.Lookup(FlagTelemetryExporterEndpoint)),
-		v.BindPFlag(conf.KeyTelemetryServiceName, flags.Lookup(FlagTelemetryServiceName)),
-		v.BindPFlag(conf.KeyTelemetrySampleRate, flags.Lookup(FlagTelemetrySampleRate)),
-		v.BindPFlag(conf.KeyTelemetryTimeout, flags.Lookup(FlagTelemetryTimeout)),
+		v.BindPFlag(conf.KeyTelemetryEnabled, flags.Lookup(conf.FlagTelemetryEnabled)),
+		v.BindPFlag(conf.KeyTelemetryExporterEndpoint, flags.Lookup(conf.FlagTelemetryExporterEndpoint)),
+		v.BindPFlag(conf.KeyTelemetryServiceName, flags.Lookup(conf.FlagTelemetryServiceName)),
+		v.BindPFlag(conf.KeyTelemetrySampleRate, flags.Lookup(conf.FlagTelemetrySampleRate)),
+		v.BindPFlag(conf.KeyTelemetryTimeout, flags.Lookup(conf.FlagTelemetryTimeout)),
 	)
 	if err != nil {
 		return errs.NewConfigError("bind flags with keys", err)

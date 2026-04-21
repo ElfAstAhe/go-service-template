@@ -5,6 +5,8 @@
 package mocks
 
 import (
+	"context"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -33,63 +35,6 @@ type MockContainer_Expecter struct {
 
 func (_m *MockContainer) EXPECT() *MockContainer_Expecter {
 	return &MockContainer_Expecter{mock: &_m.Mock}
-}
-
-// Add provides a mock function for the type MockContainer
-func (_mock *MockContainer) Add(name string, instance any) error {
-	ret := _mock.Called(name, instance)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Add")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(string, any) error); ok {
-		r0 = returnFunc(name, instance)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockContainer_Add_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Add'
-type MockContainer_Add_Call struct {
-	*mock.Call
-}
-
-// Add is a helper method to define mock.On call
-//   - name string
-//   - instance any
-func (_e *MockContainer_Expecter) Add(name interface{}, instance interface{}) *MockContainer_Add_Call {
-	return &MockContainer_Add_Call{Call: _e.mock.On("Add", name, instance)}
-}
-
-func (_c *MockContainer_Add_Call) Run(run func(name string, instance any)) *MockContainer_Add_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
-		if args[0] != nil {
-			arg0 = args[0].(string)
-		}
-		var arg1 any
-		if args[1] != nil {
-			arg1 = args[1].(any)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockContainer_Add_Call) Return(err error) *MockContainer_Add_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockContainer_Add_Call) RunAndReturn(run func(name string, instance any) error) *MockContainer_Add_Call {
-	_c.Call.Return(run)
-	return _c
 }
 
 // AllInstances provides a mock function for the type MockContainer
@@ -139,16 +84,16 @@ func (_c *MockContainer_AllInstances_Call) RunAndReturn(run func() map[string]an
 }
 
 // Close provides a mock function for the type MockContainer
-func (_mock *MockContainer) Close() error {
-	ret := _mock.Called()
+func (_mock *MockContainer) Close(ctx context.Context) error {
+	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Close")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func() error); ok {
-		r0 = returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = returnFunc(ctx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -161,13 +106,20 @@ type MockContainer_Close_Call struct {
 }
 
 // Close is a helper method to define mock.On call
-func (_e *MockContainer_Expecter) Close() *MockContainer_Close_Call {
-	return &MockContainer_Close_Call{Call: _e.mock.On("Close")}
+//   - ctx context.Context
+func (_e *MockContainer_Expecter) Close(ctx interface{}) *MockContainer_Close_Call {
+	return &MockContainer_Close_Call{Call: _e.mock.On("Close", ctx)}
 }
 
-func (_c *MockContainer_Close_Call) Run(run func()) *MockContainer_Close_Call {
+func (_c *MockContainer_Close_Call) Run(run func(ctx context.Context)) *MockContainer_Close_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -177,7 +129,7 @@ func (_c *MockContainer_Close_Call) Return(err error) *MockContainer_Close_Call 
 	return _c
 }
 
-func (_c *MockContainer_Close_Call) RunAndReturn(run func() error) *MockContainer_Close_Call {
+func (_c *MockContainer_Close_Call) RunAndReturn(run func(ctx context.Context) error) *MockContainer_Close_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -289,16 +241,16 @@ func (_c *MockContainer_GetName_Call) RunAndReturn(run func() string) *MockConta
 }
 
 // Init provides a mock function for the type MockContainer
-func (_mock *MockContainer) Init() error {
-	ret := _mock.Called()
+func (_mock *MockContainer) Init(ctx context.Context) error {
+	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Init")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func() error); ok {
-		r0 = returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = returnFunc(ctx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -311,13 +263,20 @@ type MockContainer_Init_Call struct {
 }
 
 // Init is a helper method to define mock.On call
-func (_e *MockContainer_Expecter) Init() *MockContainer_Init_Call {
-	return &MockContainer_Init_Call{Call: _e.mock.On("Init")}
+//   - ctx context.Context
+func (_e *MockContainer_Expecter) Init(ctx interface{}) *MockContainer_Init_Call {
+	return &MockContainer_Init_Call{Call: _e.mock.On("Init", ctx)}
 }
 
-func (_c *MockContainer_Init_Call) Run(run func()) *MockContainer_Init_Call {
+func (_c *MockContainer_Init_Call) Run(run func(ctx context.Context)) *MockContainer_Init_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -327,40 +286,40 @@ func (_c *MockContainer_Init_Call) Return(err error) *MockContainer_Init_Call {
 	return _c
 }
 
-func (_c *MockContainer_Init_Call) RunAndReturn(run func() error) *MockContainer_Init_Call {
+func (_c *MockContainer_Init_Call) RunAndReturn(run func(ctx context.Context) error) *MockContainer_Init_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Remove provides a mock function for the type MockContainer
-func (_mock *MockContainer) Remove(name string) error {
+// IsRegistered provides a mock function for the type MockContainer
+func (_mock *MockContainer) IsRegistered(name string) bool {
 	ret := _mock.Called(name)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Remove")
+		panic("no return value specified for IsRegistered")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(string) error); ok {
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func(string) bool); ok {
 		r0 = returnFunc(name)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(bool)
 	}
 	return r0
 }
 
-// MockContainer_Remove_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Remove'
-type MockContainer_Remove_Call struct {
+// MockContainer_IsRegistered_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsRegistered'
+type MockContainer_IsRegistered_Call struct {
 	*mock.Call
 }
 
-// Remove is a helper method to define mock.On call
+// IsRegistered is a helper method to define mock.On call
 //   - name string
-func (_e *MockContainer_Expecter) Remove(name interface{}) *MockContainer_Remove_Call {
-	return &MockContainer_Remove_Call{Call: _e.mock.On("Remove", name)}
+func (_e *MockContainer_Expecter) IsRegistered(name interface{}) *MockContainer_IsRegistered_Call {
+	return &MockContainer_IsRegistered_Call{Call: _e.mock.On("IsRegistered", name)}
 }
 
-func (_c *MockContainer_Remove_Call) Run(run func(name string)) *MockContainer_Remove_Call {
+func (_c *MockContainer_IsRegistered_Call) Run(run func(name string)) *MockContainer_IsRegistered_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -373,12 +332,120 @@ func (_c *MockContainer_Remove_Call) Run(run func(name string)) *MockContainer_R
 	return _c
 }
 
-func (_c *MockContainer_Remove_Call) Return(err error) *MockContainer_Remove_Call {
+func (_c *MockContainer_IsRegistered_Call) Return(b bool) *MockContainer_IsRegistered_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockContainer_IsRegistered_Call) RunAndReturn(run func(name string) bool) *MockContainer_IsRegistered_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RegisterInstance provides a mock function for the type MockContainer
+func (_mock *MockContainer) RegisterInstance(name string, instance any) error {
+	ret := _mock.Called(name, instance)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RegisterInstance")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(string, any) error); ok {
+		r0 = returnFunc(name, instance)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockContainer_RegisterInstance_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RegisterInstance'
+type MockContainer_RegisterInstance_Call struct {
+	*mock.Call
+}
+
+// RegisterInstance is a helper method to define mock.On call
+//   - name string
+//   - instance any
+func (_e *MockContainer_Expecter) RegisterInstance(name interface{}, instance interface{}) *MockContainer_RegisterInstance_Call {
+	return &MockContainer_RegisterInstance_Call{Call: _e.mock.On("RegisterInstance", name, instance)}
+}
+
+func (_c *MockContainer_RegisterInstance_Call) Run(run func(name string, instance any)) *MockContainer_RegisterInstance_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 any
+		if args[1] != nil {
+			arg1 = args[1].(any)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContainer_RegisterInstance_Call) Return(err error) *MockContainer_RegisterInstance_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockContainer_Remove_Call) RunAndReturn(run func(name string) error) *MockContainer_Remove_Call {
+func (_c *MockContainer_RegisterInstance_Call) RunAndReturn(run func(name string, instance any) error) *MockContainer_RegisterInstance_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UnregisterInstance provides a mock function for the type MockContainer
+func (_mock *MockContainer) UnregisterInstance(name string) error {
+	ret := _mock.Called(name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UnregisterInstance")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(string) error); ok {
+		r0 = returnFunc(name)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockContainer_UnregisterInstance_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnregisterInstance'
+type MockContainer_UnregisterInstance_Call struct {
+	*mock.Call
+}
+
+// UnregisterInstance is a helper method to define mock.On call
+//   - name string
+func (_e *MockContainer_Expecter) UnregisterInstance(name interface{}) *MockContainer_UnregisterInstance_Call {
+	return &MockContainer_UnregisterInstance_Call{Call: _e.mock.On("UnregisterInstance", name)}
+}
+
+func (_c *MockContainer_UnregisterInstance_Call) Run(run func(name string)) *MockContainer_UnregisterInstance_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContainer_UnregisterInstance_Call) Return(err error) *MockContainer_UnregisterInstance_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockContainer_UnregisterInstance_Call) RunAndReturn(run func(name string) error) *MockContainer_UnregisterInstance_Call {
 	_c.Call.Return(run)
 	return _c
 }

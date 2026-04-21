@@ -40,3 +40,6 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/container:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/app:
+    config:
+      all: true
