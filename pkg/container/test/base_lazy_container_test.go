@@ -2,6 +2,7 @@ package test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -173,34 +174,34 @@ func TestBaseLazyContainer_OverrideLogic(t *testing.T) {
 	}
 }
 
-//func TestBaseLazyContainer_SelfDependency(t *testing.T) {
-//    ctn := container.NewBaseLazyContainer("deadlock-ctn")
-//
-//    // Регистрируем А, который зависит от Б
-//    _ = ctn.RegisterProvider("A", func(n string) (any, error) {
-//        depB, err := ctn.GetInstance("B")
-//        if err != nil {
-//            return nil, err
-//        }
-//        return fmt.Sprintf("A depends on %s", depB), nil
-//    })
-//
-//    // Регистрируем Б
-//    _ = ctn.RegisterProvider("B", func(n string) (any, error) {
-//        return "B-instance", nil
-//    })
-//
-//    // Вызов GetInstance("A") не должен повесить систему (deadlock)
-//    res, err := ctn.GetInstance("A")
-//    if err != nil {
-//        t.Fatalf("failed to get A: %v", err)
-//    }
-//
-//    expected := "A depends on B-instance"
-//    if res != expected {
-//        t.Errorf("expected %s, got %s", expected, res)
-//    }
-//}
+func TestBaseLazyContainer_SelfDependency(t *testing.T) {
+	ctn := container.NewBaseLazyContainer("deadlock-ctn")
+
+	// Регистрируем А, который зависит от Б
+	_ = ctn.RegisterProvider("A", func(n string) (any, error) {
+		depB, err := ctn.GetInstance("B")
+		if err != nil {
+			return nil, err
+		}
+		return fmt.Sprintf("A depends on %s", depB), nil
+	})
+
+	// Регистрируем Б
+	_ = ctn.RegisterProvider("B", func(n string) (any, error) {
+		return "B-instance", nil
+	})
+
+	// Вызов GetInstance("A") не должен повесить систему (deadlock)
+	res, err := ctn.GetInstance("A")
+	if err != nil {
+		t.Fatalf("failed to get A: %v", err)
+	}
+
+	expected := "A depends on B-instance"
+	if res != expected {
+		t.Errorf("expected %s, got %s", expected, res)
+	}
+}
 
 func TestBaseLazyContainer_AllProvidersConsistency(t *testing.T) {
 	ctn := container.NewBaseLazyContainer("list-ctn")

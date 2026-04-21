@@ -1,7 +1,6 @@
 package container
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -11,10 +10,12 @@ import (
 
 type BaseLazyContainer struct {
 	*BaseContainer
-	mu        sync.RWMutex
-	names     map[string]struct{}
-	order     []string
-	providers map[string]Provider
+	mu    sync.RWMutex
+	names map[string]struct{}
+	// Карта каналов-обещаний: если ключ есть, значит объект в процессе создания
+	inProgress map[string]chan struct{}
+	order      []string
+	providers  map[string]Provider
 }
 
 func NewBaseLazyContainer(name string) *BaseLazyContainer {
@@ -23,6 +24,7 @@ func NewBaseLazyContainer(name string) *BaseLazyContainer {
 		names:         make(map[string]struct{}),
 		order:         make([]string, 0),
 		providers:     make(map[string]Provider),
+		inProgress:    make(map[string]chan struct{}),
 	}
 }
 
@@ -30,49 +32,60 @@ var _ Container = (*BaseLazyContainer)(nil)
 var _ LazyContainer = (*BaseLazyContainer)(nil)
 
 func (blc *BaseLazyContainer) GetInstance(name string) (any, error) {
-	if err := blc.Validate("BaseLazyContainer.GetInstance", name); err != nil {
-		return nil, err
-	}
-	if !blc.IsRegistered(name) {
-		return nil, errs.NewContainerError(blc.GetName(), fmt.Sprintf("instance or provider [%s] not registered", name), nil)
-	}
-
-	// 1. Быстрая проверка (RLock внутри базы)
-	res, instanceErr := blc.BaseContainer.GetInstance(name)
-	if instanceErr == nil {
-		return res, nil
-	}
-
-	// 2. Получаем рецепт (RLock внутри)
-	provider, providerErr := blc.getProvider(name)
-	if providerErr != nil {
-		return nil, errs.NewContainerError(blc.GetName(), fmt.Sprintf("instance and provider [%s] not registered", name), errors.Join(instanceErr, providerErr))
-	}
-
-	// 3. ЗАХВАТЫВАЕМ LOCK НА ВЕСЬ ПРОЦЕСС СОЗДАНИЯ
-	blc.mu.Lock()
-	defer blc.mu.Unlock()
-
-	// 4. Double-Check: вдруг пока мы ждали Lock, кто-то уже создал объект
+	// 1. Быстрая проверка: вдруг уже создано?
 	if res, err := blc.BaseContainer.GetInstance(name); err == nil {
 		return res, nil
 	}
 
-	// 5. Теперь мы точно единственные, кто создает объект
-	res, instanceErr = provider(name)
-	if instanceErr != nil {
-		return nil, errs.NewContainerError(blc.GetName(), fmt.Sprintf("create instance [%s] failed", name), instanceErr)
+	blc.mu.Lock()
+	// 2. Double-check под локом
+	if res, err := blc.BaseContainer.GetInstance(name); err == nil {
+		blc.mu.Unlock()
+		return res, nil
 	}
 
-	// 6. Регистрация
-	instanceErr = blc.BaseContainer.RegisterInstance(name, res)
-	if instanceErr != nil {
-		return nil, errs.NewContainerError(blc.GetName(), fmt.Sprintf("register instance [%s] failed", name), instanceErr)
+	// 3. Проверяем "обещание" (Promise)
+	if waiter, found := blc.inProgress[name]; found {
+		blc.mu.Unlock()
+		<-waiter // Ждем, пока первый поток закончит
+		return blc.BaseContainer.GetInstance(name)
 	}
 
-	blc.names[name] = struct{}{}
+	// 4. Мы — "Первопроходцы".
+	ch := make(chan struct{})
+	blc.inProgress[name] = ch
+
+	provider, ok := blc.providers[name]
+	blc.mu.Unlock() // ОТПУСКАЕМ ГЛОБАЛЬНЫЙ ЛОК
+
+	// Гарантируем очистку канала при любом исходе (паника, ошибка, успех)
+	defer blc.notifyAndCleanup(name, ch)
+
+	if !ok {
+		return nil, errs.NewContainerError(blc.GetName(), fmt.Sprintf("provider [%s] not registered", name), nil)
+	}
+
+	// 5. Спокойно создаем объект ВНЕ лока.
+	res, err := provider(name)
+	if err != nil {
+		return nil, err
+	}
+
+	// 6. Регистрируем готовый результат (внутри BaseContainer свой Lock)
+	if regErr := blc.BaseContainer.RegisterInstance(name, res); regErr != nil {
+		return nil, regErr
+	}
 
 	return res, nil
+}
+
+// notifyAndCleanup — вспомогательный приватный метод
+func (blc *BaseLazyContainer) notifyAndCleanup(name string, ch chan struct{}) {
+	blc.mu.Lock()
+	defer blc.mu.Unlock()
+
+	delete(blc.inProgress, name)
+	close(ch) // Сигнал всем "ждунам"
 }
 
 func (blc *BaseLazyContainer) RegisterProvider(name string, provider Provider) error {
