@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -26,13 +27,15 @@ func NewBaseOrchestrator(log logger.Logger) *BaseOrchestrator {
 	}
 }
 
+var _ Orchestrator = (*BaseOrchestrator)(nil)
+
 func (o *BaseOrchestrator) Init(ctx context.Context) error {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
 	for _, name := range o.regOrder {
 		ctn := o.items[name]
-		o.log.Infof("initializing layer [%s]...", name)
+		o.log.Debugf("initializing layer [%s]...", name)
 		if err := ctn.Init(ctx); err != nil {
 			return err
 		}
@@ -44,17 +47,25 @@ func (o *BaseOrchestrator) Close(ctx context.Context) error {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
+	var closeErrs []error
 	// LIFO порядок: идем по слайсу имен с конца
 	for i := len(o.regOrder) - 1; i >= 0; i-- {
 		name := o.regOrder[i]
 		if ctn, ok := o.items[name]; ok {
-			o.log.Infof("closing layer [%s]...", name)
-			if err := ctn.Close(ctx); err != nil {
+			o.log.Debugf("closing layer [%s]...", name)
+			err := ctn.Close(ctx)
+			if err != nil {
 				// Только логируем ошибку, продолжаем закрывать остальные
 				o.log.Errorf("failed to close layer [%s]: %v", name, err)
+				closeErrs = append(closeErrs, err)
 			}
 		}
 	}
+	err := errors.Join(closeErrs...)
+	if err != nil {
+		return errs.NewContainerError("orchestrator", "close containers failed", err)
+	}
+
 	return nil
 }
 
@@ -96,8 +107,9 @@ func (o *BaseOrchestrator) Unregister(name string) error {
 
 func (o *BaseOrchestrator) GetContainer(name string) (Container, error) {
 	o.mu.RLock()
+	defer o.mu.RUnlock()
+
 	res, ok := o.items[name]
-	o.mu.RUnlock()
 	if !ok {
 		return nil, errs.NewContainerError("orchestrator", fmt.Sprintf("container [%s] not found", name), nil)
 	}
@@ -112,6 +124,18 @@ func (o *BaseOrchestrator) HasContainer(name string) bool {
 	_, ok := o.items[name]
 
 	return ok
+}
+
+func (o *BaseOrchestrator) AllContainers() []Container {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+
+	res := make([]Container, 0, len(o.items))
+	for _, name := range o.regOrder {
+		res = append(res, o.items[name])
+	}
+
+	return res
 }
 
 // GetRunners — вспомогательный метод (пылесос)

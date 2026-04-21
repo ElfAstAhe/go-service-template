@@ -15,4 +15,6 @@ type Orchestrator interface {
 	HasContainer(name string) bool
 
 	AllContainers() []Container
+
+	GetRunners() ([]Runner, error)
 }

@@ -38,6 +38,52 @@ func (_m *MockOrchestrator) EXPECT() *MockOrchestrator_Expecter {
 	return &MockOrchestrator_Expecter{mock: &_m.Mock}
 }
 
+// AllContainers provides a mock function for the type MockOrchestrator
+func (_mock *MockOrchestrator) AllContainers() []container.Container {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for AllContainers")
+	}
+
+	var r0 []container.Container
+	if returnFunc, ok := ret.Get(0).(func() []container.Container); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]container.Container)
+		}
+	}
+	return r0
+}
+
+// MockOrchestrator_AllContainers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AllContainers'
+type MockOrchestrator_AllContainers_Call struct {
+	*mock.Call
+}
+
+// AllContainers is a helper method to define mock.On call
+func (_e *MockOrchestrator_Expecter) AllContainers() *MockOrchestrator_AllContainers_Call {
+	return &MockOrchestrator_AllContainers_Call{Call: _e.mock.On("AllContainers")}
+}
+
+func (_c *MockOrchestrator_AllContainers_Call) Run(run func()) *MockOrchestrator_AllContainers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockOrchestrator_AllContainers_Call) Return(containers []container.Container) *MockOrchestrator_AllContainers_Call {
+	_c.Call.Return(containers)
+	return _c
+}
+
+func (_c *MockOrchestrator_AllContainers_Call) RunAndReturn(run func() []container.Container) *MockOrchestrator_AllContainers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Close provides a mock function for the type MockOrchestrator
 func (_mock *MockOrchestrator) Close(ctx context.Context) error {
 	ret := _mock.Called(ctx)
@@ -90,7 +136,7 @@ func (_c *MockOrchestrator_Close_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // GetContainer provides a mock function for the type MockOrchestrator
-func (_mock *MockOrchestrator) GetContainer(name string) container.Container {
+func (_mock *MockOrchestrator) GetContainer(name string) (container.Container, error) {
 	ret := _mock.Called(name)
 
 	if len(ret) == 0 {
@@ -98,6 +144,10 @@ func (_mock *MockOrchestrator) GetContainer(name string) container.Container {
 	}
 
 	var r0 container.Container
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string) (container.Container, error)); ok {
+		return returnFunc(name)
+	}
 	if returnFunc, ok := ret.Get(0).(func(string) container.Container); ok {
 		r0 = returnFunc(name)
 	} else {
@@ -105,7 +155,12 @@ func (_mock *MockOrchestrator) GetContainer(name string) container.Container {
 			r0 = ret.Get(0).(container.Container)
 		}
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
+		r1 = returnFunc(name)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // MockOrchestrator_GetContainer_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetContainer'
@@ -132,12 +187,67 @@ func (_c *MockOrchestrator_GetContainer_Call) Run(run func(name string)) *MockOr
 	return _c
 }
 
-func (_c *MockOrchestrator_GetContainer_Call) Return(container1 container.Container) *MockOrchestrator_GetContainer_Call {
-	_c.Call.Return(container1)
+func (_c *MockOrchestrator_GetContainer_Call) Return(container1 container.Container, err error) *MockOrchestrator_GetContainer_Call {
+	_c.Call.Return(container1, err)
 	return _c
 }
 
-func (_c *MockOrchestrator_GetContainer_Call) RunAndReturn(run func(name string) container.Container) *MockOrchestrator_GetContainer_Call {
+func (_c *MockOrchestrator_GetContainer_Call) RunAndReturn(run func(name string) (container.Container, error)) *MockOrchestrator_GetContainer_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetRunners provides a mock function for the type MockOrchestrator
+func (_mock *MockOrchestrator) GetRunners() ([]container.Runner, error) {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRunners")
+	}
+
+	var r0 []container.Runner
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func() ([]container.Runner, error)); ok {
+		return returnFunc()
+	}
+	if returnFunc, ok := ret.Get(0).(func() []container.Runner); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]container.Runner)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func() error); ok {
+		r1 = returnFunc()
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockOrchestrator_GetRunners_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRunners'
+type MockOrchestrator_GetRunners_Call struct {
+	*mock.Call
+}
+
+// GetRunners is a helper method to define mock.On call
+func (_e *MockOrchestrator_Expecter) GetRunners() *MockOrchestrator_GetRunners_Call {
+	return &MockOrchestrator_GetRunners_Call{Call: _e.mock.On("GetRunners")}
+}
+
+func (_c *MockOrchestrator_GetRunners_Call) Run(run func()) *MockOrchestrator_GetRunners_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockOrchestrator_GetRunners_Call) Return(runners []container.Runner, err error) *MockOrchestrator_GetRunners_Call {
+	_c.Call.Return(runners, err)
+	return _c
+}
+
+func (_c *MockOrchestrator_GetRunners_Call) RunAndReturn(run func() ([]container.Runner, error)) *MockOrchestrator_GetRunners_Call {
 	_c.Call.Return(run)
 	return _c
 }
