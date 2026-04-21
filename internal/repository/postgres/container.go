@@ -9,7 +9,6 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/repository"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
 const (
@@ -25,11 +24,11 @@ type PgContainer struct {
 
 var _ container.Container = (*PgContainer)(nil)
 
-func NewContainer(conf *config.Config, log logger.Logger) *PgContainer {
+func NewContainer(conf *config.Config) *PgContainer {
 	res := &PgContainer{
 		conf: conf,
 	}
-	res.BaseLazyContainer = container.NewBaseLazyContainer(ContainerName, log)
+	res.BaseLazyContainer = container.NewBaseLazyContainer(ContainerName)
 
 	return res
 }
@@ -38,8 +37,8 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 	// add providers
 	initErrs := make([]error, 0)
 	initErrs = append(initErrs,
-		pc.AddProvider(InstanceDB, pc.providerDB),
-		pc.AddProvider(InstanceTestRepo, pc.providerTestRepository),
+		pc.RegisterProvider(InstanceDB, pc.providerDB),
+		pc.RegisterProvider(InstanceTestRepo, pc.providerTestRepository),
 	)
 	err := errors.Join(initErrs...)
 	if err != nil {

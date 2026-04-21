@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"sync"
@@ -48,36 +49,118 @@ func NewBaseApplication(opts ...Option) *BaseApplication {
 func (app *BaseApplication) Init() error {
 	// orchestrator
 	if utils.IsNil(app.orchestrator) {
-		return errs.NewCommonError("app orchestrator is nil", nil)
+		return errs.NewCommonError("orchestrator is nil", nil)
 	}
-	if err := app.orchestrator.Init(app.ctx); err != nil {
-		return err
+
+	initCtx, cancel := context.WithTimeout(app.ctx, app.conf.InitTimeout)
+	defer cancel()
+
+	if err := app.orchestrator.Init(initCtx); err != nil {
+		return errs.NewCommonError("orchestrator init failed", err)
 	}
 
 	return nil
 }
 
 func (app *BaseApplication) Run() error {
-	// ToDo: implement
+	// 1. Запускаем Runners (переводим их в состояние Running)
+	if err := app.Start(); err != nil {
+		return errs.NewCommonError("failed to start runners", err)
+	}
 
-	return nil
+	// 2. Включаем слушатель сигналов ОС в отдельной горутине
+	app.wg.Add(1)
+	go app.GracefulShutdown()
+
+	// 3. Ожидаем отмены контекста
+	app.logger.Info("application is running and waiting for app context cancel")
+	<-app.ctx.Done()
+
+	// 4. Останавливаем runners
+	app.logger.Info("application is shutting down")
+	err := app.Stop()
+
+	// Ожидаем остановки всех горутин
+	app.logger.Info("application is waiting for runners stopped")
+	app.WaitForStop()
+
+	return err
 }
 
 func (app *BaseApplication) Start() error {
-	// ToDo: implement
+	runners, err := app.orchestrator.GetRunners()
+	if err != nil {
+		return err
+	}
+
+	for _, r := range runners {
+		app.wg.Add(1)
+		go func(runner container.Runner) {
+			defer app.wg.Done()
+			app.logger.Infof("runner [%s] starting", runner.GetName())
+
+			if err := runner.Start(app.ctx); err != nil {
+				app.logger.Errorf("runner [%s] failed: %v", runner.GetName(), err)
+				app.cancel() // Даем команду на выход всему приложению
+			}
+		}(r)
+	}
 
 	return nil
 }
 
 func (app *BaseApplication) Stop() error {
+	app.logger.Info("stopping active runners (graceful shutdown phase)...")
+
+	// На всякий случай дублируем отмену контекста
 	app.cancel()
 
-	return nil
+	runners, err := app.orchestrator.GetRunners()
+	if err != nil {
+		return err
+	}
+
+	stopCtx, stopCancel := context.WithTimeout(context.Background(), app.conf.StopTimeout)
+	defer stopCancel()
+
+	var (
+		stopWg   sync.WaitGroup
+		mu       sync.Mutex
+		stopErrs []error
+	)
+
+	for _, r := range runners {
+		stopWg.Add(1)
+		go func(runner container.Runner) {
+			defer stopWg.Done()
+			// Каждый Runner знает свой stop timeout
+			if err := runner.Stop(stopCtx); err != nil {
+				mu.Lock()
+				stopErrs = append(stopErrs, err)
+				mu.Unlock()
+			}
+		}(r)
+	}
+
+	stopWg.Wait()
+	return errors.Join(stopErrs...)
 }
 
 func (app *BaseApplication) Close() error {
-	// ToDo: implement
+	app.logger.Info("closing application resources (containers)...")
 
+	// 1. Создаем контекст с таймаутом специально для фазы закрытия
+	// Используем конфиг, который мы прокинули в BaseApplication
+	closeCtx, cancel := context.WithTimeout(context.Background(), app.conf.CloseTimeout)
+	defer cancel()
+
+	// 2. Делегируем всё оркестратору
+	// Он пройдёт по всем контейнерам в порядке LIFO
+	if err := app.orchestrator.Close(closeCtx); err != nil {
+		return errs.NewCommonError("orchestrator close failed", err)
+	}
+
+	app.logger.Info("application resources closed successfully")
 	return nil
 }
 

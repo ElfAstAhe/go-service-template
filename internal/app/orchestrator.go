@@ -16,4 +16,6 @@ func NewOrchestrator() *Orchestrator {
 	return &Orchestrator{}
 }
 
-func (o *Orchestrator) Init(ctx context.Context) error {}
+func (o *Orchestrator) Init(ctx context.Context) error {
+	return nil
+}
