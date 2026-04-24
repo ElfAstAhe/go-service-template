@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"compress/flate"
 	"compress/gzip"
 	"compress/lzw"
+	"compress/zlib"
 	"errors"
 	"fmt"
 	"io"
@@ -71,10 +71,10 @@ func decompressorFactory(encoding string, compressedSource io.ReadCloser) (io.Re
 	switch encoding {
 	case EncodingGzip:
 		res, err = gzip.NewReader(compressedSource)
-	//	case encodingDeflate:
-	//		return zlib.NewReader(reader)
 	case EncodingDeflate:
-		res, err = flate.NewReader(compressedSource), nil
+		return zlib.NewReader(compressedSource)
+		//	case EncodingDeflate:
+		//		res, err = flate.NewReader(compressedSource), nil
 	case EncodingCompress:
 		res, err = lzw.NewReader(compressedSource, lzw.LSB, 8), nil
 	case EncodingBrotli:

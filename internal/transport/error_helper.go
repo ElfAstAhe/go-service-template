@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
-	transperrs "github.com/ElfAstAhe/go-service-template/internal/transport/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
@@ -12,7 +11,7 @@ func IsBadRequest(err error) bool {
 	var (
 		errInvalidArgument *errs.InvalidArgumentError
 		errBllValidate     *domerrs.BllValidateError
-		errTrMapping       *transperrs.TrMappingError
+		errTrMapping       *errs.TlMappingError
 	)
 
 	return errors.As(err, &errInvalidArgument) ||
