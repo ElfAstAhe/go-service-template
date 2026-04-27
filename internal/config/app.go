@@ -8,7 +8,7 @@ import (
 
 // AppConfig — конфигурация приложения/сервиса
 type AppConfig struct {
-	*config.AppConfig
+	*config.AppConfig `mapstructure:",squash"`
 }
 
 func NewAppConfig(
@@ -18,12 +18,7 @@ func NewAppConfig(
 	closeTimeout time.Duration,
 ) *AppConfig {
 	return &AppConfig{
-		AppConfig: &config.AppConfig{
-			Env:          env,
-			InitTimeout:  initTimeout,
-			StopTimeout:  stopTimeout,
-			CloseTimeout: closeTimeout,
-		},
+		AppConfig: config.NewAppConfig(env, initTimeout, stopTimeout, closeTimeout),
 	}
 }
 

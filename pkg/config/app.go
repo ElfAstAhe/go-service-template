@@ -37,7 +37,7 @@ func NewDefaultAppConfig() *AppConfig {
 }
 
 func (ac *AppConfig) Validate() error {
-	if ac.Env != "" {
+	if ac.Env == "" {
 		return errs.NewConfigValidateError("app", "Env", "empty", nil)
 	}
 	if !ac.Env.Exists() {

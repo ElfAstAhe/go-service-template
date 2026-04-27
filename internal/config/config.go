@@ -66,7 +66,9 @@ func NewDefaultConfig() *Config {
 
 func NewEmptyConfig() *Config {
 	return &Config{
-		App:       &AppConfig{},
+		App: &AppConfig{
+			AppConfig: &conf.AppConfig{},
+		},
 		Auth:      &conf.AuthConfig{},
 		HTTP:      &conf.HTTPConfig{},
 		GRPC:      &conf.GRPCConfig{},
@@ -224,7 +226,7 @@ func initFLags() (res *pflag.FlagSet, err error) {
 
 	// Используем константы Flag...
 	res.String(conf.FlagConfig, "config/config.yaml", "path to config file")
-	res.String(conf.FlagAppEnv, string(conf.DefaultAppEnv), "application environment")
+	res.String(conf.FlagAppEnv, string(conf.DefaultAppEnv), "application environment (prod, dev, test)")
 	res.Duration(conf.FlagAppInitTimeout, conf.DefaultAppInitTimeout, "application init timeout")
 	res.Duration(conf.FlagAppStopTimeout, conf.DefaultAppStopTimeout, "application stop timeout")
 	res.Duration(conf.FlagAppCloseTimeout, conf.DefaultAppCloseTimeout, "application close timeout")
