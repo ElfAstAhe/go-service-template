@@ -53,13 +53,13 @@ func (tm *TxManager) WithinTransaction(ctx context.Context, opts *TransactionOpt
 				recoveryErr = fmt.Errorf("recovery [%v]", r)
 			}
 
-			err = errs.NewDalError("PosgtesDBHelper.RunInTx", "panic recovery", recoveryErr)
+			err = errs.NewDalError("TxManager.WithTransaction", "panic recovery", recoveryErr)
 		} else if err != nil {
 			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
 		} else {
 			err = tx.Commit() // Фиксация
 			if err != nil {
-				err = errs.NewDalError("PosgtesDBHelper.RunInTx", "commit", err)
+				err = errs.NewDalError("TxManager.WithTransaction", "commit", err)
 			}
 		}
 	}()

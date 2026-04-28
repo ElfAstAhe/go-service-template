@@ -28,6 +28,8 @@ type CipherImpl struct {
 	cipher utils.Cipher
 }
 
+var _ Cipher = (*CipherImpl)(nil)
+
 func NewCipherHelper(cipher utils.Cipher) *CipherImpl {
 	return &CipherImpl{
 		cipher: cipher,
