@@ -1,4 +1,4 @@
-package postgres
+package container
 
 import (
 	"context"
@@ -6,29 +6,25 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
-	"github.com/ElfAstAhe/go-service-template/internal/repository"
+	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
 const (
-	ContainerName    string = "postgres"
-	InstanceDB       string = "AppDB"
-	InstanceTestRepo string = "TestRepo"
+	InstanceDB string = "AppDB"
 )
 
 type PgContainer struct {
 	*container.BaseLazyContainer
-	conf *config.Config
 }
 
 var _ container.Container = (*PgContainer)(nil)
 
-func NewContainer(orchestrator container.Orchestrator, conf *config.Config) *PgContainer {
+func NewContainer(orchestrator container.Orchestrator) *PgContainer {
 	res := &PgContainer{
-		conf: conf,
+		BaseLazyContainer: container.NewBaseLazyContainer(DBContainerName, orchestrator),
 	}
-	res.BaseLazyContainer = container.NewBaseLazyContainer(ContainerName, orchestrator)
 
 	return res
 }
@@ -38,14 +34,13 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 	initErrs := make([]error, 0)
 	initErrs = append(initErrs,
 		pc.RegisterProvider(InstanceDB, pc.providerDB),
-		pc.RegisterProvider(InstanceTestRepo, pc.providerTestRepository),
 	)
 	err := errors.Join(initErrs...)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: register providers failed", err)
 	}
 	// init instances
-	db, err := container.GetInstance[*PgDB](pc, "AppDB")
+	db, err := container.GetInstance[*postgres.PgDB](pc, InstanceDB)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: init instances failed", err)
 	}
@@ -59,23 +54,21 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 }
 
 func (pc *PgContainer) providerDB(name string) (any, error) {
-	res, err := NewPgDB(pc.conf.DB)
+	appCnt, err := pc.GetOrchestrator().GetContainer(AppContainerName)
+	if err != nil {
+		return nil, err
+	}
+	conf, err := container.GetInstance[*config.Config](appCnt, ConfigInstance)
+	if err != nil {
+		return nil, err
+	}
+	res, err := postgres.NewPgDB(conf.DB)
 	if err != nil {
 		return nil, errs.NewContainerError(pc.GetName(), fmt.Sprintf("create %s instance failed", name), err)
 	}
 
 	return res, nil
 }
+func (pc *PgContainer) providerDBMigrator(name string) (any, error) {
 
-func (pc *PgContainer) providerTestRepository(name string) (any, error) {
-	database, err := container.GetInstance[*PgDB](pc, InstanceDB)
-	if err != nil {
-		return nil, err
-	}
-	res, err := NewTestRepository(database, database)
-	if err != nil {
-		return nil, errs.NewContainerError(pc.GetName(), "create test repo instance failed", err)
-	}
-
-	return repository.NewTestMetricsRepository(res), nil
 }

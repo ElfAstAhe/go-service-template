@@ -1,4 +1,4 @@
-// Package config an minimum app configuration blocks
+// Package config a minimum app configuration blocks
 //  1. Defaults (Значения по умолчанию) — Самый низкий
 //
 // Прописаны жестко в коде (твой файл defaults.go). Это фундамент. Если всё остальное отсутствует, сервис

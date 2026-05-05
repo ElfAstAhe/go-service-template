@@ -35,7 +35,7 @@ func (o *BaseOrchestrator) Init(ctx context.Context) error {
 
 	for _, name := range o.regOrder {
 		ctn := o.items[name]
-		o.log.Debugf("initializing layer [%s]...", name)
+		o.log.Debugf("initializing container [%s]...", name)
 		if err := ctn.Init(ctx); err != nil {
 			return err
 		}
@@ -52,11 +52,11 @@ func (o *BaseOrchestrator) Close(ctx context.Context) error {
 	for i := len(o.regOrder) - 1; i >= 0; i-- {
 		name := o.regOrder[i]
 		if ctn, ok := o.items[name]; ok {
-			o.log.Debugf("closing layer [%s]...", name)
+			o.log.Debugf("closing container [%s]...", name)
 			err := ctn.Close(ctx)
 			if err != nil {
 				// Только логируем ошибку, продолжаем закрывать остальные
-				o.log.Errorf("failed to close layer [%s]: %v", name, err)
+				o.log.Errorf("failed to close container [%s]: %v", name, err)
 				closeErrs = append(closeErrs, err)
 			}
 		}
@@ -146,7 +146,7 @@ func (o *BaseOrchestrator) GetRunners() ([]Runner, error) {
 	var res []Runner
 	for _, name := range o.regOrder {
 		ctn := o.items[name]
-		// Проходим по всем ГОТОВЫМ инстансам в контейнере
+		// Проходим по всем инстансам в контейнере
 		for _, instName := range ctn.AllNames() {
 			inst, err := ctn.GetInstance(instName)
 			if err != nil {

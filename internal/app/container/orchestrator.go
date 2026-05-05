@@ -1,4 +1,4 @@
-package app
+package container
 
 import (
 	"context"
@@ -11,6 +11,8 @@ type Orchestrator struct {
 	*container.BaseOrchestrator
 	conf *config.Config
 }
+
+var _ container.Orchestrator = (*Orchestrator)(nil)
 
 func NewOrchestrator() *Orchestrator {
 	return &Orchestrator{}
