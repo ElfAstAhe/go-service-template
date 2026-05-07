@@ -1,4 +1,4 @@
-package migrations
+package goose
 
 import (
 	"context"
@@ -7,27 +7,26 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
+	"github.com/ElfAstAhe/go-service-template/pkg/migration"
 	"github.com/pressly/goose/v3"
 )
 
-// GooseDBMigrator is implementation of DBMigrator interface
-type GooseDBMigrator struct {
+// DBMigrator is implementation of DBMigrator interface
+type DBMigrator struct {
 	db  db.DB
-	ctx context.Context
 	log logger.Logger
 }
 
-func NewGooseDBMigrator(ctx context.Context, db db.DB, logger logger.Logger) (*GooseDBMigrator, error) {
-	return &GooseDBMigrator{
+var _ migration.Migrator = (*DBMigrator)(nil)
+
+func NewDBMigrator(db db.DB, logger logger.Logger) (*DBMigrator, error) {
+	return &DBMigrator{
 		db:  db,
-		ctx: ctx,
 		log: logger.GetLogger("DB migrator"),
 	}, nil
 }
 
-// DBMigrator
-
-func (g *GooseDBMigrator) Initialize() error {
+func (g *DBMigrator) Initialize() error {
 	if err := goose.SetDialect(g.db.GetDriver()); err != nil {
 		return errs.NewDBMigrationError("error select dialect", err)
 	}
@@ -37,7 +36,7 @@ func (g *GooseDBMigrator) Initialize() error {
 	return nil
 }
 
-func (g *GooseDBMigrator) Up() (err error) {
+func (g *DBMigrator) Up(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// Проверяем, является ли r ошибкой
@@ -49,14 +48,14 @@ func (g *GooseDBMigrator) Up() (err error) {
 			err = errs.NewDBMigrationError("migrate up panic", recoveryErr)
 		}
 	}()
-	if err := goose.UpContext(g.ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
+	if err := goose.UpContext(ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate up", err)
 	}
 
 	return nil
 }
 
-func (g *GooseDBMigrator) Down() (err error) {
+func (g *DBMigrator) Down(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// Проверяем, является ли r ошибкой
@@ -68,11 +67,9 @@ func (g *GooseDBMigrator) Down() (err error) {
 			err = errs.NewDBMigrationError("migrate up panic", recoveryErr)
 		}
 	}()
-	if err := goose.DownContext(g.ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
+	if err := goose.DownContext(ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate down", err)
 	}
 
 	return nil
 }
-
-// ==============

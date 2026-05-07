@@ -37,10 +37,12 @@ func NewApplication(opts ...Option) *Application {
 func (app *Application) Init() error {
 	var cntErrs []error
 	appCnt := container.NewAppContainer(app.GetOrchestrator())
-	// register containers
+	// register containers, order is IMPORTANT!
 	cntErrs = append(cntErrs,
 		app.GetOrchestrator().Register(appCnt),
 		app.GetOrchestrator().Register(container.NewToolsContainer(app.GetOrchestrator())),
+		app.GetOrchestrator().Register(container.NewPgContainer(app.GetOrchestrator())),
+		app.GetOrchestrator().Register(container.NewRepositoryContainer(app.GetOrchestrator())),
 	)
 	err := errors.Join(cntErrs...)
 	if err != nil {
