@@ -15,7 +15,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/infra/telemetry"
-	migrations "github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
+	"github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
 	"github.com/ElfAstAhe/go-service-template/pkg/transport/grpc/interceptors"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/realip"
@@ -45,14 +45,14 @@ func (app *App) initDB() error {
 }
 
 func (app *App) migrateDB() error {
-	migrator, err := migrations.NewGooseDBMigrator(app.ctx, app.db, app.logger)
+	migrator, err := goose.NewDBMigrator(app.db, app.logger)
 	if err != nil {
 		return errs.NewCommonError("create migrator", err)
 	}
 	if err = migrator.Initialize(); err != nil {
 		return errs.NewCommonError("init migrator", err)
 	}
-	if err = migrator.Up(); err != nil {
+	if err = migrator.Up(app.ctx); err != nil {
 		return errs.NewCommonError("migrator up", err)
 	}
 

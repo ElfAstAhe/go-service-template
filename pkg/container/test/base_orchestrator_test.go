@@ -35,10 +35,10 @@ func TestBaseOrchestrator_FullLifecycle(t *testing.T) {
 
 	t.Run("Init_FIFO_Order", func(t *testing.T) {
 		// Ожидаем логи (используем Anything для вариативной части, чтобы не возиться со слайсами)
-		mockLog.On("Debugf", "initializing layer [%s]...", mock.Anything).Return().Once()
+		mockLog.On("Debugf", "initializing container [%s]...", mock.Anything).Return().Once()
 		infraCtn.On("Init", ctx).Return(nil).Once()
 
-		mockLog.On("Debugf", "initializing layer [%s]...", mock.Anything).Return().Once()
+		mockLog.On("Debugf", "initializing container [%s]...", mock.Anything).Return().Once()
 		appCtn.On("Init", ctx).Return(nil).Once()
 
 		err := orch.Init(ctx)
@@ -47,10 +47,10 @@ func TestBaseOrchestrator_FullLifecycle(t *testing.T) {
 
 	t.Run("Close_LIFO_Order", func(t *testing.T) {
 		// LIFO: Сначала закрывается app, потом infra
-		mockLog.On("Debugf", "closing layer [%s]...", mock.Anything).Return().Once()
+		mockLog.On("Debugf", "closing container [%s]...", mock.Anything).Return().Once()
 		appCtn.On("Close", ctx).Return(nil).Once()
 
-		mockLog.On("Debugf", "closing layer [%s]...", mock.Anything).Return().Once()
+		mockLog.On("Debugf", "closing container [%s]...", mock.Anything).Return().Once()
 		infraCtn.On("Close", ctx).Return(nil).Once()
 
 		err := orch.Close(ctx)
