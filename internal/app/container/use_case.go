@@ -7,3 +7,6 @@ import (
 type UseCaseContainer struct {
 	*container.BaseLazyContainer
 }
+
+var _ container.Container = (*UseCaseContainer)(nil)
+var _ container.LazyContainer = (*UseCaseContainer)(nil)

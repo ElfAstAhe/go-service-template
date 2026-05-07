@@ -14,6 +14,7 @@ type RepositoryContainer struct {
 	*container.BaseLazyContainer
 }
 
+var _ container.Container = (*RepositoryContainer)(nil)
 var _ container.LazyContainer = (*RepositoryContainer)(nil)
 
 func NewRepositoryContainer(orchestrator container.Orchestrator) *RepositoryContainer {

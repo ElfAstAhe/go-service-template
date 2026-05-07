@@ -50,13 +50,13 @@ func (app *Application) Init() error {
 	}
 
 	// register app params
-	var regErrs []error
+	var instErrs []error
 
-	regErrs = append(regErrs,
+	instErrs = append(instErrs,
 		appCnt.RegisterInstance(container.LoggerInstance, app.log),
 		appCnt.RegisterInstance(container.ConfigInstance, app.conf),
 	)
-	err = errors.Join(regErrs...)
+	err = errors.Join(instErrs...)
 	if err != nil {
 		return errs.NewCommonError("register application params failed", err)
 	}

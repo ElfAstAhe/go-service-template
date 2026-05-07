@@ -20,6 +20,7 @@ type PgContainer struct {
 }
 
 var _ container.Container = (*PgContainer)(nil)
+var _ container.LazyContainer = (*PgContainer)(nil)
 
 func NewPgContainer(orchestrator container.Orchestrator) *PgContainer {
 	res := &PgContainer{

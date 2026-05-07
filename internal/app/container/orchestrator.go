@@ -3,6 +3,8 @@ package container
 import (
 	"context"
 
+	_ "expvar"
+
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 )

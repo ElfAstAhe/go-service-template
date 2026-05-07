@@ -5,10 +5,11 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
+	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	migrations "github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
+	"github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
 )
 
 func (pc *PgContainer) providerDB(name string) (any, error) {
@@ -41,7 +42,7 @@ func (pc *PgContainer) providerDBMigrator(name string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := migrations.NewDBMigrator(db, log)
+	res, err := goose.NewDBMigrator(db, log)
 	if err != nil {
 		return nil, errs.NewContainerError(pc.GetName(), fmt.Sprintf("provider: create %s instance failed", name), err)
 	}
