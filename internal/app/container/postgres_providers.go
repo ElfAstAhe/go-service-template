@@ -17,11 +17,11 @@ func (pc *PgContainer) providerDB(name string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	conf, err := container.GetInstance[*config.Config](appCnt, ConfigInstance)
+	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
 	if err != nil {
 		return nil, err
 	}
-	res, err := postgres.NewPgDB(conf.DB)
+	res, err := postgres.NewPgDB(confInst.DB)
 	if err != nil {
 		return nil, errs.NewContainerError(pc.GetName(), fmt.Sprintf("provider: create %s instance failed", name), err)
 	}
@@ -34,15 +34,15 @@ func (pc *PgContainer) providerDBMigrator(name string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	log, err := container.GetInstance[logger.Logger](appCnt, LoggerInstance)
+	logInst, err := container.GetInstance[logger.Logger](appCnt, InstanceLogger)
 	if err != nil {
 		return nil, err
 	}
-	db, err := container.GetInstance[*postgres.PgDB](pc, name)
+	dbInst, err := container.GetInstance[*postgres.PgDB](pc, InstanceDB)
 	if err != nil {
 		return nil, err
 	}
-	res, err := goose.NewDBMigrator(db, log)
+	res, err := goose.NewDBMigrator(dbInst, logInst)
 	if err != nil {
 		return nil, errs.NewContainerError(pc.GetName(), fmt.Sprintf("provider: create %s instance failed", name), err)
 	}

@@ -2,6 +2,7 @@ package container
 
 // containers
 const (
+	OrchestratorName        string = "orchestrator"
 	AppContainerName        string = "app"
 	ToolsContainerName      string = "tools"
 	DBContainerName         string = "db"

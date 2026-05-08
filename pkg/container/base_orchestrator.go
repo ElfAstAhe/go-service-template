@@ -40,6 +40,7 @@ func (o *BaseOrchestrator) Init(ctx context.Context) error {
 			return err
 		}
 	}
+
 	return nil
 }
 

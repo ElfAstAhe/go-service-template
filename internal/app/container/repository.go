@@ -2,12 +2,17 @@ package container
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/repository"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+)
+
+const (
+	InstanceTestRepo string = "testRepo"
 )
 
 type RepositoryContainer struct {
@@ -24,6 +29,13 @@ func NewRepositoryContainer(orchestrator container.Orchestrator) *RepositoryCont
 }
 
 func (rc *RepositoryContainer) Init(ctx context.Context) error {
+	err := errors.Join(
+		rc.RegisterProvider(InstanceTestRepo, rc.providerTestRepository),
+	)
+	if err != nil {
+		return errs.NewContainerError(rc.GetName(), "container init: register providers failed", err)
+	}
+
 	return nil
 }
 
@@ -32,11 +44,11 @@ func (rc *RepositoryContainer) providerTestRepository(name string) (any, error) 
 	if err != nil {
 		return nil, err
 	}
-	database, err := container.GetInstance[*postgres.PgDB](dbCnt, InstanceDB)
+	db, err := container.GetInstance[*postgres.PgDB](dbCnt, InstanceDB)
 	if err != nil {
 		return nil, err
 	}
-	res, err := postgres.NewTestRepository(database, database)
+	res, err := postgres.NewTestRepository(db, db)
 	if err != nil {
 		return nil, errs.NewContainerError(rc.GetName(), fmt.Sprintf("create [%s] repo instance failed", name), err)
 	}

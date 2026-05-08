@@ -16,7 +16,9 @@ type Application struct {
 	log  logger.Logger
 }
 
-func NewApplication(opts ...Option) *Application {
+var _ app.Application = (*Application)(nil)
+
+func NewApplication(opts ...Option) (*Application, error) {
 	// create instance
 	res := &Application{}
 	// setup
@@ -25,42 +27,28 @@ func NewApplication(opts ...Option) *Application {
 	}
 	// embed
 	res.BaseApplication = app.NewBaseApplication(
-		app.WithOrchestrator(container.NewOrchestrator()),
+		app.WithOrchestrator(container.NewOrchestrator(res.conf, res.log)),
 		app.WithLogger(res.log),
 		app.WithCloseTimeout(res.conf.App.CloseTimeout),
 		app.WithStopTimeout(res.conf.App.StopTimeout),
 	)
+	// orchestrator
+	err := errors.Join(
+		res.GetOrchestrator().Register(container.NewAppContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewToolsContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewPgContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewRepositoryContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewUseCaseContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewFacadeContainer(res.GetOrchestrator())),
+	)
+	if err != nil {
+		return nil, errs.NewCommonError("application create failed", err)
+	}
 
-	return res
+	return res, nil
 }
 
 func (app *Application) Init() error {
-	var cntErrs []error
-	appCnt := container.NewAppContainer(app.GetOrchestrator())
-	// register containers, order is IMPORTANT!
-	cntErrs = append(cntErrs,
-		app.GetOrchestrator().Register(appCnt),
-		app.GetOrchestrator().Register(container.NewToolsContainer(app.GetOrchestrator())),
-		app.GetOrchestrator().Register(container.NewPgContainer(app.GetOrchestrator())),
-		app.GetOrchestrator().Register(container.NewRepositoryContainer(app.GetOrchestrator())),
-	)
-	err := errors.Join(cntErrs...)
-	if err != nil {
-		return errs.NewCommonError("init application failed", err)
-	}
-
-	// register app params
-	var instErrs []error
-
-	instErrs = append(instErrs,
-		appCnt.RegisterInstance(container.LoggerInstance, app.log),
-		appCnt.RegisterInstance(container.ConfigInstance, app.conf),
-	)
-	err = errors.Join(instErrs...)
-	if err != nil {
-		return errs.NewCommonError("register application params failed", err)
-	}
-
 	return app.BaseApplication.Init()
 }
 

@@ -15,6 +15,7 @@ const (
 	InstanceDBMigrator string = "DBMigrator"
 )
 
+// PgContainer database connection and data migrations
 type PgContainer struct {
 	*container.BaseLazyContainer
 }
@@ -32,12 +33,10 @@ func NewPgContainer(orchestrator container.Orchestrator) *PgContainer {
 
 func (pc *PgContainer) Init(initCtx context.Context) error {
 	// add providers
-	initErrs := make([]error, 0)
-	initErrs = append(initErrs,
+	err := errors.Join(
 		pc.RegisterProvider(InstanceDB, pc.providerDB),
 		pc.RegisterProvider(InstanceDBMigrator, pc.providerDBMigrator),
 	)
-	err := errors.Join(initErrs...)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: register providers failed", err)
 	}
