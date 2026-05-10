@@ -40,7 +40,7 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: register providers failed", err)
 	}
-	// init instances
+	// init db instance
 	db, err := container.GetInstance[*postgres.PgDB](pc, InstanceDB)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: init db failed", err)
@@ -55,6 +55,7 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: init migrator failed", err)
 	}
+	// migrate up
 	err = migrator.Up(initCtx)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: up migrator failed", err)

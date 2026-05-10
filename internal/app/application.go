@@ -40,6 +40,8 @@ func NewApplication(opts ...Option) (*Application, error) {
 		res.GetOrchestrator().Register(container.NewRepositoryContainer(res.GetOrchestrator())),
 		res.GetOrchestrator().Register(container.NewUseCaseContainer(res.GetOrchestrator())),
 		res.GetOrchestrator().Register(container.NewFacadeContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewHTTPContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewGRPCContainer(res.GetOrchestrator())),
 	)
 	if err != nil {
 		return nil, errs.NewCommonError("application create failed", err)

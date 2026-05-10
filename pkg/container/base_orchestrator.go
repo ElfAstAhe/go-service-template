@@ -139,7 +139,7 @@ func (o *BaseOrchestrator) AllContainers() []Container {
 	return res
 }
 
-// GetRunners — вспомогательный метод (пылесос)
+// GetRunners — вспомогательный метод
 func (o *BaseOrchestrator) GetRunners() ([]Runner, error) {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
@@ -158,6 +158,7 @@ func (o *BaseOrchestrator) GetRunners() ([]Runner, error) {
 			}
 		}
 	}
+
 	return res, nil
 }
 
