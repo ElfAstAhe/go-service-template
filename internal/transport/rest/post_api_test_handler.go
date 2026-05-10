@@ -30,19 +30,19 @@ func (cr *AppChiRouter) postAPITest(rw http.ResponseWriter, r *http.Request) {
 	var income = &dto.TestDTO{}
 	err := pkghttp.DecodeJSON(r, income)
 	if err != nil {
-		pkghttp.RenderError(rw, err, mapToHTTPStatus)
+		pkghttp.RenderErrorDefault(rw, err)
 
 		return
 	}
 
 	res, err := cr.testFacade.Create(r.Context(), income)
 	if err != nil {
-		pkghttp.RenderError(rw, err, mapToHTTPStatus)
+		pkghttp.RenderErrorDefault(rw, err)
 
 		return
 	}
 	location := r.URL.JoinPath(res.ID)
 	rw.Header().Set("Location", location.String())
 
-	pkghttp.RenderJSON(rw, http.StatusCreated, res, mapToHTTPStatus)
+	pkghttp.RenderJSONDefault(rw, http.StatusCreated, res)
 }

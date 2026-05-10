@@ -28,7 +28,7 @@ func (cr *AppChiRouter) deleteAPITest(rw http.ResponseWriter, r *http.Request) {
 
 	err := cr.testFacade.Delete(r.Context(), id)
 	if err != nil {
-		pkghttp.RenderError(rw, err, mapToHTTPStatus)
+		pkghttp.RenderErrorDefault(rw, err)
 
 		return
 	}

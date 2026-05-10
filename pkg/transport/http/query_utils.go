@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -138,23 +137,4 @@ func GetQueryIntArrayDefault(r *http.Request, key string, defaultValue []int) []
 	}
 
 	return res
-}
-
-func DecodeJSON(r *http.Request, dst any) error {
-	// 1. Ограничиваем чтение (например, 1Мб), чтобы не выесть RAM
-	// MaxBytesReader вернет ошибку, если тело больше лимита
-	r.Body = http.MaxBytesReader(nil, r.Body, 1024*1024)
-	defer r.Body.Close()
-
-	dec := json.NewDecoder(r.Body)
-
-	// 2. Strict mode: если клиент прислал поле, которого нет в DTO — это 400
-	// Помогает отловить опечатки на фронте (например, "iddd" вместо "id")
-	dec.DisallowUnknownFields()
-
-	if err := dec.Decode(dst); err != nil {
-		return errs.NewInvalidArgumentErrorChain("body", "invalid_json_format", err)
-	}
-
-	return nil
 }
