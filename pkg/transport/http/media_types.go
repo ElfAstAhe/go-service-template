@@ -147,8 +147,8 @@ const (
 	MediaTypeVideoMpeg      string = "video/mpeg"
 	MediaTypeVideoOgg       string = "video/ogg"
 	MediaTypeVideoQuicktime string = "video/quicktime"
-	MediaTypeVideoThreegpp  string = "video/3gpp"
-	MediaTypeVideoThreegpp2 string = "video/3gpp2"
+	MediaTypeVideoThreeGPP  string = "video/3gpp"
+	MediaTypeVideoThreeGPP2 string = "video/3gpp2"
 	MediaTypeVideoWebm      string = "video/webm"
 	MediaTypeVideoXMSVideo  string = "video/x-msvideo"
 )

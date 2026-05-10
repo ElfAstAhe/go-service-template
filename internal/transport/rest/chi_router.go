@@ -98,7 +98,9 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	cr.router.Use(middleware.Timeout(cr.config.ReadTimeout))
 	// compress (add any content-types)
 	cr.router.Use(pkgmware.NewCompress(logger,
-		"application/json", "plain/text",
+		pkghttp.MediaTypeApplicationJSON,
+		pkghttp.MediaTypeTextPlain,
+		"plain/text",
 	).Handle)
 	// decompress
 	cr.router.Use(pkgmware.NewDecompress(int64(cr.config.MaxRequestBodySize), logger).Handle)

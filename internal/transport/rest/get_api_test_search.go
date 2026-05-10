@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
 	"github.com/go-chi/chi/v5/middleware"
 
 	_ "github.com/ElfAstAhe/go-service-template/internal/facade/dto"
@@ -24,9 +24,9 @@ func (cr *AppChiRouter) getAPITestSearch(rw http.ResponseWriter, r *http.Request
 	cr.log.Debugf("getAPITestSearch start, requestID [%s]", middleware.GetReqID(r.Context()))
 	defer cr.log.Debugf("getAPITestSearch finish, requestID [%s]", middleware.GetReqID(r.Context()))
 
-	code := cr.getQueryString(r, "code", "")
-	if code == "" {
-		cr.renderError(rw, errs.NewInvalidArgumentError("code", ""))
+	code, err := pkghttp.GetQueryString(r, "code")
+	if err != nil {
+		cr.renderError(rw, err)
 
 		return
 	}
