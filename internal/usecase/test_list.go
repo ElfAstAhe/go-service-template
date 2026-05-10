@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	"github.com/ElfAstAhe/go-service-template/internal/domain/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
 type TestListUseCase interface {

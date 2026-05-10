@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
@@ -30,10 +29,10 @@ func (tg *TestGetInteractor) Get(ctx context.Context, id string) (*domain.Test, 
 	res, err := tg.repo.Find(ctx, id)
 	if err != nil {
 		if _, ok := errors.AsType[*errs.DalNotFoundError](err); ok {
-			return nil, domerrs.NewBllNotFoundError("TestGetInteractor.Get", "Test", id, err)
+			return nil, errs.NewBllNotFoundError("TestGetInteractor.Get", "Test", id, err)
 		}
 
-		return nil, domerrs.NewBllError("TestGetInteractor.Get", fmt.Sprintf("find test model id [%s] failed", id), err)
+		return nil, errs.NewBllError("TestGetInteractor.Get", fmt.Sprintf("find test model id [%s] failed", id), err)
 	}
 
 	return res, nil

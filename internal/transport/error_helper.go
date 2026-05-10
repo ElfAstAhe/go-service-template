@@ -3,14 +3,13 @@ package transport
 import (
 	"errors"
 
-	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
 func IsBadRequest(err error) bool {
 	var (
 		errInvalidArgument *errs.InvalidArgumentError
-		errBllValidate     *domerrs.BllValidateError
+		errBllValidate     *errs.BllValidateError
 		errTrMapping       *errs.TlMappingError
 	)
 
@@ -21,7 +20,7 @@ func IsBadRequest(err error) bool {
 
 func IsNotFound(err error) bool {
 	var (
-		errBllNotFound *domerrs.BllNotFoundError
+		errBllNotFound *errs.BllNotFoundError
 	)
 
 	return errors.As(err, &errBllNotFound)
@@ -29,7 +28,7 @@ func IsNotFound(err error) bool {
 
 func IsConflict(err error) bool {
 	var (
-		errBllUnique *domerrs.BllUniqueError
+		errBllUnique *errs.BllUniqueError
 	)
 
 	return errors.As(err, &errBllUnique)
