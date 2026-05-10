@@ -14,6 +14,7 @@ func WithName(name string) Option {
 		r.name = name
 	}
 }
+
 func WithRouter(router Router) Option {
 	return func(r *Runner) {
 		r.router = router

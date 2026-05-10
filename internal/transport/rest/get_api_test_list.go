@@ -31,10 +31,10 @@ func (cr *AppChiRouter) getAPITestList(rw http.ResponseWriter, r *http.Request) 
 
 	res, err := cr.testFacade.List(r.Context(), limit, offset)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderError(rw, err, mapToHTTPStatus)
 
 		return
 	}
 
-	cr.renderJSON(rw, http.StatusOK, res)
+	pkghttp.RenderJSON(rw, http.StatusOK, res, mapToHTTPStatus)
 }

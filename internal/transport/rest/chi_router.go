@@ -28,6 +28,8 @@ type AppChiRouter struct {
 	testFacade      facade.TestFacade
 }
 
+var _ pkghttp.Router = (*AppChiRouter)(nil)
+
 func NewAppChiRouter(
 	config *conf.HTTPConfig,
 	telemetryConfig *conf.TelemetryConfig,

@@ -26,17 +26,17 @@ func (cr *AppChiRouter) getAPITestSearch(rw http.ResponseWriter, r *http.Request
 
 	code, err := pkghttp.GetQueryString(r, "code")
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderError(rw, err, mapToHTTPStatus)
 
 		return
 	}
 
 	res, err := cr.testFacade.GetByCode(r.Context(), code)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderError(rw, err, mapToHTTPStatus)
 
 		return
 	}
 
-	cr.renderJSON(rw, http.StatusOK, res)
+	pkghttp.RenderJSON(rw, http.StatusOK, res, mapToHTTPStatus)
 }

@@ -14,7 +14,7 @@ type Logger interface {
 	Info(args ...any)
 	Debug(args ...any)
 
-	// формтированные логи
+	// форматированные логи
 	Errorf(format string, args ...any)
 	Warnf(format string, args ...any)
 	Infof(format string, args ...any)

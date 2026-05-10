@@ -35,17 +35,17 @@ func (cr *AppChiRouter) putAPITest(rw http.ResponseWriter, r *http.Request) {
 	var income = &dto.TestDTO{}
 	err := pkghttp.DecodeJSON(r, income)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderError(rw, err, mapToHTTPStatus)
 
 		return
 	}
 
 	res, err := cr.testFacade.Change(r.Context(), id, income)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderError(rw, err, mapToHTTPStatus)
 
 		return
 	}
 
-	cr.renderJSON(rw, http.StatusOK, res)
+	pkghttp.RenderJSON(rw, http.StatusOK, res, mapToHTTPStatus)
 }

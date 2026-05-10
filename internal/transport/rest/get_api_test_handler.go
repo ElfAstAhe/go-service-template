@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 
+	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
@@ -28,10 +29,10 @@ func (cr *AppChiRouter) getAPITest(rw http.ResponseWriter, r *http.Request) {
 
 	res, err := cr.testFacade.Get(r.Context(), id)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderError(rw, err, mapToHTTPStatus)
 
 		return
 	}
 
-	cr.renderJSON(rw, http.StatusOK, res)
+	pkghttp.RenderJSON(rw, http.StatusOK, res, mapToHTTPStatus)
 }
