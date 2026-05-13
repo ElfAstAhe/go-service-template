@@ -32,7 +32,7 @@ func NewApplication(opts ...Option) (*Application, error) {
 		app.WithCloseTimeout(res.conf.App.CloseTimeout),
 		app.WithStopTimeout(res.conf.App.StopTimeout),
 	)
-	// orchestrator
+	// orchestrator and containers
 	err := errors.Join(
 		res.GetOrchestrator().Register(container.NewAppContainer(res.GetOrchestrator())),
 		res.GetOrchestrator().Register(container.NewToolsContainer(res.GetOrchestrator())),
@@ -40,6 +40,7 @@ func NewApplication(opts ...Option) (*Application, error) {
 		res.GetOrchestrator().Register(container.NewRepositoryContainer(res.GetOrchestrator())),
 		res.GetOrchestrator().Register(container.NewUseCaseContainer(res.GetOrchestrator())),
 		res.GetOrchestrator().Register(container.NewFacadeContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewServiceContainer(res.GetOrchestrator())),
 		res.GetOrchestrator().Register(container.NewHTTPContainer(res.GetOrchestrator())),
 		res.GetOrchestrator().Register(container.NewGRPCContainer(res.GetOrchestrator())),
 	)
@@ -51,23 +52,17 @@ func NewApplication(opts ...Option) (*Application, error) {
 }
 
 func (app *Application) Init() error {
+	appCnt, err := app.GetOrchestrator().GetContainer(container.AppContainerName)
+	if err != nil {
+		return errs.NewCommonError("app init", err)
+	}
+	err = errors.Join(
+		appCnt.RegisterInstance(container.InstanceApplication, app),
+		appCnt.RegisterInstance(container.InstanceApplicationReady, app.IsReady),
+	)
+	if err != nil {
+		return errs.NewCommonError("app init", err)
+	}
+
 	return app.BaseApplication.Init()
-}
-
-func (app *Application) Run() error {
-	// ToDo: implement
-
-	return app.BaseApplication.Run()
-}
-
-func (app *Application) Stop() error {
-	// ToDo: implement
-
-	return app.BaseApplication.Stop()
-}
-
-func (app *Application) Close() error {
-	// ToDo: implement
-
-	return app.BaseApplication.Close()
 }

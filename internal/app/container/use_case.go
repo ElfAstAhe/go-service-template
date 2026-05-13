@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	InstanceTransactionManager string = "TransactionManager"
-	InstanceTestGetUC          string = "TestGetUC"
-	InstanceTestGetByCodeUC    string = "TestGetByCodeUC"
-	InstanceTestListUC         string = "TestListUC"
-	InstanceTestSaveUC         string = "TestSaveUC"
-	InstanceTestDeleteUC       string = "TestDeleteUC"
+	InstanceTM              string = "TransactionManager"
+	InstanceTestGetUC       string = "TestGetUC"
+	InstanceTestGetByCodeUC string = "TestGetByCodeUC"
+	InstanceTestListUC      string = "TestListUC"
+	InstanceTestSaveUC      string = "TestSaveUC"
+	InstanceTestDeleteUC    string = "TestDeleteUC"
 )
 
 type UseCaseContainer struct {
@@ -32,7 +32,7 @@ func NewUseCaseContainer(orchestrator container.Orchestrator) *UseCaseContainer 
 
 func (ucc *UseCaseContainer) Init(ctx context.Context) error {
 	err := errors.Join(
-		ucc.RegisterProvider(InstanceTransactionManager, ucc.providerTxManager),
+		ucc.RegisterProvider(InstanceTM, ucc.providerTM),
 		ucc.RegisterProvider(InstanceTestGetUC, ucc.providerTestGetUC),
 		ucc.RegisterProvider(InstanceTestGetByCodeUC, ucc.providerTestGetByCodeUC),
 		ucc.RegisterProvider(InstanceTestListUC, ucc.providerTestListUC),

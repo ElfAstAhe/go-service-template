@@ -15,11 +15,11 @@ import (
 func (pc *PgContainer) providerDB(name string) (any, error) {
 	appCnt, err := pc.GetOrchestrator().GetContainer(AppContainerName)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewContainerError(pc.GetName(), "provider: retrieve container failed", err)
 	}
 	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
 	}
 	res, err := postgres.NewPgDB(confInst.DB)
 	if err != nil {
@@ -32,15 +32,15 @@ func (pc *PgContainer) providerDB(name string) (any, error) {
 func (pc *PgContainer) providerDBMigrator(name string) (any, error) {
 	appCnt, err := pc.GetOrchestrator().GetContainer(AppContainerName)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewContainerError(pc.GetName(), "provider: retrieve container failed", err)
 	}
 	logInst, err := container.GetInstance[logger.Logger](appCnt, InstanceLogger)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
 	}
 	dbInst, err := container.GetInstance[*postgres.PgDB](pc, InstanceDB)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
 	}
 	res, err := goose.NewDBMigrator(dbInst, logInst)
 	if err != nil {

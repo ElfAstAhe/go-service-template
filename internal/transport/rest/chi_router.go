@@ -80,18 +80,9 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// requestID (chi middleware)
 	cr.router.Use(middleware.RequestID)
 	// requestID (own implementation)
-	cr.router.Use(pkgmware.NewRequestIDExtractor([]string{
-		pkgmware.HeaderXRequestID,
-		pkgmware.HeaderXCorrelationID,
-		pkgmware.HeaderRequestID,
-	}).Handler)
+	cr.router.Use(pkgmware.NewDefaultRequestIDExtractor().Handler)
 	// traceID (own implementation)
-	cr.router.Use(pkgmware.NewTraceIDExtractor([]string{
-		pkgmware.HeaderXCloudTraceContext,
-		pkgmware.HeaderTraceParent,
-		pkgmware.HeaderXTraceID,
-		pkgmware.HeaderTraceID,
-	}).Handler)
+	cr.router.Use(pkgmware.NewDefaultTraceIDExtractor().Handler)
 	// realIP
 	cr.router.Use(middleware.RealIP)
 	// recoverer

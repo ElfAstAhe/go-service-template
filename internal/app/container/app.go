@@ -7,8 +7,11 @@ import (
 )
 
 const (
-	InstanceConfig string = "config"
-	InstanceLogger string = "logger"
+	InstanceApplication       string = "application"
+	InstanceApplicationReady  string = "application-ready"
+	InstanceApplicationHealth string = "application-health"
+	InstanceConfig            string = "config"
+	InstanceLogger            string = "logger"
 )
 
 type AppContainer struct {

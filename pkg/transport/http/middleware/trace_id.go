@@ -17,16 +17,25 @@ type TraceIDExtractor struct {
 	headers []string
 }
 
-func NewTraceIDExtractor(headers []string) *TraceIDExtractor {
+func NewTraceIDExtractor(headers ...string) *TraceIDExtractor {
 	return &TraceIDExtractor{
 		headers: headers,
 	}
 }
 
+func NewDefaultTraceIDExtractor() *TraceIDExtractor {
+	return NewTraceIDExtractor(
+		HeaderXCloudTraceContext,
+		HeaderTraceParent,
+		HeaderXTraceID,
+		HeaderTraceID,
+	)
+}
+
 func (te *TraceIDExtractor) Handler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		if len(te.headers) == 0 {
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(rw, r)
 			return
 		}
 
@@ -38,6 +47,6 @@ func (te *TraceIDExtractor) Handler(next http.Handler) http.Handler {
 			}
 		}
 
-		next.ServeHTTP(w, r.WithContext(transport.WithTraceID(r.Context(), traceID)))
+		next.ServeHTTP(rw, r.WithContext(transport.WithTraceID(r.Context(), traceID)))
 	})
 }

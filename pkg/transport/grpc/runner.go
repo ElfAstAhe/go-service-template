@@ -181,31 +181,31 @@ func (r *Runner) defaultServerProvider(conf *config.GRPCConfig) (*grpc.Server, e
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		// metrics
 		grpc.ChainUnaryInterceptor(
-			interceptors.RequestIDExtractorUSInterceptor([]string{
+			interceptors.RequestIDExtractorUSInterceptor(
 				interceptors.MDXRequestID,
 				interceptors.MDXCorrelationID,
 				interceptors.MDRequestID,
-			}),
-			interceptors.TraceIDExtractorUSInterceptor([]string{
+			),
+			interceptors.TraceIDExtractorUSInterceptor(
 				interceptors.MDXCloudTraceContext,
 				interceptors.MDTraceParent,
 				interceptors.MDXTraceID,
 				interceptors.MDTraceID,
-			}),
+			),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 		grpc.ChainStreamInterceptor(
-			interceptors.RequestIDExtractorSSInterceptor([]string{
+			interceptors.RequestIDExtractorSSInterceptor(
 				interceptors.MDXRequestID,
 				interceptors.MDXCorrelationID,
 				interceptors.MDRequestID,
-			}),
-			interceptors.TraceIDExtractorSSInterceptor([]string{
+			),
+			interceptors.TraceIDExtractorSSInterceptor(
 				interceptors.MDXCloudTraceContext,
 				interceptors.MDTraceParent,
 				interceptors.MDXTraceID,
 				interceptors.MDTraceID,
-			}),
+			),
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 	}

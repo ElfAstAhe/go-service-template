@@ -17,16 +17,24 @@ type RequestIDExtractor struct {
 	headers []string
 }
 
-func NewRequestIDExtractor(headers []string) *RequestIDExtractor {
+func NewRequestIDExtractor(headers ...string) *RequestIDExtractor {
 	return &RequestIDExtractor{
 		headers: headers,
 	}
 }
 
+func NewDefaultRequestIDExtractor() *RequestIDExtractor {
+	return NewRequestIDExtractor(
+		HeaderXRequestID,
+		HeaderXCorrelationID,
+		HeaderRequestID,
+	)
+}
+
 func (re *RequestIDExtractor) Handler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		if len(re.headers) == 0 {
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(rw, r)
 			return
 		}
 
@@ -41,6 +49,6 @@ func (re *RequestIDExtractor) Handler(next http.Handler) http.Handler {
 			requestID = fmt.Sprintf("%s-%07d", transport.GetPrefix(), transport.NextReqID())
 		}
 
-		next.ServeHTTP(w, r.WithContext(transport.WithRequestID(r.Context(), requestID)))
+		next.ServeHTTP(rw, r.WithContext(transport.WithRequestID(r.Context(), requestID)))
 	})
 }

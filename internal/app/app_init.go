@@ -295,17 +295,17 @@ func (app *App) initGRPCServer() error {
 				grpcprom.WithExemplarFromContext(exemplarFromContext),
 				grpcprom.WithLabelsFromContext(labelsFromContext),
 			),
-			interceptors.RequestIDExtractorUSInterceptor([]string{
+			interceptors.RequestIDExtractorUSInterceptor(
 				interceptors.MDXRequestID,
 				interceptors.MDXCorrelationID,
 				interceptors.MDRequestID,
-			}),
-			interceptors.TraceIDExtractorUSInterceptor([]string{
+			),
+			interceptors.TraceIDExtractorUSInterceptor(
 				interceptors.MDXCloudTraceContext,
 				interceptors.MDTraceParent,
 				interceptors.MDXTraceID,
 				interceptors.MDTraceID,
-			}),
+			),
 			realip.UnaryServerInterceptorOpts(realIPOpts...),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
@@ -314,17 +314,17 @@ func (app *App) initGRPCServer() error {
 				grpcprom.WithExemplarFromContext(exemplarFromContext),
 				grpcprom.WithLabelsFromContext(labelsFromContext),
 			),
-			interceptors.RequestIDExtractorSSInterceptor([]string{
+			interceptors.RequestIDExtractorSSInterceptor(
 				interceptors.MDXRequestID,
 				interceptors.MDXCorrelationID,
 				interceptors.MDRequestID,
-			}),
-			interceptors.TraceIDExtractorSSInterceptor([]string{
+			),
+			interceptors.TraceIDExtractorSSInterceptor(
 				interceptors.MDXCloudTraceContext,
 				interceptors.MDTraceParent,
 				interceptors.MDXTraceID,
 				interceptors.MDTraceID,
-			}),
+			),
 			realip.StreamServerInterceptorOpts(realIPOpts...),
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),

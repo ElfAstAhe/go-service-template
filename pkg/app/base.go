@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"sync/atomic"
 	"syscall"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/config"
@@ -27,6 +28,8 @@ type BaseApplication struct {
 	cancel context.CancelFunc
 	// wg
 	wg sync.WaitGroup
+	// ready
+	ready *atomic.Bool
 }
 
 func NewBaseApplication(opts ...Option) *BaseApplication {
@@ -37,11 +40,13 @@ func NewBaseApplication(opts ...Option) *BaseApplication {
 		conf:   config.NewDefaultAppConfig(),
 		ctx:    ctx,
 		cancel: cancel,
+		ready:  new(atomic.Bool),
 	}
 	// setup instance
 	for _, opt := range opts {
 		opt(res)
 	}
+	res.ready.Store(false)
 
 	return res
 }
@@ -72,9 +77,13 @@ func (app *BaseApplication) Run() error {
 	app.wg.Add(1)
 	go app.GracefulShutdown()
 
+	app.ready.Store(true)
+
 	// 3. Ожидаем отмены контекста
 	app.logger.Info("application is running and waiting for app context cancel")
 	<-app.ctx.Done()
+
+	app.ready.Store(false)
 
 	// 4. Останавливаем runners
 	app.logger.Info("application is shutting down")
@@ -229,4 +238,8 @@ func (app *BaseApplication) GetCancel() context.CancelFunc {
 
 func (app *BaseApplication) GetConfig() *config.AppConfig {
 	return app.conf
+}
+
+func (app *BaseApplication) IsReady() bool {
+	return app.ready.Load()
 }

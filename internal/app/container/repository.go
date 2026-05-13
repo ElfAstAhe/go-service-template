@@ -42,15 +42,15 @@ func (rc *RepositoryContainer) Init(ctx context.Context) error {
 func (rc *RepositoryContainer) providerTestRepository(name string) (any, error) {
 	dbCnt, err := rc.GetOrchestrator().GetContainer(DBContainerName)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewContainerError(rc.GetName(), "provider: retrieve container failed", err)
 	}
 	db, err := container.GetInstance[*postgres.PgDB](dbCnt, InstanceDB)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewContainerError(rc.GetName(), "provider: retrieve instance failed", err)
 	}
 	res, err := postgres.NewTestRepository(db, db)
 	if err != nil {
-		return nil, errs.NewContainerError(rc.GetName(), fmt.Sprintf("create [%s] repo instance failed", name), err)
+		return nil, errs.NewContainerError(rc.GetName(), fmt.Sprintf("provider: create [%s] repo instance failed", name), err)
 	}
 
 	return repository.NewTestMetricsRepository(res), nil
