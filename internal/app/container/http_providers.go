@@ -27,7 +27,7 @@ func (hc *HTTPContainer) providerChiRouter(name string) (any, error) {
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	readyz, err := container.GetInstance[http.ReadyzFunc](appCnt, InstanceApplicationReady)
+	readyz, err := container.GetInstance[func() bool](appCnt, InstanceApplicationReady)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
