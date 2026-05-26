@@ -1,6 +1,8 @@
 package container
 
 import (
+	"fmt"
+
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/internal/facade"
 	"github.com/ElfAstAhe/go-service-template/internal/transport/rest"
@@ -11,6 +13,7 @@ import (
 	"github.com/hellofresh/health-go/v5"
 )
 
+//goland:noinspection DuplicatedCode
 func (hc *HTTPContainer) providerChiRouter(name string) (any, error) {
 	appCnt, err := hc.GetOrchestrator().GetContainer(AppContainerName)
 	if err != nil {
@@ -56,8 +59,34 @@ func (hc *HTTPContainer) providerChiRouter(name string) (any, error) {
 	), nil
 }
 
+//goland:noinspection DuplicatedCode
 func (hc *HTTPContainer) providerHTTPRunner(name string) (any, error) {
-	// ToDo: implement
+	appCnt, err := hc.GetOrchestrator().GetContainer(AppContainerName)
+	if err != nil {
+		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve container failed", err)
+	}
+	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
+	if err != nil {
+		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
+	}
+	logInst, err := container.GetInstance[logger.Logger](appCnt, InstanceLogger)
+	if err != nil {
+		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
+	}
+	routerInst, err := container.GetInstance[http.Router](hc, InstanceHTTPRouter)
+	if err != nil {
+		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
+	}
 
-	return nil, nil
+	runner, err := http.NewRunner(
+		http.WithName("main-http-server"),
+		http.WithConfig(confInst.HTTP),
+		http.WithLogger("http_server", logInst),
+		http.WithRouter(routerInst),
+	)
+	if err != nil {
+		return nil, errs.NewContainerError(hc.GetName(), fmt.Sprintf("provider: create %s failed", name), err)
+	}
+
+	return runner, nil
 }
