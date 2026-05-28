@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/internal/transport"
+	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
 	"github.com/go-chi/chi/v5/middleware"
 
 	_ "github.com/ElfAstAhe/go-service-template/internal/facade/dto"
@@ -25,25 +26,15 @@ func (cr *AppChiRouter) getAPITestList(rw http.ResponseWriter, r *http.Request) 
 	cr.log.Debugf("getAPITestList start, requestID [%s]", middleware.GetReqID(r.Context()))
 	defer cr.log.Debugf("getAPITestList finish, requestID [%s]", middleware.GetReqID(r.Context()))
 
-	limit, err := cr.getQueryInt(r, "limit", transport.DefaultListLimit)
-	if err != nil {
-		cr.renderError(rw, err)
-
-		return
-	}
-	offset, err := cr.getQueryInt(r, "offset", transport.DefaultListOffset)
-	if err != nil {
-		cr.renderError(rw, err)
-
-		return
-	}
+	limit := pkghttp.GetQueryIntDefault(r, "limit", transport.DefaultListLimit)
+	offset := pkghttp.GetQueryIntDefault(r, "offset", transport.DefaultListOffset)
 
 	res, err := cr.testFacade.List(r.Context(), limit, offset)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderErrorDefault(rw, err)
 
 		return
 	}
 
-	cr.renderJSON(rw, http.StatusOK, res)
+	pkghttp.RenderJSONDefault(rw, http.StatusOK, res)
 }

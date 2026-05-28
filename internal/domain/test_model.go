@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	"github.com/ElfAstAhe/go-service-template/internal/domain/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/google/uuid"
 )
 

@@ -67,14 +67,6 @@ func setupDB(pg *sql.DB, conf *config.DBConfig) (*PgDB, error) {
 	pg.SetMaxIdleConns(conf.MaxIdleConns)
 	pg.SetConnMaxIdleTime(conf.ConnMaxIdleLifetime)
 
-	ctx, cancel := context.WithTimeout(context.Background(), conf.ConnTimeout)
-	defer cancel()
-
-	err := pg.PingContext(ctx)
-	if err != nil {
-		return nil, errs.NewDalError("setupDB", "ping db connection", err)
-	}
-
 	return &PgDB{
 		db:   pg,
 		conf: conf,
@@ -111,4 +103,13 @@ func (pgdb *PgDB) IsUniqueViolation(err error) bool {
 	}
 
 	return false
+}
+
+func (pgdb *PgDB) Ping(ctx context.Context) error {
+	err := pgdb.db.PingContext(ctx)
+	if err != nil {
+		return errs.NewDalError("Ping", "ping db connection", err)
+	}
+
+	return nil
 }

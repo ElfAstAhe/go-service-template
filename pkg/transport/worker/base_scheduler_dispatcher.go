@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
@@ -32,8 +33,9 @@ type BaseSchedulerDispatcher[D comparable] struct {
 	dataProvider DispatcherDataProvider[D]
 }
 
-var _ Scheduler = (*BaseSchedulerDispatcher[string])(nil)
 var _ CommonWorker = (*BaseSchedulerDispatcher[string])(nil)
+var _ Scheduler = (*BaseSchedulerDispatcher[string])(nil)
+var _ container.Runner = (*BaseSchedulerDispatcher[string])(nil)
 
 func NewBaseSchedulerDispatcher[D comparable](
 	name string,
@@ -59,7 +61,9 @@ func (bsd *BaseSchedulerDispatcher[D]) Start(ctx context.Context) error {
 	errScheduler := bsd.BaseScheduler.Start(ctx)
 	err := errors.Join(errPool, errScheduler)
 	if err != nil {
-		err = errors.Join(err, bsd.Stop(0))
+		stopCtx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+		err = errors.Join(err, bsd.Stop(stopCtx))
 
 		return errs.NewCommonError(fmt.Sprintf("scheduler dispatcher %s start failed", bsd.GetName()), err)
 	}
@@ -67,9 +71,9 @@ func (bsd *BaseSchedulerDispatcher[D]) Start(ctx context.Context) error {
 	return nil
 }
 
-func (bsd *BaseSchedulerDispatcher[D]) Stop(stopTimeOut time.Duration) error {
-	errScheduler := bsd.BaseScheduler.Stop(stopTimeOut)
-	errPool := bsd.workerPool.Stop(stopTimeOut)
+func (bsd *BaseSchedulerDispatcher[D]) Stop(stopCtx context.Context) error {
+	errScheduler := bsd.BaseScheduler.Stop(stopCtx)
+	errPool := bsd.workerPool.Stop(stopCtx)
 	err := errors.Join(errPool, errScheduler)
 	if err != nil {
 		return errs.NewCommonError(fmt.Sprintf("scheduler dispatcher %s stop failed", bsd.GetName()), err)
@@ -96,7 +100,8 @@ func (bsd *BaseSchedulerDispatcher[D]) timerDispatcher(ctx context.Context, even
 		select {
 		case <-ctx.Done():
 			bsd.GetLogger().Debugf("scheduler dispatcher %s time event %s break by context done", bsd.GetName(), eventTime.Format(time.DateTime))
-			break
+
+			return ctx.Err()
 		default:
 			bsd.workerPool.Push(data)
 		}

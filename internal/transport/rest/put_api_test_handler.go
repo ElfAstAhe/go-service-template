@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/internal/facade/dto"
+	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
@@ -32,19 +33,19 @@ func (cr *AppChiRouter) putAPITest(rw http.ResponseWriter, r *http.Request) {
 	defer cr.log.Debugf("putAPITest finish, requestID [%s] path param [%s]", middleware.GetReqID(r.Context()), id)
 
 	var income = &dto.TestDTO{}
-	err := cr.decodeJSON(r, income)
+	err := pkghttp.DecodeJSON(r, income)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderError(rw, err, pkghttp.MapToHTTPStatus)
 
 		return
 	}
 
 	res, err := cr.testFacade.Change(r.Context(), id, income)
 	if err != nil {
-		cr.renderError(rw, err)
+		pkghttp.RenderErrorDefault(rw, err)
 
 		return
 	}
 
-	cr.renderJSON(rw, http.StatusOK, res)
+	pkghttp.RenderJSONDefault(rw, http.StatusOK, res)
 }

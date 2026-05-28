@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
 	usecase "github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
@@ -46,13 +45,13 @@ func (ts *TestSaveInteractor) Save(ctx context.Context, model *domain.Test) (*do
 	})
 	if err != nil {
 		if _, ok := errors.AsType[*errs.DalNotFoundError](err); ok {
-			return nil, domerrs.NewBllNotFoundError("TestSaveUseCase.Save", "Test", model.Code, err)
+			return nil, errs.NewBllNotFoundError("TestSaveUseCase.Save", "Test", model.Code, err)
 		}
 		if _, ok := errors.AsType[*errs.DalAlreadyExistsError](err); ok {
-			return nil, domerrs.NewBllUniqueError("TestSaveUseCase.Save", "Test", model.Code, err)
+			return nil, errs.NewBllUniqueError("TestSaveUseCase.Save", "Test", model.Code, err)
 		}
 
-		return nil, domerrs.NewBllError("TestSaveUseCase.Save", fmt.Sprintf("save test model id [%v] failed", model.GetID()), err)
+		return nil, errs.NewBllError("TestSaveUseCase.Save", fmt.Sprintf("save test model id [%v] failed", model.GetID()), err)
 	}
 
 	return res, nil

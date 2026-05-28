@@ -8,6 +8,7 @@ import (
 	pb "github.com/ElfAstAhe/go-service-template/pkg/api/grpc/example/v1"
 	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -31,7 +32,7 @@ func NewExampleGRPCService(config *conf.GRPCConfig, testFacade facade.TestFacade
 func (es *ExampleGRPCService) Find(ctx context.Context, req *pb.ExampleServiceFindRequest) (*pb.ExampleServiceInstanceResponse, error) {
 	dtoRes, err := es.testFacade.Get(ctx, req.GetId())
 	if err != nil {
-		return nil, MapToGrpcError(err)
+		return nil, grpc.MapToGrpcError(err)
 	}
 
 	return pb.ExampleServiceInstanceResponse_builder{
@@ -42,7 +43,7 @@ func (es *ExampleGRPCService) Find(ctx context.Context, req *pb.ExampleServiceFi
 func (es *ExampleGRPCService) FindByCode(ctx context.Context, req *pb.ExampleServiceFindByCodeRequest) (*pb.ExampleServiceInstanceResponse, error) {
 	dtoRes, err := es.testFacade.GetByCode(ctx, req.GetCode())
 	if err != nil {
-		return nil, MapToGrpcError(err)
+		return nil, grpc.MapToGrpcError(err)
 	}
 
 	return pb.ExampleServiceInstanceResponse_builder{
@@ -53,7 +54,7 @@ func (es *ExampleGRPCService) FindByCode(ctx context.Context, req *pb.ExampleSer
 func (es *ExampleGRPCService) List(ctx context.Context, req *pb.ExampleServiceListRequest) (*pb.ExampleServiceInstancesResponse, error) {
 	dtosRes, err := es.testFacade.List(ctx, int(req.GetLimit()), int(req.GetOffset()))
 	if err != nil {
-		return nil, MapToGrpcError(err)
+		return nil, grpc.MapToGrpcError(err)
 	}
 
 	return pb.ExampleServiceInstancesResponse_builder{
@@ -71,7 +72,7 @@ func (es *ExampleGRPCService) Save(ctx context.Context, req *pb.ExampleServiceSa
 		dtoRes, err = es.testFacade.Change(ctx, income.ID, income)
 	}
 	if err != nil {
-		return nil, MapToGrpcError(err)
+		return nil, grpc.MapToGrpcError(err)
 	}
 
 	return pb.ExampleServiceInstanceResponse_builder{
@@ -82,7 +83,7 @@ func (es *ExampleGRPCService) Save(ctx context.Context, req *pb.ExampleServiceSa
 func (es *ExampleGRPCService) Delete(ctx context.Context, req *pb.ExampleServiceDeleteRequest) (*emptypb.Empty, error) {
 	err := es.testFacade.Delete(ctx, req.GetId())
 	if err != nil {
-		return nil, MapToGrpcError(err)
+		return nil, grpc.MapToGrpcError(err)
 	}
 
 	return &emptypb.Empty{}, nil

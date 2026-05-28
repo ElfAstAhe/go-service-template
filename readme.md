@@ -6,56 +6,62 @@
 
 ```text
 .
-├── api/                # Контракты: OpenAPI/Swagger спецификации/конфигурации, Proto-файлы
-│   ├── proto/          # Proto файлы сервиса
-│   └── rest/           # Конфигурация генератора клиента, etc. (спорно)
-├── bin/                # Артефакты сборки
-├── cmd/                # Приложения
-│   └── app/            # Точка входа: инициализация DI и запуск приложения
-├── deployments/        # Конфигурация инфраструктуры: Dockerfile, docker-compose, k8s
-├── docs/               # Сгенерированная документация (Swagger UI)
-├── internal/           # Приватный код приложения (бизнес-логика)
-│   ├── app/            # Оркестрация: инициализация всех слоев, Graceful Shutdown
-│   ├── config/         # Конфигурация: загрузка YAML/ENV/Flags
-│   ├── domain/         # Сердце системы: доменные модели (Entities) и базовые интерфейсы
-│   │   ├── errs/       # BLL ошибки
-│   │   └── mocks/      # Mock файлы 
-│   ├── facade/         # Фасад: внешняя граница приложения
-│   │   ├── dto/        # Фасад: dto
-│   │   └── mapper/     # Фасад: mappers
-│   ├── usecase/        # Бизнес-логика: реализация сценариев использования
-│   ├── repository/     # DAL: реализация работы с БД, кешем и внешними API
-│   │   └── postgres/   # DAL: реализация для postgres
-│   └── transport/      # Транспортный слой (Внешние интерфейсы)
-│       ├── errs/       # Ошибки уровня транспорта
-│       ├── rest/       # HTTP: router, handlers, middleware, DTO, mappers
-│       └── grpc/       # gRPC: Реализация сервисов и интерцепторы
-├── migrations/         # Миграции базы данных (in-code/sql)
-│   └── example-service # Миграции БД сервиса exanple-service
-├── pkg/                # Публичные библиотеки (Logger, Auth, Errors, Utils)
-│   ├── api/            # Клиенты, автогенерация
-│   ├── auth/           # Аутентификация
-│   ├── config/         # Конфигурирование
-│   ├── db/             # Абстракция БД
-│   ├── domain/         # Абстракция domain model
-│   ├── errs/           # Общие ошибки
-│   ├── helper/         # helpers
-│   ├── infra/          # Инфраструктура
-│   │   ├── metrics/    # Метрики
-│   │   └── telemetry/  # Телеметрия (open tracing)
-│   ├── logger/         # Логирование
-│   ├── migration/      # миграция данных
-│   ├── repository/     # реализация CRUD репозитория
-│   ├── transport/      # транспорт
-│   │   └── middleware/ # middleware
-│   └── utils/          # утилиты
-├── scripts/            # Вспомогательные скрипты для разработки и CI/CD
-├── .gitignore          # Список файлов к пропуску для git 
-├── .mockery.yml        # Конфигурация генератора mock файлов 
-├── Makefile            # Команды автоматизации (build, run, test, swag, migrate)
-├── go.mod              # Зависимости
-├── go.sum              # Контрольные суммы
-└── readme.md           # Документация проекта
+├── api/                    # Контракты: OpenAPI/Swagger спецификации/конфигурации, Proto-файлы
+│   ├── proto/              # Proto файлы сервиса
+│   └── rest/               # Конфигурация генератора клиента, etc. (спорно)
+├── bin/                    # Артефакты сборки
+├── cmd/                    # Приложения
+│   └── app/                # Точка входа: инициализация DI и запуск приложения
+├── deployments/            # Конфигурация инфраструктуры: Dockerfile, docker-compose, k8s
+├── docs/                   # Сгенерированная документация (Swagger UI)
+├── internal/               # Приватный код приложения (бизнес-логика)
+│   ├── app/                # Оркестрация: инициализация всех слоев, Graceful Shutdown
+│   ├── config/             # Конфигурация: загрузка YAML/ENV/Flags
+│   ├── domain/             # Сердце системы: доменные модели (Entities) и базовые интерфейсы
+│   │   ├── errs/           # BLL ошибки
+│   │   └── mocks/          # Mock файлы 
+│   ├── facade/             # Фасад: внешняя граница приложения
+│   │   ├── dto/            # Фасад: dto
+│   │   └── mapper/         # Фасад: mappers
+│   ├── usecase/            # Бизнес-логика: реализация сценариев использования
+│   ├── repository/         # DAL: реализация работы с БД, кешем и внешними API
+│   │   └── postgres/       # DAL: реализация для postgres
+│   └── transport/          # Транспортный слой (Внешние интерфейсы)
+│       ├── errs/           # Ошибки уровня транспорта
+│       ├── rest/           # HTTP: router, handlers, middleware, DTO, mappers
+│       └── grpc/           # gRPC: Реализация сервисов и интерцепторы
+├── migrations/             # Миграции базы данных (in-code/sql)
+│   └── example-service     # Миграции БД сервиса exanple-service
+├── pkg/                    # Публичные библиотеки (Logger, Auth, Errors, Utils)
+│   ├── api/                # Клиенты, автогенерация
+│   ├── app/                # Приложение
+│   ├── auth/               # Аутентификация
+│   ├── config/             # Конфигурирование
+│   ├── container/          # Контейнеры
+│   ├── db/                 # Абстракция БД
+│   ├── domain/             # Абстракция domain model
+│   ├── errs/               # Общие ошибки
+│   ├── helper/             # helpers
+│   ├── infra/              # Инфраструктура
+│   │   ├── metrics/        # Метрики
+│   │   └── telemetry/      # Телеметрия (open tracing)
+│   ├── logger/             # Логирование
+│   ├── migration/          # миграция данных
+│   ├── repository/         # реализация CRUD репозитория
+│   ├── transport/          # транспорт
+│   │   ├── grpc/           # gRPC
+│   │   │   └ interceptors/ # перехватчики
+│   │   ├── http/           # HTTP
+│   │   │   └ middleware/   # middleware
+│   │   └── worker/         # воркеры
+│   └── utils/              # утилиты
+├── scripts/                # Вспомогательные скрипты для разработки и CI/CD
+├── .gitignore              # Список файлов к пропуску для git 
+├── .mockery.yml            # Конфигурация генератора mock файлов 
+├── Makefile                # Команды автоматизации (build, run, test, swag, migrate)
+├── go.mod                  # Зависимости
+├── go.sum                  # Контрольные суммы
+└── readme.md               # Документация проекта
 ```
 ## Описание слоев
 1. `Domain`: Не зависит ни от чего. Содержит только структуры данных и интерфейсы репозиториев/сервисов.

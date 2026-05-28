@@ -15,7 +15,7 @@ const (
 	MDRequestID      string = "x-request-id"
 )
 
-func RequestIDExtractorUSInterceptor(headers []string) grpc.UnaryServerInterceptor {
+func RequestIDExtractorUSInterceptor(headers ...string) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		var requestID string
 		for _, header := range headers {
@@ -33,7 +33,7 @@ func RequestIDExtractorUSInterceptor(headers []string) grpc.UnaryServerIntercept
 	}
 }
 
-func RequestIDExtractorSSInterceptor(headers []string) grpc.StreamServerInterceptor {
+func RequestIDExtractorSSInterceptor(headers ...string) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		var requestID string
 		for _, header := range headers {

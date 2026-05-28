@@ -3,7 +3,6 @@ package helper
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -107,7 +106,10 @@ func (h *JWTHelper) ExtractClaims(token *jwt.Token) (*AppClaims, error) {
 func (h *JWTHelper) ExtractTokenFromString(tokenString string) (*jwt.Token, error) {
 	claims := NewEmptyAppClaims()
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		if reflect.TypeOf(h.signingMethod) != reflect.TypeOf(token.Method) {
+		//if reflect.TypeOf(h.signingMethod) != reflect.TypeOf(token.Method) {
+		//	return nil, errs.NewUtlJWTError("invalid signing method", nil)
+		//}
+		if h.signingMethod.Alg() != token.Method.Alg() {
 			return nil, errs.NewUtlJWTError("invalid signing method", nil)
 		}
 

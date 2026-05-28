@@ -14,7 +14,7 @@ type DispatcherDataProvider[D comparable] func(ctx context.Context, eventTime ti
 
 type CommonWorker interface {
 	Start(ctx context.Context) error
-	Stop(stopTimeOut time.Duration) error
+	Stop(stopCtx context.Context) error
 
 	GetName() string
 	GetContext() context.Context

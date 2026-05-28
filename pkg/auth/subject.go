@@ -20,6 +20,7 @@ var allowedSubjectTypes = map[SubjectType]struct{}{
 	SubjectGuest:   {},
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (st SubjectType) IsValid() bool {
 	_, ok := allowedSubjectTypes[st]
 	return ok
@@ -34,6 +35,7 @@ func ParseSubjectType(str string) (SubjectType, error) {
 	return res, nil
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (st *SubjectType) UnmarshalText(text []byte) error {
 	val := SubjectType(text)
 	if !val.IsValid() {

@@ -21,5 +21,6 @@ type DB interface {
 	GetDriver() string
 	GetDB() *sql.DB
 	GetDSN() string
+	Ping(ctx context.Context) error
 	Close() error
 }

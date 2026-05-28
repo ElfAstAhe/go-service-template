@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	domerrs "github.com/ElfAstAhe/go-service-template/internal/domain/errs"
 	usecase "github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
@@ -35,10 +34,10 @@ func (td *TestDeleteInteractor) Delete(ctx context.Context, id string) error {
 	})
 	if err != nil {
 		if _, ok := errors.AsType[*errs.DalNotFoundError](err); ok {
-			return domerrs.NewBllNotFoundError("TestDeleteInteractor.Delete", "Test", id, err)
+			return errs.NewBllNotFoundError("TestDeleteInteractor.Delete", "Test", id, err)
 		}
 
-		return domerrs.NewBllError("TestDeleteInteractor.Delete", fmt.Sprintf("delete test model id [%s] failed", id), err)
+		return errs.NewBllError("TestDeleteInteractor.Delete", fmt.Sprintf("delete test model id [%s] failed", id), err)
 	}
 
 	return nil

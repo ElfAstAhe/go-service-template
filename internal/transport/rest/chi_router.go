@@ -28,6 +28,8 @@ type AppChiRouter struct {
 	testFacade      facade.TestFacade
 }
 
+var _ pkghttp.Router = (*AppChiRouter)(nil)
+
 func NewAppChiRouter(
 	config *conf.HTTPConfig,
 	telemetryConfig *conf.TelemetryConfig,
@@ -78,18 +80,9 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// requestID (chi middleware)
 	cr.router.Use(middleware.RequestID)
 	// requestID (own implementation)
-	cr.router.Use(pkgmware.NewRequestIDExtractor([]string{
-		pkgmware.HeaderXRequestID,
-		pkgmware.HeaderXCorrelationID,
-		pkgmware.HeaderRequestID,
-	}).Handler)
+	cr.router.Use(pkgmware.NewDefaultRequestIDExtractor().Handler)
 	// traceID (own implementation)
-	cr.router.Use(pkgmware.NewTraceIDExtractor([]string{
-		pkgmware.HeaderXCloudTraceContext,
-		pkgmware.HeaderTraceParent,
-		pkgmware.HeaderXTraceID,
-		pkgmware.HeaderTraceID,
-	}).Handler)
+	cr.router.Use(pkgmware.NewDefaultTraceIDExtractor().Handler)
 	// realIP
 	cr.router.Use(middleware.RealIP)
 	// recoverer
@@ -98,7 +91,9 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	cr.router.Use(middleware.Timeout(cr.config.ReadTimeout))
 	// compress (add any content-types)
 	cr.router.Use(pkgmware.NewCompress(logger,
-		"application/json", "plain/text",
+		pkghttp.MediaTypeApplicationJSON,
+		pkghttp.MediaTypeTextPlain,
+		"plain/text",
 	).Handle)
 	// decompress
 	cr.router.Use(pkgmware.NewDecompress(int64(cr.config.MaxRequestBodySize), logger).Handle)
