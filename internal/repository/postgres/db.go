@@ -12,13 +12,17 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/xo/dburl"
-	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.41.0"
 )
 
 type PgDB struct {
 	db   *sql.DB
 	conf *config.DBConfig
 }
+
+var _ db.DB = (*PgDB)(nil)
+var _ db.Executor = (*PgDB)(nil)
+var _ db.ErrorDecipher = (*PgDB)(nil)
 
 func NewPgDB(conf *config.DBConfig) (*PgDB, error) {
 	pg, err := sql.Open("pgx", conf.DSN)
@@ -73,31 +77,31 @@ func setupDB(pg *sql.DB, conf *config.DBConfig) (*PgDB, error) {
 	}, nil
 }
 
-func (pgdb *PgDB) GetDriver() string {
-	return pgdb.conf.Driver
+func (pg *PgDB) GetDriver() string {
+	return pg.conf.Driver
 }
 
-func (pgdb *PgDB) GetDB() *sql.DB {
-	return pgdb.db
+func (pg *PgDB) GetDB() *sql.DB {
+	return pg.db
 }
 
-func (pgdb *PgDB) GetDSN() string {
-	return pgdb.conf.DSN
+func (pg *PgDB) GetDSN() string {
+	return pg.conf.DSN
 }
 
-func (pgdb *PgDB) Close() error {
-	return pgdb.db.Close()
+func (pg *PgDB) Close() error {
+	return pg.db.Close()
 }
 
-func (pgdb *PgDB) GetQuerier(ctx context.Context) db.Querier {
+func (pg *PgDB) GetQuerier(ctx context.Context) db.Querier {
 	if tx := db.GetTx(ctx); tx != nil {
 		return tx
 	}
 
-	return pgdb.db
+	return pg.db
 }
 
-func (pgdb *PgDB) IsUniqueViolation(err error) bool {
+func (pg *PgDB) IsUniqueViolation(err error) bool {
 	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
 		return pgErr.Code == "23505" // Код ошибки unique_violation в PostgreSQL
 	}
@@ -105,8 +109,8 @@ func (pgdb *PgDB) IsUniqueViolation(err error) bool {
 	return false
 }
 
-func (pgdb *PgDB) Ping(ctx context.Context) error {
-	err := pgdb.db.PingContext(ctx)
+func (pg *PgDB) Ping(ctx context.Context) error {
+	err := pg.db.PingContext(ctx)
 	if err != nil {
 		return errs.NewDalError("Ping", "ping db connection", err)
 	}
