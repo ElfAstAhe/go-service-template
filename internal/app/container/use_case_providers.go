@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+//goland:noinspection DuplicatedCode
 func (ucc *UseCaseContainer) providerTM(name string) (any, error) {
 	dbCnt, err := ucc.GetOrchestrator().GetContainer(DBContainerName)
 	if err != nil {
@@ -21,6 +22,7 @@ func (ucc *UseCaseContainer) providerTM(name string) (any, error) {
 	return db.NewTxManager(dbInst), nil
 }
 
+//goland:noinspection DuplicatedCode
 func (ucc *UseCaseContainer) providerTestGetUC(name string) (any, error) {
 	repoCnt, err := ucc.GetOrchestrator().GetContainer(RepositoryContainerName)
 	if err != nil {
