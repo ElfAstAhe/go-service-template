@@ -3,7 +3,9 @@
 package test
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new test API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new test API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new test API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -41,43 +45,92 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 }
 
 /*
-Client for test API
+Client for test API.
 */
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteAPITestID удаление тестовых данных.
 	DeleteAPITestID(params *DeleteAPITestIDParams, opts ...ClientOption) (*DeleteAPITestIDNoContent, error)
 
+	// DeleteAPITestIDContext удаление тестовых данных.
+	DeleteAPITestIDContext(ctx context.Context, params *DeleteAPITestIDParams, opts ...ClientOption) (*DeleteAPITestIDNoContent, error)
+
+	// GetAPITest получить.
 	GetAPITest(params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error)
 
+	// GetAPITestContext получить.
+	GetAPITestContext(ctx context.Context, params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error)
+
+	// GetAPITestID получить.
 	GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error)
 
+	// GetAPITestIDContext получить.
+	GetAPITestIDContext(ctx context.Context, params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error)
+
+	// GetAPITestSearch получить.
 	GetAPITestSearch(params *GetAPITestSearchParams, opts ...ClientOption) (*GetAPITestSearchOK, error)
 
+	// GetAPITestSearchContext получить.
+	GetAPITestSearchContext(ctx context.Context, params *GetAPITestSearchParams, opts ...ClientOption) (*GetAPITestSearchOK, error)
+
+	// PostAPITest создание новых тестовых данных.
 	PostAPITest(params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error)
 
+	// PostAPITestContext создание новых тестовых данных.
+	PostAPITestContext(ctx context.Context, params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error)
+
+	// PutAPITestID изменение тестовых данных.
 	PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PutAPITestIDContext изменение тестовых данных.
+	PutAPITestIDContext(ctx context.Context, params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
 /*
-DeleteAPITestID удалениеs тестовых данных
+DeleteAPITestIDудалениеs тестовых данных.
 
-Удаляет запись по её ID
+Удаляет запись по её ID.
+
+This method does not support injected context.
+However, timeout and opentracing contexts are honored whenever enabled.
+
+If you need to pass a specific context, use [Client.DeleteAPITestIDContext] instead.
 */
 func (a *Client) DeleteAPITestID(params *DeleteAPITestIDParams, opts ...ClientOption) (*DeleteAPITestIDNoContent, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAPITestIDContext(ctx, params, opts...)
+}
+
+/*
+DeleteAPITestIDContextудалениеs тестовых данных.
+
+Удаляет запись по её ID.
+
+Do not use the deprecated [DeleteAPITestIDParams.Context] with this method: it would be ignored.
+*/
+func (a *Client) DeleteAPITestIDContext(ctx context.Context, params *DeleteAPITestIDParams, opts ...ClientOption) (*DeleteAPITestIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAPITestIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteAPITestID",
 		Method:             "DELETE",
@@ -87,13 +140,14 @@ func (a *Client) DeleteAPITestID(params *DeleteAPITestIDParams, opts ...ClientOp
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAPITestIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -114,15 +168,39 @@ func (a *Client) DeleteAPITestID(params *DeleteAPITestIDParams, opts ...ClientOp
 }
 
 /*
-GetAPITest получитьs
+GetAPITestполучитьs.
 
-Удаляет запись по её ID (Soft Delete)
+Удаляет запись по её ID (Soft Delete).
+
+This method does not support injected context.
+However, timeout and opentracing contexts are honored whenever enabled.
+
+If you need to pass a specific context, use [Client.GetAPITestContext] instead.
 */
 func (a *Client) GetAPITest(params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPITestContext(ctx, params, opts...)
+}
+
+/*
+GetAPITestContextполучитьs.
+
+Удаляет запись по её ID (Soft Delete).
+
+Do not use the deprecated [GetAPITestParams.Context] with this method: it would be ignored.
+*/
+func (a *Client) GetAPITestContext(ctx context.Context, params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPITestParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPITest",
 		Method:             "GET",
@@ -132,13 +210,14 @@ func (a *Client) GetAPITest(params *GetAPITestParams, opts ...ClientOption) (*Ge
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPITestReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -159,15 +238,39 @@ func (a *Client) GetAPITest(params *GetAPITestParams, opts ...ClientOption) (*Ge
 }
 
 /*
-GetAPITestID получитьs
+GetAPITestIDполучитьs.
 
-Удаляет запись по её ID (Soft Delete)
+Удаляет запись по её ID (Soft Delete).
+
+This method does not support injected context.
+However, timeout and opentracing contexts are honored whenever enabled.
+
+If you need to pass a specific context, use [Client.GetAPITestIDContext] instead.
 */
 func (a *Client) GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPITestIDContext(ctx, params, opts...)
+}
+
+/*
+GetAPITestIDContextполучитьs.
+
+Удаляет запись по её ID (Soft Delete).
+
+Do not use the deprecated [GetAPITestIDParams.Context] with this method: it would be ignored.
+*/
+func (a *Client) GetAPITestIDContext(ctx context.Context, params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPITestIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPITestID",
 		Method:             "GET",
@@ -177,13 +280,14 @@ func (a *Client) GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPITestIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -204,15 +308,39 @@ func (a *Client) GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) 
 }
 
 /*
-GetAPITestSearch получитьs
+GetAPITestSearchполучитьs.
 
-Удаляет запись по её ID (Soft Delete)
+Удаляет запись по её ID (Soft Delete).
+
+This method does not support injected context.
+However, timeout and opentracing contexts are honored whenever enabled.
+
+If you need to pass a specific context, use [Client.GetAPITestSearchContext] instead.
 */
 func (a *Client) GetAPITestSearch(params *GetAPITestSearchParams, opts ...ClientOption) (*GetAPITestSearchOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPITestSearchContext(ctx, params, opts...)
+}
+
+/*
+GetAPITestSearchContextполучитьs.
+
+Удаляет запись по её ID (Soft Delete).
+
+Do not use the deprecated [GetAPITestSearchParams.Context] with this method: it would be ignored.
+*/
+func (a *Client) GetAPITestSearchContext(ctx context.Context, params *GetAPITestSearchParams, opts ...ClientOption) (*GetAPITestSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPITestSearchParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPITestSearch",
 		Method:             "GET",
@@ -222,13 +350,14 @@ func (a *Client) GetAPITestSearch(params *GetAPITestSearchParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPITestSearchReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -249,15 +378,39 @@ func (a *Client) GetAPITestSearch(params *GetAPITestSearchParams, opts ...Client
 }
 
 /*
-PostAPITest созданиеs новых тестовых данных
+PostAPITestсозданиеs новых тестовых данных.
 
-Сохраняет новые тестовые данные
+Сохраняет новые тестовые данные.
+
+This method does not support injected context.
+However, timeout and opentracing contexts are honored whenever enabled.
+
+If you need to pass a specific context, use [Client.PostAPITestContext] instead.
 */
 func (a *Client) PostAPITest(params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPITestContext(ctx, params, opts...)
+}
+
+/*
+PostAPITestContextсозданиеs новых тестовых данных.
+
+Сохраняет новые тестовые данные.
+
+Do not use the deprecated [PostAPITestParams.Context] with this method: it would be ignored.
+*/
+func (a *Client) PostAPITestContext(ctx context.Context, params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAPITestParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAPITest",
 		Method:             "POST",
@@ -267,13 +420,14 @@ func (a *Client) PostAPITest(params *PostAPITestParams, opts ...ClientOption) (*
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAPITestReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -294,15 +448,39 @@ func (a *Client) PostAPITest(params *PostAPITestParams, opts ...ClientOption) (*
 }
 
 /*
-PutAPITestID изменениеs тестовых данных
+PutAPITestIDизменениеs тестовых данных.
 
-Изменяет тестовые данные
+Изменяет тестовые данные.
+
+This method does not support injected context.
+However, timeout and opentracing contexts are honored whenever enabled.
+
+If you need to pass a specific context, use [Client.PutAPITestIDContext] instead.
 */
 func (a *Client) PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAPITestIDContext(ctx, params, opts...)
+}
+
+/*
+PutAPITestIDContextизменениеs тестовых данных.
+
+Изменяет тестовые данные.
+
+Do not use the deprecated [PutAPITestIDParams.Context] with this method: it would be ignored.
+*/
+func (a *Client) PutAPITestIDContext(ctx context.Context, params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutAPITestIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PutAPITestID",
 		Method:             "PUT",
@@ -312,13 +490,14 @@ func (a *Client) PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutAPITestIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -339,6 +518,14 @@ func (a *Client) PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) 
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [TestParams].
+	ctx context.Context
 }

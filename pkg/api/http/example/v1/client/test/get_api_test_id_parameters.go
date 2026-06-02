@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAPITestIDParams() *GetAPITestIDParams {
-	return &GetAPITestIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAPITestIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAPITestIDParamsWithTimeout creates a new GetAPITestIDParams object
 // with the ability to set a timeout on a request.
 func NewGetAPITestIDParamsWithTimeout(timeout time.Duration) *GetAPITestIDParams {
 	return &GetAPITestIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAPITestIDParamsWithContext creates a new GetAPITestIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestIDParams].
 func NewGetAPITestIDParamsWithContext(ctx context.Context) *GetAPITestIDParams {
 	return &GetAPITestIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -66,9 +70,9 @@ type GetAPITestIDParams struct {
 	*/
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get API test ID params (not the query body).
@@ -86,54 +90,57 @@ func (o *GetAPITestIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get API test ID params
+// WithTimeout adds the timeout to the get API test ID params.
 func (o *GetAPITestIDParams) WithTimeout(timeout time.Duration) *GetAPITestIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get API test ID params
+// SetTimeout adds the timeout to the get API test ID params.
 func (o *GetAPITestIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get API test ID params
+// WithContext adds the context to the get API test ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestIDParams].
 func (o *GetAPITestIDParams) WithContext(ctx context.Context) *GetAPITestIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get API test ID params
+// SetContext adds the context to the get API test ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestIDParams].
 func (o *GetAPITestIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get API test ID params
+// WithHTTPClient adds the HTTPClient to the get API test ID params.
 func (o *GetAPITestIDParams) WithHTTPClient(client *http.Client) *GetAPITestIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get API test ID params
+// SetHTTPClient adds the HTTPClient to the get API test ID params.
 func (o *GetAPITestIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get API test ID params
+// WithID adds the id to the get API test ID params.
 func (o *GetAPITestIDParams) WithID(id string) *GetAPITestIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get API test ID params
+// SetID adds the id to the get API test ID params.
 func (o *GetAPITestIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAPITestIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
