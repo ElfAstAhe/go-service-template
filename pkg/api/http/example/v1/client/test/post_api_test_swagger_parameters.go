@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/api/http/example/v1/models"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/ElfAstAhe/go-service-template/pkg/api/http/example/v1/models"
 )
 
 // NewPostAPITestParams creates a new PostAPITestParams object,
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAPITestParams() *PostAPITestParams {
-	return &PostAPITestParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAPITestParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAPITestParamsWithTimeout creates a new PostAPITestParams object
 // with the ability to set a timeout on a request.
 func NewPostAPITestParamsWithTimeout(timeout time.Duration) *PostAPITestParams {
 	return &PostAPITestParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAPITestParamsWithContext creates a new PostAPITestParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPITestParams].
 func NewPostAPITestParamsWithContext(ctx context.Context) *PostAPITestParams {
 	return &PostAPITestParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -66,9 +69,9 @@ type PostAPITestParams struct {
 	*/
 	Input *models.TestDTO
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post API test params (not the query body).
@@ -86,54 +89,57 @@ func (o *PostAPITestParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post API test params
+// WithTimeout adds the timeout to the post API test params.
 func (o *PostAPITestParams) WithTimeout(timeout time.Duration) *PostAPITestParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post API test params
+// SetTimeout adds the timeout to the post API test params.
 func (o *PostAPITestParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post API test params
+// WithContext adds the context to the post API test params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPITestParams].
 func (o *PostAPITestParams) WithContext(ctx context.Context) *PostAPITestParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post API test params
+// SetContext adds the context to the post API test params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPITestParams].
 func (o *PostAPITestParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post API test params
+// WithHTTPClient adds the HTTPClient to the post API test params.
 func (o *PostAPITestParams) WithHTTPClient(client *http.Client) *PostAPITestParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post API test params
+// SetHTTPClient adds the HTTPClient to the post API test params.
 func (o *PostAPITestParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithInput adds the input to the post API test params
+// WithInput adds the input to the post API test params.
 func (o *PostAPITestParams) WithInput(input *models.TestDTO) *PostAPITestParams {
 	o.SetInput(input)
 	return o
 }
 
-// SetInput adds the input to the post API test params
+// SetInput adds the input to the post API test params.
 func (o *PostAPITestParams) SetInput(input *models.TestDTO) {
 	o.Input = input
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAPITestParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

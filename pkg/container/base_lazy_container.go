@@ -69,7 +69,7 @@ func (blc *BaseLazyContainer) GetInstance(name string) (any, error) {
 	}
 
 	// 5. Спокойно создаем объект ВНЕ лока.
-	res, err := provider(name)
+	res, err := provider()
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +113,17 @@ func (blc *BaseLazyContainer) RegisterProvider(name string, provider Provider) e
 	return nil
 }
 
+func (blc *BaseLazyContainer) RegisterRunnableProvider(name string, provider Provider) error {
+	if err := blc.Validate("BaseLazyContainer.RegisterRunnableProvider", name); err != nil {
+		return err
+	}
+
+	// ToDo: implement
+
+	return nil
+}
+
+// UnregisterProvider unregister any registered provider
 func (blc *BaseLazyContainer) UnregisterProvider(name string) error {
 	if err := blc.Validate("BaseLazyContainer.UnregisterProvider", name); err != nil {
 		return err
@@ -132,6 +143,7 @@ func (blc *BaseLazyContainer) UnregisterProvider(name string) error {
 	return nil
 }
 
+// AllProviders return all registered providers
 func (blc *BaseLazyContainer) AllProviders() map[string]Provider {
 	blc.mu.RLock()
 	defer blc.mu.RUnlock()

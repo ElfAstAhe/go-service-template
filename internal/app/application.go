@@ -6,6 +6,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/app/container"
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/app"
+	pkcontainer "github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
@@ -25,9 +26,12 @@ func NewApplication(opts ...Option) (*Application, error) {
 	for _, opt := range opts {
 		opt(res)
 	}
+	orch := container.NewOrchestrator(res.conf, res.log)
+	pkcontainer.SetDefaultOrchestrator(orch)
+
 	// embed
 	res.BaseApplication = app.NewBaseApplication(
-		app.WithOrchestrator(container.NewOrchestrator(res.conf, res.log)),
+		app.WithOrchestrator(orch),
 		app.WithLogger(res.log),
 		app.WithCloseTimeout(res.conf.App.CloseTimeout),
 		app.WithStopTimeout(res.conf.App.StopTimeout),

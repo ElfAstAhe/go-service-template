@@ -8,13 +8,13 @@ import (
 	"github.com/hellofresh/health-go/v5"
 )
 
-func (sc *ServiceContainer) providerHealthStatus(name string) (any, error) {
+func (sc *ServiceContainer) providerHealthStatus() (any, error) {
 	res, err := health.New(health.WithComponent(health.Component{
 		Name:    config.AppName,
 		Version: config.AppVersion,
 	}))
 	if err != nil {
-		return nil, errs.NewContainerError(sc.GetName(), fmt.Sprintf("provider: create %s instance failed", name), err)
+		return nil, errs.NewContainerError(sc.GetName(), fmt.Sprintf("provider: create %s instance failed", InstanceHealthStatus), err)
 	}
 
 	return res, nil

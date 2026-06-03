@@ -7,28 +7,24 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
-func (fc *FacadeContainer) providerTestFacade(name string) (any, error) {
-	ucCnt, err := fc.GetOrchestrator().GetContainer(UseCaseContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve container failed", err)
-	}
-	getUC, err := container.GetInstance[usecase.TestGetUseCase](ucCnt, InstanceTestGetUC)
+func (fc *FacadeContainer) providerTestFacade() (any, error) {
+	getUC, err := container.GetInstance[usecase.TestGetUseCase](InstanceTestGetUC)
 	if err != nil {
 		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
 	}
-	getByCodeUC, err := container.GetInstance[usecase.TestGetByCodeUseCase](ucCnt, InstanceTestGetByCodeUC)
+	getByCodeUC, err := container.GetInstance[usecase.TestGetByCodeUseCase](InstanceTestGetByCodeUC)
 	if err != nil {
 		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
 	}
-	listUC, err := container.GetInstance[usecase.TestListUseCase](ucCnt, InstanceTestListUC)
+	listUC, err := container.GetInstance[usecase.TestListUseCase](InstanceTestListUC)
 	if err != nil {
 		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
 	}
-	saveUC, err := container.GetInstance[usecase.TestSaveUseCase](ucCnt, InstanceTestSaveUC)
+	saveUC, err := container.GetInstance[usecase.TestSaveUseCase](InstanceTestSaveUC)
 	if err != nil {
 		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
 	}
-	deleteUC, err := container.GetInstance[usecase.TestDeleteUseCase](ucCnt, InstanceTestDeleteUC)
+	deleteUC, err := container.GetInstance[usecase.TestDeleteUseCase](InstanceTestDeleteUC)
 	if err != nil {
 		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
 	}

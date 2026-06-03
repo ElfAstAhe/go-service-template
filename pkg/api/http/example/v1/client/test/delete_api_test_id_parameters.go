@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteAPITestIDParams() *DeleteAPITestIDParams {
-	return &DeleteAPITestIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteAPITestIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteAPITestIDParamsWithTimeout creates a new DeleteAPITestIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteAPITestIDParamsWithTimeout(timeout time.Duration) *DeleteAPITestIDParams {
 	return &DeleteAPITestIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteAPITestIDParamsWithContext creates a new DeleteAPITestIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAPITestIDParams].
 func NewDeleteAPITestIDParamsWithContext(ctx context.Context) *DeleteAPITestIDParams {
 	return &DeleteAPITestIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -66,9 +70,9 @@ type DeleteAPITestIDParams struct {
 	*/
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete API test ID params (not the query body).
@@ -86,54 +90,57 @@ func (o *DeleteAPITestIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete API test ID params
+// WithTimeout adds the timeout to the delete API test ID params.
 func (o *DeleteAPITestIDParams) WithTimeout(timeout time.Duration) *DeleteAPITestIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete API test ID params
+// SetTimeout adds the timeout to the delete API test ID params.
 func (o *DeleteAPITestIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete API test ID params
+// WithContext adds the context to the delete API test ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAPITestIDParams].
 func (o *DeleteAPITestIDParams) WithContext(ctx context.Context) *DeleteAPITestIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete API test ID params
+// SetContext adds the context to the delete API test ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAPITestIDParams].
 func (o *DeleteAPITestIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete API test ID params
+// WithHTTPClient adds the HTTPClient to the delete API test ID params.
 func (o *DeleteAPITestIDParams) WithHTTPClient(client *http.Client) *DeleteAPITestIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete API test ID params
+// SetHTTPClient adds the HTTPClient to the delete API test ID params.
 func (o *DeleteAPITestIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete API test ID params
+// WithID adds the id to the delete API test ID params.
 func (o *DeleteAPITestIDParams) WithID(id string) *DeleteAPITestIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete API test ID params
+// SetID adds the id to the delete API test ID params.
 func (o *DeleteAPITestIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteAPITestIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

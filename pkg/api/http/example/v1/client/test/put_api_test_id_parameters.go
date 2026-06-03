@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/api/http/example/v1/models"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/ElfAstAhe/go-service-template/pkg/api/http/example/v1/models"
 )
 
 // NewPutAPITestIDParams creates a new PutAPITestIDParams object,
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPutAPITestIDParams() *PutAPITestIDParams {
-	return &PutAPITestIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPutAPITestIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPutAPITestIDParamsWithTimeout creates a new PutAPITestIDParams object
 // with the ability to set a timeout on a request.
 func NewPutAPITestIDParamsWithTimeout(timeout time.Duration) *PutAPITestIDParams {
 	return &PutAPITestIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPutAPITestIDParamsWithContext creates a new PutAPITestIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAPITestIDParams].
 func NewPutAPITestIDParamsWithContext(ctx context.Context) *PutAPITestIDParams {
 	return &PutAPITestIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -74,9 +77,9 @@ type PutAPITestIDParams struct {
 	*/
 	Input *models.TestDTO
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the put API test ID params (not the query body).
@@ -94,65 +97,68 @@ func (o *PutAPITestIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the put API test ID params
+// WithTimeout adds the timeout to the put API test ID params.
 func (o *PutAPITestIDParams) WithTimeout(timeout time.Duration) *PutAPITestIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the put API test ID params
+// SetTimeout adds the timeout to the put API test ID params.
 func (o *PutAPITestIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the put API test ID params
+// WithContext adds the context to the put API test ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAPITestIDParams].
 func (o *PutAPITestIDParams) WithContext(ctx context.Context) *PutAPITestIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the put API test ID params
+// SetContext adds the context to the put API test ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAPITestIDParams].
 func (o *PutAPITestIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the put API test ID params
+// WithHTTPClient adds the HTTPClient to the put API test ID params.
 func (o *PutAPITestIDParams) WithHTTPClient(client *http.Client) *PutAPITestIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the put API test ID params
+// SetHTTPClient adds the HTTPClient to the put API test ID params.
 func (o *PutAPITestIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the put API test ID params
+// WithID adds the id to the put API test ID params.
 func (o *PutAPITestIDParams) WithID(id string) *PutAPITestIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the put API test ID params
+// SetID adds the id to the put API test ID params.
 func (o *PutAPITestIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithInput adds the input to the put API test ID params
+// WithInput adds the input to the put API test ID params.
 func (o *PutAPITestIDParams) WithInput(input *models.TestDTO) *PutAPITestIDParams {
 	o.SetInput(input)
 	return o
 }
 
-// SetInput adds the input to the put API test ID params
+// SetInput adds the input to the put API test ID params.
 func (o *PutAPITestIDParams) SetInput(input *models.TestDTO) {
 	o.Input = input
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PutAPITestIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
