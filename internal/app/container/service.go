@@ -37,24 +37,16 @@ func (sc *ServiceContainer) Init(initCtx context.Context) error {
 	if err != nil {
 		return errs.NewContainerError(sc.GetName(), "container init: register providers failed", err)
 	}
-	appCnt, err := sc.GetOrchestrator().GetContainer(AppContainerName)
-	if err != nil {
-		return errs.NewContainerError(sc.GetName(), "container init: retrieve container failed", err)
-	}
-	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
+	confInst, err := container.GetInstance[*config.Config](InstanceConfig)
 	if err != nil {
 		return errs.NewContainerError(sc.GetName(), "container init: retrieve instance failed", err)
 	}
 	// init health checks
-	dbCnt, err := sc.GetOrchestrator().GetContainer(DBContainerName)
-	if err != nil {
-		return errs.NewContainerError(sc.GetName(), "container init: retrieve container failed", err)
-	}
-	dbInst, err := container.GetInstance[db.DB](dbCnt, InstanceDB)
+	dbInst, err := container.GetInstance[db.DB](InstanceDB)
 	if err != nil {
 		return errs.NewContainerError(sc.GetName(), "container init: retrieve instance failed", err)
 	}
-	healthStatus, err := container.GetInstance[*health.Health](sc, InstanceHealthStatus)
+	healthStatus, err := container.GetInstance[*health.Health](InstanceHealthStatus)
 	if err != nil {
 		return errs.NewContainerError(sc.GetName(), "container init: retrieve instance failed", err)
 	}

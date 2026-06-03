@@ -83,7 +83,7 @@ func (bc *BaseContainer) GetInstance(name string) (any, error) {
 	// retrieve instance
 	res, ok := bc.instances[name]
 	if !ok {
-		return nil, errs.NewContainerError(bc.GetName(), fmt.Sprintf("instance %s is not registered", name), nil)
+		return nil, errs.NewContainerNotFoundError(fmt.Sprintf("container [%s] instance [%s] is not registered ", bc.GetName(), name), nil)
 	}
 
 	return res, nil

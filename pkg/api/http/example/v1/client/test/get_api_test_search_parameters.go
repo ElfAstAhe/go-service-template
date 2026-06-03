@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAPITestSearchParams() *GetAPITestSearchParams {
-	return &GetAPITestSearchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAPITestSearchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAPITestSearchParamsWithTimeout creates a new GetAPITestSearchParams object
 // with the ability to set a timeout on a request.
 func NewGetAPITestSearchParamsWithTimeout(timeout time.Duration) *GetAPITestSearchParams {
 	return &GetAPITestSearchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAPITestSearchParamsWithContext creates a new GetAPITestSearchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestSearchParams].
 func NewGetAPITestSearchParamsWithContext(ctx context.Context) *GetAPITestSearchParams {
 	return &GetAPITestSearchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -66,9 +70,9 @@ type GetAPITestSearchParams struct {
 	*/
 	Code string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get API test search params (not the query body).
@@ -86,54 +90,57 @@ func (o *GetAPITestSearchParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get API test search params
+// WithTimeout adds the timeout to the get API test search params.
 func (o *GetAPITestSearchParams) WithTimeout(timeout time.Duration) *GetAPITestSearchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get API test search params
+// SetTimeout adds the timeout to the get API test search params.
 func (o *GetAPITestSearchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get API test search params
+// WithContext adds the context to the get API test search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestSearchParams].
 func (o *GetAPITestSearchParams) WithContext(ctx context.Context) *GetAPITestSearchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get API test search params
+// SetContext adds the context to the get API test search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestSearchParams].
 func (o *GetAPITestSearchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get API test search params
+// WithHTTPClient adds the HTTPClient to the get API test search params.
 func (o *GetAPITestSearchParams) WithHTTPClient(client *http.Client) *GetAPITestSearchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get API test search params
+// SetHTTPClient adds the HTTPClient to the get API test search params.
 func (o *GetAPITestSearchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithCode adds the code to the get API test search params
+// WithCode adds the code to the get API test search params.
 func (o *GetAPITestSearchParams) WithCode(code string) *GetAPITestSearchParams {
 	o.SetCode(code)
 	return o
 }
 
-// SetCode adds the code to the get API test search params
+// SetCode adds the code to the get API test search params.
 func (o *GetAPITestSearchParams) SetCode(code string) {
 	o.Code = code
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAPITestSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

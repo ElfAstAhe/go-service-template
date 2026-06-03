@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAPITestParams creates a new GetAPITestParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAPITestParams() *GetAPITestParams {
-	return &GetAPITestParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAPITestParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAPITestParamsWithTimeout creates a new GetAPITestParams object
 // with the ability to set a timeout on a request.
 func NewGetAPITestParamsWithTimeout(timeout time.Duration) *GetAPITestParams {
 	return &GetAPITestParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAPITestParamsWithContext creates a new GetAPITestParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestParams].
 func NewGetAPITestParamsWithContext(ctx context.Context) *GetAPITestParams {
 	return &GetAPITestParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -75,9 +79,9 @@ type GetAPITestParams struct {
 	*/
 	Offset *int64
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get API test params (not the query body).
@@ -95,65 +99,68 @@ func (o *GetAPITestParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get API test params
+// WithTimeout adds the timeout to the get API test params.
 func (o *GetAPITestParams) WithTimeout(timeout time.Duration) *GetAPITestParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get API test params
+// SetTimeout adds the timeout to the get API test params.
 func (o *GetAPITestParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get API test params
+// WithContext adds the context to the get API test params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestParams].
 func (o *GetAPITestParams) WithContext(ctx context.Context) *GetAPITestParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get API test params
+// SetContext adds the context to the get API test params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPITestParams].
 func (o *GetAPITestParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get API test params
+// WithHTTPClient adds the HTTPClient to the get API test params.
 func (o *GetAPITestParams) WithHTTPClient(client *http.Client) *GetAPITestParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get API test params
+// SetHTTPClient adds the HTTPClient to the get API test params.
 func (o *GetAPITestParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get API test params
+// WithLimit adds the limit to the get API test params.
 func (o *GetAPITestParams) WithLimit(limit *int64) *GetAPITestParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get API test params
+// SetLimit adds the limit to the get API test params.
 func (o *GetAPITestParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get API test params
+// WithOffset adds the offset to the get API test params.
 func (o *GetAPITestParams) WithOffset(offset *int64) *GetAPITestParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get API test params
+// SetOffset adds the offset to the get API test params.
 func (o *GetAPITestParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAPITestParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -166,7 +173,7 @@ func (o *GetAPITestParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Re
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -183,7 +190,7 @@ func (o *GetAPITestParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Re
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

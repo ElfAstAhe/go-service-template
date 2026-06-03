@@ -9,12 +9,8 @@ import (
 )
 
 //goland:noinspection DuplicatedCode
-func (ucc *UseCaseContainer) providerTM(name string) (any, error) {
-	dbCnt, err := ucc.GetOrchestrator().GetContainer(DBContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve container failed", err)
-	}
-	dbInst, err := container.GetInstance[db.DB](dbCnt, InstanceDB)
+func (ucc *UseCaseContainer) providerTM() (any, error) {
+	dbInst, err := container.GetInstance[db.DB](InstanceDB)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -23,12 +19,8 @@ func (ucc *UseCaseContainer) providerTM(name string) (any, error) {
 }
 
 //goland:noinspection DuplicatedCode
-func (ucc *UseCaseContainer) providerTestGetUC(name string) (any, error) {
-	repoCnt, err := ucc.GetOrchestrator().GetContainer(RepositoryContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve container failed", err)
-	}
-	repoTest, err := container.GetInstance[domain.TestRepository](repoCnt, InstanceTestRepo)
+func (ucc *UseCaseContainer) providerTestGetUC() (any, error) {
+	repoTest, err := container.GetInstance[domain.TestRepository](InstanceTestRepo)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -36,12 +28,8 @@ func (ucc *UseCaseContainer) providerTestGetUC(name string) (any, error) {
 	return usecase.NewTestGetUseCase(repoTest), nil
 }
 
-func (ucc *UseCaseContainer) providerTestGetByCodeUC(name string) (any, error) {
-	repoCnt, err := ucc.GetOrchestrator().GetContainer(RepositoryContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve container failed", err)
-	}
-	repoTest, err := container.GetInstance[domain.TestRepository](repoCnt, InstanceTestRepo)
+func (ucc *UseCaseContainer) providerTestGetByCodeUC() (any, error) {
+	repoTest, err := container.GetInstance[domain.TestRepository](InstanceTestRepo)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -49,12 +37,8 @@ func (ucc *UseCaseContainer) providerTestGetByCodeUC(name string) (any, error) {
 	return usecase.NewTestGetByCodeUseCase(repoTest), nil
 }
 
-func (ucc *UseCaseContainer) providerTestListUC(name string) (any, error) {
-	repoCnt, err := ucc.GetOrchestrator().GetContainer(RepositoryContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve container failed", err)
-	}
-	repoTest, err := container.GetInstance[domain.TestRepository](repoCnt, InstanceTestRepo)
+func (ucc *UseCaseContainer) providerTestListUC() (any, error) {
+	repoTest, err := container.GetInstance[domain.TestRepository](InstanceTestRepo)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -63,16 +47,12 @@ func (ucc *UseCaseContainer) providerTestListUC(name string) (any, error) {
 }
 
 //goland:noinspection DuplicatedCode
-func (ucc *UseCaseContainer) providerTestSaveUC(name string) (any, error) {
-	trMan, err := container.GetInstance[db.TransactionManager](ucc, InstanceTM)
+func (ucc *UseCaseContainer) providerTestSaveUC() (any, error) {
+	trMan, err := container.GetInstance[db.TransactionManager](InstanceTM)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
-	repoCnt, err := ucc.GetOrchestrator().GetContainer(RepositoryContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve container failed", err)
-	}
-	repoTest, err := container.GetInstance[domain.TestRepository](repoCnt, InstanceTestRepo)
+	repoTest, err := container.GetInstance[domain.TestRepository](InstanceTestRepo)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -81,16 +61,12 @@ func (ucc *UseCaseContainer) providerTestSaveUC(name string) (any, error) {
 }
 
 //goland:noinspection DuplicatedCode
-func (ucc *UseCaseContainer) providerTestDeleteUC(name string) (any, error) {
-	trMan, err := container.GetInstance[db.TransactionManager](ucc, InstanceTM)
+func (ucc *UseCaseContainer) providerTestDeleteUC() (any, error) {
+	trMan, err := container.GetInstance[db.TransactionManager](InstanceTM)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
-	repoCnt, err := ucc.GetOrchestrator().GetContainer(RepositoryContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve container failed", err)
-	}
-	repoTest, err := container.GetInstance[domain.TestRepository](repoCnt, InstanceTestRepo)
+	repoTest, err := container.GetInstance[domain.TestRepository](InstanceTestRepo)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
