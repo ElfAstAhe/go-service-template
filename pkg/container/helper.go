@@ -7,7 +7,37 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-func GetInstance[T any](container Container, name string) (T, error) {
+var defaultOrchestrator Orchestrator
+
+func SetDefaultOrchestrator(orc Orchestrator) {
+	defaultOrchestrator = orc
+}
+
+func GetInstance[T any](name string) (T, error) {
+	var nilRes T
+	if utils.IsNil(defaultOrchestrator) {
+		return nilRes, errs.NewContainerValidateError("default orchestrator", "GetInstance", "default orchestrator not set up", nil)
+	}
+
+	var err error
+	var res T
+	for _, cnt := range defaultOrchestrator.AllContainers() {
+		if cnt.IsRegistered(name) {
+			// look for first equal name and non nil, so use unique naming for instances
+			res, err = GetContainerInstance[T](cnt, name)
+			if err != nil {
+				return nilRes, err
+			}
+			if !utils.IsNil(res) {
+				return res, nil
+			}
+		}
+	}
+
+	return nilRes, errs.NewContainerNotFoundError(fmt.Sprintf("instance %s not found in all registered containers", name), nil)
+}
+
+func GetContainerInstance[T any](container Container, name string) (T, error) {
 	var nilRes T
 	// validate
 	if err := getInstanceValidate(container, name); err != nil {
@@ -33,10 +63,10 @@ func GetInstance[T any](container Container, name string) (T, error) {
 
 func getInstanceValidate(container Container, name string) error {
 	if container == nil {
-		return errs.NewContainerValidateError("", "GetInstance", "container nil", nil)
+		return errs.NewContainerValidateError("container", "GetContainerInstance", "container nil", nil)
 	}
 	if name == "" {
-		return errs.NewContainerValidateError(container.GetName(), "GetInstance", "instance name is empty", nil)
+		return errs.NewContainerValidateError(container.GetName(), "GetContainerInstance", "instance name is empty", nil)
 	}
 
 	return nil

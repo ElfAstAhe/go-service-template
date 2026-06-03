@@ -14,36 +14,24 @@ import (
 )
 
 //goland:noinspection DuplicatedCode
-func (hc *HTTPContainer) providerChiRouter(name string) (any, error) {
-	appCnt, err := hc.GetOrchestrator().GetContainer(AppContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve container failed", err)
-	}
-	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
+func (hc *HTTPContainer) providerChiRouter() (any, error) {
+	confInst, err := container.GetInstance[*config.Config](InstanceConfig)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	logInst, err := container.GetInstance[logger.Logger](appCnt, InstanceLogger)
+	logInst, err := container.GetInstance[logger.Logger](InstanceLogger)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	readyz, err := container.GetInstance[func() bool](appCnt, InstanceApplicationReady)
+	readyz, err := container.GetInstance[func() bool](InstanceApplicationReady)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	facadeCnt, err := hc.GetOrchestrator().GetContainer(FacadeContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve container failed", err)
-	}
-	testFacadeInst, err := container.GetInstance[facade.TestFacade](facadeCnt, InstanceTestFacade)
+	testFacadeInst, err := container.GetInstance[facade.TestFacade](InstanceTestFacade)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	srvCnt, err := hc.GetOrchestrator().GetContainer(ServiceContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve container failed", err)
-	}
-	healthInst, err := container.GetInstance[*health.Health](srvCnt, InstanceHealthStatus)
+	healthInst, err := container.GetInstance[*health.Health](InstanceHealthStatus)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -60,20 +48,16 @@ func (hc *HTTPContainer) providerChiRouter(name string) (any, error) {
 }
 
 //goland:noinspection DuplicatedCode
-func (hc *HTTPContainer) providerHTTPRunner(name string) (any, error) {
-	appCnt, err := hc.GetOrchestrator().GetContainer(AppContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve container failed", err)
-	}
-	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
+func (hc *HTTPContainer) providerHTTPRunner() (any, error) {
+	confInst, err := container.GetInstance[*config.Config](InstanceConfig)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	logInst, err := container.GetInstance[logger.Logger](appCnt, InstanceLogger)
+	logInst, err := container.GetInstance[logger.Logger](InstanceLogger)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	routerInst, err := container.GetInstance[http.Router](hc, InstanceHTTPRouter)
+	routerInst, err := container.GetInstance[http.Router](InstanceHTTPRouter)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -85,7 +69,7 @@ func (hc *HTTPContainer) providerHTTPRunner(name string) (any, error) {
 		http.WithRouter(routerInst),
 	)
 	if err != nil {
-		return nil, errs.NewContainerError(hc.GetName(), fmt.Sprintf("provider: create %s failed", name), err)
+		return nil, errs.NewContainerError(hc.GetName(), fmt.Sprintf("provider: create %s failed", InstanceHTTPRunner), err)
 	}
 
 	return runner, nil

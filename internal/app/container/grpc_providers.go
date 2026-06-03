@@ -16,7 +16,7 @@ import (
 )
 
 func (gc *GRPCContainer) serviceRegister(server *libgrpc.Server) error {
-	serviceInst, err := container.GetInstance[*grpcsvc.ExampleGRPCService](gc, InstanceGRPCService)
+	serviceInst, err := container.GetInstance[*grpcsvc.ExampleGRPCService](InstanceGRPCService)
 	if err != nil {
 		return errs.NewContainerError(gc.GetName(), "service register: retrieve instance failed", err)
 	}
@@ -27,24 +27,16 @@ func (gc *GRPCContainer) serviceRegister(server *libgrpc.Server) error {
 }
 
 //goland:noinspection DuplicatedCode
-func (gc *GRPCContainer) providerGRPCService(name string) (any, error) {
-	appCnt, err := gc.GetOrchestrator().GetContainer(AppContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve container failed", err)
-	}
-	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
+func (gc *GRPCContainer) providerGRPCService() (any, error) {
+	confInst, err := container.GetInstance[*config.Config](InstanceConfig)
 	if err != nil {
 		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve instance failed", err)
 	}
-	logInst, err := container.GetInstance[logger.Logger](appCnt, InstanceLogger)
+	logInst, err := container.GetInstance[logger.Logger](InstanceLogger)
 	if err != nil {
 		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve instance failed", err)
 	}
-	facadeCnt, err := gc.GetOrchestrator().GetContainer(FacadeContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve container failed", err)
-	}
-	testFacadeInst, err := container.GetInstance[facade.TestFacade](facadeCnt, InstanceTestFacade)
+	testFacadeInst, err := container.GetInstance[facade.TestFacade](InstanceTestFacade)
 	if err != nil {
 		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -53,16 +45,12 @@ func (gc *GRPCContainer) providerGRPCService(name string) (any, error) {
 }
 
 //goland:noinspection DuplicatedCode
-func (gc *GRPCContainer) providerGRPCRunner(name string) (any, error) {
-	appCnt, err := gc.GetOrchestrator().GetContainer(AppContainerName)
-	if err != nil {
-		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve container failed", err)
-	}
-	confInst, err := container.GetInstance[*config.Config](appCnt, InstanceConfig)
+func (gc *GRPCContainer) providerGRPCRunner() (any, error) {
+	confInst, err := container.GetInstance[*config.Config](InstanceConfig)
 	if err != nil {
 		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve instance failed", err)
 	}
-	logInst, err := container.GetInstance[logger.Logger](appCnt, InstanceLogger)
+	logInst, err := container.GetInstance[logger.Logger](InstanceLogger)
 	if err != nil {
 		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -74,7 +62,7 @@ func (gc *GRPCContainer) providerGRPCRunner(name string) (any, error) {
 		grpc.WithServiceRegister(gc.serviceRegister),
 	)
 	if err != nil {
-		return nil, errs.NewContainerError(gc.GetName(), fmt.Sprintf("provider: create %s failed", name), err)
+		return nil, errs.NewContainerError(gc.GetName(), fmt.Sprintf("provider: create %s failed", InstanceGRPCRunner), err)
 	}
 
 	return runner, nil

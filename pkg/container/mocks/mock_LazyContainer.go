@@ -503,6 +503,63 @@ func (_c *MockLazyContainer_RegisterProvider_Call) RunAndReturn(run func(name st
 	return _c
 }
 
+// RegisterRunnableProvider provides a mock function for the type MockLazyContainer
+func (_mock *MockLazyContainer) RegisterRunnableProvider(name string, provider container.Provider) error {
+	ret := _mock.Called(name, provider)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RegisterRunnableProvider")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(string, container.Provider) error); ok {
+		r0 = returnFunc(name, provider)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockLazyContainer_RegisterRunnableProvider_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RegisterRunnableProvider'
+type MockLazyContainer_RegisterRunnableProvider_Call struct {
+	*mock.Call
+}
+
+// RegisterRunnableProvider is a helper method to define mock.On call
+//   - name string
+//   - provider container.Provider
+func (_e *MockLazyContainer_Expecter) RegisterRunnableProvider(name interface{}, provider interface{}) *MockLazyContainer_RegisterRunnableProvider_Call {
+	return &MockLazyContainer_RegisterRunnableProvider_Call{Call: _e.mock.On("RegisterRunnableProvider", name, provider)}
+}
+
+func (_c *MockLazyContainer_RegisterRunnableProvider_Call) Run(run func(name string, provider container.Provider)) *MockLazyContainer_RegisterRunnableProvider_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 container.Provider
+		if args[1] != nil {
+			arg1 = args[1].(container.Provider)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLazyContainer_RegisterRunnableProvider_Call) Return(err error) *MockLazyContainer_RegisterRunnableProvider_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockLazyContainer_RegisterRunnableProvider_Call) RunAndReturn(run func(name string, provider container.Provider) error) *MockLazyContainer_RegisterRunnableProvider_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Unregister provides a mock function for the type MockLazyContainer
 func (_mock *MockLazyContainer) Unregister(name string) error {
 	ret := _mock.Called(name)
