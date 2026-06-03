@@ -7,6 +7,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
+	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
@@ -30,7 +31,7 @@ func (pc *PgContainer) providerDBMigrator() (any, error) {
 	if err != nil {
 		return nil, errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
 	}
-	dbInst, err := container.GetInstance[*postgres.PgDB](InstanceDB)
+	dbInst, err := container.GetInstance[db.DB](InstanceDB)
 	if err != nil {
 		return nil, errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
 	}
