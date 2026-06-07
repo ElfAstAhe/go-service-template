@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/repository"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
+	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
@@ -40,11 +41,11 @@ func (rc *RepositoryContainer) Init(ctx context.Context) error {
 }
 
 func (rc *RepositoryContainer) providerTestRepository() (any, error) {
-	db, err := container.GetInstance[*postgres.PgDB](InstanceDB)
+	dbInst, err := container.GetInstance[db.DB](InstanceDB)
 	if err != nil {
 		return nil, errs.NewContainerError(rc.GetName(), "provider: retrieve instance failed", err)
 	}
-	res, err := postgres.NewTestRepository(db, db)
+	res, err := postgres.NewTestRepository(dbInst, dbInst)
 	if err != nil {
 		return nil, errs.NewContainerError(rc.GetName(), fmt.Sprintf("provider: create [%s] repo instance failed", InstanceTestRepo), err)
 	}
