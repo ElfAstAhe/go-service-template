@@ -75,7 +75,7 @@ type MockOwnedRepository_Change_Call[T domain.Entity[ID], ID comparable, OwnerID
 //   - ctx context.Context
 //   - ownerID OwnerID
 //   - entity T
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Change(ctx interface{}, ownerID interface{}, entity interface{}) *MockOwnedRepository_Change_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Change(ctx any, ownerID any, entity any) *MockOwnedRepository_Change_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_Change_Call[T, ID, OwnerID]{Call: _e.mock.On("Change", ctx, ownerID, entity)}
 }
 
@@ -149,7 +149,7 @@ type MockOwnedRepository_Create_Call[T domain.Entity[ID], ID comparable, OwnerID
 //   - ctx context.Context
 //   - ownerID OwnerID
 //   - entity T
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Create(ctx interface{}, ownerID interface{}, entity interface{}) *MockOwnedRepository_Create_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Create(ctx any, ownerID any, entity any) *MockOwnedRepository_Create_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_Create_Call[T, ID, OwnerID]{Call: _e.mock.On("Create", ctx, ownerID, entity)}
 }
 
@@ -212,7 +212,7 @@ type MockOwnedRepository_Delete_Call[T domain.Entity[ID], ID comparable, OwnerID
 //   - ctx context.Context
 //   - ownerID OwnerID
 //   - id ID
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Delete(ctx interface{}, ownerID interface{}, id interface{}) *MockOwnedRepository_Delete_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Delete(ctx any, ownerID any, id any) *MockOwnedRepository_Delete_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_Delete_Call[T, ID, OwnerID]{Call: _e.mock.On("Delete", ctx, ownerID, id)}
 }
 
@@ -274,7 +274,7 @@ type MockOwnedRepository_DeleteAll_Call[T domain.Entity[ID], ID comparable, Owne
 // DeleteAll is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ownerID OwnerID
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) DeleteAll(ctx interface{}, ownerID interface{}) *MockOwnedRepository_DeleteAll_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) DeleteAll(ctx any, ownerID any) *MockOwnedRepository_DeleteAll_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_DeleteAll_Call[T, ID, OwnerID]{Call: _e.mock.On("DeleteAll", ctx, ownerID)}
 }
 
@@ -343,7 +343,7 @@ type MockOwnedRepository_Find_Call[T domain.Entity[ID], ID comparable, OwnerID c
 //   - ctx context.Context
 //   - ownerID OwnerID
 //   - id ID
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Find(ctx interface{}, ownerID interface{}, id interface{}) *MockOwnedRepository_Find_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Find(ctx any, ownerID any, id any) *MockOwnedRepository_Find_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_Find_Call[T, ID, OwnerID]{Call: _e.mock.On("Find", ctx, ownerID, id)}
 }
 
@@ -418,7 +418,7 @@ type MockOwnedRepository_List_Call[T domain.Entity[ID], ID comparable, OwnerID c
 //   - ownerID OwnerID
 //   - limit int
 //   - offset int
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) List(ctx interface{}, ownerID interface{}, limit interface{}, offset interface{}) *MockOwnedRepository_List_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) List(ctx any, ownerID any, limit any, offset any) *MockOwnedRepository_List_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_List_Call[T, ID, OwnerID]{Call: _e.mock.On("List", ctx, ownerID, limit, offset)}
 }
 
@@ -496,7 +496,7 @@ type MockOwnedRepository_ListAll_Call[T domain.Entity[ID], ID comparable, OwnerI
 // ListAll is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ownerID OwnerID
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) ListAll(ctx interface{}, ownerID interface{}) *MockOwnedRepository_ListAll_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) ListAll(ctx any, ownerID any) *MockOwnedRepository_ListAll_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_ListAll_Call[T, ID, OwnerID]{Call: _e.mock.On("ListAll", ctx, ownerID)}
 }
 
@@ -570,9 +570,9 @@ type MockOwnedRepository_ListAllByOwners_Call[T domain.Entity[ID], ID comparable
 // ListAllByOwners is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ownerIDs ...OwnerID
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) ListAllByOwners(ctx interface{}, ownerIDs ...interface{}) *MockOwnedRepository_ListAllByOwners_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) ListAllByOwners(ctx any, ownerIDs ...any) *MockOwnedRepository_ListAllByOwners_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_ListAllByOwners_Call[T, ID, OwnerID]{Call: _e.mock.On("ListAllByOwners",
-		append([]interface{}{ctx}, ownerIDs...)...)}
+		append([]any{ctx}, ownerIDs...)...)}
 }
 
 func (_c *MockOwnedRepository_ListAllByOwners_Call[T, ID, OwnerID]) Run(run func(ctx context.Context, ownerIDs ...OwnerID)) *MockOwnedRepository_ListAllByOwners_Call[T, ID, OwnerID] {
@@ -642,7 +642,7 @@ type MockOwnedRepository_Save_Call[T domain.Entity[ID], ID comparable, OwnerID c
 //   - ctx context.Context
 //   - ownerID OwnerID
 //   - owned []T
-func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Save(ctx interface{}, ownerID interface{}, owned interface{}) *MockOwnedRepository_Save_Call[T, ID, OwnerID] {
+func (_e *MockOwnedRepository_Expecter[T, ID, OwnerID]) Save(ctx any, ownerID any, owned any) *MockOwnedRepository_Save_Call[T, ID, OwnerID] {
 	return &MockOwnedRepository_Save_Call[T, ID, OwnerID]{Call: _e.mock.On("Save", ctx, ownerID, owned)}
 }
 

@@ -81,7 +81,7 @@ type MockStorage_Delete_Call[K comparable] struct {
 
 // Delete is a helper method to define mock.On call
 //   - key K
-func (_e *MockStorage_Expecter[K]) Delete(key interface{}) *MockStorage_Delete_Call[K] {
+func (_e *MockStorage_Expecter[K]) Delete(key any) *MockStorage_Delete_Call[K] {
 	return &MockStorage_Delete_Call[K]{Call: _e.mock.On("Delete", key)}
 }
 
@@ -143,7 +143,7 @@ type MockStorage_Get_Call[K comparable] struct {
 
 // Get is a helper method to define mock.On call
 //   - key K
-func (_e *MockStorage_Expecter[K]) Get(key interface{}) *MockStorage_Get_Call[K] {
+func (_e *MockStorage_Expecter[K]) Get(key any) *MockStorage_Get_Call[K] {
 	return &MockStorage_Get_Call[K]{Call: _e.mock.On("Get", key)}
 }
 
@@ -194,7 +194,7 @@ type MockStorage_Has_Call[K comparable] struct {
 
 // Has is a helper method to define mock.On call
 //   - key K
-func (_e *MockStorage_Expecter[K]) Has(key interface{}) *MockStorage_Has_Call[K] {
+func (_e *MockStorage_Expecter[K]) Has(key any) *MockStorage_Has_Call[K] {
 	return &MockStorage_Has_Call[K]{Call: _e.mock.On("Has", key)}
 }
 
@@ -278,7 +278,7 @@ type MockStorage_Range_Call[K comparable] struct {
 
 // Range is a helper method to define mock.On call
 //   - fn func(key K, value []byte) bool
-func (_e *MockStorage_Expecter[K]) Range(fn interface{}) *MockStorage_Range_Call[K] {
+func (_e *MockStorage_Expecter[K]) Range(fn any) *MockStorage_Range_Call[K] {
 	return &MockStorage_Range_Call[K]{Call: _e.mock.On("Range", fn)}
 }
 
@@ -319,7 +319,7 @@ type MockStorage_Set_Call[K comparable] struct {
 // Set is a helper method to define mock.On call
 //   - key K
 //   - b []byte
-func (_e *MockStorage_Expecter[K]) Set(key interface{}, b interface{}) *MockStorage_Set_Call[K] {
+func (_e *MockStorage_Expecter[K]) Set(key any, b any) *MockStorage_Set_Call[K] {
 	return &MockStorage_Set_Call[K]{Call: _e.mock.On("Set", key, b)}
 }
 

@@ -74,7 +74,7 @@ type MockTestRepository_Change_Call struct {
 // Change is a helper method to define mock.On call
 //   - ctx context.Context
 //   - entity *domain.Test
-func (_e *MockTestRepository_Expecter) Change(ctx interface{}, entity interface{}) *MockTestRepository_Change_Call {
+func (_e *MockTestRepository_Expecter) Change(ctx any, entity any) *MockTestRepository_Change_Call {
 	return &MockTestRepository_Change_Call{Call: _e.mock.On("Change", ctx, entity)}
 }
 
@@ -142,7 +142,7 @@ type MockTestRepository_Create_Call struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - entity *domain.Test
-func (_e *MockTestRepository_Expecter) Create(ctx interface{}, entity interface{}) *MockTestRepository_Create_Call {
+func (_e *MockTestRepository_Expecter) Create(ctx any, entity any) *MockTestRepository_Create_Call {
 	return &MockTestRepository_Create_Call{Call: _e.mock.On("Create", ctx, entity)}
 }
 
@@ -199,7 +199,7 @@ type MockTestRepository_Delete_Call struct {
 // Delete is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *MockTestRepository_Expecter) Delete(ctx interface{}, id interface{}) *MockTestRepository_Delete_Call {
+func (_e *MockTestRepository_Expecter) Delete(ctx any, id any) *MockTestRepository_Delete_Call {
 	return &MockTestRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
 }
 
@@ -267,7 +267,7 @@ type MockTestRepository_Find_Call struct {
 // Find is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *MockTestRepository_Expecter) Find(ctx interface{}, id interface{}) *MockTestRepository_Find_Call {
+func (_e *MockTestRepository_Expecter) Find(ctx any, id any) *MockTestRepository_Find_Call {
 	return &MockTestRepository_Find_Call{Call: _e.mock.On("Find", ctx, id)}
 }
 
@@ -335,7 +335,7 @@ type MockTestRepository_FindByCode_Call struct {
 // FindByCode is a helper method to define mock.On call
 //   - ctx context.Context
 //   - code string
-func (_e *MockTestRepository_Expecter) FindByCode(ctx interface{}, code interface{}) *MockTestRepository_FindByCode_Call {
+func (_e *MockTestRepository_Expecter) FindByCode(ctx any, code any) *MockTestRepository_FindByCode_Call {
 	return &MockTestRepository_FindByCode_Call{Call: _e.mock.On("FindByCode", ctx, code)}
 }
 
@@ -404,7 +404,7 @@ type MockTestRepository_List_Call struct {
 //   - ctx context.Context
 //   - limit int
 //   - offset int
-func (_e *MockTestRepository_Expecter) List(ctx interface{}, limit interface{}, offset interface{}) *MockTestRepository_List_Call {
+func (_e *MockTestRepository_Expecter) List(ctx any, limit any, offset any) *MockTestRepository_List_Call {
 	return &MockTestRepository_List_Call{Call: _e.mock.On("List", ctx, limit, offset)}
 }
 

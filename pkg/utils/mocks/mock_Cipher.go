@@ -70,7 +70,7 @@ type MockCipher_Decrypt_Call struct {
 
 // Decrypt is a helper method to define mock.On call
 //   - bytes []byte
-func (_e *MockCipher_Expecter) Decrypt(bytes interface{}) *MockCipher_Decrypt_Call {
+func (_e *MockCipher_Expecter) Decrypt(bytes any) *MockCipher_Decrypt_Call {
 	return &MockCipher_Decrypt_Call{Call: _e.mock.On("Decrypt", bytes)}
 }
 
@@ -130,7 +130,7 @@ type MockCipher_DecryptString_Call struct {
 
 // DecryptString is a helper method to define mock.On call
 //   - s string
-func (_e *MockCipher_Expecter) DecryptString(s interface{}) *MockCipher_DecryptString_Call {
+func (_e *MockCipher_Expecter) DecryptString(s any) *MockCipher_DecryptString_Call {
 	return &MockCipher_DecryptString_Call{Call: _e.mock.On("DecryptString", s)}
 }
 
@@ -192,7 +192,7 @@ type MockCipher_Encrypt_Call struct {
 
 // Encrypt is a helper method to define mock.On call
 //   - bytes []byte
-func (_e *MockCipher_Expecter) Encrypt(bytes interface{}) *MockCipher_Encrypt_Call {
+func (_e *MockCipher_Expecter) Encrypt(bytes any) *MockCipher_Encrypt_Call {
 	return &MockCipher_Encrypt_Call{Call: _e.mock.On("Encrypt", bytes)}
 }
 
@@ -252,7 +252,7 @@ type MockCipher_EncryptString_Call struct {
 
 // EncryptString is a helper method to define mock.On call
 //   - s string
-func (_e *MockCipher_Expecter) EncryptString(s interface{}) *MockCipher_EncryptString_Call {
+func (_e *MockCipher_Expecter) EncryptString(s any) *MockCipher_EncryptString_Call {
 	return &MockCipher_EncryptString_Call{Call: _e.mock.On("EncryptString", s)}
 }
 

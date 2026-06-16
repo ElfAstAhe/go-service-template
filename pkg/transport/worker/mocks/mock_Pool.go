@@ -412,7 +412,7 @@ type MockPool_Push_Call[D any] struct {
 
 // Push is a helper method to define mock.On call
 //   - data D
-func (_e *MockPool_Expecter[D]) Push(data interface{}) *MockPool_Push_Call[D] {
+func (_e *MockPool_Expecter[D]) Push(data any) *MockPool_Push_Call[D] {
 	return &MockPool_Push_Call[D]{Call: _e.mock.On("Push", data)}
 }
 
@@ -463,7 +463,7 @@ type MockPool_Start_Call[D any] struct {
 
 // Start is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockPool_Expecter[D]) Start(ctx interface{}) *MockPool_Start_Call[D] {
+func (_e *MockPool_Expecter[D]) Start(ctx any) *MockPool_Start_Call[D] {
 	return &MockPool_Start_Call[D]{Call: _e.mock.On("Start", ctx)}
 }
 
@@ -514,7 +514,7 @@ type MockPool_Stop_Call[D any] struct {
 
 // Stop is a helper method to define mock.On call
 //   - stopCtx context.Context
-func (_e *MockPool_Expecter[D]) Stop(stopCtx interface{}) *MockPool_Stop_Call[D] {
+func (_e *MockPool_Expecter[D]) Stop(stopCtx any) *MockPool_Stop_Call[D] {
 	return &MockPool_Stop_Call[D]{Call: _e.mock.On("Stop", stopCtx)}
 }
 
@@ -565,7 +565,7 @@ type MockPool_TryPush_Call[D any] struct {
 
 // TryPush is a helper method to define mock.On call
 //   - data D
-func (_e *MockPool_Expecter[D]) TryPush(data interface{}) *MockPool_TryPush_Call[D] {
+func (_e *MockPool_Expecter[D]) TryPush(data any) *MockPool_TryPush_Call[D] {
 	return &MockPool_TryPush_Call[D]{Call: _e.mock.On("TryPush", data)}
 }
 

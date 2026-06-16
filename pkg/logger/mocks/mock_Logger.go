@@ -98,9 +98,9 @@ type MockLogger_Debug_Call struct {
 
 // Debug is a helper method to define mock.On call
 //   - args ...any
-func (_e *MockLogger_Expecter) Debug(args ...interface{}) *MockLogger_Debug_Call {
+func (_e *MockLogger_Expecter) Debug(args ...any) *MockLogger_Debug_Call {
 	return &MockLogger_Debug_Call{Call: _e.mock.On("Debug",
-		append([]interface{}{}, args...)...)}
+		append([]any{}, args...)...)}
 }
 
 func (_c *MockLogger_Debug_Call) Run(run func(args ...any)) *MockLogger_Debug_Call {
@@ -147,9 +147,9 @@ type MockLogger_DebugW_Call struct {
 // DebugW is a helper method to define mock.On call
 //   - msg string
 //   - keysAndValues ...any
-func (_e *MockLogger_Expecter) DebugW(msg interface{}, keysAndValues ...interface{}) *MockLogger_DebugW_Call {
+func (_e *MockLogger_Expecter) DebugW(msg any, keysAndValues ...any) *MockLogger_DebugW_Call {
 	return &MockLogger_DebugW_Call{Call: _e.mock.On("DebugW",
-		append([]interface{}{msg}, keysAndValues...)...)}
+		append([]any{msg}, keysAndValues...)...)}
 }
 
 func (_c *MockLogger_DebugW_Call) Run(run func(msg string, keysAndValues ...any)) *MockLogger_DebugW_Call {
@@ -201,9 +201,9 @@ type MockLogger_Debugf_Call struct {
 // Debugf is a helper method to define mock.On call
 //   - format string
 //   - args ...any
-func (_e *MockLogger_Expecter) Debugf(format interface{}, args ...interface{}) *MockLogger_Debugf_Call {
+func (_e *MockLogger_Expecter) Debugf(format any, args ...any) *MockLogger_Debugf_Call {
 	return &MockLogger_Debugf_Call{Call: _e.mock.On("Debugf",
-		append([]interface{}{format}, args...)...)}
+		append([]any{format}, args...)...)}
 }
 
 func (_c *MockLogger_Debugf_Call) Run(run func(format string, args ...any)) *MockLogger_Debugf_Call {
@@ -254,9 +254,9 @@ type MockLogger_Error_Call struct {
 
 // Error is a helper method to define mock.On call
 //   - args ...any
-func (_e *MockLogger_Expecter) Error(args ...interface{}) *MockLogger_Error_Call {
+func (_e *MockLogger_Expecter) Error(args ...any) *MockLogger_Error_Call {
 	return &MockLogger_Error_Call{Call: _e.mock.On("Error",
-		append([]interface{}{}, args...)...)}
+		append([]any{}, args...)...)}
 }
 
 func (_c *MockLogger_Error_Call) Run(run func(args ...any)) *MockLogger_Error_Call {
@@ -303,9 +303,9 @@ type MockLogger_ErrorW_Call struct {
 // ErrorW is a helper method to define mock.On call
 //   - msg string
 //   - keysAndValues ...any
-func (_e *MockLogger_Expecter) ErrorW(msg interface{}, keysAndValues ...interface{}) *MockLogger_ErrorW_Call {
+func (_e *MockLogger_Expecter) ErrorW(msg any, keysAndValues ...any) *MockLogger_ErrorW_Call {
 	return &MockLogger_ErrorW_Call{Call: _e.mock.On("ErrorW",
-		append([]interface{}{msg}, keysAndValues...)...)}
+		append([]any{msg}, keysAndValues...)...)}
 }
 
 func (_c *MockLogger_ErrorW_Call) Run(run func(msg string, keysAndValues ...any)) *MockLogger_ErrorW_Call {
@@ -357,9 +357,9 @@ type MockLogger_Errorf_Call struct {
 // Errorf is a helper method to define mock.On call
 //   - format string
 //   - args ...any
-func (_e *MockLogger_Expecter) Errorf(format interface{}, args ...interface{}) *MockLogger_Errorf_Call {
+func (_e *MockLogger_Expecter) Errorf(format any, args ...any) *MockLogger_Errorf_Call {
 	return &MockLogger_Errorf_Call{Call: _e.mock.On("Errorf",
-		append([]interface{}{format}, args...)...)}
+		append([]any{format}, args...)...)}
 }
 
 func (_c *MockLogger_Errorf_Call) Run(run func(format string, args ...any)) *MockLogger_Errorf_Call {
@@ -418,7 +418,7 @@ type MockLogger_GetLogger_Call struct {
 
 // GetLogger is a helper method to define mock.On call
 //   - logicEntry string
-func (_e *MockLogger_Expecter) GetLogger(logicEntry interface{}) *MockLogger_GetLogger_Call {
+func (_e *MockLogger_Expecter) GetLogger(logicEntry any) *MockLogger_GetLogger_Call {
 	return &MockLogger_GetLogger_Call{Call: _e.mock.On("GetLogger", logicEntry)}
 }
 
@@ -463,9 +463,9 @@ type MockLogger_Info_Call struct {
 
 // Info is a helper method to define mock.On call
 //   - args ...any
-func (_e *MockLogger_Expecter) Info(args ...interface{}) *MockLogger_Info_Call {
+func (_e *MockLogger_Expecter) Info(args ...any) *MockLogger_Info_Call {
 	return &MockLogger_Info_Call{Call: _e.mock.On("Info",
-		append([]interface{}{}, args...)...)}
+		append([]any{}, args...)...)}
 }
 
 func (_c *MockLogger_Info_Call) Run(run func(args ...any)) *MockLogger_Info_Call {
@@ -512,9 +512,9 @@ type MockLogger_InfoW_Call struct {
 // InfoW is a helper method to define mock.On call
 //   - msg string
 //   - keysAndValues ...any
-func (_e *MockLogger_Expecter) InfoW(msg interface{}, keysAndValues ...interface{}) *MockLogger_InfoW_Call {
+func (_e *MockLogger_Expecter) InfoW(msg any, keysAndValues ...any) *MockLogger_InfoW_Call {
 	return &MockLogger_InfoW_Call{Call: _e.mock.On("InfoW",
-		append([]interface{}{msg}, keysAndValues...)...)}
+		append([]any{msg}, keysAndValues...)...)}
 }
 
 func (_c *MockLogger_InfoW_Call) Run(run func(msg string, keysAndValues ...any)) *MockLogger_InfoW_Call {
@@ -566,9 +566,9 @@ type MockLogger_Infof_Call struct {
 // Infof is a helper method to define mock.On call
 //   - format string
 //   - args ...any
-func (_e *MockLogger_Expecter) Infof(format interface{}, args ...interface{}) *MockLogger_Infof_Call {
+func (_e *MockLogger_Expecter) Infof(format any, args ...any) *MockLogger_Infof_Call {
 	return &MockLogger_Infof_Call{Call: _e.mock.On("Infof",
-		append([]interface{}{format}, args...)...)}
+		append([]any{format}, args...)...)}
 }
 
 func (_c *MockLogger_Infof_Call) Run(run func(format string, args ...any)) *MockLogger_Infof_Call {
@@ -619,9 +619,9 @@ type MockLogger_Warn_Call struct {
 
 // Warn is a helper method to define mock.On call
 //   - args ...any
-func (_e *MockLogger_Expecter) Warn(args ...interface{}) *MockLogger_Warn_Call {
+func (_e *MockLogger_Expecter) Warn(args ...any) *MockLogger_Warn_Call {
 	return &MockLogger_Warn_Call{Call: _e.mock.On("Warn",
-		append([]interface{}{}, args...)...)}
+		append([]any{}, args...)...)}
 }
 
 func (_c *MockLogger_Warn_Call) Run(run func(args ...any)) *MockLogger_Warn_Call {
@@ -668,9 +668,9 @@ type MockLogger_WarnW_Call struct {
 // WarnW is a helper method to define mock.On call
 //   - msg string
 //   - keysAndValues ...any
-func (_e *MockLogger_Expecter) WarnW(msg interface{}, keysAndValues ...interface{}) *MockLogger_WarnW_Call {
+func (_e *MockLogger_Expecter) WarnW(msg any, keysAndValues ...any) *MockLogger_WarnW_Call {
 	return &MockLogger_WarnW_Call{Call: _e.mock.On("WarnW",
-		append([]interface{}{msg}, keysAndValues...)...)}
+		append([]any{msg}, keysAndValues...)...)}
 }
 
 func (_c *MockLogger_WarnW_Call) Run(run func(msg string, keysAndValues ...any)) *MockLogger_WarnW_Call {
@@ -722,9 +722,9 @@ type MockLogger_Warnf_Call struct {
 // Warnf is a helper method to define mock.On call
 //   - format string
 //   - args ...any
-func (_e *MockLogger_Expecter) Warnf(format interface{}, args ...interface{}) *MockLogger_Warnf_Call {
+func (_e *MockLogger_Expecter) Warnf(format any, args ...any) *MockLogger_Warnf_Call {
 	return &MockLogger_Warnf_Call{Call: _e.mock.On("Warnf",
-		append([]interface{}{format}, args...)...)}
+		append([]any{format}, args...)...)}
 }
 
 func (_c *MockLogger_Warnf_Call) Run(run func(format string, args ...any)) *MockLogger_Warnf_Call {

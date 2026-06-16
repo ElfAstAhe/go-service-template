@@ -335,7 +335,7 @@ type MockCommonWorker_Start_Call struct {
 
 // Start is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockCommonWorker_Expecter) Start(ctx interface{}) *MockCommonWorker_Start_Call {
+func (_e *MockCommonWorker_Expecter) Start(ctx any) *MockCommonWorker_Start_Call {
 	return &MockCommonWorker_Start_Call{Call: _e.mock.On("Start", ctx)}
 }
 
@@ -386,7 +386,7 @@ type MockCommonWorker_Stop_Call struct {
 
 // Stop is a helper method to define mock.On call
 //   - stopCtx context.Context
-func (_e *MockCommonWorker_Expecter) Stop(stopCtx interface{}) *MockCommonWorker_Stop_Call {
+func (_e *MockCommonWorker_Expecter) Stop(stopCtx any) *MockCommonWorker_Stop_Call {
 	return &MockCommonWorker_Stop_Call{Call: _e.mock.On("Stop", stopCtx)}
 }
 

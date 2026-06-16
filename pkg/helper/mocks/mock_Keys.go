@@ -71,7 +71,7 @@ type MockKeys_Decrypt_Call[Priv any, Pub any] struct {
 // Decrypt is a helper method to define mock.On call
 //   - data []byte
 //   - privateKey Priv
-func (_e *MockKeys_Expecter[Priv, Pub]) Decrypt(data interface{}, privateKey interface{}) *MockKeys_Decrypt_Call[Priv, Pub] {
+func (_e *MockKeys_Expecter[Priv, Pub]) Decrypt(data any, privateKey any) *MockKeys_Decrypt_Call[Priv, Pub] {
 	return &MockKeys_Decrypt_Call[Priv, Pub]{Call: _e.mock.On("Decrypt", data, privateKey)}
 }
 
@@ -137,7 +137,7 @@ type MockKeys_DecryptString_Call[Priv any, Pub any] struct {
 // DecryptString is a helper method to define mock.On call
 //   - data string
 //   - privateKey Priv
-func (_e *MockKeys_Expecter[Priv, Pub]) DecryptString(data interface{}, privateKey interface{}) *MockKeys_DecryptString_Call[Priv, Pub] {
+func (_e *MockKeys_Expecter[Priv, Pub]) DecryptString(data any, privateKey any) *MockKeys_DecryptString_Call[Priv, Pub] {
 	return &MockKeys_DecryptString_Call[Priv, Pub]{Call: _e.mock.On("DecryptString", data, privateKey)}
 }
 
@@ -205,7 +205,7 @@ type MockKeys_Encrypt_Call[Priv any, Pub any] struct {
 // Encrypt is a helper method to define mock.On call
 //   - data []byte
 //   - publicKey Pub
-func (_e *MockKeys_Expecter[Priv, Pub]) Encrypt(data interface{}, publicKey interface{}) *MockKeys_Encrypt_Call[Priv, Pub] {
+func (_e *MockKeys_Expecter[Priv, Pub]) Encrypt(data any, publicKey any) *MockKeys_Encrypt_Call[Priv, Pub] {
 	return &MockKeys_Encrypt_Call[Priv, Pub]{Call: _e.mock.On("Encrypt", data, publicKey)}
 }
 
@@ -271,7 +271,7 @@ type MockKeys_EncryptString_Call[Priv any, Pub any] struct {
 // EncryptString is a helper method to define mock.On call
 //   - data string
 //   - publicKey Pub
-func (_e *MockKeys_Expecter[Priv, Pub]) EncryptString(data interface{}, publicKey interface{}) *MockKeys_EncryptString_Call[Priv, Pub] {
+func (_e *MockKeys_Expecter[Priv, Pub]) EncryptString(data any, publicKey any) *MockKeys_EncryptString_Call[Priv, Pub] {
 	return &MockKeys_EncryptString_Call[Priv, Pub]{Call: _e.mock.On("EncryptString", data, publicKey)}
 }
 
@@ -397,7 +397,7 @@ type MockKeys_ParsePrivateKey_Call[Priv any, Pub any] struct {
 
 // ParsePrivateKey is a helper method to define mock.On call
 //   - s string
-func (_e *MockKeys_Expecter[Priv, Pub]) ParsePrivateKey(s interface{}) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
+func (_e *MockKeys_Expecter[Priv, Pub]) ParsePrivateKey(s any) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
 	return &MockKeys_ParsePrivateKey_Call[Priv, Pub]{Call: _e.mock.On("ParsePrivateKey", s)}
 }
 
@@ -459,7 +459,7 @@ type MockKeys_ParsePublicKey_Call[Priv any, Pub any] struct {
 
 // ParsePublicKey is a helper method to define mock.On call
 //   - s string
-func (_e *MockKeys_Expecter[Priv, Pub]) ParsePublicKey(s interface{}) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
+func (_e *MockKeys_Expecter[Priv, Pub]) ParsePublicKey(s any) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
 	return &MockKeys_ParsePublicKey_Call[Priv, Pub]{Call: _e.mock.On("ParsePublicKey", s)}
 }
 

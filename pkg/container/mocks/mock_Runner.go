@@ -149,7 +149,7 @@ type MockRunner_Start_Call struct {
 
 // Start is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockRunner_Expecter) Start(ctx interface{}) *MockRunner_Start_Call {
+func (_e *MockRunner_Expecter) Start(ctx any) *MockRunner_Start_Call {
 	return &MockRunner_Start_Call{Call: _e.mock.On("Start", ctx)}
 }
 
@@ -200,7 +200,7 @@ type MockRunner_Stop_Call struct {
 
 // Stop is a helper method to define mock.On call
 //   - stopCtx context.Context
-func (_e *MockRunner_Expecter) Stop(stopCtx interface{}) *MockRunner_Stop_Call {
+func (_e *MockRunner_Expecter) Stop(stopCtx any) *MockRunner_Stop_Call {
 	return &MockRunner_Stop_Call{Call: _e.mock.On("Stop", stopCtx)}
 }
 

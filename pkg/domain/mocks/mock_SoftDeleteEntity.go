@@ -138,7 +138,7 @@ type MockSoftDeleteEntity_SetDeleted_Call[DEL any] struct {
 
 // SetDeleted is a helper method to define mock.On call
 //   - deleted DEL
-func (_e *MockSoftDeleteEntity_Expecter[DEL]) SetDeleted(deleted interface{}) *MockSoftDeleteEntity_SetDeleted_Call[DEL] {
+func (_e *MockSoftDeleteEntity_Expecter[DEL]) SetDeleted(deleted any) *MockSoftDeleteEntity_SetDeleted_Call[DEL] {
 	return &MockSoftDeleteEntity_SetDeleted_Call[DEL]{Call: _e.mock.On("SetDeleted", deleted)}
 }
 

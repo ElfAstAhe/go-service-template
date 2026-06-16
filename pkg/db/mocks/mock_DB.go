@@ -243,7 +243,7 @@ type MockDB_GetQuerier_Call struct {
 
 // GetQuerier is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockDB_Expecter) GetQuerier(ctx interface{}) *MockDB_GetQuerier_Call {
+func (_e *MockDB_Expecter) GetQuerier(ctx any) *MockDB_GetQuerier_Call {
 	return &MockDB_GetQuerier_Call{Call: _e.mock.On("GetQuerier", ctx)}
 }
 
@@ -294,7 +294,7 @@ type MockDB_IsUniqueViolation_Call struct {
 
 // IsUniqueViolation is a helper method to define mock.On call
 //   - err error
-func (_e *MockDB_Expecter) IsUniqueViolation(err interface{}) *MockDB_IsUniqueViolation_Call {
+func (_e *MockDB_Expecter) IsUniqueViolation(err any) *MockDB_IsUniqueViolation_Call {
 	return &MockDB_IsUniqueViolation_Call{Call: _e.mock.On("IsUniqueViolation", err)}
 }
 
@@ -345,7 +345,7 @@ type MockDB_Ping_Call struct {
 
 // Ping is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockDB_Expecter) Ping(ctx interface{}) *MockDB_Ping_Call {
+func (_e *MockDB_Expecter) Ping(ctx any) *MockDB_Ping_Call {
 	return &MockDB_Ping_Call{Call: _e.mock.On("Ping", ctx)}
 }
 

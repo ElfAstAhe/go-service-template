@@ -81,9 +81,9 @@ type MockQuerier_ExecContext_Call struct {
 //   - ctx context.Context
 //   - query string
 //   - args ...interface{}
-func (_e *MockQuerier_Expecter) ExecContext(ctx interface{}, query interface{}, args ...interface{}) *MockQuerier_ExecContext_Call {
+func (_e *MockQuerier_Expecter) ExecContext(ctx any, query any, args ...any) *MockQuerier_ExecContext_Call {
 	return &MockQuerier_ExecContext_Call{Call: _e.mock.On("ExecContext",
-		append([]interface{}{ctx, query}, args...)...)}
+		append([]any{ctx, query}, args...)...)}
 }
 
 func (_c *MockQuerier_ExecContext_Call) Run(run func(ctx context.Context, query string, args ...interface{})) *MockQuerier_ExecContext_Call {
@@ -157,7 +157,7 @@ type MockQuerier_PrepareContext_Call struct {
 // PrepareContext is a helper method to define mock.On call
 //   - ctx context.Context
 //   - query string
-func (_e *MockQuerier_Expecter) PrepareContext(ctx interface{}, query interface{}) *MockQuerier_PrepareContext_Call {
+func (_e *MockQuerier_Expecter) PrepareContext(ctx any, query any) *MockQuerier_PrepareContext_Call {
 	return &MockQuerier_PrepareContext_Call{Call: _e.mock.On("PrepareContext", ctx, query)}
 }
 
@@ -232,9 +232,9 @@ type MockQuerier_QueryContext_Call struct {
 //   - ctx context.Context
 //   - query string
 //   - args ...interface{}
-func (_e *MockQuerier_Expecter) QueryContext(ctx interface{}, query interface{}, args ...interface{}) *MockQuerier_QueryContext_Call {
+func (_e *MockQuerier_Expecter) QueryContext(ctx any, query any, args ...any) *MockQuerier_QueryContext_Call {
 	return &MockQuerier_QueryContext_Call{Call: _e.mock.On("QueryContext",
-		append([]interface{}{ctx, query}, args...)...)}
+		append([]any{ctx, query}, args...)...)}
 }
 
 func (_c *MockQuerier_QueryContext_Call) Run(run func(ctx context.Context, query string, args ...interface{})) *MockQuerier_QueryContext_Call {
@@ -306,9 +306,9 @@ type MockQuerier_QueryRowContext_Call struct {
 //   - ctx context.Context
 //   - query string
 //   - args ...interface{}
-func (_e *MockQuerier_Expecter) QueryRowContext(ctx interface{}, query interface{}, args ...interface{}) *MockQuerier_QueryRowContext_Call {
+func (_e *MockQuerier_Expecter) QueryRowContext(ctx any, query any, args ...any) *MockQuerier_QueryRowContext_Call {
 	return &MockQuerier_QueryRowContext_Call{Call: _e.mock.On("QueryRowContext",
-		append([]interface{}{ctx, query}, args...)...)}
+		append([]any{ctx, query}, args...)...)}
 }
 
 func (_c *MockQuerier_QueryRowContext_Call) Run(run func(ctx context.Context, query string, args ...interface{})) *MockQuerier_QueryRowContext_Call {
