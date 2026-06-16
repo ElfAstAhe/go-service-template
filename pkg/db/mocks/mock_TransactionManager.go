@@ -64,7 +64,7 @@ type MockTransactionManager_WithinTransaction_Call struct {
 //   - ctx context.Context
 //   - opts *db.TransactionOptions
 //   - fn func(ctx context.Context) error
-func (_e *MockTransactionManager_Expecter) WithinTransaction(ctx interface{}, opts interface{}, fn interface{}) *MockTransactionManager_WithinTransaction_Call {
+func (_e *MockTransactionManager_Expecter) WithinTransaction(ctx any, opts any, fn any) *MockTransactionManager_WithinTransaction_Call {
 	return &MockTransactionManager_WithinTransaction_Call{Call: _e.mock.On("WithinTransaction", ctx, opts, fn)}
 }
 

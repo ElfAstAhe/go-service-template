@@ -64,7 +64,7 @@ type MockExecutor_GetQuerier_Call struct {
 
 // GetQuerier is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockExecutor_Expecter) GetQuerier(ctx interface{}) *MockExecutor_GetQuerier_Call {
+func (_e *MockExecutor_Expecter) GetQuerier(ctx any) *MockExecutor_GetQuerier_Call {
 	return &MockExecutor_GetQuerier_Call{Call: _e.mock.On("GetQuerier", ctx)}
 }
 

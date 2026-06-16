@@ -61,7 +61,7 @@ type MockCipher_DecryptBinary_Call struct {
 
 // DecryptBinary is a helper method to define mock.On call
 //   - bytes []byte
-func (_e *MockCipher_Expecter) DecryptBinary(bytes interface{}) *MockCipher_DecryptBinary_Call {
+func (_e *MockCipher_Expecter) DecryptBinary(bytes any) *MockCipher_DecryptBinary_Call {
 	return &MockCipher_DecryptBinary_Call{Call: _e.mock.On("DecryptBinary", bytes)}
 }
 
@@ -112,7 +112,7 @@ type MockCipher_DecryptString_Call struct {
 
 // DecryptString is a helper method to define mock.On call
 //   - s string
-func (_e *MockCipher_Expecter) DecryptString(s interface{}) *MockCipher_DecryptString_Call {
+func (_e *MockCipher_Expecter) DecryptString(s any) *MockCipher_DecryptString_Call {
 	return &MockCipher_DecryptString_Call{Call: _e.mock.On("DecryptString", s)}
 }
 
@@ -165,7 +165,7 @@ type MockCipher_EncryptBinary_Call struct {
 
 // EncryptBinary is a helper method to define mock.On call
 //   - bytes []byte
-func (_e *MockCipher_Expecter) EncryptBinary(bytes interface{}) *MockCipher_EncryptBinary_Call {
+func (_e *MockCipher_Expecter) EncryptBinary(bytes any) *MockCipher_EncryptBinary_Call {
 	return &MockCipher_EncryptBinary_Call{Call: _e.mock.On("EncryptBinary", bytes)}
 }
 
@@ -216,7 +216,7 @@ type MockCipher_EncryptString_Call struct {
 
 // EncryptString is a helper method to define mock.On call
 //   - s string
-func (_e *MockCipher_Expecter) EncryptString(s interface{}) *MockCipher_EncryptString_Call {
+func (_e *MockCipher_Expecter) EncryptString(s any) *MockCipher_EncryptString_Call {
 	return &MockCipher_EncryptString_Call{Call: _e.mock.On("EncryptString", s)}
 }
 
@@ -267,7 +267,7 @@ type MockCipher_IsEncrypted_Call struct {
 
 // IsEncrypted is a helper method to define mock.On call
 //   - bytes []byte
-func (_e *MockCipher_Expecter) IsEncrypted(bytes interface{}) *MockCipher_IsEncrypted_Call {
+func (_e *MockCipher_Expecter) IsEncrypted(bytes any) *MockCipher_IsEncrypted_Call {
 	return &MockCipher_IsEncrypted_Call{Call: _e.mock.On("IsEncrypted", bytes)}
 }
 
@@ -318,7 +318,7 @@ type MockCipher_IsStringEncrypted_Call struct {
 
 // IsStringEncrypted is a helper method to define mock.On call
 //   - s string
-func (_e *MockCipher_Expecter) IsStringEncrypted(s interface{}) *MockCipher_IsStringEncrypted_Call {
+func (_e *MockCipher_Expecter) IsStringEncrypted(s any) *MockCipher_IsStringEncrypted_Call {
 	return &MockCipher_IsStringEncrypted_Call{Call: _e.mock.On("IsStringEncrypted", s)}
 }
 

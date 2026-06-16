@@ -226,7 +226,7 @@ type MockEntity_SetID_Call[ID comparable] struct {
 
 // SetID is a helper method to define mock.On call
 //   - id ID
-func (_e *MockEntity_Expecter[ID]) SetID(id interface{}) *MockEntity_SetID_Call[ID] {
+func (_e *MockEntity_Expecter[ID]) SetID(id any) *MockEntity_SetID_Call[ID] {
 	return &MockEntity_SetID_Call[ID]{Call: _e.mock.On("SetID", id)}
 }
 

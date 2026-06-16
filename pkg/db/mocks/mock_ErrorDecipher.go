@@ -59,7 +59,7 @@ type MockErrorDecipher_IsUniqueViolation_Call struct {
 
 // IsUniqueViolation is a helper method to define mock.On call
 //   - err error
-func (_e *MockErrorDecipher_Expecter) IsUniqueViolation(err interface{}) *MockErrorDecipher_IsUniqueViolation_Call {
+func (_e *MockErrorDecipher_Expecter) IsUniqueViolation(err any) *MockErrorDecipher_IsUniqueViolation_Call {
 	return &MockErrorDecipher_IsUniqueViolation_Call{Call: _e.mock.On("IsUniqueViolation", err)}
 }
 

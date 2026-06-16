@@ -19,7 +19,7 @@ func TestGetInstance(t *testing.T) {
 
 		mockCtn.On("GetInstance", name).Return(expected, nil).Once()
 
-		res, err := container.GetInstance[string](mockCtn, name)
+		res, err := container.GetContainerInstance[string](mockCtn, name)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected, res)
@@ -33,7 +33,7 @@ func TestGetInstance(t *testing.T) {
 
 		mockCtn.On("GetInstance", name).Return(expected, nil).Once()
 
-		res, err := container.GetInstance[*myStruct](mockCtn, name)
+		res, err := container.GetContainerInstance[*myStruct](mockCtn, name)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected.ID, res.ID)
@@ -46,7 +46,7 @@ func TestGetInstance(t *testing.T) {
 		mockCtn.On("GetInstance", name).Return(instance, nil).Once()
 
 		// А мы пытаемся достать его как строку
-		res, err := container.GetInstance[string](mockCtn, name)
+		res, err := container.GetContainerInstance[string](mockCtn, name)
 
 		assert.Error(t, err)
 		assert.Empty(t, res)
@@ -59,14 +59,14 @@ func TestGetInstance(t *testing.T) {
 		// Имитируем, что GetInstance вернул nil (через интерфейс)
 		mockCtn.On("GetInstance", name).Return(nil, nil).Once()
 
-		res, err := container.GetInstance[*testing.T](mockCtn, name)
+		res, err := container.GetContainerInstance[*testing.T](mockCtn, name)
 
 		assert.NoError(t, err)
 		assert.Nil(t, res, "Should return typed nil without error if instance is nil")
 	})
 
 	t.Run("Error_ContainerNil", func(t *testing.T) {
-		res, err := container.GetInstance[string](nil, "any")
+		res, err := container.GetContainerInstance[string](nil, "any")
 
 		assert.Error(t, err)
 		assert.Empty(t, res)
@@ -74,7 +74,7 @@ func TestGetInstance(t *testing.T) {
 	})
 
 	t.Run("Error_EmptyName", func(t *testing.T) {
-		res, err := container.GetInstance[string](mockCtn, "")
+		res, err := container.GetContainerInstance[string](mockCtn, "")
 
 		assert.Error(t, err)
 		assert.Empty(t, res)
@@ -86,7 +86,7 @@ func TestGetInstance(t *testing.T) {
 		// Имитируем, что сам контейнер вернул ошибку (например, Not Found)
 		mockCtn.On("GetInstance", name).Return(nil, assert.AnError).Once()
 
-		res, err := container.GetInstance[string](mockCtn, name)
+		res, err := container.GetContainerInstance[string](mockCtn, name)
 
 		assert.Error(t, err)
 		assert.Equal(t, assert.AnError, err)

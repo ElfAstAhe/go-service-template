@@ -154,7 +154,7 @@ type MockLazyContainer_Close_Call struct {
 
 // Close is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockLazyContainer_Expecter) Close(ctx interface{}) *MockLazyContainer_Close_Call {
+func (_e *MockLazyContainer_Expecter) Close(ctx any) *MockLazyContainer_Close_Call {
 	return &MockLazyContainer_Close_Call{Call: _e.mock.On("Close", ctx)}
 }
 
@@ -216,7 +216,7 @@ type MockLazyContainer_GetInstance_Call struct {
 
 // GetInstance is a helper method to define mock.On call
 //   - name string
-func (_e *MockLazyContainer_Expecter) GetInstance(name interface{}) *MockLazyContainer_GetInstance_Call {
+func (_e *MockLazyContainer_Expecter) GetInstance(name any) *MockLazyContainer_GetInstance_Call {
 	return &MockLazyContainer_GetInstance_Call{Call: _e.mock.On("GetInstance", name)}
 }
 
@@ -311,7 +311,7 @@ type MockLazyContainer_Init_Call struct {
 
 // Init is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockLazyContainer_Expecter) Init(ctx interface{}) *MockLazyContainer_Init_Call {
+func (_e *MockLazyContainer_Expecter) Init(ctx any) *MockLazyContainer_Init_Call {
 	return &MockLazyContainer_Init_Call{Call: _e.mock.On("Init", ctx)}
 }
 
@@ -362,7 +362,7 @@ type MockLazyContainer_IsRegistered_Call struct {
 
 // IsRegistered is a helper method to define mock.On call
 //   - name string
-func (_e *MockLazyContainer_Expecter) IsRegistered(name interface{}) *MockLazyContainer_IsRegistered_Call {
+func (_e *MockLazyContainer_Expecter) IsRegistered(name any) *MockLazyContainer_IsRegistered_Call {
 	return &MockLazyContainer_IsRegistered_Call{Call: _e.mock.On("IsRegistered", name)}
 }
 
@@ -414,7 +414,7 @@ type MockLazyContainer_RegisterInstance_Call struct {
 // RegisterInstance is a helper method to define mock.On call
 //   - name string
 //   - instance any
-func (_e *MockLazyContainer_Expecter) RegisterInstance(name interface{}, instance interface{}) *MockLazyContainer_RegisterInstance_Call {
+func (_e *MockLazyContainer_Expecter) RegisterInstance(name any, instance any) *MockLazyContainer_RegisterInstance_Call {
 	return &MockLazyContainer_RegisterInstance_Call{Call: _e.mock.On("RegisterInstance", name, instance)}
 }
 
@@ -471,7 +471,7 @@ type MockLazyContainer_RegisterProvider_Call struct {
 // RegisterProvider is a helper method to define mock.On call
 //   - name string
 //   - provider container.Provider
-func (_e *MockLazyContainer_Expecter) RegisterProvider(name interface{}, provider interface{}) *MockLazyContainer_RegisterProvider_Call {
+func (_e *MockLazyContainer_Expecter) RegisterProvider(name any, provider any) *MockLazyContainer_RegisterProvider_Call {
 	return &MockLazyContainer_RegisterProvider_Call{Call: _e.mock.On("RegisterProvider", name, provider)}
 }
 
@@ -528,7 +528,7 @@ type MockLazyContainer_RegisterRunnableProvider_Call struct {
 // RegisterRunnableProvider is a helper method to define mock.On call
 //   - name string
 //   - provider container.Provider
-func (_e *MockLazyContainer_Expecter) RegisterRunnableProvider(name interface{}, provider interface{}) *MockLazyContainer_RegisterRunnableProvider_Call {
+func (_e *MockLazyContainer_Expecter) RegisterRunnableProvider(name any, provider any) *MockLazyContainer_RegisterRunnableProvider_Call {
 	return &MockLazyContainer_RegisterRunnableProvider_Call{Call: _e.mock.On("RegisterRunnableProvider", name, provider)}
 }
 
@@ -584,7 +584,7 @@ type MockLazyContainer_Unregister_Call struct {
 
 // Unregister is a helper method to define mock.On call
 //   - name string
-func (_e *MockLazyContainer_Expecter) Unregister(name interface{}) *MockLazyContainer_Unregister_Call {
+func (_e *MockLazyContainer_Expecter) Unregister(name any) *MockLazyContainer_Unregister_Call {
 	return &MockLazyContainer_Unregister_Call{Call: _e.mock.On("Unregister", name)}
 }
 
@@ -635,7 +635,7 @@ type MockLazyContainer_UnregisterInstance_Call struct {
 
 // UnregisterInstance is a helper method to define mock.On call
 //   - name string
-func (_e *MockLazyContainer_Expecter) UnregisterInstance(name interface{}) *MockLazyContainer_UnregisterInstance_Call {
+func (_e *MockLazyContainer_Expecter) UnregisterInstance(name any) *MockLazyContainer_UnregisterInstance_Call {
 	return &MockLazyContainer_UnregisterInstance_Call{Call: _e.mock.On("UnregisterInstance", name)}
 }
 
@@ -686,7 +686,7 @@ type MockLazyContainer_UnregisterProvider_Call struct {
 
 // UnregisterProvider is a helper method to define mock.On call
 //   - name string
-func (_e *MockLazyContainer_Expecter) UnregisterProvider(name interface{}) *MockLazyContainer_UnregisterProvider_Call {
+func (_e *MockLazyContainer_Expecter) UnregisterProvider(name any) *MockLazyContainer_UnregisterProvider_Call {
 	return &MockLazyContainer_UnregisterProvider_Call{Call: _e.mock.On("UnregisterProvider", name)}
 }
 

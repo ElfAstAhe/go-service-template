@@ -19,7 +19,7 @@ func TestBaseLazyContainer_LazyInitialization(t *testing.T) {
 	instanceName := "lazy-service"
 
 	// Регистрируем провайдер
-	err := ctn.RegisterProvider(instanceName, func(name string) (any, error) {
+	err := ctn.RegisterProvider(instanceName, func() (any, error) {
 		counter++ // Увеличиваем счетчик при каждом вызове
 		return "service-instance", nil
 	})
@@ -55,7 +55,7 @@ func TestBaseLazyContainer_Concurrency(t *testing.T) {
 	var createCount int32
 	instanceName := "concurrent-service"
 
-	_ = ctn.RegisterProvider(instanceName, func(name string) (any, error) {
+	_ = ctn.RegisterProvider(instanceName, func() (any, error) {
 		atomic.AddInt32(&createCount, 1)
 		time.Sleep(10 * time.Millisecond) // Симулируем тяжелую сборку
 		return "ok", nil
@@ -83,7 +83,7 @@ func TestBaseLazyContainer_Order(t *testing.T) {
 
 	names := []string{"first", "second", "third"}
 	for _, name := range names {
-		_ = ctn.RegisterProvider(name, func(n string) (any, error) { return "ok", nil })
+		_ = ctn.RegisterProvider(name, func() (any, error) { return "ok", nil })
 	}
 
 	// Здесь нужно проверить внутреннее поле order,
@@ -95,7 +95,7 @@ func TestBaseLazyContainer_Unregister(t *testing.T) {
 	ctn := container.NewBaseLazyContainer("clean-ctn", nil)
 	name := "to-delete"
 
-	_ = ctn.RegisterProvider(name, func(n string) (any, error) { return "val", nil })
+	_ = ctn.RegisterProvider(name, func() (any, error) { return "val", nil })
 	_, _ = ctn.GetInstance(name) // "Будим" объект
 
 	if !ctn.IsRegistered(name) {
@@ -121,7 +121,7 @@ func TestBaseLazyContainer_ProviderError(t *testing.T) {
 	expectedErrText := "first time fail"
 	calls := 0
 
-	_ = ctn.RegisterProvider(name, func(n string) (any, error) {
+	_ = ctn.RegisterProvider(name, func() (any, error) {
 		calls++
 		if calls == 1 {
 			return nil, errors.New(expectedErrText)
@@ -158,7 +158,7 @@ func TestBaseLazyContainer_OverrideLogic(t *testing.T) {
 	_ = ctn.RegisterInstance(name, "manual-version")
 
 	// 2. Пытаемся зарегистрировать провайдер с тем же именем
-	err := ctn.RegisterProvider(name, func(n string) (any, error) {
+	err := ctn.RegisterProvider(name, func() (any, error) {
 		return "lazy-version", nil
 	})
 
@@ -178,7 +178,7 @@ func TestBaseLazyContainer_SelfDependency(t *testing.T) {
 	ctn := container.NewBaseLazyContainer("deadlock-ctn", nil)
 
 	// Регистрируем А, который зависит от Б
-	_ = ctn.RegisterProvider("A", func(n string) (any, error) {
+	_ = ctn.RegisterProvider("A", func() (any, error) {
 		depB, err := ctn.GetInstance("B")
 		if err != nil {
 			return nil, err
@@ -187,7 +187,7 @@ func TestBaseLazyContainer_SelfDependency(t *testing.T) {
 	})
 
 	// Регистрируем Б
-	_ = ctn.RegisterProvider("B", func(n string) (any, error) {
+	_ = ctn.RegisterProvider("B", func() (any, error) {
 		return "B-instance", nil
 	})
 
@@ -206,8 +206,8 @@ func TestBaseLazyContainer_SelfDependency(t *testing.T) {
 func TestBaseLazyContainer_AllProvidersConsistency(t *testing.T) {
 	ctn := container.NewBaseLazyContainer("list-ctn", nil)
 
-	_ = ctn.RegisterProvider("p1", func(n string) (any, error) { return 1, nil })
-	_ = ctn.RegisterProvider("p2", func(n string) (any, error) { return 2, nil })
+	_ = ctn.RegisterProvider("p1", func() (any, error) { return 1, nil })
+	_ = ctn.RegisterProvider("p2", func() (any, error) { return 2, nil })
 
 	providers := ctn.AllProviders()
 	if len(providers) != 2 {

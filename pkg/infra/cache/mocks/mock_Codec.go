@@ -74,7 +74,7 @@ type MockCodec_Marshal_Call[V any] struct {
 // Marshal is a helper method to define mock.On call
 //   - v V
 //   - ttl time.Duration
-func (_e *MockCodec_Expecter[V]) Marshal(v interface{}, ttl interface{}) *MockCodec_Marshal_Call[V] {
+func (_e *MockCodec_Expecter[V]) Marshal(v any, ttl any) *MockCodec_Marshal_Call[V] {
 	return &MockCodec_Marshal_Call[V]{Call: _e.mock.On("Marshal", v, ttl)}
 }
 
@@ -141,7 +141,7 @@ type MockCodec_Unmarshal_Call[V any] struct {
 
 // Unmarshal is a helper method to define mock.On call
 //   - b []byte
-func (_e *MockCodec_Expecter[V]) Unmarshal(b interface{}) *MockCodec_Unmarshal_Call[V] {
+func (_e *MockCodec_Expecter[V]) Unmarshal(b any) *MockCodec_Unmarshal_Call[V] {
 	return &MockCodec_Unmarshal_Call[V]{Call: _e.mock.On("Unmarshal", b)}
 }
 

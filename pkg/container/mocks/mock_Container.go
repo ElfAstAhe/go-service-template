@@ -107,7 +107,7 @@ type MockContainer_Close_Call struct {
 
 // Close is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockContainer_Expecter) Close(ctx interface{}) *MockContainer_Close_Call {
+func (_e *MockContainer_Expecter) Close(ctx any) *MockContainer_Close_Call {
 	return &MockContainer_Close_Call{Call: _e.mock.On("Close", ctx)}
 }
 
@@ -169,7 +169,7 @@ type MockContainer_GetInstance_Call struct {
 
 // GetInstance is a helper method to define mock.On call
 //   - name string
-func (_e *MockContainer_Expecter) GetInstance(name interface{}) *MockContainer_GetInstance_Call {
+func (_e *MockContainer_Expecter) GetInstance(name any) *MockContainer_GetInstance_Call {
 	return &MockContainer_GetInstance_Call{Call: _e.mock.On("GetInstance", name)}
 }
 
@@ -264,7 +264,7 @@ type MockContainer_Init_Call struct {
 
 // Init is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockContainer_Expecter) Init(ctx interface{}) *MockContainer_Init_Call {
+func (_e *MockContainer_Expecter) Init(ctx any) *MockContainer_Init_Call {
 	return &MockContainer_Init_Call{Call: _e.mock.On("Init", ctx)}
 }
 
@@ -315,7 +315,7 @@ type MockContainer_IsRegistered_Call struct {
 
 // IsRegistered is a helper method to define mock.On call
 //   - name string
-func (_e *MockContainer_Expecter) IsRegistered(name interface{}) *MockContainer_IsRegistered_Call {
+func (_e *MockContainer_Expecter) IsRegistered(name any) *MockContainer_IsRegistered_Call {
 	return &MockContainer_IsRegistered_Call{Call: _e.mock.On("IsRegistered", name)}
 }
 
@@ -367,7 +367,7 @@ type MockContainer_RegisterInstance_Call struct {
 // RegisterInstance is a helper method to define mock.On call
 //   - name string
 //   - instance any
-func (_e *MockContainer_Expecter) RegisterInstance(name interface{}, instance interface{}) *MockContainer_RegisterInstance_Call {
+func (_e *MockContainer_Expecter) RegisterInstance(name any, instance any) *MockContainer_RegisterInstance_Call {
 	return &MockContainer_RegisterInstance_Call{Call: _e.mock.On("RegisterInstance", name, instance)}
 }
 
@@ -423,7 +423,7 @@ type MockContainer_UnregisterInstance_Call struct {
 
 // UnregisterInstance is a helper method to define mock.On call
 //   - name string
-func (_e *MockContainer_Expecter) UnregisterInstance(name interface{}) *MockContainer_UnregisterInstance_Call {
+func (_e *MockContainer_Expecter) UnregisterInstance(name any) *MockContainer_UnregisterInstance_Call {
 	return &MockContainer_UnregisterInstance_Call{Call: _e.mock.On("UnregisterInstance", name)}
 }
 

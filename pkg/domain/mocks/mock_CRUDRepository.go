@@ -74,7 +74,7 @@ type MockCRUDRepository_Change_Call[T domain.Entity[ID], ID comparable] struct {
 // Change is a helper method to define mock.On call
 //   - ctx context.Context
 //   - entity T
-func (_e *MockCRUDRepository_Expecter[T, ID]) Change(ctx interface{}, entity interface{}) *MockCRUDRepository_Change_Call[T, ID] {
+func (_e *MockCRUDRepository_Expecter[T, ID]) Change(ctx any, entity any) *MockCRUDRepository_Change_Call[T, ID] {
 	return &MockCRUDRepository_Change_Call[T, ID]{Call: _e.mock.On("Change", ctx, entity)}
 }
 
@@ -142,7 +142,7 @@ type MockCRUDRepository_Create_Call[T domain.Entity[ID], ID comparable] struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - entity T
-func (_e *MockCRUDRepository_Expecter[T, ID]) Create(ctx interface{}, entity interface{}) *MockCRUDRepository_Create_Call[T, ID] {
+func (_e *MockCRUDRepository_Expecter[T, ID]) Create(ctx any, entity any) *MockCRUDRepository_Create_Call[T, ID] {
 	return &MockCRUDRepository_Create_Call[T, ID]{Call: _e.mock.On("Create", ctx, entity)}
 }
 
@@ -199,7 +199,7 @@ type MockCRUDRepository_Delete_Call[T domain.Entity[ID], ID comparable] struct {
 // Delete is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id ID
-func (_e *MockCRUDRepository_Expecter[T, ID]) Delete(ctx interface{}, id interface{}) *MockCRUDRepository_Delete_Call[T, ID] {
+func (_e *MockCRUDRepository_Expecter[T, ID]) Delete(ctx any, id any) *MockCRUDRepository_Delete_Call[T, ID] {
 	return &MockCRUDRepository_Delete_Call[T, ID]{Call: _e.mock.On("Delete", ctx, id)}
 }
 
@@ -267,7 +267,7 @@ type MockCRUDRepository_Find_Call[T domain.Entity[ID], ID comparable] struct {
 // Find is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id ID
-func (_e *MockCRUDRepository_Expecter[T, ID]) Find(ctx interface{}, id interface{}) *MockCRUDRepository_Find_Call[T, ID] {
+func (_e *MockCRUDRepository_Expecter[T, ID]) Find(ctx any, id any) *MockCRUDRepository_Find_Call[T, ID] {
 	return &MockCRUDRepository_Find_Call[T, ID]{Call: _e.mock.On("Find", ctx, id)}
 }
 
@@ -336,7 +336,7 @@ type MockCRUDRepository_List_Call[T domain.Entity[ID], ID comparable] struct {
 //   - ctx context.Context
 //   - limit int
 //   - offset int
-func (_e *MockCRUDRepository_Expecter[T, ID]) List(ctx interface{}, limit interface{}, offset interface{}) *MockCRUDRepository_List_Call[T, ID] {
+func (_e *MockCRUDRepository_Expecter[T, ID]) List(ctx any, limit any, offset any) *MockCRUDRepository_List_Call[T, ID] {
 	return &MockCRUDRepository_List_Call[T, ID]{Call: _e.mock.On("List", ctx, limit, offset)}
 }
 

@@ -108,7 +108,7 @@ type MockOrchestrator_Close_Call struct {
 
 // Close is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockOrchestrator_Expecter) Close(ctx interface{}) *MockOrchestrator_Close_Call {
+func (_e *MockOrchestrator_Expecter) Close(ctx any) *MockOrchestrator_Close_Call {
 	return &MockOrchestrator_Close_Call{Call: _e.mock.On("Close", ctx)}
 }
 
@@ -170,7 +170,7 @@ type MockOrchestrator_GetContainer_Call struct {
 
 // GetContainer is a helper method to define mock.On call
 //   - name string
-func (_e *MockOrchestrator_Expecter) GetContainer(name interface{}) *MockOrchestrator_GetContainer_Call {
+func (_e *MockOrchestrator_Expecter) GetContainer(name any) *MockOrchestrator_GetContainer_Call {
 	return &MockOrchestrator_GetContainer_Call{Call: _e.mock.On("GetContainer", name)}
 }
 
@@ -276,7 +276,7 @@ type MockOrchestrator_HasContainer_Call struct {
 
 // HasContainer is a helper method to define mock.On call
 //   - name string
-func (_e *MockOrchestrator_Expecter) HasContainer(name interface{}) *MockOrchestrator_HasContainer_Call {
+func (_e *MockOrchestrator_Expecter) HasContainer(name any) *MockOrchestrator_HasContainer_Call {
 	return &MockOrchestrator_HasContainer_Call{Call: _e.mock.On("HasContainer", name)}
 }
 
@@ -327,7 +327,7 @@ type MockOrchestrator_Init_Call struct {
 
 // Init is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockOrchestrator_Expecter) Init(ctx interface{}) *MockOrchestrator_Init_Call {
+func (_e *MockOrchestrator_Expecter) Init(ctx any) *MockOrchestrator_Init_Call {
 	return &MockOrchestrator_Init_Call{Call: _e.mock.On("Init", ctx)}
 }
 
@@ -378,7 +378,7 @@ type MockOrchestrator_Register_Call struct {
 
 // Register is a helper method to define mock.On call
 //   - container1 container.Container
-func (_e *MockOrchestrator_Expecter) Register(container1 interface{}) *MockOrchestrator_Register_Call {
+func (_e *MockOrchestrator_Expecter) Register(container1 any) *MockOrchestrator_Register_Call {
 	return &MockOrchestrator_Register_Call{Call: _e.mock.On("Register", container1)}
 }
 
@@ -429,7 +429,7 @@ type MockOrchestrator_Unregister_Call struct {
 
 // Unregister is a helper method to define mock.On call
 //   - name string
-func (_e *MockOrchestrator_Expecter) Unregister(name interface{}) *MockOrchestrator_Unregister_Call {
+func (_e *MockOrchestrator_Expecter) Unregister(name any) *MockOrchestrator_Unregister_Call {
 	return &MockOrchestrator_Unregister_Call{Call: _e.mock.On("Unregister", name)}
 }
 

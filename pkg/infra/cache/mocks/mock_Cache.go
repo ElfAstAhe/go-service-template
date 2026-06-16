@@ -63,7 +63,7 @@ type MockCache_CacheJanitor_Call[K comparable, V any] struct {
 // CacheJanitor is a helper method to define mock.On call
 //   - ctx context.Context
 //   - eventTime time.Time
-func (_e *MockCache_Expecter[K, V]) CacheJanitor(ctx interface{}, eventTime interface{}) *MockCache_CacheJanitor_Call[K, V] {
+func (_e *MockCache_Expecter[K, V]) CacheJanitor(ctx any, eventTime any) *MockCache_CacheJanitor_Call[K, V] {
 	return &MockCache_CacheJanitor_Call[K, V]{Call: _e.mock.On("CacheJanitor", ctx, eventTime)}
 }
 
@@ -141,7 +141,7 @@ type MockCache_Delete_Call[K comparable, V any] struct {
 
 // Delete is a helper method to define mock.On call
 //   - key K
-func (_e *MockCache_Expecter[K, V]) Delete(key interface{}) *MockCache_Delete_Call[K, V] {
+func (_e *MockCache_Expecter[K, V]) Delete(key any) *MockCache_Delete_Call[K, V] {
 	return &MockCache_Delete_Call[K, V]{Call: _e.mock.On("Delete", key)}
 }
 
@@ -209,7 +209,7 @@ type MockCache_Get_Call[K comparable, V any] struct {
 
 // Get is a helper method to define mock.On call
 //   - key K
-func (_e *MockCache_Expecter[K, V]) Get(key interface{}) *MockCache_Get_Call[K, V] {
+func (_e *MockCache_Expecter[K, V]) Get(key any) *MockCache_Get_Call[K, V] {
 	return &MockCache_Get_Call[K, V]{Call: _e.mock.On("Get", key)}
 }
 
@@ -262,7 +262,7 @@ type MockCache_Set_Call[K comparable, V any] struct {
 //   - key K
 //   - value V
 //   - ttl time.Duration
-func (_e *MockCache_Expecter[K, V]) Set(key interface{}, value interface{}, ttl interface{}) *MockCache_Set_Call[K, V] {
+func (_e *MockCache_Expecter[K, V]) Set(key any, value any, ttl any) *MockCache_Set_Call[K, V] {
 	return &MockCache_Set_Call[K, V]{Call: _e.mock.On("Set", key, value, ttl)}
 }
 

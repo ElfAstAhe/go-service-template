@@ -335,7 +335,7 @@ type MockScheduler_Start_Call struct {
 
 // Start is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockScheduler_Expecter) Start(ctx interface{}) *MockScheduler_Start_Call {
+func (_e *MockScheduler_Expecter) Start(ctx any) *MockScheduler_Start_Call {
 	return &MockScheduler_Start_Call{Call: _e.mock.On("Start", ctx)}
 }
 
@@ -386,7 +386,7 @@ type MockScheduler_Stop_Call struct {
 
 // Stop is a helper method to define mock.On call
 //   - stopCtx context.Context
-func (_e *MockScheduler_Expecter) Stop(stopCtx interface{}) *MockScheduler_Stop_Call {
+func (_e *MockScheduler_Expecter) Stop(stopCtx any) *MockScheduler_Stop_Call {
 	return &MockScheduler_Stop_Call{Call: _e.mock.On("Stop", stopCtx)}
 }
 

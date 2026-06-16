@@ -37,6 +37,9 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/infra/cache:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/infra/pubsub:
+    config:
+      all: true
   github.com/ElfAstAhe/go-service-template/internal/domain:
     config:
       all: true

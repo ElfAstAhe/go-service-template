@@ -103,7 +103,7 @@ type MockEvictionPolicy_OnGet_Call[K comparable] struct {
 
 // OnGet is a helper method to define mock.On call
 //   - key K
-func (_e *MockEvictionPolicy_Expecter[K]) OnGet(key interface{}) *MockEvictionPolicy_OnGet_Call[K] {
+func (_e *MockEvictionPolicy_Expecter[K]) OnGet(key any) *MockEvictionPolicy_OnGet_Call[K] {
 	return &MockEvictionPolicy_OnGet_Call[K]{Call: _e.mock.On("OnGet", key)}
 }
 
@@ -143,7 +143,7 @@ type MockEvictionPolicy_OnRemove_Call[K comparable] struct {
 
 // OnRemove is a helper method to define mock.On call
 //   - key K
-func (_e *MockEvictionPolicy_Expecter[K]) OnRemove(key interface{}) *MockEvictionPolicy_OnRemove_Call[K] {
+func (_e *MockEvictionPolicy_Expecter[K]) OnRemove(key any) *MockEvictionPolicy_OnRemove_Call[K] {
 	return &MockEvictionPolicy_OnRemove_Call[K]{Call: _e.mock.On("OnRemove", key)}
 }
 
@@ -183,7 +183,7 @@ type MockEvictionPolicy_OnSet_Call[K comparable] struct {
 
 // OnSet is a helper method to define mock.On call
 //   - key K
-func (_e *MockEvictionPolicy_Expecter[K]) OnSet(key interface{}) *MockEvictionPolicy_OnSet_Call[K] {
+func (_e *MockEvictionPolicy_Expecter[K]) OnSet(key any) *MockEvictionPolicy_OnSet_Call[K] {
 	return &MockEvictionPolicy_OnSet_Call[K]{Call: _e.mock.On("OnSet", key)}
 }
 
