@@ -34,6 +34,9 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/transport/http:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/transport/amqp:
+    config:
+      all: true
   github.com/ElfAstAhe/go-service-template/pkg/infra/cache:
     config:
       all: true
