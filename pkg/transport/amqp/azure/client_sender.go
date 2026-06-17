@@ -3,12 +3,13 @@ package azure
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/Azure/go-amqp"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 // amqpSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
@@ -55,19 +56,35 @@ func (cs *ClientSender) Close(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cs.opts.shutdownTimeout)
 	defer cancel()
 
+	var closeErrs []error
+
 	for addr, sender := range cs.senders {
-		_ = sender.Close(ctx)
+		err := sender.Close(ctx)
+		if err != nil {
+			closeErrs = append(closeErrs, err)
+		}
 		delete(cs.senders, addr)
 	}
 
 	if cs.session != nil {
-		_ = cs.session.Close(ctx)
+		err := cs.session.Close(ctx)
+		if err != nil {
+			closeErrs = append(closeErrs, err)
+		}
 		cs.session = nil
 	}
 
 	if cs.conn != nil {
-		_ = cs.conn.Close()
+		err := cs.conn.Close()
+		if err != nil {
+			closeErrs = append(closeErrs, err)
+		}
 		cs.conn = nil
+	}
+
+	err := errors.Join(closeErrs...)
+	if err != nil {
+		return errs.NewCommonError("Azure AMQP client sender close fails", err)
 	}
 
 	return nil
@@ -75,8 +92,8 @@ func (cs *ClientSender) Close(ctx context.Context) error {
 
 // Publish отправляет сообщение с автоматическим фоновым In-Flight реконнектом и ретраем
 func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamqp.Message) error {
-	if msg == nil {
-		return errors.New("cannot publish nil message")
+	if utils.IsNil(msg) {
+		return errs.NewCommonError("cannot publish nil message", nil)
 	}
 
 	const maxAttempts = 2
@@ -90,7 +107,8 @@ func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamq
 				cs.resetInfrastructure()
 				continue
 			}
-			return fmt.Errorf("azure sender failed to initialize connection: %w", err)
+
+			return errs.NewCommonError("azure sender failed to initialize connection", err)
 		}
 
 		azureMsg := amqp.NewMessage(msg.Payload)
@@ -108,6 +126,7 @@ func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamq
 			if attempt > 1 {
 				cs.logger.Infof("AMQP message successfully published after automatic reconnection on attempt %d", attempt)
 			}
+
 			return nil
 		}
 
@@ -124,16 +143,16 @@ func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamq
 				cs.handleSendError(address, err)
 				continue // Уходим на вторую попытку со свежим сокетом!
 			}
-			return fmt.Errorf("azure sender network error persisted after retry: %w", err)
 
+			return errs.NewCommonError("azure sender network error persisted after retry", err)
 		default:
 			// Обычный таймаут контекста (context deadline exceeded) диспетчера.
 			// Сеть исправна, реконнект не нужен — выходим сразу.
-			return fmt.Errorf("azure sender unrecoverable send error: %w", err)
+			return errs.NewCommonError("azure sender unrecoverable send error", err)
 		}
 	}
 
-	return errors.New("azure sender unexpected retry loop exit")
+	return errs.NewCommonError("azure sender unexpected retry loop exit", nil)
 }
 
 func (cs *ClientSender) establishConnection(ctx context.Context) error {
@@ -148,17 +167,18 @@ func (cs *ClientSender) establishConnection(ctx context.Context) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("dial failed: %w", err)
+		return errs.NewCommonError("dial failed", err)
 	}
 
 	session, err := conn.NewSession(ctx, nil)
 	if err != nil {
 		_ = conn.Close()
-		return fmt.Errorf("failed to open session: %w", err)
+		return errs.NewCommonError("failed to open session", err)
 	}
 
 	cs.conn = conn
 	cs.session = session
+
 	return nil
 }
 
@@ -189,10 +209,12 @@ func (cs *ClientSender) getOrCreateSender(ctx context.Context, address string) (
 	newSender, err := cs.session.NewSender(ctx, address, nil)
 	if err != nil {
 		cs.session = nil
-		return nil, fmt.Errorf("failed to create amqp link: %w", err)
+
+		return nil, errs.NewCommonError("failed to create amqp link", err)
 	}
 
 	cs.senders[address] = newSender
+
 	return newSender, nil
 }
 

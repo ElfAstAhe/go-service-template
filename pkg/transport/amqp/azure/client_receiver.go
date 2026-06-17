@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/Azure/go-amqp"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
 )
@@ -62,37 +63,51 @@ func (cr *ClientReceiver) Close(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cr.opts.shutdownTimeout)
 	defer cancel()
 
+	var closeErrs []error
+
 	for queue, receiver := range cr.receivers {
-		_ = receiver.Close(ctx)
+		err := receiver.Close(ctx)
+		if err != nil {
+			closeErrs = append(closeErrs, err)
+		}
 		delete(cr.receivers, queue)
 	}
 
 	if cr.session != nil {
-		_ = cr.session.Close(ctx)
+		err := cr.session.Close(ctx)
+		if err != nil {
+			closeErrs = append(closeErrs, err)
+		}
 		cr.session = nil
 	}
 
 	if cr.conn != nil {
-		_ = cr.conn.Close()
+		err := cr.conn.Close()
+		if err != nil {
+			closeErrs = append(closeErrs, err)
+		}
 		cr.conn = nil
+	}
+	err := errors.Join(closeErrs...)
+	if err != nil {
+		return errs.NewCommonError("Azure AMQP client receiver close fails", err)
 	}
 
 	return nil
 }
 
 // Receive блокирует поток, ожидая новое сообщение из указанной очереди брокера
-// Receive блокирует поток, ожидая новое сообщение из указанной очереди брокера
 func (cr *ClientReceiver) Receive(ctx context.Context, queueName string) (*pkgamqp.Message, error) {
 	receiver, err := cr.getOrCreateReceiver(ctx, queueName)
 	if err != nil {
-		return nil, fmt.Errorf("azure receiver failed to get link for %s: %w", queueName, err)
+		return nil, errs.NewCommonError(fmt.Sprintf("azure receiver failed to get link for %s", queueName), err)
 	}
 
 	// Читаем сообщение из сокета (блокирующий вызов библиотеки Azure)
 	azureMsg, err := receiver.Receive(ctx, nil)
 	if err != nil {
 		cr.handleReceiverFailure(queueName, err)
-		return nil, fmt.Errorf("azure receiver incoming packet error: %w", err)
+		return nil, errs.NewCommonError("azure receiver incoming packet error", err)
 	}
 
 	// 1. Безопасно собираем Payload из Data [][]byte
@@ -141,17 +156,18 @@ func (cr *ClientReceiver) Receive(ctx context.Context, queueName string) (*pkgam
 func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message) error {
 	azureMsg, err := cr.extractSysMessage(msg)
 	if err != nil {
-		return err
+		return errs.NewCommonError("extract original azure amqp message failed", err)
 	}
 
 	receiver, err := cr.getOrCreateReceiver(ctx, "") // Поиск по сессии не требует имени
 	if err != nil {
-		return err
+		return errs.NewCommonError("retrieve or create azure receiver failed", err)
 	}
 
-	if err := receiver.AcceptMessage(ctx, azureMsg); err != nil {
-		return fmt.Errorf("azure receiver failed to accept amqp message: %w", err)
+	if err = receiver.AcceptMessage(ctx, azureMsg); err != nil {
+		return errs.NewCommonError("azure receiver failed to accept amqp message", err)
 	}
+
 	return nil
 }
 
@@ -159,19 +175,20 @@ func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message) erro
 func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message, err error) error {
 	azureMsg, extractErr := cr.extractSysMessage(msg)
 	if extractErr != nil {
-		return extractErr
+		return errs.NewCommonError("extract original azure amqp message failed", extractErr)
 	}
 
 	receiver, getErr := cr.getOrCreateReceiver(ctx, "")
 	if getErr != nil {
-		return getErr
+		return errs.NewCommonError("retrieve or create azure receiver failed", getErr)
 	}
 
 	// Передаем ошибку как причину отклонения пакета
 	amqpErr := &amqp.Error{Condition: "amqp:processing-error", Description: err.Error()}
-	if err := receiver.RejectMessage(ctx, azureMsg, amqpErr); err != nil {
-		return fmt.Errorf("azure receiver failed to reject amqp message: %w", err)
+	if err = receiver.RejectMessage(ctx, azureMsg, amqpErr); err != nil {
+		return errs.NewCommonError("azure receiver failed to reject amqp message", err)
 	}
+
 	return nil
 }
 
@@ -179,17 +196,18 @@ func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message, err 
 func (cr *ClientReceiver) Release(ctx context.Context, msg *pkgamqp.Message) error {
 	azureMsg, err := cr.extractSysMessage(msg)
 	if err != nil {
-		return err
+		return errs.NewCommonError("extract original azure amqp message failed", err)
 	}
 
 	receiver, err := cr.getOrCreateReceiver(ctx, "")
 	if err != nil {
-		return err
+		return errs.NewCommonError("retrieve or create azure receiver failed", err)
 	}
 
-	if err := receiver.ReleaseMessage(ctx, azureMsg); err != nil {
-		return fmt.Errorf("azure receiver failed to release amqp message: %w", err)
+	if err = receiver.ReleaseMessage(ctx, azureMsg); err != nil {
+		return errs.NewCommonError("azure receiver failed to release amqp message", err)
 	}
+
 	return nil
 }
 
@@ -206,17 +224,18 @@ func (cr *ClientReceiver) establishConnection(ctx context.Context) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("dial failed: %w", err)
+		return errs.NewCommonError("dial failed", err)
 	}
 
 	session, err := conn.NewSession(ctx, nil)
 	if err != nil {
 		_ = conn.Close()
-		return fmt.Errorf("failed to open session: %w", err)
+		return errs.NewCommonError("failed to open session", err)
 	}
 
 	cr.conn = conn
 	cr.session = session
+
 	return nil
 }
 
@@ -256,17 +275,19 @@ func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, queueName str
 
 	// Если имя пустое и сессия пустая — мы не можем создать дефолтный линк
 	if queueName == "" {
-		return nil, errors.New("amqp session is empty, cannot manage message acknowledgement state")
+		return nil, errs.NewCommonError("amqp session is empty, cannot manage message acknowledgement state", nil)
 	}
 
 	cr.logger.Debugf("opening new amqp source link for queue: %s", queueName)
 	newReceiver, err := cr.session.NewReceiver(ctx, queueName, nil)
 	if err != nil {
 		cr.session = nil
-		return nil, fmt.Errorf("failed to create amqp link receiver: %w", err)
+
+		return nil, errs.NewCommonError("failed to create amqp link", err)
 	}
 
 	cr.receivers[queueName] = newReceiver
+
 	return newReceiver, nil
 }
 
@@ -308,17 +329,17 @@ func (cr *ClientReceiver) clearAllLinks() {
 
 func (cr *ClientReceiver) extractSysMessage(msg *pkgamqp.Message) (*amqp.Message, error) {
 	if msg == nil || msg.Properties == nil {
-		return nil, errors.New("cannot manage ack state for empty message envelope")
+		return nil, errs.NewCommonError("cannot manage ack state for empty message envelope", nil)
 	}
 
 	raw, exists := msg.Properties[sysMsgKey]
 	if !exists {
-		return nil, errors.New("message envelope missing underlying system amqp context")
+		return nil, errs.NewCommonError("message envelope missing underlying system amqp context", nil)
 	}
 
 	sysMsg, ok := raw.(*amqp.Message)
 	if !ok {
-		return nil, errors.New("invalid underlying amqp packet structure type")
+		return nil, errs.NewCommonError("invalid underlying amqp packet structure type", nil)
 	}
 
 	return sysMsg, nil
