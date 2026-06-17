@@ -190,7 +190,7 @@ func (bp *BasePool[D]) worker(workerIndex int) {
 					bp.GetLogger().Errorf("worker pool %s worker %v job failed:  %v", bp.GetName(), workerIndex, err)
 				}
 			} else {
-				bp.GetLogger().Warnf("worker pool %s worker %v job handler not applied", bp.GetName(), workerIndex)
+				bp.GetLogger().Warnf("worker pool %s worker %v job handler not applied, data lost", bp.GetName(), workerIndex)
 			}
 		}
 	}
