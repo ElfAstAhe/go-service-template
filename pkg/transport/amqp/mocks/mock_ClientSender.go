@@ -39,8 +39,8 @@ func (_m *MockClientSender) EXPECT() *MockClientSender_Expecter {
 }
 
 // Publish provides a mock function for the type MockClientSender
-func (_mock *MockClientSender) Publish(ctx context.Context, address string, msg *amqp.Message) error {
-	ret := _mock.Called(ctx, address, msg)
+func (_mock *MockClientSender) Publish(ctx context.Context, targetName string, msg *amqp.Message) error {
+	ret := _mock.Called(ctx, targetName, msg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Publish")
@@ -48,7 +48,7 @@ func (_mock *MockClientSender) Publish(ctx context.Context, address string, msg 
 
 	var r0 error
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *amqp.Message) error); ok {
-		r0 = returnFunc(ctx, address, msg)
+		r0 = returnFunc(ctx, targetName, msg)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -62,13 +62,13 @@ type MockClientSender_Publish_Call struct {
 
 // Publish is a helper method to define mock.On call
 //   - ctx context.Context
-//   - address string
+//   - targetName string
 //   - msg *amqp.Message
-func (_e *MockClientSender_Expecter) Publish(ctx any, address any, msg any) *MockClientSender_Publish_Call {
-	return &MockClientSender_Publish_Call{Call: _e.mock.On("Publish", ctx, address, msg)}
+func (_e *MockClientSender_Expecter) Publish(ctx any, targetName any, msg any) *MockClientSender_Publish_Call {
+	return &MockClientSender_Publish_Call{Call: _e.mock.On("Publish", ctx, targetName, msg)}
 }
 
-func (_c *MockClientSender_Publish_Call) Run(run func(ctx context.Context, address string, msg *amqp.Message)) *MockClientSender_Publish_Call {
+func (_c *MockClientSender_Publish_Call) Run(run func(ctx context.Context, targetName string, msg *amqp.Message)) *MockClientSender_Publish_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -96,7 +96,7 @@ func (_c *MockClientSender_Publish_Call) Return(err error) *MockClientSender_Pub
 	return _c
 }
 
-func (_c *MockClientSender_Publish_Call) RunAndReturn(run func(ctx context.Context, address string, msg *amqp.Message) error) *MockClientSender_Publish_Call {
+func (_c *MockClientSender_Publish_Call) RunAndReturn(run func(ctx context.Context, targetName string, msg *amqp.Message) error) *MockClientSender_Publish_Call {
 	_c.Call.Return(run)
 	return _c
 }
