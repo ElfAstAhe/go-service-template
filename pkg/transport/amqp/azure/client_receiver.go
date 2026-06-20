@@ -213,14 +213,19 @@ func (cr *ClientReceiver) Release(ctx context.Context, msg *pkgamqp.Message) err
 
 // ---- Внутренние служебные методы (Оркестрация сокета) ----
 
+//goland:noinspection DuplicatedCode
 func (cr *ClientReceiver) establishConnection(ctx context.Context) error {
 	var conn *amqp.Conn
 	var err error
 
+	// Ограничиваем контекст подключения на базе нашего ConnectTimeout из конфига!
+	dialCtx, cancel := context.WithTimeout(ctx, cr.opts.connectTimeout)
+	defer cancel()
+
 	if cr.opts.dialFnTestGap != nil {
-		conn, err = cr.opts.dialFnTestGap(ctx, cr.url, cr.opts.ConnOptions)
+		conn, err = cr.opts.dialFnTestGap(dialCtx, cr.url, cr.opts.ConnOptions)
 	} else {
-		conn, err = amqp.Dial(ctx, cr.url, cr.opts.ConnOptions)
+		conn, err = amqp.Dial(dialCtx, cr.url, cr.opts.ConnOptions)
 	}
 
 	if err != nil {

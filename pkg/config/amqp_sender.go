@@ -15,8 +15,7 @@ type AMQPSenderConfig struct {
 	Password   string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 
 	// Настройки безопасности
-	CACertPath         string `mapstructure:"ca_cert_path" json:"ca_cert_path,omitempty" yaml:"ca_cert_path,omitempty"`
-	InsecureSkipVerify bool   `mapstructure:"insecure_skip_verify" json:"insecure_skip_verify,omitempty" yaml:"insecure_skip_verify,omitempty"` // Пропуск валидации сертификатов (для local dev)
+	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify" json:"insecure_skip_verify,omitempty" yaml:"insecure_skip_verify,omitempty"` // Пропуск валидации сертификатов (для local dev)
 
 	// Сетевые таймауты отправителя (Prod Way)
 	ConnectTimeout time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"` // Default: 5s
