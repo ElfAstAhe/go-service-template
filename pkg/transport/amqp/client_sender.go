@@ -5,5 +5,5 @@ import (
 )
 
 type ClientSender interface {
-	Publish(ctx context.Context, address string, msg *Message) error
+	Publish(ctx context.Context, targetName string, msg *Message) error
 }

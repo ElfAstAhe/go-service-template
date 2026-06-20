@@ -97,16 +97,16 @@ func (cr *ClientReceiver) Close(ctx context.Context) error {
 }
 
 // Receive блокирует поток, ожидая новое сообщение из указанной очереди брокера
-func (cr *ClientReceiver) Receive(ctx context.Context, queueName string) (*pkgamqp.Message, error) {
-	receiver, err := cr.getOrCreateReceiver(ctx, queueName)
+func (cr *ClientReceiver) Receive(ctx context.Context, targetName string) (*pkgamqp.Message, error) {
+	receiver, err := cr.getOrCreateReceiver(ctx, targetName)
 	if err != nil {
-		return nil, errs.NewCommonError(fmt.Sprintf("azure receiver failed to get link for %s", queueName), err)
+		return nil, errs.NewCommonError(fmt.Sprintf("azure receiver failed to get link for %s", targetName), err)
 	}
 
 	// Читаем сообщение из сокета (блокирующий вызов библиотеки Azure)
 	azureMsg, err := receiver.Receive(ctx, nil)
 	if err != nil {
-		cr.handleReceiverFailure(queueName, err)
+		cr.handleReceiverFailure(targetName, err)
 		return nil, errs.NewCommonError("azure receiver incoming packet error", err)
 	}
 
@@ -154,7 +154,7 @@ func (cr *ClientReceiver) Receive(ctx context.Context, queueName string) (*pkgam
 
 // Accept подтверждает успешную обработку сообщения
 func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message) error {
-	azureMsg, err := cr.extractSysMessage(msg)
+	azureMsg, err := cr.extractOriginalMessage(msg)
 	if err != nil {
 		return errs.NewCommonError("extract original azure amqp message failed", err)
 	}
@@ -173,7 +173,7 @@ func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message) erro
 
 // Reject уводит сообщение в Dead Letter Address (DLA) брокера при критической ошибке
 func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message, err error) error {
-	azureMsg, extractErr := cr.extractSysMessage(msg)
+	azureMsg, extractErr := cr.extractOriginalMessage(msg)
 	if extractErr != nil {
 		return errs.NewCommonError("extract original azure amqp message failed", extractErr)
 	}
@@ -194,7 +194,7 @@ func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message, err 
 
 // Release возвращает сообщение обратно в начало очереди для ретрая
 func (cr *ClientReceiver) Release(ctx context.Context, msg *pkgamqp.Message) error {
-	azureMsg, err := cr.extractSysMessage(msg)
+	azureMsg, err := cr.extractOriginalMessage(msg)
 	if err != nil {
 		return errs.NewCommonError("extract original azure amqp message failed", err)
 	}
@@ -239,10 +239,10 @@ func (cr *ClientReceiver) establishConnection(ctx context.Context) error {
 	return nil
 }
 
-func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, queueName string) (amqpReceiverLink, error) {
+func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, targetName string) (amqpReceiverLink, error) {
 	cr.mu.RLock()
 	// Если queueName пустой (вызов из Accept/Reject), берем любой первый живой ресивер сессии
-	if queueName == "" {
+	if targetName == "" {
 		for _, r := range cr.receivers {
 			if r != nil {
 				cr.mu.RUnlock()
@@ -250,7 +250,7 @@ func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, queueName str
 			}
 		}
 	}
-	receiver, exists := cr.receivers[queueName]
+	receiver, exists := cr.receivers[targetName]
 	cr.mu.RUnlock()
 
 	if exists && receiver != nil {
@@ -261,8 +261,8 @@ func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, queueName str
 	defer cr.mu.Unlock()
 
 	// Double-checked locking
-	if queueName != "" {
-		if receiver, exists = cr.receivers[queueName]; exists && receiver != nil {
+	if targetName != "" {
+		if receiver, exists = cr.receivers[targetName]; exists && receiver != nil {
 			return receiver, nil
 		}
 	}
@@ -274,24 +274,24 @@ func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, queueName str
 	}
 
 	// Если имя пустое и сессия пустая — мы не можем создать дефолтный линк
-	if queueName == "" {
+	if targetName == "" {
 		return nil, errs.NewCommonError("amqp session is empty, cannot manage message acknowledgement state", nil)
 	}
 
-	cr.logger.Debugf("opening new amqp source link for queue: %s", queueName)
-	newReceiver, err := cr.session.NewReceiver(ctx, queueName, nil)
+	cr.logger.Debugf("opening new amqp source link for target name: %s", targetName)
+	newReceiver, err := cr.session.NewReceiver(ctx, targetName, nil)
 	if err != nil {
 		cr.session = nil
 
 		return nil, errs.NewCommonError("failed to create amqp link", err)
 	}
 
-	cr.receivers[queueName] = newReceiver
+	cr.receivers[targetName] = newReceiver
 
 	return newReceiver, nil
 }
 
-func (cr *ClientReceiver) handleReceiverFailure(queueName string, err error) {
+func (cr *ClientReceiver) handleReceiverFailure(targetName string, err error) {
 	var linkErr *amqp.LinkError
 	var sessionErr *amqp.SessionError
 	var connErr *amqp.ConnError
@@ -301,10 +301,10 @@ func (cr *ClientReceiver) handleReceiverFailure(queueName string, err error) {
 
 	switch {
 	case errors.As(err, &linkErr):
-		cr.logger.Errorf("AMQP Receiver Link dead for queue %s: %v. Cleaning target link.", queueName, linkErr)
-		if receiver, exists := cr.receivers[queueName]; exists {
+		cr.logger.Errorf("AMQP Receiver Link dead for target name %s: %v. Cleaning target link.", targetName, linkErr)
+		if receiver, exists := cr.receivers[targetName]; exists {
 			_ = receiver.Close(context.Background())
-			delete(cr.receivers, queueName)
+			delete(cr.receivers, targetName)
 		}
 
 	case errors.As(err, &sessionErr):
@@ -321,13 +321,13 @@ func (cr *ClientReceiver) handleReceiverFailure(queueName string, err error) {
 }
 
 func (cr *ClientReceiver) clearAllLinks() {
-	for queue, receiver := range cr.receivers {
+	for targetName, receiver := range cr.receivers {
 		_ = receiver.Close(context.Background())
-		delete(cr.receivers, queue)
+		delete(cr.receivers, targetName)
 	}
 }
 
-func (cr *ClientReceiver) extractSysMessage(msg *pkgamqp.Message) (*amqp.Message, error) {
+func (cr *ClientReceiver) extractOriginalMessage(msg *pkgamqp.Message) (*amqp.Message, error) {
 	if msg == nil || msg.Properties == nil {
 		return nil, errs.NewCommonError("cannot manage ack state for empty message envelope", nil)
 	}

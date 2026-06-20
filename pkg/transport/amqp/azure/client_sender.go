@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/Azure/go-amqp"
@@ -91,7 +92,7 @@ func (cs *ClientSender) Close(ctx context.Context) error {
 }
 
 // Publish отправляет сообщение с автоматическим фоновым In-Flight реконнектом и ретраем
-func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamqp.Message) error {
+func (cs *ClientSender) Publish(ctx context.Context, targetName string, msg *pkgamqp.Message) error {
 	if utils.IsNil(msg) {
 		return errs.NewCommonError("cannot publish nil message", nil)
 	}
@@ -100,7 +101,7 @@ func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamq
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		// Лениво берем или открываем соединение прямо в момент отправки
-		sender, err := cs.getOrCreateSender(ctx, address)
+		sender, err := cs.getOrCreateSender(ctx, targetName)
 		if err != nil {
 			if attempt == 1 {
 				cs.logger.Warnf("AMQP failed to get sender on attempt 1, resetting session for retry: %v", err)
@@ -140,7 +141,7 @@ func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamq
 			// Поймали сетевой сбой (или сработавший idle timeout брокера) [INDEX].
 			if attempt < maxAttempts {
 				cs.logger.Warnf("AMQP network failure detected on attempt %d (%v). Invalidating resources and retrying...", attempt, err)
-				cs.handleSendError(address, err)
+				cs.handleSendError(targetName, err)
 				continue // Уходим на вторую попытку со свежим сокетом!
 			}
 
@@ -155,6 +156,7 @@ func (cs *ClientSender) Publish(ctx context.Context, address string, msg *pkgamq
 	return errs.NewCommonError("azure sender unexpected retry loop exit", nil)
 }
 
+//goland:noinspection DuplicatedCode
 func (cs *ClientSender) establishConnection(ctx context.Context) error {
 	var conn *amqp.Conn
 	var err error
@@ -182,9 +184,9 @@ func (cs *ClientSender) establishConnection(ctx context.Context) error {
 	return nil
 }
 
-func (cs *ClientSender) getOrCreateSender(ctx context.Context, address string) (amqpSenderLink, error) {
+func (cs *ClientSender) getOrCreateSender(ctx context.Context, targetName string) (amqpSenderLink, error) {
 	cs.mu.RLock()
-	sender, exists := cs.senders[address]
+	sender, exists := cs.senders[targetName]
 	cs.mu.RUnlock()
 
 	if exists && sender != nil {
@@ -195,7 +197,7 @@ func (cs *ClientSender) getOrCreateSender(ctx context.Context, address string) (
 	defer cs.mu.Unlock()
 
 	// Double-checked locking
-	if sender, exists = cs.senders[address]; exists && sender != nil {
+	if sender, exists = cs.senders[targetName]; exists && sender != nil {
 		return sender, nil
 	}
 
@@ -205,20 +207,20 @@ func (cs *ClientSender) getOrCreateSender(ctx context.Context, address string) (
 		}
 	}
 
-	cs.logger.Debugf("opening new amqp target link for address: %s", address)
-	newSender, err := cs.session.NewSender(ctx, address, nil)
+	cs.logger.Debugf("opening new amqp target link for target name: %s", targetName)
+	newSender, err := cs.session.NewSender(ctx, targetName, nil)
 	if err != nil {
 		cs.session = nil
 
-		return nil, errs.NewCommonError("failed to create amqp link", err)
+		return nil, errs.NewCommonError(fmt.Sprintf("failed to create amqp link for target [%s]", targetName), err)
 	}
 
-	cs.senders[address] = newSender
+	cs.senders[targetName] = newSender
 
 	return newSender, nil
 }
 
-func (cs *ClientSender) handleSendError(address string, err error) {
+func (cs *ClientSender) handleSendError(targetName string, err error) {
 	var linkErr *amqp.LinkError
 	var sessionErr *amqp.SessionError
 	var connErr *amqp.ConnError
@@ -228,10 +230,10 @@ func (cs *ClientSender) handleSendError(address string, err error) {
 
 	switch {
 	case errors.As(err, &linkErr):
-		cs.logger.Errorf("AMQP Link dead for address %s: %v. Cleaning target link.", address, linkErr)
-		if sender, exists := cs.senders[address]; exists {
+		cs.logger.Errorf("AMQP Link dead for address %s: %v. Cleaning target link.", targetName, linkErr)
+		if sender, exists := cs.senders[targetName]; exists {
 			_ = sender.Close(context.Background())
-			delete(cs.senders, address)
+			delete(cs.senders, targetName)
 		}
 
 	case errors.As(err, &sessionErr):

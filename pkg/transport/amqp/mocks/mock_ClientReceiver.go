@@ -147,8 +147,8 @@ func (_c *MockClientReceiver_Close_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // Receive provides a mock function for the type MockClientReceiver
-func (_mock *MockClientReceiver) Receive(ctx context.Context, queueName string) (*amqp.Message, error) {
-	ret := _mock.Called(ctx, queueName)
+func (_mock *MockClientReceiver) Receive(ctx context.Context, targetName string) (*amqp.Message, error) {
+	ret := _mock.Called(ctx, targetName)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Receive")
@@ -157,17 +157,17 @@ func (_mock *MockClientReceiver) Receive(ctx context.Context, queueName string) 
 	var r0 *amqp.Message
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*amqp.Message, error)); ok {
-		return returnFunc(ctx, queueName)
+		return returnFunc(ctx, targetName)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *amqp.Message); ok {
-		r0 = returnFunc(ctx, queueName)
+		r0 = returnFunc(ctx, targetName)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*amqp.Message)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = returnFunc(ctx, queueName)
+		r1 = returnFunc(ctx, targetName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -181,12 +181,12 @@ type MockClientReceiver_Receive_Call struct {
 
 // Receive is a helper method to define mock.On call
 //   - ctx context.Context
-//   - queueName string
-func (_e *MockClientReceiver_Expecter) Receive(ctx any, queueName any) *MockClientReceiver_Receive_Call {
-	return &MockClientReceiver_Receive_Call{Call: _e.mock.On("Receive", ctx, queueName)}
+//   - targetName string
+func (_e *MockClientReceiver_Expecter) Receive(ctx any, targetName any) *MockClientReceiver_Receive_Call {
+	return &MockClientReceiver_Receive_Call{Call: _e.mock.On("Receive", ctx, targetName)}
 }
 
-func (_c *MockClientReceiver_Receive_Call) Run(run func(ctx context.Context, queueName string)) *MockClientReceiver_Receive_Call {
+func (_c *MockClientReceiver_Receive_Call) Run(run func(ctx context.Context, targetName string)) *MockClientReceiver_Receive_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -209,7 +209,7 @@ func (_c *MockClientReceiver_Receive_Call) Return(message *amqp.Message, err err
 	return _c
 }
 
-func (_c *MockClientReceiver_Receive_Call) RunAndReturn(run func(ctx context.Context, queueName string) (*amqp.Message, error)) *MockClientReceiver_Receive_Call {
+func (_c *MockClientReceiver_Receive_Call) RunAndReturn(run func(ctx context.Context, targetName string) (*amqp.Message, error)) *MockClientReceiver_Receive_Call {
 	_c.Call.Return(run)
 	return _c
 }
