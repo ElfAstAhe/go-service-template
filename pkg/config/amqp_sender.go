@@ -7,16 +7,16 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// AMQPSenderConfig currently usable for artemis amq, later improve for artemis,kafka,rabbit
 type AMQPSenderConfig struct {
 	URL        string `mapstructure:"url" json:"url,omitempty" yaml:"url,omitempty"`                         // Хост и порт брокера (например, "localhost:5672")
-	Address    string `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty"`             // Адрес очереди/топика
-	TargetName string `mapstructure:"target_name" json:"target_name,omitempty" yaml:"target_name,omitempty"` // Имя очереди, которую слушаем
+	TargetName string `mapstructure:"target_name" json:"target_name,omitempty" yaml:"target_name,omitempty"` // Имя очереди (FQQN)
 	Username   string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
 	Password   string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 
 	// Настройки безопасности
-	Secure             bool `mapstructure:"secure" json:"secure,omitempty" yaml:"secure,omitempty"`                                           // Включает шифрование трафика (SSL/TLS)
-	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify" json:"insecure_skip_verify,omitempty" yaml:"insecure_skip_verify,omitempty"` // Пропуск валидации сертификатов (для local dev)
+	CACertPath         string `mapstructure:"ca_cert_path" json:"ca_cert_path,omitempty" yaml:"ca_cert_path,omitempty"`
+	InsecureSkipVerify bool   `mapstructure:"insecure_skip_verify" json:"insecure_skip_verify,omitempty" yaml:"insecure_skip_verify,omitempty"` // Пропуск валидации сертификатов (для local dev)
 
 	// Сетевые таймауты отправителя (Prod Way)
 	ConnectTimeout time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"` // Default: 5s
@@ -29,11 +29,9 @@ type AMQPSenderConfig struct {
 
 func NewAMQPSenderConfig(
 	url string,
-	address string,
 	targetName string,
 	username string,
 	password string,
-	secure bool,
 	insecureSkipVerify bool,
 	connectTimeout time.Duration,
 	writeTimeout time.Duration,
@@ -42,11 +40,9 @@ func NewAMQPSenderConfig(
 ) *AMQPSenderConfig {
 	return &AMQPSenderConfig{
 		URL:                url,
-		Address:            address,
 		TargetName:         targetName,
 		Username:           username,
 		Password:           password,
-		Secure:             secure,
 		InsecureSkipVerify: insecureSkipVerify,
 		ConnectTimeout:     connectTimeout,
 		WriteTimeout:       writeTimeout,
@@ -61,8 +57,6 @@ func NewDefaultAMQPSenderConfig() *AMQPSenderConfig {
 		"",
 		"",
 		"",
-		"",
-		DefaultAMQPSenderSecure,
 		DefaultAMQPSenderInsecureSkipVerify,
 		DefaultAMQPSenderConnectTimeout,
 		DefaultAMQPSenderWriteTimeout,
@@ -74,9 +68,6 @@ func NewDefaultAMQPSenderConfig() *AMQPSenderConfig {
 func (sc *AMQPSenderConfig) Validate() error {
 	if strings.TrimSpace(sc.URL) == "" {
 		return errs.NewConfigValidateError("amqp sender", "URL", "empty", nil)
-	}
-	if strings.TrimSpace(sc.Address) == "" {
-		return errs.NewConfigValidateError("amqp sender", "Address", "empty", nil)
 	}
 	if strings.TrimSpace(sc.TargetName) == "" {
 		return errs.NewConfigValidateError("amqp sender", "TargetName", "empty", nil)

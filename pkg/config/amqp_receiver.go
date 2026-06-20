@@ -9,13 +9,11 @@ import (
 
 type AMQPReceiverConfig struct {
 	URL        string `mapstructure:"url" json:"url,omitempty" yaml:"url,omitempty"`                         // Хост и порт брокера
-	Address    string `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty"`             // Адрес очереди/топика
 	TargetName string `mapstructure:"target_name" json:"target_name,omitempty" yaml:"target_name,omitempty"` // Имя очереди, которую слушаем
 	Username   string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
 	Password   string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 
 	// Настройки безопасности
-	Secure             bool `mapstructure:"secure" json:"secure,omitempty" yaml:"secure,omitempty"`                                           // Включает шифрование трафика
 	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify" json:"insecure_skip_verify,omitempty" yaml:"insecure_skip_verify,omitempty"` // Пропуск валидации сертификатов (для local dev)
 
 	// Сетевые таймауты получателя
@@ -32,11 +30,9 @@ type AMQPReceiverConfig struct {
 
 func NewAMQPReceiverConfig(
 	url string,
-	address string,
 	targetName string,
 	username string,
 	password string,
-	secure bool,
 	insecureSkipVerify bool,
 	connectTimeout time.Duration,
 	idleTimeout time.Duration,
@@ -48,11 +44,9 @@ func NewAMQPReceiverConfig(
 ) *AMQPReceiverConfig {
 	return &AMQPReceiverConfig{
 		URL:                url,
-		Address:            address,
 		TargetName:         targetName,
 		Username:           username,
 		Password:           password,
-		Secure:             secure,
 		InsecureSkipVerify: insecureSkipVerify,
 		ConnectTimeout:     connectTimeout,
 		IdleTimeout:        idleTimeout,
@@ -70,8 +64,6 @@ func NewDefaultAMQPReceiverConfig() *AMQPReceiverConfig {
 		"",
 		"",
 		"",
-		"",
-		DefaultAMQPReceiverSecure,
 		DefaultAMQPReceiverInsecureSkipVerify,
 		DefaultAMQPReceiverConnectTimeout,
 		DefaultAMQPReceiverIdleTimeout,
@@ -86,9 +78,6 @@ func NewDefaultAMQPReceiverConfig() *AMQPReceiverConfig {
 func (rc *AMQPReceiverConfig) Validate() error {
 	if strings.TrimSpace(rc.URL) == "" {
 		return errs.NewConfigValidateError("amqp receiver", "URL", "empty", nil)
-	}
-	if strings.TrimSpace(rc.Address) == "" {
-		return errs.NewConfigValidateError("amqp receiver", "Address", "empty", nil)
 	}
 	if strings.TrimSpace(rc.TargetName) == "" {
 		return errs.NewConfigValidateError("amqp receiver", "TargetName", "empty", nil)

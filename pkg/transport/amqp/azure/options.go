@@ -3,6 +3,9 @@ package azure
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/Azure/go-amqp"
@@ -31,12 +34,75 @@ func WithSASLPlain(username, password string) Option {
 	}
 }
 
+// WithTLS задает конфигурацию TLS для защищенного соединения.
+// Внимание: метод полностью перезаписывает структуру TLSConfig.
+// Если вам нужно переопределить флаг InsecureSkipVerify,
+// вызывайте опцию WithInsecureSkipVerify строго ПОСЛЕ WithTLS.
 func WithTLS(config *tls.Config) Option {
 	return func(o *options) {
 		if o.ConnOptions == nil {
 			o.ConnOptions = &amqp.ConnOptions{}
 		}
 		o.ConnOptions.TLSConfig = config
+	}
+}
+
+func WithInsecureSkipVerify(skip bool) Option {
+	return func(o *options) {
+		if o.ConnOptions == nil {
+			o.ConnOptions = &amqp.ConnOptions{}
+		}
+		if o.ConnOptions.TLSConfig == nil {
+			o.ConnOptions.TLSConfig = &tls.Config{}
+		}
+		o.ConnOptions.TLSConfig.InsecureSkipVerify = skip
+	}
+}
+
+// WithCACerts загружает корневые сертификаты из одного или нескольких PEM-файлов.
+func WithCACerts(certPaths ...string) Option {
+	return func(o *options) {
+		if len(certPaths) == 0 {
+			return
+		}
+
+		if o.ConnOptions == nil {
+			o.ConnOptions = &amqp.ConnOptions{}
+		}
+		if o.ConnOptions.TLSConfig == nil {
+			o.ConnOptions.TLSConfig = &tls.Config{}
+		}
+
+		caCertPool, err := x509.SystemCertPool() // Загружает дефолтные сертификаты ОС
+		if err != nil {
+			caCertPool = x509.NewCertPool() // Фолбек, если в системе нет пула (например, в scratch-контейнере)
+		}
+		var loadedAny bool
+
+		for _, path := range certPaths {
+			if strings.TrimSpace(path) == "" {
+				continue
+			}
+
+			certBytes, err := os.ReadFile(path)
+			if err != nil {
+				continue // Или логируем ошибку чтения конкретного файла
+			}
+
+			// AppendCertsFromPEM проглотит как один сертификат, так и всю цепочку в файле
+			if ok := caCertPool.AppendCertsFromPEM(certBytes); ok {
+				loadedAny = true
+			}
+		}
+
+		// Если не удалось загрузить вообще ни одного сертификата из переданных путей,
+		// инвалидируем пул, чтобы Dial упал, защищая периметр.
+		if !loadedAny {
+			o.ConnOptions.TLSConfig.RootCAs = x509.NewCertPool()
+			return
+		}
+
+		o.ConnOptions.TLSConfig.RootCAs = caCertPool
 	}
 }
 
