@@ -161,11 +161,15 @@ func (cs *ClientSender) establishConnection(ctx context.Context) error {
 	var conn *amqp.Conn
 	var err error
 
+	// Ограничиваем контекст подключения на базе нашего ConnectTimeout из конфига!
+	dialCtx, cancel := context.WithTimeout(ctx, cs.opts.connectTimeout)
+	defer cancel()
+
 	// Если в тесте передан мок — вызываем его, иначе идем в реальную сеть
 	if cs.opts.dialFnTestGap != nil {
-		conn, err = cs.opts.dialFnTestGap(ctx, cs.url, cs.opts.ConnOptions)
+		conn, err = cs.opts.dialFnTestGap(dialCtx, cs.url, cs.opts.ConnOptions)
 	} else {
-		conn, err = amqp.Dial(ctx, cs.url, cs.opts.ConnOptions)
+		conn, err = amqp.Dial(dialCtx, cs.url, cs.opts.ConnOptions)
 	}
 
 	if err != nil {

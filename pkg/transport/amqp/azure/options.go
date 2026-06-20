@@ -15,8 +15,15 @@ type Option func(*options)
 
 type options struct {
 	*amqp.ConnOptions
+	connectTimeout  time.Duration
 	shutdownTimeout time.Duration
 	dialFnTestGap   func(ctx context.Context, url string, opts *amqp.ConnOptions) (*amqp.Conn, error)
+}
+
+func WithConnectTimeout(timeout time.Duration) Option {
+	return func(o *options) {
+		o.connectTimeout = timeout
+	}
 }
 
 func WithShutdownTimeout(timeout time.Duration) Option {
