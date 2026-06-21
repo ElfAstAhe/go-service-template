@@ -60,13 +60,13 @@ func (cr *ClientReceiver) Close(ctx context.Context) error {
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cr.opts.shutdownTimeout)
-	defer cancel()
+	closeCtx, closeCancel := context.WithTimeout(context.WithoutCancel(ctx), cr.opts.shutdownTimeout)
+	defer closeCancel()
 
 	var closeErrs []error
 
 	for queue, receiver := range cr.receivers {
-		err := receiver.Close(ctx)
+		err := receiver.Close(closeCtx)
 		if err != nil {
 			closeErrs = append(closeErrs, err)
 		}
@@ -74,7 +74,7 @@ func (cr *ClientReceiver) Close(ctx context.Context) error {
 	}
 
 	if cr.session != nil {
-		err := cr.session.Close(ctx)
+		err := cr.session.Close(closeCtx)
 		if err != nil {
 			closeErrs = append(closeErrs, err)
 		}
