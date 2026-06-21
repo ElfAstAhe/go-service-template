@@ -83,6 +83,8 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	cr.router.Use(pkgmware.NewDefaultRequestIDExtractor().Handler)
 	// traceID (own implementation)
 	cr.router.Use(pkgmware.NewDefaultTraceIDExtractor().Handler)
+	// realIP (own implementation)
+	cr.router.Use(pkgmware.NewDefaultRealIPExtractor().Handler)
 	// realIP
 	cr.router.Use(middleware.RealIP)
 	// recoverer

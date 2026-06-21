@@ -221,7 +221,6 @@ const (
 // amqp sender
 const (
 	DefaultAMQPSenderURL                string        = "amqp://localhost:5672/"
-	DefaultAMQPSenderSecure             bool          = false
 	DefaultAMQPSenderInsecureSkipVerify bool          = true
 	DefaultAMQPSenderConnectTimeout     time.Duration = 10 * time.Second
 	DefaultAMQPSenderWriteTimeout       time.Duration = 10 * time.Second
@@ -232,7 +231,6 @@ const (
 // amqp receiver
 const (
 	DefaultAMQPReceiverURL                string        = "amqp://localhost:5672/"
-	DefaultAMQPReceiverSecure             bool          = false
 	DefaultAMQPReceiverInsecureSkipVerify bool          = true
 	DefaultAMQPReceiverConnectTimeout     time.Duration = 10 * time.Second
 	DefaultAMQPReceiverIdleTimeout        time.Duration = 30 * time.Second
