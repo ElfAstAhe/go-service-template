@@ -1,11 +1,14 @@
 package container
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 type BaseLazyContainer struct {
@@ -266,4 +269,66 @@ func (blc *BaseLazyContainer) UnregisterInstance(name string) error {
 	}
 
 	return nil
+}
+
+func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
+	var wg sync.WaitGroup
+
+	// 1. Блокируем и собираем инстансы СТРОГО в порядке их регистрации (blc.order)
+	blc.mu.RLock()
+	closables := make([]any, 0, len(blc.order))
+	for _, name := range blc.order {
+		if inst, err := blc.BaseContainer.GetInstance(name); err == nil {
+			closables = append(closables, inst)
+		}
+	}
+	blc.mu.RUnlock()
+
+	// 2. Очищаем локальные структуры и базовый контейнер
+	blc.mu.Lock()
+	blc.providers = make(map[string]Provider)
+	blc.names = make(map[string]struct{})
+	blc.order = make([]string, 0)
+	blc.mu.Unlock()
+
+	// Используем логику безопасного закрытия, очищая BaseContainer
+	// Чтобы не дублировать логику с WaitGroup и селектами, мы можем вызвать базовый Close,
+	// но так как мапа там уже пуста, мы просто закрываем собранные элементы вручную:
+	closeChan := make(chan struct{})
+	closeErrs := utils.NewConcurrentList[error]()
+
+	for _, instance := range closables {
+		if inst, ok := instance.(SimpleCloser); ok {
+			wg.Add(1)
+			go func(closer SimpleCloser) {
+				defer wg.Done()
+				if err := closer.Close(); err != nil {
+					closeErrs.Append(err)
+				}
+			}(inst)
+		} else if inst, ok := instance.(ContextCloser); ok {
+			wg.Add(1)
+			go func(closer ContextCloser) {
+				defer wg.Done()
+				if err := closer.Close(closeCtx); err != nil {
+					closeErrs.Append(err)
+				}
+			}(inst)
+		}
+	}
+
+	go func() {
+		defer close(closeChan)
+		wg.Wait()
+	}()
+
+	select {
+	case <-closeChan:
+		if closeErrs.Len() > 0 {
+			return errs.NewContainerError(blc.GetName(), "lazy container close: close fails", errors.Join(closeErrs.Snapshot()...))
+		}
+		return nil
+	case <-closeCtx.Done():
+		return errs.NewContainerError(blc.GetName(), "lazy container close: close timeout limit reached", closeCtx.Err())
+	}
 }

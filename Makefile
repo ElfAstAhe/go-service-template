@@ -67,6 +67,7 @@ test:
 # Запуск бенчмарков (сюда добавляем все вызовы) или разные параметры под один пакет
 bench:
 	go test -bench=BenchmarkManager_FullCycle -benchmem ./pkg/infra/cache/test/...
+	go test -bench=. -benchmem ./pkg/utils/...
 
 # Запуск static check
 static-check:

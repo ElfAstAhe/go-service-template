@@ -1,16 +1,23 @@
 package test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
+	"github.com/ElfAstAhe/go-service-template/pkg/container/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBaseContainer_Lifecycle(t *testing.T) {
-	c := container.NewBaseContainer("test-container", nil)
+	mockOrchestrator := mocks.NewMockOrchestrator(t)
+	c := container.NewBaseContainer("test-container", mockOrchestrator)
 
 	t.Run("Add_And_Get_Success", func(t *testing.T) {
 		instance := "hello-world"
@@ -25,7 +32,6 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 	t.Run("Add_Duplicate_Error", func(t *testing.T) {
 		err := c.RegisterInstance("key1", "duplicate")
 		assert.Error(t, err)
-		// Проверяем тип ошибки, если у тебя используется errs.NewContainerError
 		assert.Contains(t, err.Error(), "already exists")
 	})
 
@@ -48,7 +54,6 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 	t.Run("Validate_Empty_Name", func(t *testing.T) {
 		err := c.RegisterInstance("", "something")
 		assert.Error(t, err)
-		// Здесь должна сработать твоя commonValidate
 		assert.Contains(t, err.Error(), "name is empty")
 	})
 }
@@ -72,7 +77,7 @@ func TestBaseContainer_Concurrency(t *testing.T) {
 		}(i)
 	}
 
-	// Параллельное чтение
+	// Параллельное чтение (ошибки отсутствия ключа здесь допустимы и безопасны)
 	for i := 0; i < workers; i++ {
 		go func(workerID int) {
 			defer wg.Done()
@@ -84,5 +89,74 @@ func TestBaseContainer_Concurrency(t *testing.T) {
 	}
 
 	wg.Wait()
-	assert.Greater(t, len(c.AllNames()), 0)
+	assert.Equal(t, workers*iterations, len(c.AllNames()))
+}
+
+func TestBaseContainer_Close(t *testing.T) {
+	t.Run("Close_Success_With_All_Interfaces", func(t *testing.T) {
+		c := container.NewBaseContainer("close-success", nil)
+
+		// Создаем типизированные моки из пакета mocks
+		mockCloser := mocks.NewMockSimpleCloser(t)
+		mockCloser.On("Close").Return(nil).Once()
+
+		mockCtxCloser := mocks.NewMockContextCloser(t)
+		mockCtxCloser.On("Close", mock.Anything).Return(nil).Once()
+
+		require.NoError(t, c.RegisterInstance("io-closer", mockCloser))
+		require.NoError(t, c.RegisterInstance("ctx-closer", mockCtxCloser))
+		require.NoError(t, c.RegisterInstance("string-instance", "non-closable"))
+
+		err := c.Close(context.Background())
+
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(c.AllNames())) // Мапа должна полностью очиститься
+
+		mockCloser.AssertExpectations(t)
+		mockCtxCloser.AssertExpectations(t)
+	})
+
+	t.Run("Close_With_Errors_Returns_Combined_Error", func(t *testing.T) {
+		c := container.NewBaseContainer("close-errors", nil)
+
+		errCloser := errors.New("io closer failed")
+		errCtxCloser := errors.New("context closer failed")
+
+		mockCloser := mocks.NewMockSimpleCloser(t)
+		mockCloser.On("Close").Return(errCloser).Once()
+
+		mockCtxCloser := mocks.NewMockContextCloser(t)
+		mockCtxCloser.On("Close", mock.Anything).Return(errCtxCloser).Once()
+
+		require.NoError(t, c.RegisterInstance("closer", mockCloser))
+		require.NoError(t, c.RegisterInstance("ctxCloser", mockCtxCloser))
+
+		err := c.Close(context.Background())
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "io closer failed")
+		assert.Contains(t, err.Error(), "context closer failed")
+	})
+
+	t.Run("Close_Timeout_Limit_Reached", func(t *testing.T) {
+		c := container.NewBaseContainer("close-timeout", nil)
+
+		mockCtxCloser := mocks.NewMockContextCloser(t)
+		// Имитируем зависание ресурса, заставляя мок ждать отмены контекста
+		mockCtxCloser.On("Close", mock.Anything).Run(func(args mock.Arguments) {
+			ctx := args.Get(0).(context.Context)
+			<-ctx.Done()
+		}).Return(context.DeadlineExceeded).Once()
+
+		require.NoError(t, c.RegisterInstance("hanging-service", mockCtxCloser))
+
+		// Выделяем жесткий лимит времени на выполнение Close
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+		defer cancel()
+
+		err := c.Close(ctx)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "close timeout limit reached")
+	})
 }

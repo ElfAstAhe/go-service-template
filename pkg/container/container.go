@@ -16,6 +16,7 @@ type Container interface {
 
 	GetInstance(name string) (any, error)
 	IsRegistered(name string) bool
+	HasInstance(name string) bool
 
 	AllNames() []string
 }

@@ -2,11 +2,21 @@ package container
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
+
+type SimpleCloser interface {
+	Close() error
+}
+
+type ContextCloser interface {
+	Close(ctx context.Context) error
+}
 
 type BaseContainer struct {
 	name         string
@@ -37,7 +47,56 @@ func (bc *BaseContainer) Init(initCtx context.Context) error {
 }
 
 func (bc *BaseContainer) Close(closeCtx context.Context) error {
-	return nil
+	var wg sync.WaitGroup
+
+	// 1. Быстро копируем ссылки на инстансы под RLock
+	bc.mu.RLock()
+	closables := make([]any, 0, len(bc.instances))
+	for _, instance := range bc.instances {
+		closables = append(closables, instance)
+	}
+	bc.mu.RUnlock()
+
+	// 2. Полностью очищаем мапу под Lock, так как контейнер уничтожается
+	bc.mu.Lock()
+	bc.instances = make(map[string]any)
+	bc.mu.Unlock()
+
+	closeChan := make(chan struct{})
+	closeErrs := utils.NewConcurrentList[error]()
+	for _, instance := range closables {
+		if inst, ok := instance.(SimpleCloser); ok {
+			wg.Add(1)
+			go func(closer SimpleCloser) {
+				defer wg.Done()
+				if err := closer.Close(); err != nil {
+					closeErrs.Append(err)
+				}
+			}(inst)
+		} else if inst, ok := instance.(ContextCloser); ok {
+			wg.Add(1)
+			go func(closer ContextCloser) {
+				defer wg.Done()
+				if err := closer.Close(closeCtx); err != nil {
+					closeErrs.Append(err)
+				}
+			}(inst)
+		}
+	}
+	go func() {
+		defer close(closeChan)
+		wg.Wait()
+	}()
+	select {
+	case <-closeChan:
+		if closeErrs.Len() > 0 {
+			return errs.NewContainerError(bc.GetName(), "container close: close fails", errors.Join(closeErrs.Snapshot()...))
+		}
+
+		return nil
+	case <-closeCtx.Done():
+		return errs.NewContainerError(bc.GetName(), "container close: close timeout limit reached", nil)
+	}
 }
 
 func (bc *BaseContainer) RegisterInstance(name string, instance any) error {
@@ -114,6 +173,15 @@ func (bc *BaseContainer) Validate(op string, name string) error {
 }
 
 func (bc *BaseContainer) IsRegistered(name string) bool {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+
+	_, ok := bc.instances[name]
+
+	return ok
+}
+
+func (bc *BaseContainer) HasInstance(name string) bool {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
