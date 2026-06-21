@@ -192,6 +192,7 @@ func (r *Runner) defaultServerProvider(conf *config.GRPCConfig) (*grpc.Server, e
 				interceptors.MDXTraceID,
 				interceptors.MDTraceID,
 			),
+			interceptors.NewDefaultRealIPExtractorUSInterceptor().UnaryServerInterceptor(),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 		grpc.ChainStreamInterceptor(
