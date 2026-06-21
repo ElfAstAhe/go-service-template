@@ -54,13 +54,13 @@ func (cs *ClientSender) Close(ctx context.Context) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cs.opts.shutdownTimeout)
-	defer cancel()
+	closeCtx, closeCancel := context.WithTimeout(context.WithoutCancel(ctx), cs.opts.shutdownTimeout)
+	defer closeCancel()
 
 	var closeErrs []error
 
 	for addr, sender := range cs.senders {
-		err := sender.Close(ctx)
+		err := sender.Close(closeCtx)
 		if err != nil {
 			closeErrs = append(closeErrs, err)
 		}
@@ -68,7 +68,7 @@ func (cs *ClientSender) Close(ctx context.Context) error {
 	}
 
 	if cs.session != nil {
-		err := cs.session.Close(ctx)
+		err := cs.session.Close(closeCtx)
 		if err != nil {
 			closeErrs = append(closeErrs, err)
 		}
