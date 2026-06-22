@@ -240,6 +240,57 @@ func (_c *MockContainer_GetName_Call) RunAndReturn(run func() string) *MockConta
 	return _c
 }
 
+// HasInstance provides a mock function for the type MockContainer
+func (_mock *MockContainer) HasInstance(name string) bool {
+	ret := _mock.Called(name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for HasInstance")
+	}
+
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = returnFunc(name)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	return r0
+}
+
+// MockContainer_HasInstance_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'HasInstance'
+type MockContainer_HasInstance_Call struct {
+	*mock.Call
+}
+
+// HasInstance is a helper method to define mock.On call
+//   - name string
+func (_e *MockContainer_Expecter) HasInstance(name any) *MockContainer_HasInstance_Call {
+	return &MockContainer_HasInstance_Call{Call: _e.mock.On("HasInstance", name)}
+}
+
+func (_c *MockContainer_HasInstance_Call) Run(run func(name string)) *MockContainer_HasInstance_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContainer_HasInstance_Call) Return(b bool) *MockContainer_HasInstance_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockContainer_HasInstance_Call) RunAndReturn(run func(name string) bool) *MockContainer_HasInstance_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Init provides a mock function for the type MockContainer
 func (_mock *MockContainer) Init(ctx context.Context) error {
 	ret := _mock.Called(ctx)

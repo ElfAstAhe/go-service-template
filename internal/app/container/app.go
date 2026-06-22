@@ -31,3 +31,7 @@ func NewAppContainer(
 func (ac *AppContainer) Init(ctx context.Context) error {
 	return nil
 }
+
+func (ac *AppContainer) Close(ctx context.Context) error {
+	return nil
+}
