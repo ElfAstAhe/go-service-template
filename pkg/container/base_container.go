@@ -46,6 +46,7 @@ func (bc *BaseContainer) Init(initCtx context.Context) error {
 	return errs.NewNotImplementedError(nil)
 }
 
+//goland:noinspection DuplicatedCode
 func (bc *BaseContainer) Close(closeCtx context.Context) error {
 	var wg sync.WaitGroup
 
