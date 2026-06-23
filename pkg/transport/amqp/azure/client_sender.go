@@ -54,7 +54,7 @@ func (cs *ClientSender) Close(ctx context.Context) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	closeCtx, closeCancel := context.WithTimeout(context.WithoutCancel(ctx), cs.opts.shutdownTimeout)
+	closeCtx, closeCancel := context.WithTimeout(ctx, cs.opts.shutdownTimeout)
 	defer closeCancel()
 
 	var closeErrs []error

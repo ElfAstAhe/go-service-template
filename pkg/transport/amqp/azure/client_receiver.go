@@ -60,7 +60,7 @@ func (cr *ClientReceiver) Close(ctx context.Context) error {
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
 
-	closeCtx, closeCancel := context.WithTimeout(context.WithoutCancel(ctx), cr.opts.shutdownTimeout)
+	closeCtx, closeCancel := context.WithTimeout(ctx, cr.opts.shutdownTimeout)
 	defer closeCancel()
 
 	var closeErrs []error
