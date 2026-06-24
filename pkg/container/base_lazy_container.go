@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
@@ -19,18 +20,29 @@ type BaseLazyContainer struct {
 	inProgress map[string]chan struct{}
 	order      []string
 	providers  map[string]Provider
+	logger     logger.Logger
 }
 
 func NewBaseLazyContainer(
-	name string,
-	orchestrator Orchestrator,
+	opts ...LazyOption,
 ) *BaseLazyContainer {
+	lazyOptions := &LazyOptions{}
+
+	for _, o := range opts {
+		o(lazyOptions)
+	}
+
 	return &BaseLazyContainer{
-		BaseContainer: NewBaseContainer(name, orchestrator),
-		names:         make(map[string]struct{}),
-		order:         make([]string, 0),
-		providers:     make(map[string]Provider),
-		inProgress:    make(map[string]chan struct{}),
+		BaseContainer: NewBaseContainer(
+			WithName(lazyOptions.Name),
+			WithOrchestrator(lazyOptions.Orchestrator),
+			WithLogger(lazyOptions.Logger),
+		),
+		names:      make(map[string]struct{}),
+		order:      make([]string, 0),
+		providers:  make(map[string]Provider),
+		inProgress: make(map[string]chan struct{}),
+		logger:     lazyOptions.Logger.GetLogger("BaseLazyContainer"),
 	}
 }
 

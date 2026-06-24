@@ -6,6 +6,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
 const (
@@ -19,9 +20,16 @@ type FacadeContainer struct {
 var _ container.Container = (*FacadeContainer)(nil)
 var _ container.LazyContainer = (*FacadeContainer)(nil)
 
-func NewFacadeContainer(orchestrator container.Orchestrator) *FacadeContainer {
+func NewFacadeContainer(
+	orchestrator container.Orchestrator,
+	log logger.Logger,
+) *FacadeContainer {
 	return &FacadeContainer{
-		BaseLazyContainer: container.NewBaseLazyContainer(FacadeContainerName, orchestrator),
+		BaseLazyContainer: container.NewBaseLazyContainer(
+			container.WithLazyName(FacadeContainerName),
+			container.WithLazyOrchestrator(orchestrator),
+			container.WithLazyLogger(log),
+		),
 	}
 }
 

@@ -20,7 +20,10 @@ type Orchestrator struct {
 
 var _ container.Orchestrator = (*Orchestrator)(nil)
 
-func NewOrchestrator(conf *config.Config, log logger.Logger) *Orchestrator {
+func NewOrchestrator(
+	conf *config.Config,
+	log logger.Logger,
+) *Orchestrator {
 	return &Orchestrator{
 		BaseOrchestrator: container.NewBaseOrchestrator(log),
 		conf:             conf,

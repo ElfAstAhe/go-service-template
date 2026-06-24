@@ -7,6 +7,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/migration"
 )
 
@@ -23,12 +24,17 @@ type PgContainer struct {
 var _ container.Container = (*PgContainer)(nil)
 var _ container.LazyContainer = (*PgContainer)(nil)
 
-func NewPgContainer(orchestrator container.Orchestrator) *PgContainer {
-	res := &PgContainer{
-		BaseLazyContainer: container.NewBaseLazyContainer(DBContainerName, orchestrator),
+func NewPgContainer(
+	orchestrator container.Orchestrator,
+	log logger.Logger,
+) *PgContainer {
+	return &PgContainer{
+		BaseLazyContainer: container.NewBaseLazyContainer(
+			container.WithLazyName(DBContainerName),
+			container.WithLazyOrchestrator(orchestrator),
+			container.WithLazyLogger(log),
+		),
 	}
-
-	return res
 }
 
 func (pc *PgContainer) Init(initCtx context.Context) error {

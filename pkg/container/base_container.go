@@ -7,32 +7,33 @@ import (
 	"sync"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-type SimpleCloser interface {
-	Close() error
-}
-
-type ContextCloser interface {
-	Close(ctx context.Context) error
-}
-
+// BaseContainer simple instance storage
 type BaseContainer struct {
 	name         string
 	mu           sync.RWMutex
 	instances    map[string]any
 	orchestrator Orchestrator
+	logger       logger.Logger
 }
 
 func NewBaseContainer(
-	name string,
-	orchestrator Orchestrator,
+	opts ...Option,
 ) *BaseContainer {
+	options := &Options{}
+
+	for _, o := range opts {
+		o(options)
+	}
+
 	return &BaseContainer{
-		name:         name,
+		name:         options.Name,
 		instances:    make(map[string]any),
-		orchestrator: orchestrator,
+		orchestrator: options.Orchestrator,
+		logger:       options.Logger.GetLogger("BaseContainer"),
 	}
 }
 
