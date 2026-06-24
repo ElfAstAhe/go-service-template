@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-type ClientSender interface {
-	Publish(ctx context.Context, targetName string, msg *Message) error
+type ClientSender[O any] interface {
+	Publish(ctx context.Context, targetName string, msg *Message, sendOpts O) error
 	Close(ctx context.Context) error
 }
