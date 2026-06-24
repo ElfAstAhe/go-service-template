@@ -50,6 +50,9 @@ var _ Container = (*BaseLazyContainer)(nil)
 var _ LazyContainer = (*BaseLazyContainer)(nil)
 
 func (blc *BaseLazyContainer) GetInstance(name string) (any, error) {
+	blc.logger.Debugf("container %s get instance: started", blc.GetName())
+	defer blc.logger.Debugf("container %s get instance: finished", blc.GetName())
+
 	// 1. Быстрая проверка: вдруг уже создано?
 	if res, err := blc.BaseContainer.GetInstance(name); err == nil {
 		return res, nil
@@ -107,6 +110,9 @@ func (blc *BaseLazyContainer) notifyAndCleanup(name string, ch chan struct{}) {
 }
 
 func (blc *BaseLazyContainer) RegisterProvider(name string, provider Provider) error {
+	blc.logger.Debugf("lazy container %s register provider: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s register provider: finished", blc.GetName())
+
 	if err := blc.Validate("BaseLazyContainer.RegisterProvider", name); err != nil {
 		return err
 	}
@@ -129,6 +135,9 @@ func (blc *BaseLazyContainer) RegisterProvider(name string, provider Provider) e
 }
 
 func (blc *BaseLazyContainer) RegisterRunnableProvider(name string, provider Provider) error {
+	blc.logger.Debugf("lazy container %s register runnable provider: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s register runnable provider: finished", blc.GetName())
+
 	if err := blc.Validate("BaseLazyContainer.RegisterRunnableProvider", name); err != nil {
 		return err
 	}
@@ -140,6 +149,9 @@ func (blc *BaseLazyContainer) RegisterRunnableProvider(name string, provider Pro
 
 // UnregisterProvider unregister any registered provider
 func (blc *BaseLazyContainer) UnregisterProvider(name string) error {
+	blc.logger.Debugf("lazy container %s unregister provider: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s unregister provider: finished", blc.GetName())
+
 	if err := blc.Validate("BaseLazyContainer.UnregisterProvider", name); err != nil {
 		return err
 	}
@@ -160,6 +172,9 @@ func (blc *BaseLazyContainer) UnregisterProvider(name string) error {
 
 // AllProviders return all registered providers
 func (blc *BaseLazyContainer) AllProviders() map[string]Provider {
+	blc.logger.Debugf("lazy container %s all providers: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s all providers: finished", blc.GetName())
+
 	blc.mu.RLock()
 	defer blc.mu.RUnlock()
 
@@ -172,6 +187,9 @@ func (blc *BaseLazyContainer) AllProviders() map[string]Provider {
 }
 
 func (blc *BaseLazyContainer) AllNames() []string {
+	blc.logger.Debugf("lazy container %s all names: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s all names: finished", blc.GetName())
+
 	blc.mu.RLock()
 	defer blc.mu.RUnlock()
 
@@ -182,6 +200,9 @@ func (blc *BaseLazyContainer) AllNames() []string {
 }
 
 func (blc *BaseLazyContainer) IsRegistered(name string) bool {
+	blc.logger.Debugf("lazy container %s is registered: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s is registered: finished", blc.GetName())
+
 	blc.mu.RLock()
 	defer blc.mu.RUnlock()
 
@@ -192,6 +213,9 @@ func (blc *BaseLazyContainer) IsRegistered(name string) bool {
 
 // Unregister remove provider and instance from lists, errors ignored
 func (blc *BaseLazyContainer) Unregister(name string) error {
+	blc.logger.Debugf("lazy container %s unregister: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s unregister: finished", blc.GetName())
+
 	if err := blc.Validate("BaseLazyContainer.Unregister", name); err != nil {
 		return err
 	}
@@ -238,6 +262,9 @@ func (blc *BaseLazyContainer) isProviderRegistered(name string) bool {
 }
 
 func (blc *BaseLazyContainer) RegisterInstance(name string, instance any) error {
+	blc.logger.Debugf("lazy container %s register instance: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s register instance: finished", blc.GetName())
+
 	if err := blc.Validate("BaseLazyContainer.RegisterInstance", name); err != nil {
 		return err
 	}
@@ -260,6 +287,9 @@ func (blc *BaseLazyContainer) RegisterInstance(name string, instance any) error 
 }
 
 func (blc *BaseLazyContainer) UnregisterInstance(name string) error {
+	blc.logger.Debugf("lazy container %s unregister instance: started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s unregister instance: finished", blc.GetName())
+
 	if err := blc.Validate("BaseLazyContainer.UnregisterInstance", name); err != nil {
 		return err
 	}
@@ -284,17 +314,22 @@ func (blc *BaseLazyContainer) UnregisterInstance(name string) error {
 }
 
 func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
+	blc.logger.Debugf("lazy container %s close started", blc.GetName())
+	defer blc.logger.Debugf("lazy container %s close finished", blc.GetName())
+
 	var wg sync.WaitGroup
 
 	// 1. Блокируем и собираем инстансы СТРОГО в порядке их регистрации (blc.order)
 	blc.mu.RLock()
-	closables := make([]any, 0, len(blc.order))
+	toClosing := make([]*closeInstance, 0, len(blc.order))
 	for _, name := range blc.order {
 		if inst, err := blc.BaseContainer.GetInstance(name); err == nil {
-			closables = append(closables, inst)
+			toClosing = append(toClosing, newCloseInstance(name, inst))
 		}
 	}
 	blc.mu.RUnlock()
+
+	blc.logger.Debugf("lazy container %s: got %d instances to close", blc.GetName(), len(toClosing))
 
 	// 2. Очищаем локальные структуры и базовый контейнер
 	blc.mu.Lock()
@@ -309,23 +344,33 @@ func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
 	closeChan := make(chan struct{})
 	closeErrs := utils.NewConcurrentList[error]()
 
-	for _, instance := range closables {
-		if inst, ok := instance.(SimpleCloser); ok {
+	for _, toClose := range toClosing {
+		if inst, ok := toClose.Instance.(SimpleCloser); ok {
 			wg.Add(1)
-			go func(closer SimpleCloser) {
+			go func(name string, closer SimpleCloser) {
+				blc.logger.Debugf("lazy container %s close: simple closer for instance %s start", blc.GetName(), name)
+				defer blc.logger.Debugf("lazy container %s close: simple closer for instance %s finish", blc.GetName(), name)
+
 				defer wg.Done()
+
 				if err := closer.Close(); err != nil {
 					closeErrs.Append(err)
+					blc.logger.Debugf("container %s close: simple closer for instance %s failed: %v", blc.GetName(), name, err)
 				}
-			}(inst)
-		} else if inst, ok := instance.(ContextCloser); ok {
+			}(toClose.Name, inst)
+		} else if inst, ok := toClose.Instance.(ContextCloser); ok {
 			wg.Add(1)
-			go func(closer ContextCloser) {
+			go func(name string, closer ContextCloser) {
+				blc.logger.Debugf("lazy container %s close: context closer for instance %s start", blc.GetName(), name)
+				defer blc.logger.Debugf("lazy container %s close: context closer for instance %s finish", blc.GetName(), name)
+
 				defer wg.Done()
+
 				if err := closer.Close(closeCtx); err != nil {
 					closeErrs.Append(err)
+					blc.logger.Debugf("lazy container %s close: context closer for instance %s failed: %v", blc.GetName(), name, err)
 				}
-			}(inst)
+			}(toClose.Name, inst)
 		}
 	}
 

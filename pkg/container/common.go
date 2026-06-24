@@ -17,9 +17,9 @@ type closeInstance struct {
 	Instance any
 }
 
-func newCloseInstance(name string, closer SimpleCloser) *closeInstance {
+func newCloseInstance(name string, instance any) *closeInstance {
 	return &closeInstance{
 		Name:     name,
-		Instance: closer,
+		Instance: instance,
 	}
 }
