@@ -356,6 +356,8 @@ func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
 				if err := closer.Close(); err != nil {
 					closeErrs.Append(err)
 					blc.logger.Debugf("container %s close: simple closer for instance %s failed: %v", blc.GetName(), name, err)
+				} else {
+					blc.logger.Debugf("container %s close: simple closer for instance %s done", blc.GetName(), name)
 				}
 			}(toClose.Name, inst)
 		} else if inst, ok := toClose.Instance.(ContextCloser); ok {
@@ -369,8 +371,12 @@ func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
 				if err := closer.Close(closeCtx); err != nil {
 					closeErrs.Append(err)
 					blc.logger.Debugf("lazy container %s close: context closer for instance %s failed: %v", blc.GetName(), name, err)
+				} else {
+					blc.logger.Debugf("lazy container %s close: context closer for instance %s done", blc.GetName(), name)
 				}
 			}(toClose.Name, inst)
+		} else {
+			blc.logger.Debugf("lazy container %s close: no closer methods for instance %s", blc.GetName(), toClose.Name)
 		}
 	}
 
