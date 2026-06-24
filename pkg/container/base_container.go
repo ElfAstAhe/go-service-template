@@ -83,6 +83,8 @@ func (bc *BaseContainer) Close(closeCtx context.Context) error {
 				if err := closer.Close(); err != nil {
 					closeErrs.Append(err)
 					bc.logger.Debugf("container %s close: simple closer for instance %s failed: %v", bc.GetName(), name, err)
+				} else {
+					bc.logger.Debugf("container %s close: simple closer for instance %s done", bc.GetName(), name)
 				}
 			}(toClose.Name, inst)
 		} else if inst, ok := toClose.Instance.(ContextCloser); ok {
@@ -96,8 +98,12 @@ func (bc *BaseContainer) Close(closeCtx context.Context) error {
 				if err := closer.Close(closeCtx); err != nil {
 					closeErrs.Append(err)
 					bc.logger.Debugf("container %s close: context closer for instance %s failed: %v", bc.GetName(), name, err)
+				} else {
+					bc.logger.Debugf("container %s close: context closer for instance %s done", bc.GetName(), name)
 				}
 			}(toClose.Name, inst)
+		} else {
+			bc.logger.Debugf("container %s close: no closer methods for instance %s", bc.GetName(), toClose.Name)
 		}
 	}
 	go func() {
