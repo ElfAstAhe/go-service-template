@@ -6,10 +6,10 @@ import (
 
 // ClientReceiver описывает чистый контракт для получения сообщений из брокера AMQP 1.0.
 // Он намеренно изолирован от сендера, чтобы сервисы импортировали только то, что им нужно.
-type ClientReceiver interface {
+type ClientReceiver[O any] interface {
 	// Receive блокирует поток до тех пор, пока из указанной очереди/топика (targetName)
 	// не прилетит новое сообщение, либо пока не отменится контекст.
-	Receive(ctx context.Context, targetName string) (*Message, error)
+	Receive(ctx context.Context, targetName string, receiveOpts O) (*Message, error)
 
 	// Accept подтверждает брокеру успешную обработку сообщения. Message удаляется из очереди.
 	Accept(ctx context.Context, msg *Message) error

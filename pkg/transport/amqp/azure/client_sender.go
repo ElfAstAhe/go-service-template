@@ -30,7 +30,7 @@ type ClientSender struct {
 	opts    *options
 }
 
-var _ pkgamqp.ClientSender = (*ClientSender)(nil)
+var _ pkgamqp.ClientSender[*amqp.SendOptions] = (*ClientSender)(nil)
 
 func NewClientSender(url string, log logger.Logger, opts ...Option) *ClientSender {
 	conf := &options{
@@ -51,48 +51,73 @@ func NewClientSender(url string, log logger.Logger, opts ...Option) *ClientSende
 
 //goland:noinspection DuplicatedCode
 func (cs *ClientSender) Close(ctx context.Context) error {
+	// 1. Быстро копируем ссылки под Lock и сразу очищаем инфраструктуру
 	cs.mu.Lock()
-	defer cs.mu.Unlock()
+	closableSenders := make(map[string]amqpSenderLink, len(cs.senders))
+	for addr, sender := range cs.senders {
+		closableSenders[addr] = sender
+	}
+	cs.senders = make(map[string]amqpSenderLink) // Очищаем мапу
+
+	sessionToClose := cs.session
+	connToClose := cs.conn
+
+	cs.session = nil
+	cs.conn = nil
+	cs.mu.Unlock() // ОТПУСКАЕМ ЛОК! Теперь сетевой I/O не заблокирует структуру
 
 	closeCtx, closeCancel := context.WithTimeout(ctx, cs.opts.shutdownTimeout)
 	defer closeCancel()
 
-	var closeErrs []error
+	done := make(chan error, 1)
 
-	for addr, sender := range cs.senders {
-		err := sender.Close(closeCtx)
-		if err != nil {
-			closeErrs = append(closeErrs, err)
+	// 2. Запускаем Graceful Shutdown сетевых ресурсов в отдельной горутине
+	go func() {
+		var closeErrs []error
+
+		// Мягко закрываем сендеры по локальной копии
+		for _, sender := range closableSenders {
+			if err := sender.Close(closeCtx); err != nil {
+				closeErrs = append(closeErrs, err)
+			}
 		}
-		delete(cs.senders, addr)
-	}
 
-	if cs.session != nil {
-		err := cs.session.Close(closeCtx)
-		if err != nil {
-			closeErrs = append(closeErrs, err)
+		if sessionToClose != nil {
+			if err := sessionToClose.Close(closeCtx); err != nil {
+				closeErrs = append(closeErrs, err)
+			}
 		}
-		cs.session = nil
-	}
 
-	if cs.conn != nil {
-		err := cs.conn.Close()
-		if err != nil {
-			closeErrs = append(closeErrs, err)
+		if connToClose != nil {
+			if err := connToClose.Close(); err != nil {
+				closeErrs = append(closeErrs, err)
+			}
 		}
-		cs.conn = nil
-	}
 
-	err := errors.Join(closeErrs...)
-	if err != nil {
-		return errs.NewCommonError("Azure AMQP client sender close fails", err)
-	}
+		done <- errors.Join(closeErrs...)
+	}()
 
-	return nil
+	select {
+	case err := <-done:
+		if err != nil {
+			return errs.NewCommonError("Azure AMQP client sender close fails", err)
+		}
+
+		return nil
+	case <-closeCtx.Done():
+		// СРАБОТАЛ ПРЕДОХРАНИТЕЛЬ (Hard Teardown)
+		// Если сендеры зависли на 2+ сообщениях — мы выходим из горутины и бьем по сокету напрямую
+		if connToClose != nil {
+			// Принудительное закрытие сокета на уровне ОС разблокирует внутренний mux го-амкп
+			_ = connToClose.Close()
+		}
+
+		return errs.NewCommonError("Azure AMQP client sender close timeout: connection force closed", closeCtx.Err())
+	}
 }
 
 // Publish отправляет сообщение с автоматическим фоновым In-Flight реконнектом и ретраем
-func (cs *ClientSender) Publish(ctx context.Context, targetName string, msg *pkgamqp.Message) error {
+func (cs *ClientSender) Publish(ctx context.Context, targetName string, msg *pkgamqp.Message, sendOpts *amqp.SendOptions) error {
 	if utils.IsNil(msg) {
 		return errs.NewCommonError("cannot publish nil message", nil)
 	}
@@ -122,7 +147,7 @@ func (cs *ClientSender) Publish(ctx context.Context, targetName string, msg *pkg
 		}
 
 		// Попытка отправить пакет в сеть
-		err = sender.Send(ctx, azureMsg, nil)
+		err = sender.Send(ctx, azureMsg, sendOpts)
 		if err == nil {
 			if attempt > 1 {
 				cs.logger.Infof("AMQP message successfully published after automatic reconnection on attempt %d", attempt)
@@ -262,8 +287,11 @@ func (cs *ClientSender) resetInfrastructure() {
 }
 
 func (cs *ClientSender) clearAllLinks() {
+	clearCtx, clearCancel := context.WithTimeout(context.Background(), cs.opts.shutdownTimeout)
+	defer clearCancel()
+
 	for addr, sender := range cs.senders {
-		_ = sender.Close(context.Background())
+		_ = sender.Close(clearCtx)
 		delete(cs.senders, addr)
 	}
 }

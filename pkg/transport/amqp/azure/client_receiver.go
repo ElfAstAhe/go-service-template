@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -35,7 +36,7 @@ type ClientReceiver struct {
 	opts      *options
 }
 
-var _ pkgamqp.ClientReceiver = (*ClientReceiver)(nil)
+var _ pkgamqp.ClientReceiver[*amqp.ReceiveOptions] = (*ClientReceiver)(nil)
 
 func NewClientReceiver(url string, log logger.Logger, opts ...Option) *ClientReceiver {
 	conf := &options{
@@ -57,54 +58,83 @@ func NewClientReceiver(url string, log logger.Logger, opts ...Option) *ClientRec
 
 //goland:noinspection DuplicatedCode
 func (cr *ClientReceiver) Close(ctx context.Context) error {
+	// 1. Быстро копируем ссылки под Lock и обнуляем инфраструктуру
 	cr.mu.Lock()
-	defer cr.mu.Unlock()
+	closableReceivers := make(map[string]amqpReceiverLink, len(cr.receivers))
+	for queue, receiver := range cr.receivers {
+		closableReceivers[queue] = receiver
+	}
+	cr.receivers = make(map[string]amqpReceiverLink)
 
-	closeCtx, closeCancel := context.WithTimeout(ctx, cr.opts.shutdownTimeout)
+	sessionToClose := cr.session
+	connToClose := cr.conn
+
+	cr.session = nil
+	cr.conn = nil
+	cr.mu.Unlock() // ОТПУСКАЕМ МЬЮТЕКС! Сетевой I/O теперь безопасен
+
+	// Контролируем таймаут
+	timeout := cr.opts.shutdownTimeout
+	if timeout == 0 {
+		timeout = 3 * time.Second
+	}
+	closeCtx, closeCancel := context.WithTimeout(ctx, timeout)
 	defer closeCancel()
 
-	var closeErrs []error
+	done := make(chan error, 1)
 
-	for queue, receiver := range cr.receivers {
-		err := receiver.Close(closeCtx)
-		if err != nil {
-			closeErrs = append(closeErrs, err)
+	// 2. Выполняем мягкое закрытие в фоне
+	go func() {
+		var closeErrs []error
+
+		for _, receiver := range closableReceivers {
+			if err := receiver.Close(closeCtx); err != nil {
+				closeErrs = append(closeErrs, err)
+			}
 		}
-		delete(cr.receivers, queue)
-	}
 
-	if cr.session != nil {
-		err := cr.session.Close(closeCtx)
-		if err != nil {
-			closeErrs = append(closeErrs, err)
+		if sessionToClose != nil {
+			if err := sessionToClose.Close(closeCtx); err != nil {
+				closeErrs = append(closeErrs, err)
+			}
 		}
-		cr.session = nil
-	}
 
-	if cr.conn != nil {
-		err := cr.conn.Close()
-		if err != nil {
-			closeErrs = append(closeErrs, err)
+		if connToClose != nil {
+			if err := connToClose.Close(); err != nil {
+				closeErrs = append(closeErrs, err)
+			}
 		}
-		cr.conn = nil
-	}
-	err := errors.Join(closeErrs...)
-	if err != nil {
-		return errs.NewCommonError("Azure AMQP client receiver close fails", err)
-	}
 
-	return nil
+		done <- errors.Join(closeErrs...)
+	}()
+
+	// 3. Защита от вечного зависания ресиверов
+	select {
+	case err := <-done:
+		if err != nil {
+			return errs.NewCommonError("Azure AMQP client receiver close fails", err)
+		}
+
+		return nil
+	case <-closeCtx.Done():
+		// Сработал предохранитель! Обрываем TCP-соединение "с колена"
+		if connToClose != nil {
+			_ = connToClose.Close() // Закрытие сокета разблокирует все висящие рутины Receive()
+		}
+
+		return errs.NewCommonError("Azure AMQP client receiver close timeout: connection force closed", closeCtx.Err())
+	}
 }
 
 // Receive блокирует поток, ожидая новое сообщение из указанной очереди брокера
-func (cr *ClientReceiver) Receive(ctx context.Context, targetName string) (*pkgamqp.Message, error) {
+func (cr *ClientReceiver) Receive(ctx context.Context, targetName string, receiveOpts *amqp.ReceiveOptions) (*pkgamqp.Message, error) {
 	receiver, err := cr.getOrCreateReceiver(ctx, targetName)
 	if err != nil {
 		return nil, errs.NewCommonError(fmt.Sprintf("azure receiver failed to get link for %s", targetName), err)
 	}
 
 	// Читаем сообщение из сокета (блокирующий вызов библиотеки Azure)
-	azureMsg, err := receiver.Receive(ctx, nil)
+	azureMsg, err := receiver.Receive(ctx, receiveOpts)
 	if err != nil {
 		cr.handleReceiverFailure(targetName, err)
 		return nil, errs.NewCommonError("azure receiver incoming packet error", err)
@@ -326,8 +356,11 @@ func (cr *ClientReceiver) handleReceiverFailure(targetName string, err error) {
 }
 
 func (cr *ClientReceiver) clearAllLinks() {
+	ctx, cancel := context.WithTimeout(context.Background(), cr.opts.shutdownTimeout)
+	defer cancel()
+
 	for targetName, receiver := range cr.receivers {
-		_ = receiver.Close(context.Background())
+		_ = receiver.Close(ctx)
 		delete(cr.receivers, targetName)
 	}
 }

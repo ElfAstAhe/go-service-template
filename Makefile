@@ -58,7 +58,8 @@ build-only: gen-proto gen-swagger gen-http-client
 run: build
 	./bin/$(SERVER_BINARY_NAME) \
 		--db-driver "postgres" \
-		--db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service"
+		--db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service" \
+		--log-level "DEBUG"
 
 # Запуск тестов
 test:
