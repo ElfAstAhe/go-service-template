@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/hellofresh/health-go/v5"
 	healthPg "github.com/hellofresh/health-go/v5/checks/pgx5"
 )
@@ -23,9 +24,16 @@ type ServiceContainer struct {
 var _ container.Container = (*ServiceContainer)(nil)
 var _ container.LazyContainer = (*ServiceContainer)(nil)
 
-func NewServiceContainer(orchestrator container.Orchestrator) *ServiceContainer {
+func NewServiceContainer(
+	orchestrator container.Orchestrator,
+	log logger.Logger,
+) *ServiceContainer {
 	return &ServiceContainer{
-		BaseLazyContainer: container.NewBaseLazyContainer(ServiceContainerName, orchestrator),
+		BaseLazyContainer: container.NewBaseLazyContainer(
+			container.WithLazyName(ServiceContainerName),
+			container.WithLazyOrchestrator(orchestrator),
+			container.WithLazyLogger(log),
+		),
 	}
 }
 

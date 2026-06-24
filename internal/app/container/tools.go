@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
 // ToolsContainer utils and helpers instances
@@ -13,9 +14,16 @@ type ToolsContainer struct {
 
 var _ container.Container = (*ToolsContainer)(nil)
 
-func NewToolsContainer(orchestrator container.Orchestrator) *ToolsContainer {
+func NewToolsContainer(
+	orchestrator container.Orchestrator,
+	log logger.Logger,
+) *ToolsContainer {
 	return &ToolsContainer{
-		BaseContainer: container.NewBaseContainer(ToolsContainerName, orchestrator),
+		BaseContainer: container.NewBaseContainer(
+			container.WithName(ToolsContainerName),
+			container.WithOrchestrator(orchestrator),
+			container.WithLogger(log),
+		),
 	}
 }
 

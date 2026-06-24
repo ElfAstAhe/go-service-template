@@ -10,6 +10,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
 const (
@@ -23,9 +24,16 @@ type RepositoryContainer struct {
 var _ container.Container = (*RepositoryContainer)(nil)
 var _ container.LazyContainer = (*RepositoryContainer)(nil)
 
-func NewRepositoryContainer(orchestrator container.Orchestrator) *RepositoryContainer {
+func NewRepositoryContainer(
+	orchestrator container.Orchestrator,
+	log logger.Logger,
+) *RepositoryContainer {
 	return &RepositoryContainer{
-		BaseLazyContainer: container.NewBaseLazyContainer(RepositoryContainerName, orchestrator),
+		BaseLazyContainer: container.NewBaseLazyContainer(
+			container.WithLazyName(RepositoryContainerName),
+			container.WithLazyOrchestrator(orchestrator),
+			container.WithLazyLogger(log),
+		),
 	}
 }
 

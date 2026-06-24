@@ -7,32 +7,33 @@ import (
 	"sync"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-type SimpleCloser interface {
-	Close() error
-}
-
-type ContextCloser interface {
-	Close(ctx context.Context) error
-}
-
+// BaseContainer simple instance storage
 type BaseContainer struct {
 	name         string
 	mu           sync.RWMutex
 	instances    map[string]any
 	orchestrator Orchestrator
+	logger       logger.Logger
 }
 
 func NewBaseContainer(
-	name string,
-	orchestrator Orchestrator,
+	opts ...Option,
 ) *BaseContainer {
+	options := &Options{}
+
+	for _, o := range opts {
+		o(options)
+	}
+
 	return &BaseContainer{
-		name:         name,
+		name:         options.Name,
 		instances:    make(map[string]any),
-		orchestrator: orchestrator,
+		orchestrator: options.Orchestrator,
+		logger:       options.Logger.GetLogger("BaseContainer"),
 	}
 }
 
@@ -46,16 +47,22 @@ func (bc *BaseContainer) Init(initCtx context.Context) error {
 	return errs.NewNotImplementedError(nil)
 }
 
+//goland:noinspection DuplicatedCode
 func (bc *BaseContainer) Close(closeCtx context.Context) error {
+	bc.logger.Debugf("container %s close: started", bc.GetName())
+	defer bc.logger.Debugf("container %s close: finished", bc.GetName())
+
 	var wg sync.WaitGroup
 
 	// 1. Быстро копируем ссылки на инстансы под RLock
 	bc.mu.RLock()
-	closables := make([]any, 0, len(bc.instances))
-	for _, instance := range bc.instances {
-		closables = append(closables, instance)
+	toClosing := make([]*closeInstance, 0, len(bc.instances))
+	for name, instance := range bc.instances {
+		toClosing = append(toClosing, newCloseInstance(name, instance))
 	}
 	bc.mu.RUnlock()
+
+	bc.logger.Debugf("container %s close: got %d instances to close", bc.GetName(), len(toClosing))
 
 	// 2. Полностью очищаем мапу под Lock, так как контейнер уничтожается
 	bc.mu.Lock()
@@ -64,23 +71,33 @@ func (bc *BaseContainer) Close(closeCtx context.Context) error {
 
 	closeChan := make(chan struct{})
 	closeErrs := utils.NewConcurrentList[error]()
-	for _, instance := range closables {
-		if inst, ok := instance.(SimpleCloser); ok {
+	for _, toClose := range toClosing {
+		if inst, ok := toClose.Instance.(SimpleCloser); ok {
 			wg.Add(1)
-			go func(closer SimpleCloser) {
+			go func(name string, closer SimpleCloser) {
+				bc.logger.Debugf("container %s close: simple closer for instance %s start", bc.GetName(), name)
+				defer bc.logger.Debugf("container %s close: simple closer for instance %s finish", bc.GetName(), name)
+
 				defer wg.Done()
+
 				if err := closer.Close(); err != nil {
 					closeErrs.Append(err)
+					bc.logger.Debugf("container %s close: simple closer for instance %s failed: %v", bc.GetName(), name, err)
 				}
-			}(inst)
-		} else if inst, ok := instance.(ContextCloser); ok {
+			}(toClose.Name, inst)
+		} else if inst, ok := toClose.Instance.(ContextCloser); ok {
 			wg.Add(1)
-			go func(closer ContextCloser) {
+			go func(name string, closer ContextCloser) {
+				bc.logger.Debugf("container %s close: context closer for instance %s start", bc.GetName(), name)
+				defer bc.logger.Debugf("container %s close: context closer for instance %s finish", bc.GetName(), name)
+
 				defer wg.Done()
+
 				if err := closer.Close(closeCtx); err != nil {
 					closeErrs.Append(err)
+					bc.logger.Debugf("container %s close: context closer for instance %s failed: %v", bc.GetName(), name, err)
 				}
-			}(inst)
+			}(toClose.Name, inst)
 		}
 	}
 	go func() {
@@ -100,6 +117,9 @@ func (bc *BaseContainer) Close(closeCtx context.Context) error {
 }
 
 func (bc *BaseContainer) RegisterInstance(name string, instance any) error {
+	bc.logger.Debugf("container %s register instance: started", bc.GetName())
+	defer bc.logger.Debugf("container %s register instance: finished", bc.GetName())
+
 	if err := bc.Validate("BaseContainer.RegisterInstance", name); err != nil {
 		return err
 	}
@@ -118,6 +138,9 @@ func (bc *BaseContainer) RegisterInstance(name string, instance any) error {
 }
 
 func (bc *BaseContainer) UnregisterInstance(name string) error {
+	bc.logger.Debugf("container %s unregister instance: started", bc.GetName())
+	defer bc.logger.Debugf("container %s unregister instance: finished", bc.GetName())
+
 	if err := bc.Validate("BaseContainer.UnregisterInstance", name); err != nil {
 		return err
 	}
@@ -131,6 +154,9 @@ func (bc *BaseContainer) UnregisterInstance(name string) error {
 }
 
 func (bc *BaseContainer) GetInstance(name string) (any, error) {
+	bc.logger.Debugf("container %s get instance: started", bc.GetName())
+	defer bc.logger.Debugf("container %s get instance: finished", bc.GetName())
+
 	// validate
 	if err := bc.Validate("BaseContainer.GetInstance", name); err != nil {
 		return nil, err
@@ -149,6 +175,9 @@ func (bc *BaseContainer) GetInstance(name string) (any, error) {
 }
 
 func (bc *BaseContainer) AllNames() []string {
+	bc.logger.Debugf("container %s all names: started", bc.GetName())
+	defer bc.logger.Debugf("container %s all names: finished", bc.GetName())
+
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 	if len(bc.instances) == 0 {
@@ -165,6 +194,9 @@ func (bc *BaseContainer) AllNames() []string {
 }
 
 func (bc *BaseContainer) Validate(op string, name string) error {
+	bc.logger.Debugf("container %s validate: started", bc.GetName())
+	defer bc.logger.Debugf("container %s validate: finished", bc.GetName())
+
 	if name == "" {
 		return errs.NewContainerValidateError(bc.GetName(), op, "name is empty", nil)
 	}
@@ -173,6 +205,9 @@ func (bc *BaseContainer) Validate(op string, name string) error {
 }
 
 func (bc *BaseContainer) IsRegistered(name string) bool {
+	bc.logger.Debugf("container %s is registered: started", bc.GetName())
+	defer bc.logger.Debugf("container %s is registered: finished", bc.GetName())
+
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
@@ -182,6 +217,9 @@ func (bc *BaseContainer) IsRegistered(name string) bool {
 }
 
 func (bc *BaseContainer) HasInstance(name string) bool {
+	bc.logger.Debugf("container %s has instance: started", bc.GetName())
+	defer bc.logger.Debugf("container %s has instance: finished", bc.GetName())
+
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 

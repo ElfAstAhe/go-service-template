@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
 const (
@@ -22,9 +23,14 @@ var _ container.Container = (*AppContainer)(nil)
 
 func NewAppContainer(
 	orchestrator container.Orchestrator,
+	log logger.Logger,
 ) *AppContainer {
 	return &AppContainer{
-		BaseContainer: container.NewBaseContainer(AppContainerName, orchestrator),
+		BaseContainer: container.NewBaseContainer(
+			container.WithName(AppContainerName),
+			container.WithOrchestrator(orchestrator),
+			container.WithLogger(log),
+		),
 	}
 }
 

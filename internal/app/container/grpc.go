@@ -6,6 +6,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
 const (
@@ -20,9 +21,16 @@ type GRPCContainer struct {
 var _ container.Container = (*GRPCContainer)(nil)
 var _ container.LazyContainer = (*GRPCContainer)(nil)
 
-func NewGRPCContainer(orchestrator container.Orchestrator) *GRPCContainer {
+func NewGRPCContainer(
+	orchestrator container.Orchestrator,
+	log logger.Logger,
+) *GRPCContainer {
 	return &GRPCContainer{
-		BaseLazyContainer: container.NewBaseLazyContainer(GRPCContainerName, orchestrator),
+		BaseLazyContainer: container.NewBaseLazyContainer(
+			container.WithLazyName(GRPCContainerName),
+			container.WithLazyOrchestrator(orchestrator),
+			container.WithLazyLogger(log),
+		),
 	}
 }
 

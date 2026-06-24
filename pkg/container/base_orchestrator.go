@@ -30,6 +30,9 @@ func NewBaseOrchestrator(log logger.Logger) *BaseOrchestrator {
 var _ Orchestrator = (*BaseOrchestrator)(nil)
 
 func (o *BaseOrchestrator) Init(ctx context.Context) error {
+	o.log.Debug("Init start")
+	defer o.log.Debug("Init finish")
+
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
@@ -45,6 +48,9 @@ func (o *BaseOrchestrator) Init(ctx context.Context) error {
 }
 
 func (o *BaseOrchestrator) Close(ctx context.Context) error {
+	o.log.Debug("Close start")
+	defer o.log.Debug("Close finish")
+
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
@@ -71,6 +77,9 @@ func (o *BaseOrchestrator) Close(ctx context.Context) error {
 }
 
 func (o *BaseOrchestrator) Register(container Container) error {
+	o.log.Debug("Register start")
+	defer o.log.Debug("Register finish")
+
 	if err := o.validateContainer("BaseOrchestrator.Register", container); err != nil {
 		return err
 	}
@@ -88,6 +97,9 @@ func (o *BaseOrchestrator) Register(container Container) error {
 }
 
 func (o *BaseOrchestrator) Unregister(name string) error {
+	o.log.Debug("Unregister start")
+	defer o.log.Debug("Unregister finish")
+
 	if err := o.validateName("BaseOrchestrator.Unregister", name); err != nil {
 		return err
 	}
@@ -107,6 +119,9 @@ func (o *BaseOrchestrator) Unregister(name string) error {
 }
 
 func (o *BaseOrchestrator) GetContainer(name string) (Container, error) {
+	o.log.Debug("GetContainer start")
+	defer o.log.Debug("GetContainer finish")
+
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
@@ -119,6 +134,9 @@ func (o *BaseOrchestrator) GetContainer(name string) (Container, error) {
 }
 
 func (o *BaseOrchestrator) HasContainer(name string) bool {
+	o.log.Debug("HasContainer start")
+	defer o.log.Debug("HasContainer finish")
+
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
@@ -128,6 +146,9 @@ func (o *BaseOrchestrator) HasContainer(name string) bool {
 }
 
 func (o *BaseOrchestrator) AllContainers() []Container {
+	o.log.Debug("AllContainers start")
+	defer o.log.Debug("AllContainers finish")
+
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
@@ -141,6 +162,9 @@ func (o *BaseOrchestrator) AllContainers() []Container {
 
 // GetRunners — вспомогательный метод
 func (o *BaseOrchestrator) GetRunners() ([]Runner, error) {
+	o.log.Debug("GetRunners start")
+	defer o.log.Debug("GetRunners finish")
+
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 

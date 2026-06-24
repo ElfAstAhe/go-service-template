@@ -38,15 +38,15 @@ func NewApplication(opts ...Option) (*Application, error) {
 	)
 	// orchestrator and containers
 	err := errors.Join(
-		res.GetOrchestrator().Register(container.NewAppContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewToolsContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewPgContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewRepositoryContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewUseCaseContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewFacadeContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewServiceContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewHTTPContainer(res.GetOrchestrator())),
-		res.GetOrchestrator().Register(container.NewGRPCContainer(res.GetOrchestrator())),
+		res.GetOrchestrator().Register(container.NewAppContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewToolsContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewPgContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewRepositoryContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewUseCaseContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewFacadeContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewServiceContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewHTTPContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewGRPCContainer(res.GetOrchestrator(), res.log)),
 	)
 	if err != nil {
 		return nil, errs.NewCommonError("application create failed", err)
