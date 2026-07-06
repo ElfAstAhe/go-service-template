@@ -220,12 +220,15 @@ const (
 
 // amqp sender
 const (
-	DefaultAMQPSenderURL                string        = "amqp://localhost:5672/"
-	DefaultAMQPSenderInsecureSkipVerify bool          = true
-	DefaultAMQPSenderConnectTimeout     time.Duration = 10 * time.Second
-	DefaultAMQPSenderWriteTimeout       time.Duration = 10 * time.Second
-	DefaultAMQPSenderNotifyTimeout      time.Duration = 10 * time.Second
-	DefaultAMQPSenderShutdownTimeout    time.Duration = 15 * time.Second
+	DefaultAMQPSenderURL                   string        = "amqp://localhost:5672/"
+	DefaultAMQPSenderInsecureSkipVerify    bool          = true
+	DefaultAMQPSenderConnectTimeout        time.Duration = 10 * time.Second
+	DefaultAMQPSenderWriteTimeout          time.Duration = 10 * time.Second
+	DefaultAMQPSenderNotifyTimeout         time.Duration = 10 * time.Second
+	DefaultAMQPSenderShutdownTimeout       time.Duration = 15 * time.Second
+	DefaultAMQPSenderPublishMaxTryAttempts int           = 2
+	DefaultAMQPSenderPublishBaseRetryDelay time.Duration = 100 * time.Millisecond
+	DefaultAMQPSenderPublishMaxRetryDelay  time.Duration = 3 * time.Second
 )
 
 // amqp receiver

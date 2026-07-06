@@ -24,6 +24,11 @@ type AMQPSenderConfig struct {
 	// Таймауты оркестрации отправки шаблона
 	NotifyTimeout   time.Duration `mapstructure:"notify_timeout" json:"notify_timeout,omitempty" yaml:"notify_timeout,omitempty"`       // Default: 2s
 	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"` // Default: 3s
+
+	// publish
+	PublishMaxTryAttempts int           `mapstructure:"publish_max_try_attempts" json:"publish_max_try_attempts" yaml:"publish_max_try_attempts"`
+	PublishBaseRetryDelay time.Duration `mapstructure:"publish_base_retry_delay" json:"publish_base_retry_delay,omitempty" yaml:"publish_base_retry_delay,omitempty"`
+	PublishMaxRetryDelay  time.Duration `mapstructure:"publish_max_retry_delay" json:"publish_max_retry_delay" yaml:"publish_max_retry_delay"`
 }
 
 func NewAMQPSenderConfig(
@@ -36,17 +41,23 @@ func NewAMQPSenderConfig(
 	writeTimeout time.Duration,
 	notifyTimeout time.Duration,
 	shutdownTimeout time.Duration,
+	publishMaxTryAttempts int,
+	publishBaseRetryDelay time.Duration,
+	publishMaxRetryDelay time.Duration,
 ) *AMQPSenderConfig {
 	return &AMQPSenderConfig{
-		URL:                url,
-		TargetName:         targetName,
-		Username:           username,
-		Password:           password,
-		InsecureSkipVerify: insecureSkipVerify,
-		ConnectTimeout:     connectTimeout,
-		WriteTimeout:       writeTimeout,
-		NotifyTimeout:      notifyTimeout,
-		ShutdownTimeout:    shutdownTimeout,
+		URL:                   url,
+		TargetName:            targetName,
+		Username:              username,
+		Password:              password,
+		InsecureSkipVerify:    insecureSkipVerify,
+		ConnectTimeout:        connectTimeout,
+		WriteTimeout:          writeTimeout,
+		NotifyTimeout:         notifyTimeout,
+		ShutdownTimeout:       shutdownTimeout,
+		PublishMaxTryAttempts: publishMaxTryAttempts,
+		PublishBaseRetryDelay: publishBaseRetryDelay,
+		PublishMaxRetryDelay:  publishMaxRetryDelay,
 	}
 }
 
@@ -61,6 +72,9 @@ func NewDefaultAMQPSenderConfig() *AMQPSenderConfig {
 		DefaultAMQPSenderWriteTimeout,
 		DefaultAMQPSenderNotifyTimeout,
 		DefaultAMQPSenderShutdownTimeout,
+		DefaultAMQPSenderPublishMaxTryAttempts,
+		DefaultAMQPSenderPublishBaseRetryDelay,
+		DefaultAMQPSenderPublishMaxRetryDelay,
 	)
 }
 
@@ -82,6 +96,12 @@ func (sc *AMQPSenderConfig) Validate() error {
 	}
 	if !(sc.ShutdownTimeout > 0) {
 		return errs.NewConfigValidateError("amqp sender", "ShutdownTimeout", "less than 0", nil)
+	}
+	if !(sc.PublishBaseRetryDelay > 0) {
+		return errs.NewConfigValidateError("amqp sender", "PublishBaseRetryDelay", "less than 0", nil)
+	}
+	if !(sc.PublishMaxRetryDelay > 0) {
+		return errs.NewConfigValidateError("amqp sender", "PublishMaxRetryDelay", "less than 0", nil)
 	}
 
 	return nil
