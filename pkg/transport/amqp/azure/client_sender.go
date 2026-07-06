@@ -13,13 +13,6 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-// amqpSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
-// которые нам нужны для управления его жизненным циклом.
-type amqpSenderLink interface {
-	Send(ctx context.Context, msg *amqp.Message, opts *amqp.SendOptions) error
-	Close(ctx context.Context) error
-}
-
 type ClientSender struct {
 	mu      sync.RWMutex
 	url     string
@@ -29,8 +22,6 @@ type ClientSender struct {
 	senders map[string]amqpSenderLink
 	opts    *options
 }
-
-var _ pkgamqp.ClientSender[*amqp.SendOptions] = (*ClientSender)(nil)
 
 func NewClientSender(url string, log logger.Logger, opts ...Option) *ClientSender {
 	conf := &options{
