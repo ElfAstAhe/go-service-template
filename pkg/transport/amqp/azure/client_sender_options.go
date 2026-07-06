@@ -91,7 +91,7 @@ func WithSenderURL(url string) SenderOption {
 	}
 }
 
-func WithTargetName(targetName string) SenderOption {
+func WithSenderTargetName(targetName string) SenderOption {
 	return func(cso *ClientSenderOptions) {
 		cso.TargetName = targetName
 	}
