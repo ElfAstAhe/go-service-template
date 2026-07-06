@@ -7,7 +7,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/XSAM/otelsql v0.42.0
 	github.com/andybalholm/brotli v1.2.2
-	github.com/go-chi/chi/v5 v5.3.0
+	github.com/go-chi/chi/v5 v5.3.1
 	github.com/go-openapi/errors v0.22.8
 	github.com/go-openapi/runtime v0.32.4
 	github.com/go-openapi/strfmt v0.26.4
