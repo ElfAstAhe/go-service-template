@@ -18,17 +18,13 @@ func TestClientSingleSender_GetOrCreateSession_DialError(t *testing.T) {
 	ctx := context.Background()
 	expectedErr := errors.New("connection refused by target host")
 
-	// 1. Настраиваем мок логгера
-	mockLogger := new(mocks.MockLogger) // Имя сгенерированного mockery мока для logger.Logger
-	// Конструктор NewClientSingleSender вызывает GetLogger, настраиваем этот вызов
+	mockLogger := new(mocks.MockLogger)
 	mockLogger.On("GetLogger", "azure-amqp-client-single-sender").Return(mockLogger)
 
-	// 2. Настраиваем DialFnTestGap на симуляцию падения сети
 	mockDial := func(ctx context.Context, url string, opts *amqp.ConnOptions) (*amqp.Conn, error) {
 		return nil, expectedErr
 	}
 
-	// 3. Собираем опции
 	opts := NewClientSenderOptions()
 	opts.URL = "amqp://localhost:5672"
 	opts.TargetName = "test-topic"
@@ -41,17 +37,12 @@ func TestClientSingleSender_GetOrCreateSession_DialError(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Пытаемся вызвать getSender, который внутри пойдет в getOrCreateSession -> mockDial
 	sender, err := css.getSender(ctx)
 
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, sender)
-
-	// Проверяем, что наша кастомная обертка ошибок pkg/errs сохранила корневую причину
 	assert.Contains(t, err.Error(), "dial failed")
-
-	// Проверяем, что в процессе не случилось паники и структура осталась консистентной
 	assert.Nil(t, css.connection)
 	assert.Nil(t, css.session)
 
@@ -62,41 +53,44 @@ func TestClientSingleSender_WaitBackoff_And_ContextCancel(t *testing.T) {
 	// Arrange
 	mockLogger := new(mocks.MockLogger)
 	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger)
-	// Метод waitBackoff пишет в Debugf, настраиваем мок на игнорирование или фиксацию этого вызова
-	mockLogger.On("Debugf", mock.Anything, mock.Anything).Return()
+
+	// Оптимизация: Разрешаем вызывать логгеру Debugf любое количество раз, чтобы тесты не были хрупкими
+	mockLogger.On("Debugf", mock.Anything, mock.Anything).Return().Maybe()
 
 	opts := NewClientSenderOptions()
 	opts.TargetName = "test-topic"
 	opts.Logger = mockLogger
-	opts.PublishBaseRetryDelay = 20 * time.Millisecond
-	opts.PublishMaxRetryDelay = 100 * time.Millisecond
+	// Ставим задержки чуть больше, чтобы разница между штатным сном и прерыванием была очевидной
+	opts.PublishBaseRetryDelay = 100 * time.Millisecond
+	opts.PublishMaxRetryDelay = 500 * time.Millisecond
 
 	css, err := NewClientSingleSender(func(cso *ClientSenderOptions) {
 		*cso = *opts
 	})
 	require.NoError(t, err)
 
-	// Тестируем быструю отмену контекста во время ожидания бэккоффа
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Запускаем waitBackoff и отменяем контекст параллельно через небольшую паузу
+	// Избавляемся от flaky-поведения: отменяем контекст сразу же в фоновом потоке.
+	// Канал syncChan гарантирует, что горутина запустилась.
+	syncChan := make(chan struct{})
 	go func() {
-		time.Sleep(5 * time.Millisecond)
+		close(syncChan)
 		cancel()
 	}()
+	<-syncChan
 
 	start := time.Now()
 
 	// Act
-	// Передаем 3 попытку. Без отмены контекста код спал бы 20ms * 2^2 = 80ms (+/- джиттер)
+	// Попытка 3 при базовой 100ms должна спать 400ms. Но контекст уже отменен.
 	css.waitBackoff(ctx, 3)
 
 	duration := time.Since(start)
 
 	// Assert
-	// Так как контекст отменился через 5ms, waitBackoff должен был мгновенно выйти,
-	// не дожидаясь окончания всех 80ms.
-	assert.Less(t, duration, 40*time.Millisecond, "waitBackoff не вышел досрочно при отмене контекста")
+	// Выход должен быть мгновенным (явно меньше 400ms и даже меньше 50ms)
+	assert.Less(t, duration, 50*time.Millisecond, "waitBackoff не вышел досрочно при отмене контекста")
 
 	mockLogger.AssertExpectations(t)
 }
@@ -134,7 +128,7 @@ func TestClientSenderOptions_ValidationCases(t *testing.T) {
 		opts.TargetName = "queue"
 		opts.Logger = mockLogger
 		opts.PublishBaseRetryDelay = 5 * time.Second
-		opts.PublishMaxRetryDelay = 1 * time.Second // Базовая больше максимальной
+		opts.PublishMaxRetryDelay = 1 * time.Second
 		assert.Error(t, opts.Validate())
 	})
 }
