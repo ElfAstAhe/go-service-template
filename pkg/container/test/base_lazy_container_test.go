@@ -18,6 +18,8 @@ func TestBaseLazyContainer_LazyInitialization(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
+
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("test-ctn"),
 		container.WithLazyLogger(mockLog))
@@ -60,6 +62,7 @@ func TestBaseLazyContainer_Concurrency(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("race-ctn"),
 		container.WithLazyLogger(mockLog))
@@ -94,6 +97,7 @@ func TestBaseLazyContainer_Order(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("order-ctn"),
 		container.WithLazyLogger(mockLog))
@@ -112,6 +116,7 @@ func TestBaseLazyContainer_Unregister(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("clean-ctn"),
 		container.WithLazyLogger(mockLog))
@@ -140,6 +145,7 @@ func TestBaseLazyContainer_ProviderError(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("err-ctn"),
 		container.WithLazyLogger(mockLog))
@@ -181,6 +187,7 @@ func TestBaseLazyContainer_OverrideLogic(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("override-ctn"),
 		container.WithLazyLogger(mockLog))
@@ -210,6 +217,7 @@ func TestBaseLazyContainer_SelfDependency(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("deadlock-ctn"),
 		container.WithLazyLogger(mockLog))
@@ -244,6 +252,7 @@ func TestBaseLazyContainer_AllProvidersConsistency(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 	ctn := container.NewBaseLazyContainer(
 		container.WithLazyName("list-ctn"),
 		container.WithLazyLogger(mockLog))

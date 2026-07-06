@@ -21,6 +21,8 @@ func TestBaseContainer_Lifecycle(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
+
 	c := container.NewBaseContainer(
 		container.WithName("test-container"),
 		container.WithOrchestrator(mockOrchestrator),
@@ -69,6 +71,8 @@ func TestBaseContainer_Concurrency(t *testing.T) {
 	mockLog := mocks2.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
+
 	c := container.NewBaseContainer(
 		container.WithName("concurrency-test"),
 		container.WithLogger(mockLog))
@@ -109,6 +113,7 @@ func TestBaseContainer_Close(t *testing.T) {
 		mockLog := mocks2.NewMockLogger(t)
 		// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 		mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+		mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 		c := container.NewBaseContainer(
 			container.WithName("close-success"),
 			container.WithLogger(mockLog))
@@ -137,6 +142,7 @@ func TestBaseContainer_Close(t *testing.T) {
 		mockLog := mocks2.NewMockLogger(t)
 		// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 		mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+		mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 		c := container.NewBaseContainer(
 			container.WithName("close-errors"),
 			container.WithLogger(mockLog))
@@ -164,6 +170,7 @@ func TestBaseContainer_Close(t *testing.T) {
 		mockLog := mocks2.NewMockLogger(t)
 		// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 		mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+		mockLog.On("Debugf", mock.Anything, mock.Anything).Return()
 		c := container.NewBaseContainer(
 			container.WithName("close-timeout"),
 			container.WithLogger(mockLog))

@@ -18,6 +18,7 @@ func TestBaseOrchestrator_FullLifecycle(t *testing.T) {
 	mockLog := mocks.NewMockLogger(t)
 	// Настраиваем GetLogger, так как NewBaseOrchestrator его вызывает
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debug", mock.Anything).Return()
 
 	orch := container.NewBaseOrchestrator(mockLog)
 	ctx := context.Background()
@@ -61,6 +62,7 @@ func TestBaseOrchestrator_FullLifecycle(t *testing.T) {
 func TestBaseOrchestrator_GetRunners(t *testing.T) {
 	mockLog := mocks.NewMockLogger(t)
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debug", mock.Anything).Return()
 	orch := container.NewBaseOrchestrator(mockLog)
 
 	ctn := mocks2.NewMockContainer(t)
@@ -87,6 +89,7 @@ func TestBaseOrchestrator_GetRunners(t *testing.T) {
 func TestBaseOrchestrator_Init_StopOnError(t *testing.T) {
 	mockLog := mocks.NewMockLogger(t)
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debug", mock.Anything).Return()
 	orch := container.NewBaseOrchestrator(mockLog)
 	ctx := context.Background()
 
@@ -116,6 +119,7 @@ func TestBaseOrchestrator_Init_StopOnError(t *testing.T) {
 func TestBaseOrchestrator_GetContainer_NotFound(t *testing.T) {
 	mockLog := mocks.NewMockLogger(t)
 	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockLog.On("Debug", mock.Anything).Return()
 	orch := container.NewBaseOrchestrator(mockLog)
 
 	res, err := orch.GetContainer("unknown")
