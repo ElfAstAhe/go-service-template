@@ -379,3 +379,7 @@ func (css *ClientSingleSender) pStr(s string) *string {
 func (css *ClientSingleSender) GetOpts() *ClientSenderOptions {
 	return css.opts
 }
+
+func (css *ClientSingleSender) GetTargetName() string {
+	return css.opts.TargetName
+}
