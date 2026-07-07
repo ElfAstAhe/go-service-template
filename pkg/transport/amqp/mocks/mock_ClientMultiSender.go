@@ -89,6 +89,52 @@ func (_c *MockClientMultiSender_Close_Call[SenderOpts, SendOpts]) RunAndReturn(r
 	return _c
 }
 
+// GetTargetNames provides a mock function for the type MockClientMultiSender
+func (_mock *MockClientMultiSender[SenderOpts, SendOpts]) GetTargetNames() []string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTargetNames")
+	}
+
+	var r0 []string
+	if returnFunc, ok := ret.Get(0).(func() []string); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+	return r0
+}
+
+// MockClientMultiSender_GetTargetNames_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTargetNames'
+type MockClientMultiSender_GetTargetNames_Call[SenderOpts any, SendOpts any] struct {
+	*mock.Call
+}
+
+// GetTargetNames is a helper method to define mock.On call
+func (_e *MockClientMultiSender_Expecter[SenderOpts, SendOpts]) GetTargetNames() *MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts] {
+	return &MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts]{Call: _e.mock.On("GetTargetNames")}
+}
+
+func (_c *MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts]) Run(run func()) *MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts] {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts]) Return(strings []string) *MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts] {
+	_c.Call.Return(strings)
+	return _c
+}
+
+func (_c *MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts]) RunAndReturn(run func() []string) *MockClientMultiSender_GetTargetNames_Call[SenderOpts, SendOpts] {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Publish provides a mock function for the type MockClientMultiSender
 func (_mock *MockClientMultiSender[SenderOpts, SendOpts]) Publish(ctx context.Context, targetName string, senderOpts SenderOpts, msg *amqp.Message, sendOpts SendOpts) error {
 	ret := _mock.Called(ctx, targetName, senderOpts, msg, sendOpts)

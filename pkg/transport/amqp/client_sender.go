@@ -9,6 +9,8 @@ import (
 type ClientSingleSender[SendOpts any] interface {
 	Publish(ctx context.Context, msg *Message, opts SendOpts) error
 	Close(ctx context.Context) error
+
+	GetTargetName() string
 }
 
 // ClientMultiSender предназначен для динамической маршрутизации (1 ко многим).
@@ -18,4 +20,6 @@ type ClientSingleSender[SendOpts any] interface {
 type ClientMultiSender[SenderOpts any, SendOpts any] interface {
 	Publish(ctx context.Context, targetName string, senderOpts SenderOpts, msg *Message, sendOpts SendOpts) error
 	Close(ctx context.Context) error
+
+	GetTargetNames() []string
 }

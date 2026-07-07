@@ -89,6 +89,50 @@ func (_c *MockClientSingleSender_Close_Call[SendOpts]) RunAndReturn(run func(ctx
 	return _c
 }
 
+// GetTargetName provides a mock function for the type MockClientSingleSender
+func (_mock *MockClientSingleSender[SendOpts]) GetTargetName() string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTargetName")
+	}
+
+	var r0 string
+	if returnFunc, ok := ret.Get(0).(func() string); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	return r0
+}
+
+// MockClientSingleSender_GetTargetName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTargetName'
+type MockClientSingleSender_GetTargetName_Call[SendOpts any] struct {
+	*mock.Call
+}
+
+// GetTargetName is a helper method to define mock.On call
+func (_e *MockClientSingleSender_Expecter[SendOpts]) GetTargetName() *MockClientSingleSender_GetTargetName_Call[SendOpts] {
+	return &MockClientSingleSender_GetTargetName_Call[SendOpts]{Call: _e.mock.On("GetTargetName")}
+}
+
+func (_c *MockClientSingleSender_GetTargetName_Call[SendOpts]) Run(run func()) *MockClientSingleSender_GetTargetName_Call[SendOpts] {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockClientSingleSender_GetTargetName_Call[SendOpts]) Return(s string) *MockClientSingleSender_GetTargetName_Call[SendOpts] {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockClientSingleSender_GetTargetName_Call[SendOpts]) RunAndReturn(run func() string) *MockClientSingleSender_GetTargetName_Call[SendOpts] {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Publish provides a mock function for the type MockClientSingleSender
 func (_mock *MockClientSingleSender[SendOpts]) Publish(ctx context.Context, msg *amqp.Message, opts SendOpts) error {
 	ret := _mock.Called(ctx, msg, opts)
