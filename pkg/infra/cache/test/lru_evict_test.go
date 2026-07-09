@@ -23,6 +23,7 @@ func TestLRUEvict(t *testing.T) {
 
 		// Следующий — "b"
 		key, ok = lru.Evict()
+		assert.True(t, ok)
 		assert.Equal(t, "b", key)
 	})
 

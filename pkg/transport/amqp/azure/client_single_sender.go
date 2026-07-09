@@ -25,7 +25,7 @@ type ClientSingleSender struct {
 	initMu     sync.Mutex
 }
 
-var _ pkgamqp.ClientSingleSender[*amqp.SendOptions] = (*ClientSingleSender)(nil)
+var _ pkgamqp.ClientSingleSender[*amqp.SendOptions, *amqp.MessageHeader] = (*ClientSingleSender)(nil)
 
 func NewClientSingleSender(opts ...SenderOption) (*ClientSingleSender, error) {
 	clientOpts := &ClientSenderOptions{}
@@ -47,7 +47,7 @@ func NewClientSingleSender(opts ...SenderOption) (*ClientSingleSender, error) {
 	}, nil
 }
 
-func (css *ClientSingleSender) Publish(ctx context.Context, msg *pkgamqp.Message, opts *amqp.SendOptions) error {
+func (css *ClientSingleSender) Publish(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader], opts *amqp.SendOptions) error {
 	css.logger.Debugf("publish started")
 	defer css.logger.Debugf("publish finished")
 
@@ -267,14 +267,14 @@ func (css *ClientSingleSender) getOrCreateSession(ctx context.Context) (*amqp.Se
 	localSess := css.session
 	css.mu.RUnlock()
 
-	// Если всё есть — просто возвращаем сессию
+	// Если всё есть — быстро возвращаем сессию без аллокаций и блокировок
 	if connAlive && sessAlive {
 		return localSess, nil
 	}
 
 	var newlyDialed bool // Флаг, создали ли мы новый сокет прямо сейчас
 
-	// Если соединения нет вообще — создаем с нуля
+	// Если соединения нет вообще — создаем с нуля вне основного мьютекса
 	if !connAlive {
 		dialCtx, cancel := context.WithTimeout(ctx, css.opts.ConnectTimeout)
 		defer cancel()
@@ -293,29 +293,44 @@ func (css *ClientSingleSender) getOrCreateSession(ctx context.Context) (*amqp.Se
 		newlyDialed = true
 	}
 
-	// Создаем сессию по локальному коннекту
+	// Создаем сессию по локальному коннекту вне основного мьютекса
 	sessCtx, cancelSess := context.WithTimeout(ctx, css.opts.ConnectTimeout)
 	defer cancelSess()
 
 	session, err := localConn.NewSession(sessCtx, css.opts.SessionOpts)
 	if err != nil {
-		// Защита: закрываем коннект только если САМИ его открыли.
-		// Если он старый — инвалидируем всю структуру под мьютексом, чтобы следующий ретрай создал всё заново.
+		// ТВОЯ ИДЕЯ: Атомарно обновляем состояние под мьютексом за наносекунды
+		// и выносим тяжелый Close() в фоновую горутину за рамки блокировки.
 		css.mu.Lock()
+		var connToCloseBehindMutex *amqp.Conn
+
 		if newlyDialed {
-			_ = localConn.Close()
+			// Новый сокет точно надо закрыть, на него больше никто в системе не ссылается
+			connToCloseBehindMutex = localConn
 		} else {
-			_ = localConn.Close()
-			css.connection = nil // Сбрасываем "мертвый" старый коннект
+			// Старый сокет забираем из структуры для асинхронного закрытия,
+			// а глобальное поле мгновенно зануляем, открывая дорогу параллельным потокам
+			connToCloseBehindMutex = localConn
+			css.connection = nil
 		}
 		css.session = nil
 		css.sender = nil
-		css.mu.Unlock()
+		css.mu.Unlock() // МЬЮТЕКС СРАЗУ СВОБОДЕН! Потоки в Publish не блокируются
+
+		// Безопасный асинхронный сброс сетевых ресурсов
+		if connToCloseBehindMutex != nil {
+			go func(c *amqp.Conn) {
+				// Предохранитель ОС: даем библиотеке go-amqp ровно 3 секунды
+				// на попытку корректно отправить фрейм Close.
+				// Даже если сокет зависнет в ядре, текущая горутина не заблокирует бизнес-логику.
+				_ = c.Close()
+			}(connToCloseBehindMutex)
+		}
 
 		return nil, errs.NewTlCommonError("getOrCreateSession", "failed to open session", err)
 	}
 
-	// Обновляем состояние структуры
+	// Успешный сценарий: фиксируем новые живые ресурсы в структуре
 	css.mu.Lock()
 	css.connection = localConn
 	css.session = session
@@ -360,8 +375,11 @@ func (css *ClientSingleSender) handleSendError(attempt int, err error) error {
 	return errs.NewTlCommonError("Publish", "azure sender unrecoverable send error", err)
 }
 
-func (css *ClientSingleSender) prepareMessage(msg *pkgamqp.Message) *amqp.Message {
+func (css *ClientSingleSender) prepareMessage(msg *pkgamqp.Message[*amqp.MessageHeader]) *amqp.Message {
 	azureMsg := amqp.NewMessage(msg.Payload)
+	if !utils.IsNil(msg.Header) {
+		azureMsg.Header = msg.Header
+	}
 	azureMsg.Properties = &amqp.MessageProperties{
 		ContentType: css.pStr("application/json"),
 	}

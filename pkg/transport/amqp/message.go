@@ -1,7 +1,8 @@
 package amqp
 
 // Message — наш собственный независимый контейнер для AMQP 1.0 сообщения.
-type Message struct {
+type Message[Header any] struct {
+	Header     Header
 	Payload    []byte         // Сырые байты (например, JSON)
 	Properties map[string]any // Заголовки / Метаданные (для TraceID, etc.)
 }

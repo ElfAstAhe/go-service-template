@@ -108,7 +108,7 @@ func (cs *ClientSender) Close(ctx context.Context) error {
 }
 
 // Publish отправляет сообщение с автоматическим фоновым In-Flight реконнектом и ретраем
-func (cs *ClientSender) Publish(ctx context.Context, targetName string, msg *pkgamqp.Message, sendOpts *amqp.SendOptions) error {
+func (cs *ClientSender) Publish(ctx context.Context, targetName string, msg *pkgamqp.Message[*amqp.MessageHeader], sendOpts *amqp.SendOptions) error {
 	if utils.IsNil(msg) {
 		return errs.NewCommonError("cannot publish nil message", nil)
 	}

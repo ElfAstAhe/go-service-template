@@ -36,7 +36,7 @@ type ClientReceiver struct {
 	opts      *options
 }
 
-var _ pkgamqp.ClientReceiver[*amqp.ReceiveOptions] = (*ClientReceiver)(nil)
+var _ pkgamqp.ClientReceiver[*amqp.ReceiveOptions, *amqp.MessageHeader] = (*ClientReceiver)(nil)
 
 func NewClientReceiver(url string, log logger.Logger, opts ...Option) *ClientReceiver {
 	conf := &options{
@@ -127,7 +127,7 @@ func (cr *ClientReceiver) Close(ctx context.Context) error {
 }
 
 // Receive блокирует поток, ожидая новое сообщение из указанной очереди брокера
-func (cr *ClientReceiver) Receive(ctx context.Context, targetName string, receiveOpts *amqp.ReceiveOptions) (*pkgamqp.Message, error) {
+func (cr *ClientReceiver) Receive(ctx context.Context, targetName string, receiveOpts *amqp.ReceiveOptions) (*pkgamqp.Message[*amqp.MessageHeader], error) {
 	receiver, err := cr.getOrCreateReceiver(ctx, targetName)
 	if err != nil {
 		return nil, errs.NewCommonError(fmt.Sprintf("azure receiver failed to get link for %s", targetName), err)
@@ -163,7 +163,7 @@ func (cr *ClientReceiver) Receive(ctx context.Context, targetName string, receiv
 	}
 
 	// Мапим системное сообщение в наш чистый pkgamqp.Message
-	resMsg := &pkgamqp.Message{
+	resMsg := &pkgamqp.Message[*amqp.MessageHeader]{
 		Payload:    finalPayload,
 		Properties: make(map[string]any),
 	}
@@ -183,7 +183,7 @@ func (cr *ClientReceiver) Receive(ctx context.Context, targetName string, receiv
 }
 
 // Accept подтверждает успешную обработку сообщения
-func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message) error {
+func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader]) error {
 	azureMsg, err := cr.extractOriginalMessage(msg)
 	if err != nil {
 		return errs.NewCommonError("extract original azure amqp message failed", err)
@@ -202,7 +202,7 @@ func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message) erro
 }
 
 // Reject уводит сообщение в Dead Letter Address (DLA) брокера при критической ошибке
-func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message, err error) error {
+func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader], err error) error {
 	azureMsg, extractErr := cr.extractOriginalMessage(msg)
 	if extractErr != nil {
 		return errs.NewCommonError("extract original azure amqp message failed", extractErr)
@@ -223,7 +223,7 @@ func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message, err 
 }
 
 // Release возвращает сообщение обратно в начало очереди для ретрая
-func (cr *ClientReceiver) Release(ctx context.Context, msg *pkgamqp.Message) error {
+func (cr *ClientReceiver) Release(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader]) error {
 	azureMsg, err := cr.extractOriginalMessage(msg)
 	if err != nil {
 		return errs.NewCommonError("extract original azure amqp message failed", err)
@@ -365,7 +365,7 @@ func (cr *ClientReceiver) clearAllLinks() {
 	}
 }
 
-func (cr *ClientReceiver) extractOriginalMessage(msg *pkgamqp.Message) (*amqp.Message, error) {
+func (cr *ClientReceiver) extractOriginalMessage(msg *pkgamqp.Message[*amqp.MessageHeader]) (*amqp.Message, error) {
 	if msg == nil || msg.Properties == nil {
 		return nil, errs.NewCommonError("cannot manage ack state for empty message envelope", nil)
 	}

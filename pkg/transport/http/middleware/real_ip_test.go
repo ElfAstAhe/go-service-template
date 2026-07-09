@@ -6,16 +6,6 @@ import (
 	"testing"
 )
 
-// Тестовый хендлер для перехвата IP из контекста
-func newTestHandler(capturedIP *string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Имитируем получение IP из вашего пакета transport
-		// Для автономности теста проверяем значение напрямую через ключ или кастомную логику,
-		// но здесь мы просто вызовем extractRemoteIP напрямую или симулируем контекст.
-		w.WriteHeader(http.StatusOK)
-	})
-}
-
 func TestRealIPExtractor_ExtractRemoteIP(t *testing.T) {
 	tests := []struct {
 		name           string

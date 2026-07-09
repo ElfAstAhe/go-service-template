@@ -42,6 +42,7 @@ func TestLFUEvict_Order(t *testing.T) {
 		assert.Equal(t, "a", key)
 
 		key, ok = lfu.Evict()
+		assert.True(t, ok)
 		assert.Equal(t, "b", key)
 	})
 

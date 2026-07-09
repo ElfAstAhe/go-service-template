@@ -86,7 +86,7 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// realIP (own implementation)
 	cr.router.Use(pkgmware.NewDefaultRealIPExtractor().Handler)
 	// realIP
-	cr.router.Use(middleware.RealIP)
+	//cr.router.Use(middleware.RealIP)
 	// recoverer
 	cr.router.Use(middleware.Recoverer)
 	// timeout
