@@ -51,9 +51,9 @@ func (cso *ClientSenderOptions) Validate() error {
 	if strings.TrimSpace(cso.URL) == "" {
 		return errs.NewTlCommonError("Validate", "amqp URL empty", nil)
 	}
-	if strings.TrimSpace(cso.TargetName) == "" {
-		return errs.NewTlCommonError("Validate", "target name empty", nil)
-	}
+	//if strings.TrimSpace(cso.TargetName) == "" {
+	//	return errs.NewTlCommonError("Validate", "target name empty", nil)
+	//}
 	//if utils.IsNil(cso.ConnOpts) {
 	//    return errs.NewTlCommonError("Validate", "connection options is nil", nil)
 	//}

@@ -19,7 +19,7 @@ type ClientSender struct {
 	logger  logger.Logger
 	conn    *amqp.Conn
 	session *amqp.Session
-	senders map[string]amqpSenderLink
+	senders map[string]AmqpSenderLink
 	opts    *options
 }
 
@@ -35,7 +35,7 @@ func NewClientSender(url string, log logger.Logger, opts ...Option) *ClientSende
 	return &ClientSender{
 		url:     url,
 		logger:  log.GetLogger("azure-client-sender"),
-		senders: make(map[string]amqpSenderLink),
+		senders: make(map[string]AmqpSenderLink),
 		opts:    conf,
 	}
 }
@@ -44,11 +44,11 @@ func NewClientSender(url string, log logger.Logger, opts ...Option) *ClientSende
 func (cs *ClientSender) Close(ctx context.Context) error {
 	// 1. Быстро копируем ссылки под Lock и сразу очищаем инфраструктуру
 	cs.mu.Lock()
-	closableSenders := make(map[string]amqpSenderLink, len(cs.senders))
+	closableSenders := make(map[string]AmqpSenderLink, len(cs.senders))
 	for addr, sender := range cs.senders {
 		closableSenders[addr] = sender
 	}
-	cs.senders = make(map[string]amqpSenderLink) // Очищаем мапу
+	cs.senders = make(map[string]AmqpSenderLink) // Очищаем мапу
 
 	sessionToClose := cs.session
 	connToClose := cs.conn
@@ -204,7 +204,7 @@ func (cs *ClientSender) establishConnection(ctx context.Context) error {
 	return nil
 }
 
-func (cs *ClientSender) getOrCreateSender(ctx context.Context, targetName string) (amqpSenderLink, error) {
+func (cs *ClientSender) getOrCreateSender(ctx context.Context, targetName string) (AmqpSenderLink, error) {
 	cs.mu.RLock()
 	sender, exists := cs.senders[targetName]
 	cs.mu.RUnlock()
