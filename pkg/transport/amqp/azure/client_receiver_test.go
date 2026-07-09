@@ -71,7 +71,7 @@ func TestClientReceiver_ExtractAndAccept(t *testing.T) {
 	cr := NewClientReceiver("amqp://localhost:5672", mockLog)
 
 	sysMsg := createFakeSysMessage()
-	cleanMsg := &pkgamqp.Message{
+	cleanMsg := &pkgamqp.Message[*amqp.MessageHeader]{
 		Payload: []byte(`{"user_id":"123"}`),
 		Properties: map[string]any{
 			sysMsgKey: sysMsg,
@@ -94,10 +94,10 @@ func TestClientReceiver_ExtractSysMessage_ValidationErrors(t *testing.T) {
 	_, err := cr.extractOriginalMessage(nil)
 	assert.Error(t, err)
 
-	_, err = cr.extractOriginalMessage(&pkgamqp.Message{Payload: []byte("{}")})
+	_, err = cr.extractOriginalMessage(&pkgamqp.Message[*amqp.MessageHeader]{Payload: []byte("{}")})
 	assert.Error(t, err)
 
-	invalidMsg := &pkgamqp.Message{
+	invalidMsg := &pkgamqp.Message[*amqp.MessageHeader]{
 		Payload: []byte("{}"),
 		Properties: map[string]any{
 			sysMsgKey: "corrupted-string",

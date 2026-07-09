@@ -236,6 +236,7 @@ func (blc *BaseLazyContainer) Unregister(name string) error {
 	return nil
 }
 
+//lint:ignore U1000 This method is kept for future extensions or interface compatibility
 func (blc *BaseLazyContainer) getProvider(name string) (Provider, error) {
 	if !blc.isProviderRegistered(name) {
 		return nil, errs.NewContainerError(blc.GetName(), fmt.Sprintf("provider [%s] not registered", name), nil)
@@ -252,6 +253,7 @@ func (blc *BaseLazyContainer) getProvider(name string) (Provider, error) {
 	return provider, nil
 }
 
+//lint:ignore U1000 This method is kept for future extensions or interface compatibility
 func (blc *BaseLazyContainer) isProviderRegistered(name string) bool {
 	blc.mu.RLock()
 	defer blc.mu.RUnlock()

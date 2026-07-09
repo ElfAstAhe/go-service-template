@@ -192,7 +192,7 @@ func (bc *BaseContainer) AllNames() []string {
 
 	// make a map copy
 	res := make([]string, 0, len(bc.instances))
-	for key, _ := range bc.instances {
+	for key := range bc.instances {
 		res = append(res, key)
 	}
 
