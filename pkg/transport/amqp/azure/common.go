@@ -6,9 +6,9 @@ import (
 	"github.com/Azure/go-amqp"
 )
 
-// amqpSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
+// AmqpSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
 // которые нам нужны для управления его жизненным циклом.
-type amqpSenderLink interface {
+type AmqpSenderLink interface {
 	Send(ctx context.Context, msg *amqp.Message, opts *amqp.SendOptions) error
 	Close(ctx context.Context) error
 }

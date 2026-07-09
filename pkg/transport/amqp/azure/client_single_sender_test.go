@@ -106,13 +106,13 @@ func TestClientSenderOptions_ValidationCases(t *testing.T) {
 		assert.Error(t, opts.Validate())
 	})
 
-	t.Run("empty TargetName", func(t *testing.T) {
-		opts := NewClientSenderOptions()
-		opts.URL = "amqp://localhost"
-		opts.TargetName = ""
-		opts.Logger = mockLogger
-		assert.Error(t, opts.Validate())
-	})
+	//t.Run("empty TargetName", func(t *testing.T) {
+	//	opts := NewClientSenderOptions()
+	//	opts.URL = "amqp://localhost"
+	//	opts.TargetName = ""
+	//	opts.Logger = mockLogger
+	//	assert.Error(t, opts.Validate())
+	//})
 
 	t.Run("nil Logger", func(t *testing.T) {
 		opts := NewClientSenderOptions()

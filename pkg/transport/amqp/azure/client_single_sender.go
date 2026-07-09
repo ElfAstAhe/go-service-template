@@ -19,7 +19,7 @@ type ClientSingleSender struct {
 	opts       *ClientSenderOptions
 	connection *amqp.Conn
 	session    *amqp.Session
-	sender     *amqp.Sender
+	sender     AmqpSenderLink
 	logger     logger.Logger
 	mu         sync.RWMutex
 	initMu     sync.Mutex
@@ -97,6 +97,7 @@ func (css *ClientSingleSender) Publish(ctx context.Context, msg *pkgamqp.Message
 	return errs.NewTlCommonError("Publish", "azure sender unexpected retry loop exit", nil)
 }
 
+//goland:noinspection DuplicatedCode
 func (css *ClientSingleSender) Close(ctx context.Context) error {
 	css.logger.Debugf("close started")
 	defer css.logger.Debugf("close finished")
@@ -206,7 +207,7 @@ func (css *ClientSingleSender) waitBackoff(ctx context.Context, attempt int) {
 	}
 }
 
-func (css *ClientSingleSender) getSender(ctx context.Context) (amqpSenderLink, error) {
+func (css *ClientSingleSender) getSender(ctx context.Context) (AmqpSenderLink, error) {
 	// 1. Быстрый путь (Fast Path): если сендер жив, отдаем под RLock
 	css.mu.RLock()
 	if !utils.IsNil(css.sender) {
