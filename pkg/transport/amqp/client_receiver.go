@@ -27,4 +27,6 @@ type ClientReceiver[ReceiveOpts any, MsgHeader any] interface {
 
 	// Close мягко закрывает слушающие линки, сессию и соединение с брокером.
 	Close(ctx context.Context) error
+
+	GetTargetNames() []string
 }

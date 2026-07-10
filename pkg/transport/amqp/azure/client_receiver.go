@@ -5,156 +5,78 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-// amqpReceiverLink описывает методы встроенного получателя Azure AMQP,
-// необходимые для чтения, подтверждения и закрытия линка.
-type amqpReceiverLink interface {
-	Receive(ctx context.Context, opts *amqp.ReceiveOptions) (*amqp.Message, error)
-	AcceptMessage(ctx context.Context, msg *amqp.Message) error
-	RejectMessage(ctx context.Context, msg *amqp.Message, err *amqp.Error) error
-	ReleaseMessage(ctx context.Context, msg *amqp.Message) error
-	Close(ctx context.Context) error
-}
-
-// Ключ для скрытой передачи системного сообщения внутри pkgamqp.Message
 const sysMsgKey = "_sys_amqp_orig_azure_message"
 
 type ClientReceiver struct {
-	mu        sync.RWMutex
-	url       string
-	logger    logger.Logger
-	conn      *amqp.Conn
-	session   *amqp.Session
-	receivers map[string]amqpReceiverLink
-	opts      *options
+	mu         sync.RWMutex
+	initMu     sync.Mutex // Изолирует Thundering Herd при сетевом Dial/Link Open
+	url        string
+	logger     logger.Logger
+	connection *amqp.Conn
+	session    *amqp.Session
+	receivers  map[string]AmqpReceiverLink
+	opts       *ClientReceiverOptions
 }
 
 var _ pkgamqp.ClientReceiver[*amqp.ReceiveOptions, *amqp.MessageHeader] = (*ClientReceiver)(nil)
 
-func NewClientReceiver(url string, log logger.Logger, opts ...Option) *ClientReceiver {
-	conf := &options{
-		ConnOptions:     &amqp.ConnOptions{},
-		shutdownTimeout: 3, // Безопасный дефолт
-	}
+func NewClientReceiver(opts ...ReceiverOption) (*ClientReceiver, error) {
+	clientOpts := NewClientReceiverOptions() // Все дефолты ( timeouts, delays) уже внутри
 
 	for _, opt := range opts {
-		opt(conf)
+		opt(clientOpts)
+	}
+
+	if err := clientOpts.Validate(); err != nil {
+		return nil, errs.NewTlCommonError("NewClientReceiver", "client receiver options validate failed", err)
 	}
 
 	return &ClientReceiver{
-		url:       url,
-		logger:    log.GetLogger("azure-client-receiver"),
-		receivers: make(map[string]amqpReceiverLink),
-		opts:      conf,
-	}
+		url:       clientOpts.URL,
+		logger:    clientOpts.Logger.GetLogger("azure-amqp-client-receiver"),
+		receivers: make(map[string]AmqpReceiverLink),
+		opts:      clientOpts,
+	}, nil
 }
 
-//goland:noinspection DuplicatedCode
-func (cr *ClientReceiver) Close(ctx context.Context) error {
-	// 1. Быстро копируем ссылки под Lock и обнуляем инфраструктуру
-	cr.mu.Lock()
-	closableReceivers := make(map[string]amqpReceiverLink, len(cr.receivers))
-	for queue, receiver := range cr.receivers {
-		closableReceivers[queue] = receiver
-	}
-	cr.receivers = make(map[string]amqpReceiverLink)
-
-	sessionToClose := cr.session
-	connToClose := cr.conn
-
-	cr.session = nil
-	cr.conn = nil
-	cr.mu.Unlock() // ОТПУСКАЕМ МЬЮТЕКС! Сетевой I/O теперь безопасен
-
-	// Контролируем таймаут
-	timeout := cr.opts.shutdownTimeout
-	if timeout == 0 {
-		timeout = 3 * time.Second
-	}
-	closeCtx, closeCancel := context.WithTimeout(ctx, timeout)
-	defer closeCancel()
-
-	done := make(chan error, 1)
-
-	// 2. Выполняем мягкое закрытие в фоне
-	go func() {
-		var closeErrs []error
-
-		for _, receiver := range closableReceivers {
-			if err := receiver.Close(closeCtx); err != nil {
-				closeErrs = append(closeErrs, err)
-			}
-		}
-
-		if sessionToClose != nil {
-			if err := sessionToClose.Close(closeCtx); err != nil {
-				closeErrs = append(closeErrs, err)
-			}
-		}
-
-		if connToClose != nil {
-			if err := connToClose.Close(); err != nil {
-				closeErrs = append(closeErrs, err)
-			}
-		}
-
-		done <- errors.Join(closeErrs...)
-	}()
-
-	// 3. Защита от вечного зависания ресиверов
-	select {
-	case err := <-done:
-		if err != nil {
-			return errs.NewCommonError("Azure AMQP client receiver close fails", err)
-		}
-
-		return nil
-	case <-closeCtx.Done():
-		// Сработал предохранитель! Обрываем TCP-соединение "с колена"
-		if connToClose != nil {
-			_ = connToClose.Close() // Закрытие сокета разблокирует все висящие рутины Receive()
-		}
-
-		return errs.NewCommonError("Azure AMQP client receiver close timeout: connection force closed", closeCtx.Err())
-	}
-}
-
-// Receive блокирует поток, ожидая новое сообщение из указанной очереди брокера
 func (cr *ClientReceiver) Receive(ctx context.Context, targetName string, receiveOpts *amqp.ReceiveOptions) (*pkgamqp.Message[*amqp.MessageHeader], error) {
+	if targetName == "" {
+		return nil, errs.NewTlCommonError("Receive", "target queue/topic name cannot be empty", nil)
+	}
+
 	receiver, err := cr.getOrCreateReceiver(ctx, targetName)
 	if err != nil {
-		return nil, errs.NewCommonError(fmt.Sprintf("azure receiver failed to get link for %s", targetName), err)
+		return nil, errs.NewTlCommonError("Receive", fmt.Sprintf("azure receiver failed to get link for %s", targetName), err)
 	}
 
-	// Читаем сообщение из сокета (блокирующий вызов библиотеки Azure)
 	azureMsg, err := receiver.Receive(ctx, receiveOpts)
 	if err != nil {
 		cr.handleReceiverFailure(targetName, err)
-		return nil, errs.NewCommonError("azure receiver incoming packet error", err)
+		return nil, errs.NewTlCommonError("Receive", "azure receiver incoming packet error", err)
 	}
 
-	// 1. Безопасно собираем Payload из Data [][]byte
+	// Высокопроизводительная сборка Payload через copy без лишних микро-аллокаций в куче
 	var finalPayload []byte
 	if len(azureMsg.Data) > 0 {
-		// Подсчитываем общий размер всех чанков для эффективного выделения памяти без лишних аллокаций
 		totalSize := 0
 		for _, chunk := range azureMsg.Data {
 			totalSize += len(chunk)
 		}
 
-		finalPayload = make([]byte, 0, totalSize)
+		finalPayload = make([]byte, totalSize)
+		offset := 0
 		for _, chunk := range azureMsg.Data {
-			finalPayload = append(finalPayload, chunk...)
+			offset += copy(finalPayload[offset:], chunk)
 		}
 	} else if azureMsg.Value != nil {
-		// Фолбек-страховка: если отправитель упаковал данные как AMQP Value (например, чистую строку или байты)
 		if byteVal, ok := azureMsg.Value.([]byte); ok {
 			finalPayload = byteVal
 		} else if strVal, ok := azureMsg.Value.(string); ok {
@@ -162,170 +84,291 @@ func (cr *ClientReceiver) Receive(ctx context.Context, targetName string, receiv
 		}
 	}
 
-	// Мапим системное сообщение в наш чистый pkgamqp.Message
 	resMsg := &pkgamqp.Message[*amqp.MessageHeader]{
 		Payload:    finalPayload,
 		Properties: make(map[string]any),
+		TargetName: targetName, // Фиксируем точный топик-источник для адресного ACK
 	}
 
-	// Переносим пользовательские ApplicationProperties, если они есть
 	if azureMsg.ApplicationProperties != nil {
 		for k, v := range azureMsg.ApplicationProperties {
 			resMsg.Properties[k] = v
 		}
 	}
 
-	// Скрытый хак: Прячем оригинальный *amqp.Message внутрь Properties,
-	// чтобы методы Accept/Reject ниже знали, кого именно подтверждать брокеру.
 	resMsg.Properties[sysMsgKey] = azureMsg
 
 	return resMsg, nil
 }
 
-// Accept подтверждает успешную обработку сообщения
 func (cr *ClientReceiver) Accept(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader]) error {
 	azureMsg, err := cr.extractOriginalMessage(msg)
 	if err != nil {
-		return errs.NewCommonError("extract original azure amqp message failed", err)
+		return errs.NewTlCommonError("Accept", "extract original azure amqp message failed", err)
 	}
 
-	receiver, err := cr.getOrCreateReceiver(ctx, "") // Поиск по сессии не требует имени
+	// ИСПРАВЛЕНИЕ: Ищем ресивер строго по имени SourceQueue, откуда сообщение пришло
+	receiver, err := cr.getOrCreateReceiver(ctx, msg.TargetName)
 	if err != nil {
-		return errs.NewCommonError("retrieve or create azure receiver failed", err)
+		return errs.NewTlCommonError("Accept", "retrieve or create azure receiver failed", err)
 	}
 
 	if err = receiver.AcceptMessage(ctx, azureMsg); err != nil {
-		return errs.NewCommonError("azure receiver failed to accept amqp message", err)
+		return errs.NewTlCommonError("Accept", "azure receiver failed to accept amqp message", err)
 	}
 
 	return nil
 }
 
-// Reject уводит сообщение в Dead Letter Address (DLA) брокера при критической ошибке
 func (cr *ClientReceiver) Reject(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader], err error) error {
 	azureMsg, extractErr := cr.extractOriginalMessage(msg)
 	if extractErr != nil {
-		return errs.NewCommonError("extract original azure amqp message failed", extractErr)
+		return errs.NewTlCommonError("Reject", "extract original azure amqp message failed", extractErr)
 	}
 
-	receiver, getErr := cr.getOrCreateReceiver(ctx, "")
+	receiver, getErr := cr.getOrCreateReceiver(ctx, msg.TargetName)
 	if getErr != nil {
-		return errs.NewCommonError("retrieve or create azure receiver failed", getErr)
+		return errs.NewTlCommonError("Reject", "retrieve or create azure receiver failed", getErr)
 	}
 
-	// Передаем ошибку как причину отклонения пакета
 	amqpErr := &amqp.Error{Condition: "amqp:processing-error", Description: err.Error()}
 	if err = receiver.RejectMessage(ctx, azureMsg, amqpErr); err != nil {
-		return errs.NewCommonError("azure receiver failed to reject amqp message", err)
+		return errs.NewTlCommonError("Reject", "azure receiver failed to reject amqp message", err)
 	}
 
 	return nil
 }
 
-// Release возвращает сообщение обратно в начало очереди для ретрая
 func (cr *ClientReceiver) Release(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader]) error {
 	azureMsg, err := cr.extractOriginalMessage(msg)
 	if err != nil {
-		return errs.NewCommonError("extract original azure amqp message failed", err)
+		return errs.NewTlCommonError("Release", "extract original azure amqp message failed", err)
 	}
 
-	receiver, err := cr.getOrCreateReceiver(ctx, "")
+	receiver, err := cr.getOrCreateReceiver(ctx, msg.TargetName)
 	if err != nil {
-		return errs.NewCommonError("retrieve or create azure receiver failed", err)
+		return errs.NewTlCommonError("Release", "retrieve or create azure receiver failed", err)
 	}
 
 	if err = receiver.ReleaseMessage(ctx, azureMsg); err != nil {
-		return errs.NewCommonError("azure receiver failed to release amqp message", err)
+		return errs.NewTlCommonError("Release", "azure receiver failed to release amqp message", err)
 	}
 
 	return nil
 }
-
-// ---- Внутренние служебные методы (Оркестрация сокета) ----
 
 //goland:noinspection DuplicatedCode
-func (cr *ClientReceiver) establishConnection(ctx context.Context) error {
-	var conn *amqp.Conn
-	var err error
+func (cr *ClientReceiver) Close(ctx context.Context) error {
+	cr.logger.Debugf("close started")
+	defer cr.logger.Debugf("close finished")
 
-	// Ограничиваем контекст подключения на базе нашего ConnectTimeout из конфига!
-	dialCtx, cancel := context.WithTimeout(ctx, cr.opts.connectTimeout)
-	defer cancel()
-
-	if cr.opts.dialFnTestGap != nil {
-		conn, err = cr.opts.dialFnTestGap(dialCtx, cr.url, cr.opts.ConnOptions)
-	} else {
-		conn, err = amqp.Dial(dialCtx, cr.url, cr.opts.ConnOptions)
+	cr.mu.Lock()
+	receiversToClose := make(map[string]AmqpReceiverLink, len(cr.receivers))
+	for k, v := range cr.receivers {
+		receiversToClose[k] = v
 	}
+	cr.receivers = make(map[string]AmqpReceiverLink)
 
-	if err != nil {
-		return errs.NewCommonError("dial failed", err)
-	}
+	sessionToClose := cr.session
+	connToClose := cr.connection
 
-	session, err := conn.NewSession(ctx, nil)
-	if err != nil {
-		_ = conn.Close()
-		return errs.NewCommonError("failed to open session", err)
-	}
+	cr.session = nil
+	cr.connection = nil
+	cr.mu.Unlock() // МЬЮТЕКС МОМЕНТАЛЬНО СВОБОДЕН
 
-	cr.conn = conn
-	cr.session = session
+	closeCtx, closeCancel := context.WithTimeout(ctx, cr.opts.ShutdownTimeout)
+	defer closeCancel()
 
-	return nil
-}
+	done := make(chan error, 1)
 
-func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, targetName string) (amqpReceiverLink, error) {
-	cr.mu.RLock()
-	// Если queueName пустой (вызов из Accept/Reject), берем любой первый живой ресивер сессии
-	if targetName == "" {
-		for _, r := range cr.receivers {
-			if r != nil {
-				cr.mu.RUnlock()
-				return r, nil
+	go func() {
+		var closeErrs = utils.NewConcurrentList[error]()
+		var wg sync.WaitGroup
+
+		for _, receiver := range receiversToClose {
+			if utils.IsNil(receiver) {
+				continue
+			}
+			wg.Add(1)
+			go func(r AmqpReceiverLink) {
+				defer wg.Done()
+				if err := r.Close(closeCtx); err != nil {
+					closeErrs.Append(err)
+				}
+			}(receiver)
+		}
+		wg.Wait()
+
+		if !utils.IsNil(sessionToClose) {
+			if err := sessionToClose.Close(closeCtx); err != nil {
+				closeErrs.Append(err)
 			}
 		}
+
+		if !utils.IsNil(connToClose) {
+			if err := connToClose.Close(); err != nil {
+				closeErrs.Append(err)
+			}
+		}
+
+		done <- errors.Join(closeErrs.Snapshot()...)
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return errs.NewTlCommonError("Close", "Azure AMQP client receiver close fails", err)
+		}
+
+		return nil
+	case <-closeCtx.Done():
+		if connToClose != nil {
+			_ = connToClose.Close()
+		}
+
+		return errs.NewTlCommonError("Close", "Azure AMQP client receiver close timeout", closeCtx.Err())
 	}
+}
+
+func (cr *ClientReceiver) GetTargetNames() []string {
+	cr.mu.RLock()
+	defer cr.mu.RUnlock()
+
+	var targetNames = make([]string, 0, len(cr.receivers))
+	for key := range cr.receivers {
+		targetNames = append(targetNames, key)
+	}
+
+	return targetNames
+}
+
+//goland:noinspection DuplicatedCode
+func (cr *ClientReceiver) getOrCreateReceiver(ctx context.Context, targetName string) (AmqpReceiverLink, error) {
+	if targetName == "" {
+		return nil, errs.NewTlCommonError("getOrCreateReceiver", "target queue name empty", nil)
+	}
+
+	// 1. Fast Path под RLock
+	cr.mu.RLock()
 	receiver, exists := cr.receivers[targetName]
 	cr.mu.RUnlock()
 
-	if exists && receiver != nil {
+	if exists && !utils.IsNil(receiver) {
 		return receiver, nil
 	}
 
-	cr.mu.Lock()
-	defer cr.mu.Unlock()
+	// 2. Slow Path под мьютексом инициализации пула
+	cr.initMu.Lock()
+	defer cr.initMu.Unlock()
 
-	// Double-checked locking
-	if targetName != "" {
-		if receiver, exists = cr.receivers[targetName]; exists && receiver != nil {
-			return receiver, nil
-		}
+	// 3. Double Check
+	cr.mu.RLock()
+	receiver, exists = cr.receivers[targetName]
+	cr.mu.RUnlock()
+
+	if exists && !utils.IsNil(receiver) {
+		return receiver, nil
 	}
 
-	if cr.session == nil || cr.conn == nil {
-		if err := cr.establishConnection(ctx); err != nil {
-			return nil, err
-		}
-	}
-
-	// Если имя пустое и сессия пустая — мы не можем создать дефолтный линк
-	if targetName == "" {
-		return nil, errs.NewCommonError("amqp session is empty, cannot manage message acknowledgement state", nil)
-	}
-
-	cr.logger.Debugf("opening new amqp source link for target name: %s", targetName)
-	newReceiver, err := cr.session.NewReceiver(ctx, targetName, nil)
+	session, err := cr.getOrCreateSession(ctx)
 	if err != nil {
-		cr.session = nil
-
-		return nil, errs.NewCommonError("failed to create amqp link", err)
+		return nil, err
 	}
 
+	cr.logger.Debugf("opening new durable amqp source link for target name: %s", targetName)
+
+	linkCtx, cancel := context.WithTimeout(ctx, cr.opts.ConnectTimeout)
+	defer cancel()
+
+	// ИСПРАВЛЕНИЕ: Настраиваем Durable-подписку, чтобы Artemis хранил логи на диске во время деплоев
+	linkOpts := &amqp.ReceiverOptions{
+		Durability:   amqp.DurabilityConfiguration,
+		ExpiryPolicy: amqp.ExpiryPolicyNever,
+		Credit:       (int32)(DefaultReceiverCredit),
+	}
+
+	newReceiver, err := session.NewReceiver(linkCtx, targetName, linkOpts)
+	if err != nil {
+		cr.mu.Lock()
+		cr.session = nil
+		delete(cr.receivers, targetName)
+		cr.mu.Unlock()
+		return nil, errs.NewTlCommonError("getOrCreateReceiver", fmt.Sprintf("failed to create amqp receiver link for [%s]", targetName), err)
+	}
+
+	cr.mu.Lock()
 	cr.receivers[targetName] = newReceiver
+	cr.mu.Unlock()
 
 	return newReceiver, nil
 }
 
+//goland:noinspection DuplicatedCode
+func (cr *ClientReceiver) getOrCreateSession(ctx context.Context) (*amqp.Session, error) {
+	cr.mu.RLock()
+	connAlive := !utils.IsNil(cr.connection)
+	sessAlive := !utils.IsNil(cr.session)
+	localConn := cr.connection
+	localSess := cr.session
+	cr.mu.RUnlock()
+
+	if connAlive && sessAlive {
+		return localSess, nil
+	}
+
+	var newlyDialed bool
+
+	if !connAlive {
+		dialCtx, cancel := context.WithTimeout(ctx, cr.opts.ConnectTimeout)
+		defer cancel()
+
+		var conn *amqp.Conn
+		var err error
+		if !utils.IsNil(cr.opts.DialFnTestGap) {
+			conn, err = cr.opts.DialFnTestGap(dialCtx, cr.url, cr.opts.ConnOpts)
+		} else {
+			conn, err = amqp.Dial(dialCtx, cr.url, cr.opts.ConnOpts)
+		}
+		if err != nil {
+			return nil, errs.NewTlCommonError("getOrCreateSession", "dial failed", err)
+		}
+		localConn = conn
+		newlyDialed = true
+	}
+
+	sessCtx, cancelSess := context.WithTimeout(ctx, cr.opts.ConnectTimeout)
+	defer cancelSess()
+
+	session, err := localConn.NewSession(sessCtx, cr.opts.SessionOpts)
+	if err != nil {
+		cr.mu.Lock()
+		var connToCloseBehindMutex *amqp.Conn
+
+		if newlyDialed {
+			connToCloseBehindMutex = localConn
+		} else {
+			connToCloseBehindMutex = localConn
+			cr.connection = nil
+		}
+		cr.session = nil
+
+		cr.receivers = make(map[string]AmqpReceiverLink) // Инвалидируем весь кэш ресиверов
+		cr.mu.Unlock()
+		if connToCloseBehindMutex != nil {
+			go func(c *amqp.Conn) {
+				_ = c.Close() // Асинхронное закрытие сокета вне мьютекса
+			}(connToCloseBehindMutex)
+		}
+
+		return nil, errs.NewTlCommonError("getOrCreateSession", "failed to open session", err)
+	}
+	cr.mu.Lock()
+	cr.connection = localConn
+	cr.session = session
+	cr.mu.Unlock()
+
+	return session, nil
+}
 func (cr *ClientReceiver) handleReceiverFailure(targetName string, err error) {
 	var linkErr *amqp.LinkError
 	var sessionErr *amqp.SessionError
@@ -336,48 +379,32 @@ func (cr *ClientReceiver) handleReceiverFailure(targetName string, err error) {
 
 	switch {
 	case errors.As(err, &linkErr):
-		cr.logger.Errorf("AMQP Receiver Link dead for target name %s: %v. Cleaning target link.", targetName, linkErr)
-		if receiver, exists := cr.receivers[targetName]; exists {
-			_ = receiver.Close(context.Background())
-			delete(cr.receivers, targetName)
-		}
-
-	case errors.As(err, &sessionErr):
-		cr.logger.Errorf("AMQP Receiver Session dead: %v. Invalidating session and links.", sessionErr)
-		cr.clearAllLinks()
-		cr.session = nil
-
-	case errors.As(err, &connErr):
-		cr.logger.Errorf("AMQP Receiver Socket dead: %v. Resetting server connection pipelines.", connErr)
-		cr.clearAllLinks()
-		cr.session = nil
-		cr.conn = nil
-	}
-}
-
-func (cr *ClientReceiver) clearAllLinks() {
-	ctx, cancel := context.WithTimeout(context.Background(), cr.opts.shutdownTimeout)
-	defer cancel()
-
-	for targetName, receiver := range cr.receivers {
-		_ = receiver.Close(ctx)
+		cr.logger.Errorf("AMQP Receiver Link dead for target name %s: %v. Cleaning link.", targetName, linkErr)
 		delete(cr.receivers, targetName)
+		// Стираем только этот битый топик
+	case errors.As(err, &sessionErr):
+		cr.logger.Errorf("AMQP Receiver Session dead: %v. Invalidating session and pool.", sessionErr)
+		cr.session = nil
+		cr.receivers = make(map[string]AmqpReceiverLink)
+	case errors.As(err, &connErr):
+		cr.logger.Errorf("AMQP Receiver Socket dead: %v. Resetting full connector pipelines.", connErr)
+		cr.connection = nil
+		cr.session = nil
+		cr.receivers = make(map[string]AmqpReceiverLink)
 	}
 }
 
 func (cr *ClientReceiver) extractOriginalMessage(msg *pkgamqp.Message[*amqp.MessageHeader]) (*amqp.Message, error) {
 	if msg == nil || msg.Properties == nil {
-		return nil, errs.NewCommonError("cannot manage ack state for empty message envelope", nil)
+		return nil, errs.NewTlCommonError("extractOriginalMessage", "cannot manage ack state for empty envelope", nil)
 	}
-
 	raw, exists := msg.Properties[sysMsgKey]
 	if !exists {
-		return nil, errs.NewCommonError("message envelope missing underlying system amqp context", nil)
+		return nil, errs.NewTlCommonError("extractOriginalMessage", "missing underlying system amqp context", nil)
 	}
-
 	sysMsg, ok := raw.(*amqp.Message)
 	if !ok {
-		return nil, errs.NewCommonError("invalid underlying amqp packet structure type", nil)
+		return nil, errs.NewTlCommonError("extractOriginalMessage", "invalid underlying packet structure type", nil)
 	}
 
 	return sysMsg, nil

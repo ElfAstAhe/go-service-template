@@ -8,132 +8,186 @@ import (
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger/mocks"
 	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
+	mocks2 "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp/azure/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
-// Безопасный стаб для интерфейса amqpReceiverLink, который теперь умеет всё
-type fakeReceiverLink struct{}
+func TestClientReceiver_Receive_Success_And_PayloadAssembly(t *testing.T) {
+	// Arrange
+	ctx := context.Background()
+	queueName := "audit-events"
 
-func (f *fakeReceiverLink) Receive(ctx context.Context, opts *amqp.ReceiveOptions) (*amqp.Message, error) {
-	return &amqp.Message{}, nil
-}
+	mockLogger := new(mocks.MockLogger)
+	mockLogger.On("GetLogger", "azure-amqp-client-receiver").Return(mockLogger)
 
-func (f *fakeReceiverLink) AcceptMessage(ctx context.Context, msg *amqp.Message) error {
-	return nil // Безопасный стаб
-}
-
-func (f *fakeReceiverLink) RejectMessage(ctx context.Context, msg *amqp.Message, err *amqp.Error) error {
-	return nil // Безопасный стаб
-}
-
-func (f *fakeReceiverLink) ReleaseMessage(ctx context.Context, msg *amqp.Message) error {
-	return nil // Безопасный стаб
-}
-
-func (f *fakeReceiverLink) Close(ctx context.Context) error {
-	return nil // Гарантированная защита от паники
-}
-
-func createFakeSysMessage() *amqp.Message {
-	return &amqp.Message{
+	// Имитируем успешное получение сообщения, разбитого на два чанка (Data [][]byte)
+	mockAzureMsg := &amqp.Message{
 		Data: [][]byte{
-			[]byte(`{"user`),
-			[]byte(`_id":`),
-			[]byte(`"123"}`),
+			[]byte("chunk-1_"),
+			[]byte("chunk-2"),
 		},
 		ApplicationProperties: map[string]any{
-			"trace_id": "fake-trace-888",
+			"trace_id": "uuid-12345",
 		},
 	}
+
+	mockReceiver := new(mocks2.MockAmqpReceiverLink)
+	mockReceiver.On("Receive", mock.Anything, mock.Anything).Return(mockAzureMsg, nil).Once()
+
+	opts := NewClientReceiverOptions()
+	opts.Logger = mockLogger
+
+	cr, err := NewClientReceiver(func(cro *ClientReceiverOptions) {
+		*cro = *opts
+	})
+	require.NoError(t, err)
+
+	// Прогреваем кэш ресиверов моком
+	cr.receivers[queueName] = mockReceiver
+
+	// Act
+	msg, err := cr.Receive(ctx, queueName, nil)
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, msg)
+
+	// Проверяем, что наша оптимизация через copy склеила Payload без искажений
+	assert.Equal(t, []byte("chunk-1_chunk-2"), msg.Payload)
+	assert.Equal(t, "uuid-12345", msg.Properties["trace_id"])
+	assert.Equal(t, queueName, msg.TargetName) // Ресивер зафиксировал точный источник
+
+	mockReceiver.AssertExpectations(t)
 }
 
-// 1. Тест применения опций
-func TestClientReceiver_OptionsApplication(t *testing.T) {
-	mockLog := &mocks.MockLogger{}
-	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+func TestClientReceiver_Accept_AddressRouting(t *testing.T) {
+	// Arrange
+	ctx := context.Background()
+	queueName := "critical-audit-queue"
 
-	cr := NewClientReceiver(
-		"amqp://localhost:5672",
-		mockLog,
-		WithShutdownTimeout(10*time.Second),
-	)
+	mockLogger := new(mocks.MockLogger)
+	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger)
 
-	assert.NotNil(t, cr)
-	assert.Equal(t, 10*time.Second, cr.opts.shutdownTimeout)
-}
+	// Создаем фейковый оригинальный пакет amqp.Message
+	origAzureMsg := &amqp.Message{}
 
-// 2. Тест успешного извлечения контекста сообщения
-func TestClientReceiver_ExtractAndAccept(t *testing.T) {
-	mockLog := &mocks.MockLogger{}
-	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+	mockReceiver := new(mocks2.MockAmqpReceiverLink)
+	// Проверяем, что AcceptMessage вызовется именно с нашей структурой пакета
+	mockReceiver.On("AcceptMessage", mock.Anything, origAzureMsg).Return(nil).Once()
 
-	cr := NewClientReceiver("amqp://localhost:5672", mockLog)
+	opts := NewClientReceiverOptions()
+	opts.Logger = mockLogger
 
-	sysMsg := createFakeSysMessage()
-	cleanMsg := &pkgamqp.Message[*amqp.MessageHeader]{
-		Payload: []byte(`{"user_id":"123"}`),
+	cr, err := NewClientReceiver(func(cro *ClientReceiverOptions) {
+		*cro = *opts
+	})
+	require.NoError(t, err)
+
+	// Кэшируем мок под конкретным именем очереди
+	cr.receivers[queueName] = mockReceiver
+
+	// Собираем конверт сообщения, пряча туда оригинал под ключом sysMsgKey
+	msg := &pkgamqp.Message[*amqp.MessageHeader]{
+		TargetName: queueName, // Указываем точную очередь-источник
 		Properties: map[string]any{
-			sysMsgKey: sysMsg,
+			sysMsgKey: origAzureMsg,
 		},
 	}
 
-	extracted, err := cr.extractOriginalMessage(cleanMsg)
+	// Act
+	err = cr.Accept(ctx, msg)
+
+	// Assert
+	// Метод должен отработать без ошибок, найдя по TargetName правильный линк в map
 	assert.NoError(t, err)
-	assert.Equal(t, sysMsg, extracted)
-	assert.Len(t, extracted.Data, 3)
+	mockReceiver.AssertExpectations(t)
 }
 
-// 3. Тест валидации ошибок извлечения
-func TestClientReceiver_ExtractSysMessage_ValidationErrors(t *testing.T) {
-	mockLog := &mocks.MockLogger{}
-	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+func TestClientReceiver_Receive_HandleReceiverFailure_InvalidatesCache(t *testing.T) {
+	// Arrange
+	ctx := context.Background()
+	queueName := "flaky-queue"
 
-	cr := NewClientReceiver("amqp://localhost:5672", mockLog)
+	mockLogger := new(mocks.MockLogger)
+	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger)
+	// Настраиваем логгер на фиксацию падения линка
+	mockLogger.On("Errorf", mock.Anything, mock.Anything, mock.Anything).Return().Once()
 
-	_, err := cr.extractOriginalMessage(nil)
+	mockReceiver := new(mocks2.MockAmqpReceiverLink)
+	// Симулируем критическую ошибку линка при вызове Receive
+	linkErr := &amqp.LinkError{RemoteErr: &amqp.Error{Condition: amqp.ErrCondInternalError}}
+	mockReceiver.On("Receive", mock.Anything, mock.Anything).Return(nil, linkErr).Once()
+
+	opts := NewClientReceiverOptions()
+	opts.Logger = mockLogger
+
+	cr, err := NewClientReceiver(func(cro *ClientReceiverOptions) {
+		*cro = *opts
+	})
+	require.NoError(t, err)
+
+	cr.receivers[queueName] = mockReceiver
+
+	// Act
+	msg, err := cr.Receive(ctx, queueName, nil)
+
+	// Assert
 	assert.Error(t, err)
+	assert.Nil(t, msg)
+	assert.Contains(t, err.Error(), "azure receiver incoming packet error")
 
-	_, err = cr.extractOriginalMessage(&pkgamqp.Message[*amqp.MessageHeader]{Payload: []byte("{}")})
-	assert.Error(t, err)
+	// ПРОВЕРКА ИНВАЛИДАЦИИ: handleReceiverFailure обязан был удалить упавший топик из карты!
+	cr.mu.RLock()
+	_, exists := cr.receivers[queueName]
+	cr.mu.RUnlock()
+	assert.False(t, exists, "Битый линк ресивера должен быть атомарно удален из кэша пула")
 
-	invalidMsg := &pkgamqp.Message[*amqp.MessageHeader]{
-		Payload: []byte("{}"),
-		Properties: map[string]any{
-			sysMsgKey: "corrupted-string",
-		},
-	}
-	_, err = cr.extractOriginalMessage(invalidMsg)
-	assert.Error(t, err)
+	mockReceiver.AssertExpectations(t)
 }
 
-// 4. Тест: Каскадный сброс стейт-машины при смерти сокета (ConnError) БЕЗ ПАНИК
-func TestClientReceiver_HandleReceiverFailure(t *testing.T) {
-	mockLog := &mocks.MockLogger{}
-	mockLog.On("GetLogger", mock.Anything).Return(mockLog)
+func TestClientReceiver_Close_ConcurrentClosing(t *testing.T) {
+	// Arrange
+	ctx := context.Background()
 
-	// Ожидаем вызов Errorf с вариативными аргументами
-	mockLog.On("Errorf",
-		"AMQP Receiver Socket dead: %v. Resetting server connection pipelines.",
-		mock.Anything,
-	).Once().Return()
+	mockLogger := new(mocks.MockLogger)
+	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger)
+	mockLogger.On("Debugf", mock.Anything).Return().Maybe()
 
-	cr := NewClientReceiver("amqp://localhost:5672", mockLog)
+	mockReceiver1 := new(mocks2.MockAmqpReceiverLink)
+	mockReceiver2 := new(mocks2.MockAmqpReceiverLink)
 
-	cr.conn = &amqp.Conn{}
-	cr.session = &amqp.Session{}
+	// Имитируем долгое закрытие линков (сеть тормозит)
+	mockReceiver1.On("Close", mock.Anything).Return(nil).After(15 * time.Millisecond)
+	mockReceiver2.On("Close", mock.Anything).Return(nil).After(15 * time.Millisecond)
 
-	// ИСПРАВЛЕНО: Забиваем мапу нашим безопасным интерфейсным фейк-линком
-	cr.receivers["audit.queue"] = &fakeReceiverLink{}
+	opts := NewClientReceiverOptions()
+	opts.Logger = mockLogger
+	opts.ShutdownTimeout = 50 * time.Millisecond
 
-	connErr := &amqp.ConnError{
-		RemoteErr: &amqp.Error{Condition: "amqp:connection:forced-close"},
-	}
+	cr, err := NewClientReceiver(func(cro *ClientReceiverOptions) {
+		*cro = *opts
+	})
+	require.NoError(t, err)
 
-	// Теперь этот вызов отработает идеально, безопасно удалив фейк-линк из мапы
-	cr.handleReceiverFailure("audit.queue", connErr)
+	cr.receivers["queue-1"] = mockReceiver1
+	cr.receivers["queue-2"] = mockReceiver2
 
-	assert.Empty(t, cr.receivers)
-	assert.Nil(t, cr.session)
-	assert.Nil(t, cr.conn)
+	start := time.Now()
+
+	// Act
+	err = cr.Close(ctx)
+
+	duration := time.Since(start)
+
+	// Assert
+	assert.NoError(t, err)
+	// Проверяем конкурентность: благодаря sync.WaitGroup и utils.NewConcurrentList,
+	// оба зависших линка закроются одновременно, и Close уложится в ~15ms вместо последовательных 30ms.
+	assert.Less(t, duration, 25*time.Millisecond, "Линки получателей закрываются последовательно")
+	assert.Empty(t, cr.GetTargetNames())
+
+	mockReceiver1.AssertExpectations(t)
+	mockReceiver2.AssertExpectations(t)
 }
