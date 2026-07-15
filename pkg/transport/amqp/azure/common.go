@@ -2,8 +2,14 @@ package azure
 
 import (
 	"context"
+	"time"
 
 	"github.com/Azure/go-amqp"
+)
+
+const (
+	DefaultConnectTimeout  time.Duration = 5 * time.Second
+	DefaultShutdownTimeout time.Duration = 5 * time.Second
 )
 
 // AmqpSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
