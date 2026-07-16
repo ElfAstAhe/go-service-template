@@ -4,15 +4,14 @@ import (
 	"context"
 )
 
-// ClientReceiver описывает чистый контракт для получения сообщений из брокера AMQP 1.0.
-// Он намеренно изолирован от сендера, чтобы сервисы импортировали только то, что им нужно.
+// Receiver описывает чистый контракт для получения сообщений из конкретной очереди/топика AMQP 1.0.
 //
-//	ReceiveOpts - опции получателя
-//	MsgHeader - заголовок сообщения
-type ClientReceiver[ReceiveOpts any, MsgHeader any] interface {
-	// Receive блокирует поток до тех пор, пока из указанной очереди/топика (targetName)
+//	ReceiveOpts — опции получателя конкретного кадра сообщения
+//	MsgHeader   — заголовок сообщения (дженерик)
+type Receiver[ReceiveOpts any, MsgHeader any] interface {
+	// Receive блокирует поток до тех пор, пока из настроенной очереди/топика
 	// не прилетит новое сообщение, либо пока не отменится контекст.
-	Receive(ctx context.Context, targetName string, receiveOpts ReceiveOpts) (*Message[MsgHeader], error)
+	Receive(ctx context.Context, receiveOpts ReceiveOpts) (*Message[MsgHeader], error)
 
 	// Accept подтверждает брокеру успешную обработку сообщения. Message удаляется из очереди.
 	Accept(ctx context.Context, msg *Message[MsgHeader]) error
@@ -25,8 +24,8 @@ type ClientReceiver[ReceiveOpts any, MsgHeader any] interface {
 	// Брокер возвращает сообщение обратно в очередь для повторной обработки.
 	Release(ctx context.Context, msg *Message[MsgHeader]) error
 
-	// Close мягко закрывает слушающие линки, сессию и соединение с брокером.
+	// Close мягко закрывает слушающий линк, не прерывая общую сессию коннектора.
 	Close(ctx context.Context) error
 
-	GetTargetNames() []string
+	GetTargetName() string
 }
