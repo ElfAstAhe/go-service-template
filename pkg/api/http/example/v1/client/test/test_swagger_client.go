@@ -44,9 +44,7 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for test API.
-*/
+// Client for test API.
 type Client struct {
 	transport runtime.ContextualTransport
 	formats   strfmt.Registry
@@ -97,16 +95,14 @@ type ClientService interface {
 	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-DeleteAPITestIDудалениеs тестовых данных.
-
-Удаляет запись по её ID.
-
-This method does not support injected context.
-However, timeout and opentracing contexts are honored whenever enabled.
-
-If you need to pass a specific context, use [Client.DeleteAPITestIDContext] instead.
-*/
+// DeleteAPITestID удалениеs тестовых данных.
+//
+// Удаляет запись по её ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAPITestIDContext] instead.
 func (a *Client) DeleteAPITestID(params *DeleteAPITestIDParams, opts ...ClientOption) (*DeleteAPITestIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
@@ -118,13 +114,11 @@ func (a *Client) DeleteAPITestID(params *DeleteAPITestIDParams, opts ...ClientOp
 	return a.DeleteAPITestIDContext(ctx, params, opts...)
 }
 
-/*
-DeleteAPITestIDContextудалениеs тестовых данных.
-
-Удаляет запись по её ID.
-
-Do not use the deprecated [DeleteAPITestIDParams.Context] with this method: it would be ignored.
-*/
+// DeleteAPITestIDContext удалениеs тестовых данных.
+//
+// Удаляет запись по её ID.
+//
+// Do not use the deprecated [DeleteAPITestIDParams.Context] with this method: it would be ignored.
 func (a *Client) DeleteAPITestIDContext(ctx context.Context, params *DeleteAPITestIDParams, opts ...ClientOption) (*DeleteAPITestIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
@@ -167,16 +161,14 @@ func (a *Client) DeleteAPITestIDContext(ctx context.Context, params *DeleteAPITe
 	panic(msg)
 }
 
-/*
-GetAPITestполучитьs.
-
-Удаляет запись по её ID (Soft Delete).
-
-This method does not support injected context.
-However, timeout and opentracing contexts are honored whenever enabled.
-
-If you need to pass a specific context, use [Client.GetAPITestContext] instead.
-*/
+// GetAPITest получитьs.
+//
+// Удаляет запись по её ID (Soft Delete).
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPITestContext] instead.
 func (a *Client) GetAPITest(params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
@@ -188,13 +180,11 @@ func (a *Client) GetAPITest(params *GetAPITestParams, opts ...ClientOption) (*Ge
 	return a.GetAPITestContext(ctx, params, opts...)
 }
 
-/*
-GetAPITestContextполучитьs.
-
-Удаляет запись по её ID (Soft Delete).
-
-Do not use the deprecated [GetAPITestParams.Context] with this method: it would be ignored.
-*/
+// GetAPITestContext получитьs.
+//
+// Удаляет запись по её ID (Soft Delete).
+//
+// Do not use the deprecated [GetAPITestParams.Context] with this method: it would be ignored.
 func (a *Client) GetAPITestContext(ctx context.Context, params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
@@ -237,16 +227,14 @@ func (a *Client) GetAPITestContext(ctx context.Context, params *GetAPITestParams
 	panic(msg)
 }
 
-/*
-GetAPITestIDполучитьs.
-
-Удаляет запись по её ID (Soft Delete).
-
-This method does not support injected context.
-However, timeout and opentracing contexts are honored whenever enabled.
-
-If you need to pass a specific context, use [Client.GetAPITestIDContext] instead.
-*/
+// GetAPITestID получитьs.
+//
+// Удаляет запись по её ID (Soft Delete).
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPITestIDContext] instead.
 func (a *Client) GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
@@ -258,13 +246,11 @@ func (a *Client) GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) 
 	return a.GetAPITestIDContext(ctx, params, opts...)
 }
 
-/*
-GetAPITestIDContextполучитьs.
-
-Удаляет запись по её ID (Soft Delete).
-
-Do not use the deprecated [GetAPITestIDParams.Context] with this method: it would be ignored.
-*/
+// GetAPITestIDContext получитьs.
+//
+// Удаляет запись по её ID (Soft Delete).
+//
+// Do not use the deprecated [GetAPITestIDParams.Context] with this method: it would be ignored.
 func (a *Client) GetAPITestIDContext(ctx context.Context, params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
@@ -307,16 +293,14 @@ func (a *Client) GetAPITestIDContext(ctx context.Context, params *GetAPITestIDPa
 	panic(msg)
 }
 
-/*
-GetAPITestSearchполучитьs.
-
-Удаляет запись по её ID (Soft Delete).
-
-This method does not support injected context.
-However, timeout and opentracing contexts are honored whenever enabled.
-
-If you need to pass a specific context, use [Client.GetAPITestSearchContext] instead.
-*/
+// GetAPITestSearch получитьs.
+//
+// Удаляет запись по её ID (Soft Delete).
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPITestSearchContext] instead.
 func (a *Client) GetAPITestSearch(params *GetAPITestSearchParams, opts ...ClientOption) (*GetAPITestSearchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
@@ -328,13 +312,11 @@ func (a *Client) GetAPITestSearch(params *GetAPITestSearchParams, opts ...Client
 	return a.GetAPITestSearchContext(ctx, params, opts...)
 }
 
-/*
-GetAPITestSearchContextполучитьs.
-
-Удаляет запись по её ID (Soft Delete).
-
-Do not use the deprecated [GetAPITestSearchParams.Context] with this method: it would be ignored.
-*/
+// GetAPITestSearchContext получитьs.
+//
+// Удаляет запись по её ID (Soft Delete).
+//
+// Do not use the deprecated [GetAPITestSearchParams.Context] with this method: it would be ignored.
 func (a *Client) GetAPITestSearchContext(ctx context.Context, params *GetAPITestSearchParams, opts ...ClientOption) (*GetAPITestSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
@@ -377,16 +359,14 @@ func (a *Client) GetAPITestSearchContext(ctx context.Context, params *GetAPITest
 	panic(msg)
 }
 
-/*
-PostAPITestсозданиеs новых тестовых данных.
-
-Сохраняет новые тестовые данные.
-
-This method does not support injected context.
-However, timeout and opentracing contexts are honored whenever enabled.
-
-If you need to pass a specific context, use [Client.PostAPITestContext] instead.
-*/
+// PostAPITest созданиеs новых тестовых данных.
+//
+// Сохраняет новые тестовые данные.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPITestContext] instead.
 func (a *Client) PostAPITest(params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
@@ -398,13 +378,11 @@ func (a *Client) PostAPITest(params *PostAPITestParams, opts ...ClientOption) (*
 	return a.PostAPITestContext(ctx, params, opts...)
 }
 
-/*
-PostAPITestContextсозданиеs новых тестовых данных.
-
-Сохраняет новые тестовые данные.
-
-Do not use the deprecated [PostAPITestParams.Context] with this method: it would be ignored.
-*/
+// PostAPITestContext созданиеs новых тестовых данных.
+//
+// Сохраняет новые тестовые данные.
+//
+// Do not use the deprecated [PostAPITestParams.Context] with this method: it would be ignored.
 func (a *Client) PostAPITestContext(ctx context.Context, params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
@@ -447,16 +425,14 @@ func (a *Client) PostAPITestContext(ctx context.Context, params *PostAPITestPara
 	panic(msg)
 }
 
-/*
-PutAPITestIDизменениеs тестовых данных.
-
-Изменяет тестовые данные.
-
-This method does not support injected context.
-However, timeout and opentracing contexts are honored whenever enabled.
-
-If you need to pass a specific context, use [Client.PutAPITestIDContext] instead.
-*/
+// PutAPITestID изменениеs тестовых данных.
+//
+// Изменяет тестовые данные.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAPITestIDContext] instead.
 func (a *Client) PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
@@ -468,13 +444,11 @@ func (a *Client) PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) 
 	return a.PutAPITestIDContext(ctx, params, opts...)
 }
 
-/*
-PutAPITestIDContextизменениеs тестовых данных.
-
-Изменяет тестовые данные.
-
-Do not use the deprecated [PutAPITestIDParams.Context] with this method: it would be ignored.
-*/
+// PutAPITestIDContext изменениеs тестовых данных.
+//
+// Изменяет тестовые данные.
+//
+// Do not use the deprecated [PutAPITestIDParams.Context] with this method: it would be ignored.
 func (a *Client) PutAPITestIDContext(ctx context.Context, params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {

@@ -63,20 +63,18 @@ GetAPITestParams contains all the parameters to send to the API endpoint
 */
 type GetAPITestParams struct {
 
-	/* Limit.
-
-	   limit row count, max 1000
-
-	   Format: int
-	*/
+	// Limit.
+	//
+	// limit row count, max 1000
+	//
+	// Format: int
 	Limit *int64
 
-	/* Offset.
-
-	   offset, min 0, max n
-
-	   Format: int
-	*/
+	// Offset.
+	//
+	// offset, min 0, max n
+	//
+	// Format: int
 	Offset *int64
 
 	HTTPClient *http.Client

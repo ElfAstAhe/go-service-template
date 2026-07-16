@@ -61,11 +61,9 @@ func NewPutAPITestIDOK() *PutAPITestIDOK {
 	return &PutAPITestIDOK{}
 }
 
-/*
-PutAPITestIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutAPITestIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutAPITestIDOK struct {
 	Payload *models.TestDTO
 }
@@ -131,11 +129,9 @@ func NewPutAPITestIDBadRequest() *PutAPITestIDBadRequest {
 	return &PutAPITestIDBadRequest{}
 }
 
-/*
-PutAPITestIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutAPITestIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutAPITestIDBadRequest struct {
 	Payload *models.ErrorDTO
 }
@@ -201,11 +197,9 @@ func NewPutAPITestIDNotFound() *PutAPITestIDNotFound {
 	return &PutAPITestIDNotFound{}
 }
 
-/*
-PutAPITestIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutAPITestIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutAPITestIDNotFound struct {
 	Payload *models.ErrorDTO
 }
@@ -271,11 +265,9 @@ func NewPutAPITestIDConflict() *PutAPITestIDConflict {
 	return &PutAPITestIDConflict{}
 }
 
-/*
-PutAPITestIDConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PutAPITestIDConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PutAPITestIDConflict struct {
 	Payload *models.ErrorDTO
 }
@@ -341,11 +333,9 @@ func NewPutAPITestIDInternalServerError() *PutAPITestIDInternalServerError {
 	return &PutAPITestIDInternalServerError{}
 }
 
-/*
-PutAPITestIDInternalServerError describes a response with status code 500, with default header values.
-
-Внутренняя ошибка сервера (пустое тело)
-*/
+// PutAPITestIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Внутренняя ошибка сервера (пустое тело)
 type PutAPITestIDInternalServerError struct {
 }
 

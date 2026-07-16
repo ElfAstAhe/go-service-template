@@ -49,11 +49,9 @@ func NewGetAPITestIDOK() *GetAPITestIDOK {
 	return &GetAPITestIDOK{}
 }
 
-/*
-GetAPITestIDOK describes a response with status code 200, with default header values.
-
-Тестовые данные
-*/
+// GetAPITestIDOK describes a response with status code 200, with default header values.
+//
+// Тестовые данные
 type GetAPITestIDOK struct {
 	Payload *models.TestDTO
 }
@@ -119,11 +117,9 @@ func NewGetAPITestIDNotFound() *GetAPITestIDNotFound {
 	return &GetAPITestIDNotFound{}
 }
 
-/*
-GetAPITestIDNotFound describes a response with status code 404, with default header values.
-
-Запись не найдена
-*/
+// GetAPITestIDNotFound describes a response with status code 404, with default header values.
+//
+// Запись не найдена
 type GetAPITestIDNotFound struct {
 	Payload *models.ErrorDTO
 }
@@ -189,11 +185,9 @@ func NewGetAPITestIDInternalServerError() *GetAPITestIDInternalServerError {
 	return &GetAPITestIDInternalServerError{}
 }
 
-/*
-GetAPITestIDInternalServerError describes a response with status code 500, with default header values.
-
-Внутренняя ошибка сервера (пустое тело)
-*/
+// GetAPITestIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Внутренняя ошибка сервера (пустое тело)
 type GetAPITestIDInternalServerError struct {
 }
 

@@ -55,11 +55,9 @@ func NewPostAPITestCreated() *PostAPITestCreated {
 	return &PostAPITestCreated{}
 }
 
-/*
-PostAPITestCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostAPITestCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostAPITestCreated struct {
 	Payload *models.TestDTO
 }
@@ -125,11 +123,9 @@ func NewPostAPITestBadRequest() *PostAPITestBadRequest {
 	return &PostAPITestBadRequest{}
 }
 
-/*
-PostAPITestBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAPITestBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAPITestBadRequest struct {
 	Payload *models.ErrorDTO
 }
@@ -195,11 +191,9 @@ func NewPostAPITestConflict() *PostAPITestConflict {
 	return &PostAPITestConflict{}
 }
 
-/*
-PostAPITestConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostAPITestConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostAPITestConflict struct {
 	Payload *models.ErrorDTO
 }
@@ -265,11 +259,9 @@ func NewPostAPITestInternalServerError() *PostAPITestInternalServerError {
 	return &PostAPITestInternalServerError{}
 }
 
-/*
-PostAPITestInternalServerError describes a response with status code 500, with default header values.
-
-Внутренняя ошибка сервера (пустое тело)
-*/
+// PostAPITestInternalServerError describes a response with status code 500, with default header values.
+//
+// Внутренняя ошибка сервера (пустое тело)
 type PostAPITestInternalServerError struct {
 }
 

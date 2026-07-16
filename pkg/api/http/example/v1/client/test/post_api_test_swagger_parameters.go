@@ -63,10 +63,9 @@ PostAPITestParams contains all the parameters to send to the API endpoint
 */
 type PostAPITestParams struct {
 
-	/* Input.
-
-	   Тестовые данные
-	*/
+	// Input.
+	//
+	// Тестовые данные
 	Input *models.TestDTO
 
 	HTTPClient *http.Client

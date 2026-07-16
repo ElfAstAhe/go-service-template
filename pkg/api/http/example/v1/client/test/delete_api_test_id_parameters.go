@@ -62,12 +62,11 @@ DeleteAPITestIDParams contains all the parameters to send to the API endpoint
 */
 type DeleteAPITestIDParams struct {
 
-	/* ID.
-
-	   ID записи
-
-	   Format: string
-	*/
+	// ID.
+	//
+	// ID записи
+	//
+	// Format: string
 	ID string
 
 	HTTPClient *http.Client

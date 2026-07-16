@@ -49,11 +49,9 @@ func NewGetAPITestOK() *GetAPITestOK {
 	return &GetAPITestOK{}
 }
 
-/*
-GetAPITestOK describes a response with status code 200, with default header values.
-
-Набор тестовых данных
-*/
+// GetAPITestOK describes a response with status code 200, with default header values.
+//
+// Набор тестовых данных
 type GetAPITestOK struct {
 	Payload []*models.TestDTO
 }
@@ -117,11 +115,9 @@ func NewGetAPITestBadRequest() *GetAPITestBadRequest {
 	return &GetAPITestBadRequest{}
 }
 
-/*
-GetAPITestBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetAPITestBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetAPITestBadRequest struct {
 	Payload *models.ErrorDTO
 }
@@ -187,11 +183,9 @@ func NewGetAPITestInternalServerError() *GetAPITestInternalServerError {
 	return &GetAPITestInternalServerError{}
 }
 
-/*
-GetAPITestInternalServerError describes a response with status code 500, with default header values.
-
-Внутренняя ошибка сервера (пустое тело)
-*/
+// GetAPITestInternalServerError describes a response with status code 500, with default header values.
+//
+// Внутренняя ошибка сервера (пустое тело)
 type GetAPITestInternalServerError struct {
 }
 

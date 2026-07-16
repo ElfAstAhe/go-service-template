@@ -49,11 +49,9 @@ func NewDeleteAPITestIDNoContent() *DeleteAPITestIDNoContent {
 	return &DeleteAPITestIDNoContent{}
 }
 
-/*
-DeleteAPITestIDNoContent describes a response with status code 204, with default header values.
-
-Запись успешно удалена, тело ответа отсутствует
-*/
+// DeleteAPITestIDNoContent describes a response with status code 204, with default header values.
+//
+// Запись успешно удалена, тело ответа отсутствует
 type DeleteAPITestIDNoContent struct {
 }
 
@@ -105,11 +103,9 @@ func NewDeleteAPITestIDNotFound() *DeleteAPITestIDNotFound {
 	return &DeleteAPITestIDNotFound{}
 }
 
-/*
-DeleteAPITestIDNotFound describes a response with status code 404, with default header values.
-
-Запись не найдена
-*/
+// DeleteAPITestIDNotFound describes a response with status code 404, with default header values.
+//
+// Запись не найдена
 type DeleteAPITestIDNotFound struct {
 	Payload *models.ErrorDTO
 }
@@ -175,11 +171,9 @@ func NewDeleteAPITestIDInternalServerError() *DeleteAPITestIDInternalServerError
 	return &DeleteAPITestIDInternalServerError{}
 }
 
-/*
-DeleteAPITestIDInternalServerError describes a response with status code 500, with default header values.
-
-Внутренняя ошибка сервера (пустое тело)
-*/
+// DeleteAPITestIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Внутренняя ошибка сервера (пустое тело)
 type DeleteAPITestIDInternalServerError struct {
 }
 
