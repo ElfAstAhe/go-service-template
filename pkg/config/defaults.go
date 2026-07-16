@@ -218,13 +218,18 @@ const (
 	KeyAuthMasterPasswordSalt string = "auth.master_password_salt"
 )
 
+// amqp connector
+const (
+	DefaultAMQPConnectorURL             string        = "amqp://localhost:5672/"
+	DefaultAMQPConnectorConnectTimeout  time.Duration = 10 * time.Second
+	DefaultAMQPConnectorWriteTimeout    time.Duration = 10 * time.Second
+	DefaultAMQPConnectorIdleTimeout     time.Duration = 30 * time.Second
+	DefaultAMQPConnectorShutdownTimeout time.Duration = 15 * time.Second
+)
+
 // amqp sender
 const (
-	DefaultAMQPSenderURL                   string        = "amqp://localhost:5672/"
-	DefaultAMQPSenderInsecureSkipVerify    bool          = true
 	DefaultAMQPSenderConnectTimeout        time.Duration = 10 * time.Second
-	DefaultAMQPSenderWriteTimeout          time.Duration = 10 * time.Second
-	DefaultAMQPSenderNotifyTimeout         time.Duration = 10 * time.Second
 	DefaultAMQPSenderShutdownTimeout       time.Duration = 15 * time.Second
 	DefaultAMQPSenderPublishMaxTryAttempts int           = 2
 	DefaultAMQPSenderPublishBaseRetryDelay time.Duration = 100 * time.Millisecond
@@ -233,13 +238,7 @@ const (
 
 // amqp receiver
 const (
-	DefaultAMQPReceiverURL                string        = "amqp://localhost:5672/"
-	DefaultAMQPReceiverInsecureSkipVerify bool          = true
-	DefaultAMQPReceiverConnectTimeout     time.Duration = 10 * time.Second
-	DefaultAMQPReceiverIdleTimeout        time.Duration = 30 * time.Second
-	DefaultAMQPReceiverShutdownTimeout    time.Duration = 15 * time.Second
-	DefaultAMQPReceiverPrefetchCredit     int           = 100
-	DefaultAMQPReceiverWorkerCount        int           = 4
-	DefaultAMQPReceiverDataCapacity       int           = 100
-	DefaultAMQPReceiverCompleteProcess    bool          = true
+	DefaultAMQPReceiverConnectTimeout  time.Duration = 10 * time.Second
+	DefaultAMQPReceiverShutdownTimeout time.Duration = 15 * time.Second
+	DefaultAMQPReceiverPrefetchCredit  int           = 100
 )
