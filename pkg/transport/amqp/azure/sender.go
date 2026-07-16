@@ -95,6 +95,7 @@ func (s *Sender) Publish(ctx context.Context, msg *pkgamqp.Message[*amqp.Message
 	return errs.NewTlCommonError("Publish", "azure sender unexpected retry loop exit", nil)
 }
 
+//goland:noinspection DuplicatedCode
 func (s *Sender) Close(ctx context.Context) error {
 	s.logger.Debug("close started")
 	defer s.logger.Debug("close finished")
