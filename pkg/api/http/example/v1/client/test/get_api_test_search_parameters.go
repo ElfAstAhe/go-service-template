@@ -62,12 +62,11 @@ GetAPITestSearchParams contains all the parameters to send to the API endpoint
 */
 type GetAPITestSearchParams struct {
 
-	/* Code.
-
-	   code записи
-
-	   Format: string
-	*/
+	// Code.
+	//
+	// code записи
+	//
+	// Format: string
 	Code string
 
 	HTTPClient *http.Client
