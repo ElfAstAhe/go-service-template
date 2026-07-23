@@ -187,6 +187,7 @@ func (r *Receiver) Close(ctx context.Context) error {
 	}
 }
 
+//goland:noinspection DuplicatedCode
 func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock за наносекунды
 	r.mu.RLock()
