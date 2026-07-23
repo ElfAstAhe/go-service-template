@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"sync"
 
 	"github.com/Azure/go-amqp"
@@ -85,9 +86,7 @@ func (r *Receiver) Receive(ctx context.Context, receiveOpts *amqp.ReceiveOptions
 	}
 
 	if azureMsg.ApplicationProperties != nil {
-		for k, v := range azureMsg.ApplicationProperties {
-			resMsg.Properties[k] = v
-		}
+		maps.Copy(resMsg.Properties, azureMsg.ApplicationProperties)
 	}
 
 	resMsg.Properties[sysMsgKey] = azureMsg
@@ -119,14 +118,14 @@ func (r *Receiver) Reject(ctx context.Context, msg *pkgamqp.Message[*amqp.Messag
 		return errs.NewTlCommonError("Reject", "extract original azure amqp message failed", extractErr)
 	}
 
-	receiverLink, err := r.getReceiver(ctx)
-	if err != nil {
-		return errs.NewTlCommonError("Reject", "retrieve azure receiver failed", err)
+	receiverLink, localErr := r.getReceiver(ctx)
+	if localErr != nil {
+		return errs.NewTlCommonError("Reject", "retrieve azure receiver failed", localErr)
 	}
 
 	amqpErr := &amqp.Error{Condition: "amqp:processing-error", Description: err.Error()}
-	if err = receiverLink.RejectMessage(ctx, azureMsg, amqpErr); err != nil {
-		return errs.NewTlCommonError("Reject", "azure receiver failed to reject amqp message", err)
+	if localErr = receiverLink.RejectMessage(ctx, azureMsg, amqpErr); localErr != nil {
+		return errs.NewTlCommonError("Reject", "azure receiver failed to reject amqp message", localErr)
 	}
 
 	return nil
