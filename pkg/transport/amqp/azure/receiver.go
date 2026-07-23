@@ -149,6 +149,7 @@ func (r *Receiver) Release(ctx context.Context, msg *pkgamqp.Message[*amqp.Messa
 	return nil
 }
 
+//goland:noinspection DuplicatedCode
 func (r *Receiver) Close(ctx context.Context) error {
 	r.logger.Debug("close started")
 	defer r.logger.Debug("close finished")
