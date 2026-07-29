@@ -26,7 +26,7 @@ type Sender struct {
 }
 
 // Привязываем структуру к итоговому интерфейсу пакета абстракций
-var _ pkgamqp.Sender[*amqp.SendOptions, *amqp.MessageHeader] = (*Sender)(nil)
+var _ pkgamqp.Sender[*amqp.SendOptions] = (*Sender)(nil)
 
 func NewSender(opts ...SenderOption) (*Sender, error) {
 	clientOpts := NewSenderOptions() // Все базовые дефолты таймаутов и бэккоффов внутри
@@ -45,7 +45,7 @@ func NewSender(opts ...SenderOption) (*Sender, error) {
 	}, nil
 }
 
-func (s *Sender) Publish(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader], opts *amqp.SendOptions) error {
+func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message, opts *amqp.SendOptions) error {
 	s.logger.Debug("publish started")
 	defer s.logger.Debug("publish finished")
 
@@ -137,6 +137,7 @@ func (s *Sender) GetTargetName() string {
 	return s.opts.TargetName
 }
 
+//goland:noinspection DuplicatedCode
 func (s *Sender) getSender(ctx context.Context) (AmqpSenderLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock
 	s.mu.RLock()
@@ -215,10 +216,7 @@ func (s *Sender) handleSendError(attempt int, err error) error {
 }
 
 func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
-	shift := uint(attempt - 1)
-	if shift > 31 {
-		shift = 31
-	}
+	shift := min(uint(attempt-1), 31)
 
 	delay := s.opts.PublishBaseRetryDelay * (1 << shift)
 	if delay > s.opts.PublishMaxRetryDelay || delay <= 0 {
@@ -250,16 +248,18 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 	}
 }
 
-func (s *Sender) prepareMessage(msg *pkgamqp.Message[*amqp.MessageHeader]) *amqp.Message {
-	azureMsg := amqp.NewMessage(msg.Payload)
-	if !utils.IsNil(msg.Header) {
-		azureMsg.Header = msg.Header
-	}
+func (s *Sender) prepareMessage(msg pkgamqp.Message) *amqp.Message {
+	azureMsg := amqp.NewMessage(msg.GetPayload())
 	azureMsg.Properties = &amqp.MessageProperties{
 		ContentType: &jsonContentType,
 	}
-	if len(msg.Properties) > 0 {
-		azureMsg.ApplicationProperties = msg.Properties
+	if len(msg.GetProperties()) > 0 {
+		azureMsg.ApplicationProperties = msg.GetProperties()
+	}
+	if msgImpl, ok := msg.(*Message); ok {
+		if !utils.IsNil(msgImpl.Header) {
+			azureMsg.Header = msgImpl.Header
+		}
 	}
 
 	return azureMsg

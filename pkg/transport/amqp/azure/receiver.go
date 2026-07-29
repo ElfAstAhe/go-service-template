@@ -14,8 +14,6 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-const sysMsgKey = "_sys_amqp_orig_azure_message"
-
 type Receiver struct {
 	opts   *ReceiverOptions
 	link   AmqpReceiverLink // Наш единственный фиксированный линк-получатель
@@ -25,7 +23,7 @@ type Receiver struct {
 }
 
 // Привязываем структуру к итоговому интерфейсу пакета абстракций
-var _ pkgamqp.Receiver[*amqp.ReceiveOptions, *amqp.MessageHeader] = (*Receiver)(nil)
+var _ pkgamqp.Receiver[*amqp.ReceiveOptions] = (*Receiver)(nil)
 
 func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 	clientOpts := NewReceiverOptions() // Все базовые дефолты таймаутов и кредитов внутри
@@ -44,7 +42,7 @@ func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 	}, nil
 }
 
-func (r *Receiver) Receive(ctx context.Context, receiveOpts *amqp.ReceiveOptions) (*pkgamqp.Message[*amqp.MessageHeader], error) {
+func (r *Receiver) Receive(ctx context.Context, receiveOpts *amqp.ReceiveOptions) (pkgamqp.Message, error) {
 	// Получаем или лениво инициализируем линк очереди/топика
 	receiverLink, err := r.getReceiver(ctx)
 	if err != nil {
@@ -79,23 +77,23 @@ func (r *Receiver) Receive(ctx context.Context, receiveOpts *amqp.ReceiveOptions
 		}
 	}
 
-	resMsg := &pkgamqp.Message[*amqp.MessageHeader]{
+	resMsg := &Message{
 		Payload:    finalPayload,
-		Properties: make(map[string]any),
+		Props:      make(map[string]any),
 		TargetName: r.opts.TargetName, // Фиксируем точный топик-источник, так как ресивер теперь 1-к-1
 	}
 
 	if azureMsg.ApplicationProperties != nil {
-		maps.Copy(resMsg.Properties, azureMsg.ApplicationProperties)
+		maps.Copy(resMsg.Props, azureMsg.ApplicationProperties)
 	}
 
-	resMsg.Properties[sysMsgKey] = azureMsg
+	resMsg.Props[sysMsgKey] = azureMsg
 
 	return resMsg, nil
 }
 
-func (r *Receiver) Accept(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader]) error {
-	azureMsg, err := r.extractOriginalMessage(msg)
+func (r *Receiver) Accept(ctx context.Context, msg pkgamqp.Message) error {
+	azureMsg, err := ExtractOriginalMessage(msg)
 	if err != nil {
 		return errs.NewTlCommonError("Accept", "extract original azure amqp message failed", err)
 	}
@@ -112,8 +110,8 @@ func (r *Receiver) Accept(ctx context.Context, msg *pkgamqp.Message[*amqp.Messag
 	return nil
 }
 
-func (r *Receiver) Reject(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader], err error) error {
-	azureMsg, extractErr := r.extractOriginalMessage(msg)
+func (r *Receiver) Reject(ctx context.Context, msg pkgamqp.Message, err error) error {
+	azureMsg, extractErr := ExtractOriginalMessage(msg)
 	if extractErr != nil {
 		return errs.NewTlCommonError("Reject", "extract original azure amqp message failed", extractErr)
 	}
@@ -131,8 +129,8 @@ func (r *Receiver) Reject(ctx context.Context, msg *pkgamqp.Message[*amqp.Messag
 	return nil
 }
 
-func (r *Receiver) Release(ctx context.Context, msg *pkgamqp.Message[*amqp.MessageHeader]) error {
-	azureMsg, err := r.extractOriginalMessage(msg)
+func (r *Receiver) Release(ctx context.Context, msg pkgamqp.Message) error {
+	azureMsg, err := ExtractOriginalMessage(msg)
 	if err != nil {
 		return errs.NewTlCommonError("Release", "extract original azure amqp message failed", err)
 	}
@@ -187,6 +185,11 @@ func (r *Receiver) Close(ctx context.Context) error {
 	}
 }
 
+func (r *Receiver) GetTargetName() string {
+	return r.opts.TargetName
+}
+
+//goland:noinspection DuplicatedCode
 func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock за наносекунды
 	r.mu.RLock()
@@ -220,20 +223,7 @@ func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
 	defer cancel()
 
 	// Настраиваем Durable-подписку и динамические кредиты из файла настроек
-	linkOpts := &amqp.ReceiverOptions{
-		Durability:   amqp.DurabilityConfiguration,
-		ExpiryPolicy: amqp.ExpiryPolicyNever,
-		Credit:       r.opts.LinkCredit, // Твоя инкапсулированная настройка int32
-	}
-
-	// Если пользователь передал целиком кастомные ReceiverOpts через WithReceiverOpts,
-	// берем их, но страхуем поле Credit, если оно там не заполнено (0)
-	if r.opts.ReceiverOpts != nil {
-		linkOpts = r.opts.ReceiverOpts
-		if linkOpts.Credit == 0 {
-			linkOpts.Credit = r.opts.LinkCredit
-		}
-	}
+	linkOpts := r.buildReceiverOpts()
 
 	newReceiver, err := session.NewReceiver(linkCtx, r.opts.TargetName, linkOpts)
 	if err != nil {
@@ -252,6 +242,26 @@ func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
 	return newReceiver, nil
 }
 
+func (r *Receiver) buildReceiverOpts() *amqp.ReceiverOptions {
+	// Настраиваем Durable-подписку и динамические кредиты из файла настроек
+	linkOpts := &amqp.ReceiverOptions{
+		Durability:   amqp.DurabilityConfiguration,
+		ExpiryPolicy: amqp.ExpiryPolicyNever,
+		Credit:       r.opts.LinkCredit, // Твоя инкапсулированная настройка int32
+	}
+
+	// Если пользователь передал целиком кастомные ReceiverOpts через WithReceiverOpts,
+	// берем их, но страхуем поле Credit, если оно там не заполнено (0)
+	if r.opts.ReceiverOpts != nil {
+		linkOpts = r.opts.ReceiverOpts
+		if linkOpts.Credit == 0 {
+			linkOpts.Credit = r.opts.LinkCredit
+		}
+	}
+
+	return linkOpts
+}
+
 func (r *Receiver) handleReceiverFailure(err error) {
 	r.logger.Warnf("AMQP packet reading failure detected: %v. Notifying connector...", err)
 
@@ -262,26 +272,4 @@ func (r *Receiver) handleReceiverFailure(err error) {
 	r.mu.Lock()
 	r.link = nil // Сбрасываем локальный линк, чтобы на следующем Receive() лениво его пересоздать
 	r.mu.Unlock()
-}
-
-func (r *Receiver) extractOriginalMessage(msg *pkgamqp.Message[*amqp.MessageHeader]) (*amqp.Message, error) {
-	if msg == nil || msg.Properties == nil {
-		return nil, errs.NewTlCommonError("extractOriginalMessage", "cannot manage ack state for empty envelope", nil)
-	}
-
-	raw, exists := msg.Properties[sysMsgKey]
-	if !exists {
-		return nil, errs.NewTlCommonError("extractOriginalMessage", "missing underlying system amqp context", nil)
-	}
-
-	sysMsg, ok := raw.(*amqp.Message)
-	if !ok {
-		return nil, errs.NewTlCommonError("extractOriginalMessage", "invalid underlying packet structure type", nil)
-	}
-
-	return sysMsg, nil
-}
-
-func (r *Receiver) GetTargetName() string {
-	return r.opts.TargetName
 }

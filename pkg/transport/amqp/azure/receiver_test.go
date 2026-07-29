@@ -50,8 +50,8 @@ func TestReceiver_Receive_Success_And_Payload(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, []byte("part1_part2"), msg.Payload)
-	assert.Equal(t, queueName, msg.TargetName) // Убеждаемся, что TargetName на месте
+	assert.Equal(t, []byte("part1_part2"), msg.GetPayload())
+	assert.Equal(t, queueName, msg.GetTargetName()) // Убеждаемся, что TargetName на месте
 	mockReceiverLink.AssertExpectations(t)
 }
 

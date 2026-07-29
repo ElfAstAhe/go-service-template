@@ -8,7 +8,6 @@ import (
 
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger/mocks"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
 	mocks3 "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp/azure/mocks"
 	mocks2 "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp/mocks"
 	"github.com/stretchr/testify/assert"
@@ -46,7 +45,7 @@ func TestSender_Publish_Success_Via_Connector(t *testing.T) {
 	// Имитируем Fast Path — забиваем живой линк напрямую
 	s.sender = mockSenderLink
 
-	msg := &pkgamqp.Message[*amqp.MessageHeader]{Payload: []byte(`{"action":"login"}`)}
+	msg := &Message{Payload: []byte(`{"action":"login"}`)}
 
 	// Act
 	err = s.Publish(ctx, msg, nil)
@@ -100,7 +99,7 @@ func TestSender_Publish_Retry_And_Invalidate(t *testing.T) {
 	s.sender = mockSenderLink
 
 	// Act
-	err = s.Publish(ctx, &pkgamqp.Message[*amqp.MessageHeader]{Payload: []byte(`{}`)}, nil)
+	err = s.Publish(ctx, &Message{Payload: []byte(`{}`)}, nil)
 
 	// Assert
 	// Тест завершится с ошибкой инициализации соединения на 2-й попытке
