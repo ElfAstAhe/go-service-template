@@ -187,6 +187,10 @@ func (r *Receiver) Close(ctx context.Context) error {
 	}
 }
 
+func (r *Receiver) GetTargetName() string {
+	return r.opts.TargetName
+}
+
 //goland:noinspection DuplicatedCode
 func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock за наносекунды
@@ -221,20 +225,7 @@ func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
 	defer cancel()
 
 	// Настраиваем Durable-подписку и динамические кредиты из файла настроек
-	linkOpts := &amqp.ReceiverOptions{
-		Durability:   amqp.DurabilityConfiguration,
-		ExpiryPolicy: amqp.ExpiryPolicyNever,
-		Credit:       r.opts.LinkCredit, // Твоя инкапсулированная настройка int32
-	}
-
-	// Если пользователь передал целиком кастомные ReceiverOpts через WithReceiverOpts,
-	// берем их, но страхуем поле Credit, если оно там не заполнено (0)
-	if r.opts.ReceiverOpts != nil {
-		linkOpts = r.opts.ReceiverOpts
-		if linkOpts.Credit == 0 {
-			linkOpts.Credit = r.opts.LinkCredit
-		}
-	}
+	linkOpts := r.buildReceiverOpts()
 
 	newReceiver, err := session.NewReceiver(linkCtx, r.opts.TargetName, linkOpts)
 	if err != nil {
@@ -251,6 +242,26 @@ func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
 	r.mu.Unlock()
 
 	return newReceiver, nil
+}
+
+func (r *Receiver) buildReceiverOpts() *amqp.ReceiverOptions {
+	// Настраиваем Durable-подписку и динамические кредиты из файла настроек
+	linkOpts := &amqp.ReceiverOptions{
+		Durability:   amqp.DurabilityConfiguration,
+		ExpiryPolicy: amqp.ExpiryPolicyNever,
+		Credit:       r.opts.LinkCredit, // Твоя инкапсулированная настройка int32
+	}
+
+	// Если пользователь передал целиком кастомные ReceiverOpts через WithReceiverOpts,
+	// берем их, но страхуем поле Credit, если оно там не заполнено (0)
+	if r.opts.ReceiverOpts != nil {
+		linkOpts = r.opts.ReceiverOpts
+		if linkOpts.Credit == 0 {
+			linkOpts.Credit = r.opts.LinkCredit
+		}
+	}
+
+	return linkOpts
 }
 
 func (r *Receiver) handleReceiverFailure(err error) {
@@ -281,8 +292,4 @@ func (r *Receiver) extractOriginalMessage(msg *pkgamqp.Message[*amqp.MessageHead
 	}
 
 	return sysMsg, nil
-}
-
-func (r *Receiver) GetTargetName() string {
-	return r.opts.TargetName
 }
