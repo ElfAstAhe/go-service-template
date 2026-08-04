@@ -263,6 +263,12 @@ func (r *Receiver) buildReceiverOpts() *amqp.ReceiverOptions {
 }
 
 func (r *Receiver) handleReceiverFailure(err error) {
+	if errors.Is(err, context.DeadlineExceeded) {
+		r.logger.Warnf("AMQP timed out (DeadlineExceeded), do nothing, pass")
+
+		return
+	}
+
 	r.logger.Warnf("AMQP packet reading failure detected: %v. Notifying connector...", err)
 
 	// ИСПРАВЛЕНИЕ: Просто передаем сетевую ошибку в общий коннектор.
