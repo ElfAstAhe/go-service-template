@@ -53,6 +53,7 @@ func (r *Receiver) Receive(ctx context.Context, receiveOpts *amqp.ReceiveOptions
 	azureMsg, err := receiverLink.Receive(ctx, receiveOpts)
 	if err != nil {
 		r.handleReceiverFailure(err)
+
 		return nil, errs.NewTlCommonError("Receive", "azure receiver incoming packet error", err)
 	}
 
@@ -263,7 +264,7 @@ func (r *Receiver) buildReceiverOpts() *amqp.ReceiverOptions {
 }
 
 func (r *Receiver) handleReceiverFailure(err error) {
-	if errors.Is(err, context.DeadlineExceeded) {
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 		r.logger.Warnf("AMQP timed out (DeadlineExceeded), do nothing, pass")
 
 		return
