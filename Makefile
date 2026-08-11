@@ -40,15 +40,19 @@ gen-http-client:
 gen-mocks:
 	mockery
 
+# Генерирует исходники
+gen-sources:
+	go run ./cmd/gen-tz/main.go
+
 # Сборка всего с прокидыванием переменных
-build: gen-proto gen-swagger gen-http-client gen-mocks
+build: gen-sources gen-proto gen-swagger gen-http-client gen-mocks
 	go build -ldflags \
 	"-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
 	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
 
 # Сборка проекта с прокидыванием переменных
-build-only: gen-proto gen-swagger gen-http-client
+build-only: gen-sources gen-proto gen-swagger gen-http-client
 	go build -ldflags \
 	"-X '$(MODULE_NAME)/internal/config.AppVersion=$(VERSION)' \
 	-X '$(MODULE_NAME)/internal/config.AppBuildTime=$(BUILD_TIME)'" \
