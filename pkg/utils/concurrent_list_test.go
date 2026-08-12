@@ -81,22 +81,20 @@ func TestConcurrentList_DataRace(t *testing.T) {
 	iterations := 500
 
 	// Параллельные писатели
-	for i := 0; i < workers; i++ {
+	for i := range workers {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			for j := 0; j < iterations; j++ {
+			for j := range iterations {
 				list.Append(workerID*iterations + j)
 			}
 		}(i)
 	}
 
 	// Параллельные читатели через итераторы
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 50; j++ {
+	for range workers {
+		wg.Go(func() {
+			for range 50 {
 				// Читаем через All() во время активной записи
 				for _, val := range list.All() {
 					_ = val
@@ -106,7 +104,7 @@ func TestConcurrentList_DataRace(t *testing.T) {
 					_ = val
 				}
 			}
-		}()
+		})
 	}
 
 	wg.Wait()

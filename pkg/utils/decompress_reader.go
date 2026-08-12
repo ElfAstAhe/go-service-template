@@ -72,7 +72,7 @@ func decompressorFactory(encoding string, compressedSource io.ReadCloser) (io.Re
 	case EncodingGzip:
 		res, err = gzip.NewReader(compressedSource)
 	case EncodingDeflate:
-		return zlib.NewReader(compressedSource)
+		res, err = zlib.NewReader(compressedSource)
 		//	case EncodingDeflate:
 		//		res, err = flate.NewReader(compressedSource), nil
 	case EncodingCompress:
@@ -80,10 +80,10 @@ func decompressorFactory(encoding string, compressedSource io.ReadCloser) (io.Re
 	case EncodingBrotli:
 		res, err = brotli.NewReader(compressedSource), nil
 	default:
-		res, err = nil, errs.NewMiddleWareError(fmt.Sprintf("unknown encoding [%s]", encoding), nil)
+		res, err = nil, errs.NewUtlError("decompressorFactory", fmt.Sprintf("unknown encoding [%s]", encoding), nil)
 	}
 	if err != nil {
-		err = errs.NewUtlError("newDecompressor", "create decompressed reader", err)
+		err = errs.NewUtlError("decompressorFactory", "create decompressed reader failed", err)
 	}
 
 	return res, err
