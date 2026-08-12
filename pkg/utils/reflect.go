@@ -15,7 +15,7 @@ func GetTypeName(instance any) string {
 	t := reflect.TypeOf(instance)
 
 	// Уходим от указателей (даже если их несколько: **Type)
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
@@ -46,7 +46,7 @@ func GetFullTypeName(instance any) string {
 	t := reflect.TypeOf(instance)
 
 	// Разыменовываем указатели любой вложенности
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 

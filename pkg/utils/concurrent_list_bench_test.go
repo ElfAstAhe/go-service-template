@@ -10,7 +10,7 @@ func BenchmarkConcurrentList_ParallelReadWrite(b *testing.B) {
 	for _, size := range []int{10, 100, 1000} {
 		b.Run(fmt.Sprintf("SliceSize-%d", size), func(b *testing.B) {
 			list := NewConcurrentList[int]()
-			for i := 0; i < size; i++ {
+			for i := range size {
 				list.Append(i)
 			}
 
@@ -38,7 +38,7 @@ func BenchmarkConcurrentList_ParallelReadWrite(b *testing.B) {
 func BenchmarkConcurrentList_SnapshotVsIterator(b *testing.B) {
 	size := 500
 	list := NewConcurrentList[int]()
-	for i := 0; i < size; i++ {
+	for i := range size {
 		list.Append(i)
 	}
 
