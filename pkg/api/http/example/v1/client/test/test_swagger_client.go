@@ -105,7 +105,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteAPITestIDContext] instead.
 func (a *Client) DeleteAPITestID(params *DeleteAPITestIDParams, opts ...ClientOption) (*DeleteAPITestIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -171,7 +171,7 @@ func (a *Client) DeleteAPITestIDContext(ctx context.Context, params *DeleteAPITe
 // If you need to pass a specific context, use [Client.GetAPITestContext] instead.
 func (a *Client) GetAPITest(params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -237,7 +237,7 @@ func (a *Client) GetAPITestContext(ctx context.Context, params *GetAPITestParams
 // If you need to pass a specific context, use [Client.GetAPITestIDContext] instead.
 func (a *Client) GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -303,7 +303,7 @@ func (a *Client) GetAPITestIDContext(ctx context.Context, params *GetAPITestIDPa
 // If you need to pass a specific context, use [Client.GetAPITestSearchContext] instead.
 func (a *Client) GetAPITestSearch(params *GetAPITestSearchParams, opts ...ClientOption) (*GetAPITestSearchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -369,7 +369,7 @@ func (a *Client) GetAPITestSearchContext(ctx context.Context, params *GetAPITest
 // If you need to pass a specific context, use [Client.PostAPITestContext] instead.
 func (a *Client) PostAPITest(params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -435,7 +435,7 @@ func (a *Client) PostAPITestContext(ctx context.Context, params *PostAPITestPara
 // If you need to pass a specific context, use [Client.PutAPITestIDContext] instead.
 func (a *Client) PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

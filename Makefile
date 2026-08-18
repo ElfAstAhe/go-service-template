@@ -66,11 +66,11 @@ run: build
 		--log-level "DEBUG"
 
 # Запуск тестов
-test:
+test: gen-sources gen-proto gen-mocks
 	go test -v ./...
 
 # Запуск бенчмарков (сюда добавляем все вызовы) или разные параметры под один пакет
-bench:
+bench: gen-sources gen-proto gen-mocks
 	go test -bench=BenchmarkManager_FullCycle -benchmem ./pkg/infra/cache/test/...
 	go test -bench=. -benchmem ./pkg/utils/...
 
