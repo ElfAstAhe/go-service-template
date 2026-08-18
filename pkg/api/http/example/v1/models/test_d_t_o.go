@@ -34,12 +34,12 @@ type TestDTO struct {
 }
 
 // Validate validates this test d t o
-func (m *TestDTO) Validate(formats strfmt.Registry) error {
+func (m *TestDTO) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this test d t o based on context it is used
-func (m *TestDTO) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *TestDTO) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

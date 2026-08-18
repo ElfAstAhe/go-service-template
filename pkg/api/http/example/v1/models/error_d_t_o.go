@@ -22,12 +22,12 @@ type ErrorDTO struct {
 }
 
 // Validate validates this error d t o
-func (m *ErrorDTO) Validate(formats strfmt.Registry) error {
+func (m *ErrorDTO) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this error d t o based on context it is used
-func (m *ErrorDTO) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ErrorDTO) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 
