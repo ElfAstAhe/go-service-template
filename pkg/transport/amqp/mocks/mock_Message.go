@@ -80,8 +80,8 @@ func (_c *MockMessage_ExtractOriginalMessage_Call) Run(run func()) *MockMessage_
 	return _c
 }
 
-func (_c *MockMessage_ExtractOriginalMessage_Call) Return(v any, err error) *MockMessage_ExtractOriginalMessage_Call {
-	_c.Call.Return(v, err)
+func (_c *MockMessage_ExtractOriginalMessage_Call) Return(anyMoqParam any, err error) *MockMessage_ExtractOriginalMessage_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
@@ -172,8 +172,8 @@ func (_c *MockMessage_GetProperties_Call) Run(run func()) *MockMessage_GetProper
 	return _c
 }
 
-func (_c *MockMessage_GetProperties_Call) Return(stringToV map[string]any) *MockMessage_GetProperties_Call {
-	_c.Call.Return(stringToV)
+func (_c *MockMessage_GetProperties_Call) Return(stringToAnyMoqParam map[string]any) *MockMessage_GetProperties_Call {
+	_c.Call.Return(stringToAnyMoqParam)
 	return _c
 }
 

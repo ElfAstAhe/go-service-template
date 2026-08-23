@@ -233,8 +233,8 @@ func (_c *MockLazyContainer_GetInstance_Call) Run(run func(name string)) *MockLa
 	return _c
 }
 
-func (_c *MockLazyContainer_GetInstance_Call) Return(v any, err error) *MockLazyContainer_GetInstance_Call {
-	_c.Call.Return(v, err)
+func (_c *MockLazyContainer_GetInstance_Call) Return(anyMoqParam any, err error) *MockLazyContainer_GetInstance_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
