@@ -35,3 +35,4 @@ go.work.sum
 /vendor/
 /.run/
 /bin/
+/configs/gemini_cli.txt
