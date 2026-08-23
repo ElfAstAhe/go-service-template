@@ -186,8 +186,8 @@ func (_c *MockContainer_GetInstance_Call) Run(run func(name string)) *MockContai
 	return _c
 }
 
-func (_c *MockContainer_GetInstance_Call) Return(v any, err error) *MockContainer_GetInstance_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContainer_GetInstance_Call) Return(anyMoqParam any, err error) *MockContainer_GetInstance_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
