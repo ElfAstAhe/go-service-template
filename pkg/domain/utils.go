@@ -27,3 +27,14 @@ func AssignUUIDv7[T Entity[string]](entity T) error {
 
 	return nil
 }
+
+func AssignUUIDv4[T Entity[string]](entity T) error {
+	newID, err := uuid.NewUUID()
+	if err != nil {
+		return errs.NewBllError("AssignUUIDv4", "generate new id", err)
+	}
+
+	entity.SetID(newID.String())
+
+	return nil
+}
