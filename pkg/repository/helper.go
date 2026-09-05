@@ -75,14 +75,19 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 
 	rows, err := querier.QueryContext(ctx, sqlReq, params...)
 	if err != nil {
-		return nil, errs.NewDalError("Helper.List", "query", err)
+		return nil, errs.NewDalError("Helper.List", "query failed", err)
 	}
 	defer rows.Close()
 
 	res := make([]T, 0)
 	for rows.Next() {
 		if err = ctx.Err(); err != nil {
-			return nil, errs.NewDalError("Helper.List", "check context", err)
+			// context canceled - no errors, return as is
+			if errors.Is(err, context.Canceled) {
+				return res, nil
+			}
+
+			return nil, errs.NewDalError("Helper.List", "got context error", err)
 		}
 
 		addEntity := true
@@ -90,13 +95,13 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 
 		err = h.GetCallbacks().EntityScanner(rows, sourceLabel, entity, params...)
 		if err != nil {
-			return nil, errs.NewDalError("Helper.List", "scan rows", err)
+			return nil, errs.NewDalError("Helper.List", "scan rows failed", err)
 		}
 
 		if h.GetCallbacks().AfterListYield != nil {
 			entity, addEntity, err = h.GetCallbacks().AfterListYield(entity, params...)
 			if err != nil {
-				return nil, errs.NewDalError("Helper.List", "post scan processing", err)
+				return nil, errs.NewDalError("Helper.List", "post scan row yield failed", err)
 			}
 		}
 		// yeld метод постобработки строки не вернул entity, нет данных - нет добавления
@@ -107,7 +112,7 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 		res = append(res, entity)
 	}
 	if rows.Err() != nil {
-		return nil, errs.NewDalError("Helper.List", "after scan", rows.Err())
+		return nil, errs.NewDalError("Helper.List", "after scan rows failed", rows.Err())
 	}
 
 	return res, nil
