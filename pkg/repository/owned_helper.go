@@ -2,15 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-)
-
-const (
-	EntityScannerSourceLabelListAll      string = "list_all"
-	EntityScannerSourceLabelListByOwners string = "list_by_owners"
 )
 
 type OwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable] struct {
@@ -28,14 +24,19 @@ func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sourceL
 
 	rows, err := querier.QueryContext(ctx, sqlReq, params...)
 	if err != nil {
-		return nil, errs.NewDalError("OwnedHelper.List", "query", err)
+		return nil, errs.NewDalError("OwnedHelper.ListByOwners", "query rows failed", err)
 	}
 	defer rows.Close()
 
 	res := make(map[OwnerID][]T)
 	for rows.Next() {
 		if err = ctx.Err(); err != nil {
-			return nil, errs.NewDalError("OwnedHelper.List", "check context", err)
+			// context canceled - no errors, return as is
+			if errors.Is(err, context.Canceled) {
+				return res, nil
+			}
+
+			return nil, errs.NewDalError("OwnedHelper.ListByOwners", "got context error", err)
 		}
 
 		addEntity := true
@@ -44,13 +45,13 @@ func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sourceL
 
 		err = oh.GetCallbacks().EntityScanner(rows, sourceLabel, entity, &ownerID)
 		if err != nil {
-			return nil, errs.NewDalError("OwnedHelper.ListByOwners", "scan rows", err)
+			return nil, errs.NewDalError("OwnedHelper.ListByOwners", "scan row failed", err)
 		}
 
 		if oh.GetCallbacks().AfterListYield != nil {
 			entity, addEntity, err = oh.GetCallbacks().AfterListYield(entity, ownerID)
 			if err != nil {
-				return nil, errs.NewDalError("OwnedHelper.List", "post scan processing", err)
+				return nil, errs.NewDalError("OwnedHelper.ListByOwners", "post scan row yield failed", err)
 			}
 		}
 		// yeld метод постобработки строки не вернул entity, нет данных - нет добавления
@@ -63,7 +64,7 @@ func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sourceL
 		res[ownerID] = append(res[ownerID], entity)
 	}
 	if rows.Err() != nil {
-		return nil, errs.NewDalError("OwnedHelper.List", "after scan", rows.Err())
+		return nil, errs.NewDalError("OwnedHelper.ListByOwners", "after scan rows failed", rows.Err())
 	}
 
 	return res, nil
