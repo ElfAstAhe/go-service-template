@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/Azure/go-amqp v1.7.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/XSAM/otelsql v0.43.0
+	github.com/XSAM/otelsql v0.44.0
 	github.com/andybalholm/brotli v1.2.3
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/go-openapi/errors v0.22.8
