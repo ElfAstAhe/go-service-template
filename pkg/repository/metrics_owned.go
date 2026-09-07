@@ -97,3 +97,7 @@ func (omr *BaseOwnedMetricsRepository[T, ID, OwnerID]) Delete(ctx context.Contex
 
 	return omr.repository.Delete(ctx, ownerID, id)
 }
+
+func (omr *BaseOwnedMetricsRepository[T, ID, OwnerID]) GetRepositoryName() string {
+	return omr.repoName
+}
