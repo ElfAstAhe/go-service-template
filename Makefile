@@ -65,14 +65,14 @@ build-only: gen-sources gen-proto gen-swagger gen-http-client ## Быстрая 
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
 
 # Запуск проекта (сначала соберет, потом запустит)
-run: build ## Собрать проект и запустить бинарник с локальными флагами (БД, логи)
+run: build-only ## Собрать проект и запустить бинарник с локальными флагами (БД, логи)
 	./bin/$(SERVER_BINARY_NAME) \
 		--db-driver "postgres" \
 		--db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service" \
 		--log-level "DEBUG"
 
 # Запуск тестов
-test: gen-sources gen-proto gen-mocks ## Запустить модульные и интеграционные тесты проекта
+test: gen-sources gen-proto gen-swagger gen-mocks ## Запустить модульные и интеграционные тесты проекта
 	go test -v ./...
 
 # Запуск бенчмарков (сюда добавляем все вызовы) или разные параметры под один пакет
