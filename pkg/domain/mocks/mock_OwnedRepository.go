@@ -17,10 +17,19 @@ func NewMockOwnedRepository[T domain.Entity[ID], ID comparable, OwnerID comparab
 	mock.TestingT
 	Cleanup(func())
 }) *MockOwnedRepository[T, ID, OwnerID] {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockOwnedRepository[T, ID, OwnerID]{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }

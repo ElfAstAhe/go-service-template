@@ -14,10 +14,19 @@ func NewMockKeys[Priv any, Pub any](t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockKeys[Priv, Pub] {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockKeys[Priv, Pub]{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
