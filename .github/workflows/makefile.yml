@@ -1,0 +1,72 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Скачиваем код репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Устанавливаем Go нужной версии
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      # 3. Устанавливаем системные зависимости (protoc для сборки gRPC)
+      - name: Install Protobuf Compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      # 4. Устанавливаем тулинг для генерации и линтинга
+      - name: Install Tools
+        run: |
+          go install -v github.com/vektra/mockery/v3@latest
+          go install -v honnef.co/go/tools/cmd/staticcheck@latest
+          go install -v github.com/mgechev/revive@latest
+          go install -v golang.org/x/tools/gopls@latest
+          go install -v golang.org/x/tools/cmd/goimports@latest
+          go install -v golang.org/x/tools/cmd/godoc@latest
+          go install -v github.com/go-swagger/go-swagger/cmd/swagger@latest
+          go install -v github.com/swaggo/swag/cmd/swag@latest
+
+      # 5. Проверяем зависимости Go
+      - name: Install Go dependencies
+        run: go mod download
+
+      # 6. Генерируем весь код (gRPC, моки, исходники таймзон)
+      # Это гарантирует, что линтеры и тесты будут видеть актуальный код
+      - name: Generate Sources, Proto and Mocks
+        run: |
+          make gen-sources
+          make gen-proto
+          make gen-swagger
+          make gen-mocks
+
+      # 7. Запускаем статический анализ через ваши Makefile таргеты
+      - name: Run Staticcheck
+        run: make static-check
+
+      - name: Run Revive Linter
+        run: make lint
+
+      # 8. Запускаем тесты (флаг -race уже можно зашить внутрь Makefile при желании)
+      # Обратите внимание: тесты теперь не упадут, так как моки и прото уже сгенерированы шагом выше
+      - name: Run tests
+        run: make test
+
+      # 9. Пробная полная сборка бинарника
+      - name: Build Application
+        run: make build-only

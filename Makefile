@@ -9,7 +9,7 @@ VERSION=1.0.0
 BUILD_TIME=$(shell date +'%Y/%m/%d_%H:%M:%S')
 STAGE=DEV
 
-.PHONY: gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run test bench static-check clean update-deps
+.PHONY: gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run test bench static-check lint clean update-deps
 # Показывает это руководство (выполняется по умолчанию)
 help:
 	@echo "Доступные команды для сборки и тестирования:"
@@ -65,14 +65,14 @@ build-only: gen-sources gen-proto gen-swagger gen-http-client ## Быстрая 
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
 
 # Запуск проекта (сначала соберет, потом запустит)
-run: build ## Собрать проект и запустить бинарник с локальными флагами (БД, логи)
+run: build-only ## Собрать проект и запустить бинарник с локальными флагами (БД, логи)
 	./bin/$(SERVER_BINARY_NAME) \
 		--db-driver "postgres" \
 		--db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service" \
 		--log-level "DEBUG"
 
 # Запуск тестов
-test: gen-sources gen-proto gen-mocks ## Запустить модульные и интеграционные тесты проекта
+test: gen-sources gen-proto gen-swagger gen-mocks ## Запустить модульные и интеграционные тесты проекта
 	go test -v ./...
 
 # Запуск бенчмарков (сюда добавляем все вызовы) или разные параметры под один пакет
@@ -82,7 +82,11 @@ bench: gen-sources gen-proto gen-mocks ## Запустить кэш-бенчма
 
 # Запуск static check
 static-check: ## Запустить статический анализ кода (пропуская автогенерируемый pkg/api)
-	staticcheck $$(go list ./... | grep -vE "pkg/api")
+	staticcheck $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz")
+
+# Запуск линтера
+lint: ## Запустить линтер revive (пропуская автогенерируемый код)
+	revive $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz")
 
 # Очистка бинарников
 clean: ## Очистить скомпилированные файлы из папки ./bin
