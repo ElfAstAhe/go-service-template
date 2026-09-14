@@ -41,7 +41,7 @@ type RealIPExtractor struct {
 	customHeaders []string
 }
 
-func NewRealIPExtractor(headers ...string) *RealIPExtractor {
+func NewCustomRealIPExtractor(headers ...string) *RealIPExtractor {
 	allowed := make(map[string]struct{}, len(headers))
 	var custom []string
 
@@ -73,7 +73,22 @@ func NewRealIPExtractor(headers ...string) *RealIPExtractor {
 }
 
 func NewDefaultRealIPExtractor() *RealIPExtractor {
-	return NewRealIPExtractor(defaultHeaders...)
+	return NewCustomRealIPExtractor(defaultHeaders...)
+}
+
+func NewRealIPExtractor() *RealIPExtractor {
+	return NewCustomRealIPExtractor(
+		HeaderXRealIP,
+		HeaderXForwardedFor,
+		HeaderClientIP,
+		HeaderXClientIP,
+		HeaderXClusterClientIP,
+		HeaderCFConnectingIP,
+		HeaderTrueClientIP,
+		HeaderXCloudDeploymentUserIP,
+		HeaderXAzureClientIP,
+		HeaderFastlyClientIP,
+	)
 }
 
 func (re *RealIPExtractor) Handler(next http.Handler) http.Handler {

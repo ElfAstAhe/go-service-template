@@ -121,19 +121,5 @@ func (cr *AppChiRouter) setupRoutes() {
 			r.Put("/{id}", cr.putAPITest)
 			r.Delete("/{id}", cr.deleteAPITest)
 		})
-		/*
-			// auth sub-router
-			r.Route("/auth", func(r chi.Router) {
-				r.Post("/login", cr.postAPIAuthLogin)       // POST /api/auth/login
-				r.Post("/register", cr.postAPIAuthRegister) // POST /api/auth/register
-			})
-			// users sub-router
-			r.Route("/users", func(r chi.Router) {
-				r.Get("/profile", cr.getAPIUsersProfile)
-				r.Put("/keys", cr.putAPIUsersKeys)
-				r.Put("/password", cr.putAPIUsersPassword)
-			})
-
-		*/
 	})
 }
