@@ -107,7 +107,7 @@ func TestRealIPExtractor_ExtractRemoteIP(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			extractor := NewRealIPExtractor(tt.allowedHeaders...)
+			extractor := NewCustomRealIPExtractor(tt.allowedHeaders...)
 			req := httptest.NewRequest(http.MethodGet, "http://localhost/", nil)
 			req.RemoteAddr = tt.remoteAddr
 
