@@ -4,7 +4,7 @@
 // 	protoc        v7.34.0
 // source: example-service.proto
 
-package example_service
+package example
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -673,7 +673,7 @@ const file_example_service_proto_rawDesc = "" +
 	"FindByCode\x120.example.service.ExampleServiceFindByCodeRequest\x1a/.example.service.ExampleServiceInstanceResponse\x12d\n" +
 	"\x04List\x12*.example.service.ExampleServiceListRequest\x1a0.example.service.ExampleServiceInstancesResponse\x12c\n" +
 	"\x04Save\x12*.example.service.ExampleServiceSaveRequest\x1a/.example.service.ExampleServiceInstanceResponse\x12N\n" +
-	"\x06Delete\x12,.example.service.ExampleServiceDeleteRequest\x1a\x16.google.protobuf.EmptyB*Z(go-service-template/grpc/example-serviceb\x06proto3"
+	"\x06Delete\x12,.example.service.ExampleServiceDeleteRequest\x1a\x16.google.protobuf.EmptyB\"Z go-service-template/grpc/exampleb\x06proto3"
 
 var file_example_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_example_service_proto_goTypes = []any{

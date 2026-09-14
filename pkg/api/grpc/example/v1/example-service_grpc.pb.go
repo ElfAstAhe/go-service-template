@@ -4,7 +4,7 @@
 // - protoc             v7.34.0
 // source: example-service.proto
 
-package example_service
+package example
 
 import (
 	context "context"

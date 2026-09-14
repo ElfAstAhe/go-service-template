@@ -1,5 +1,4 @@
-//lint:ignore ST1003 временно
-package example_service
+package example
 
 import (
 	"context"

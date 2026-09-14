@@ -5,7 +5,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
-	_ "github.com/ElfAstAhe/go-service-template/migrations/example-service"
+	_ "github.com/ElfAstAhe/go-service-template/migrations/example"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
