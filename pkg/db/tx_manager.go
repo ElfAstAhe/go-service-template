@@ -32,7 +32,7 @@ func (tm *TxManager) WithinTransaction(ctx context.Context, opts *TransactionOpt
 	var sqlOpts *sql.TxOptions
 	if opts != nil {
 		sqlOpts = &sql.TxOptions{
-			Isolation: mapIsolationLevelSqlIsolation(opts.Isolation),
+			Isolation: mapIsolationLevelSQLIsolation(opts.Isolation),
 			ReadOnly:  opts.ReadOnly,
 		}
 	}
@@ -79,7 +79,7 @@ func GetTx(ctx context.Context) *sql.Tx {
 	return nil
 }
 
-func mapIsolationLevelSqlIsolation(level IsolationLevel) sql.IsolationLevel {
+func mapIsolationLevelSQLIsolation(level IsolationLevel) sql.IsolationLevel {
 	switch level {
 	case LevelReadCommitted:
 		return sql.LevelReadCommitted

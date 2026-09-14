@@ -31,7 +31,7 @@ func TestReceiver_Receive_Success_And_Payload(t *testing.T) {
 		},
 	}
 
-	mockReceiverLink := mocks3.NewMockAmqpReceiverLink(t)
+	mockReceiverLink := mocks3.NewMockAMQPReceiverLink(t)
 	mockReceiverLink.On("Receive", mock.Anything, mock.Anything).Return(mockAzureMsg, nil).Once()
 
 	opts := NewReceiverOptions()
@@ -68,7 +68,7 @@ func TestReceiver_Receive_Failure_InvalidatesConnector(t *testing.T) {
 	// Проверяем, что ресивер при ошибке чтения ЧЕСТНО вызвал Invalidate на общем коннекторе
 	mockConnector.On("Invalidate", connErr).Return().Once()
 
-	mockReceiverLink := mocks3.NewMockAmqpReceiverLink(t)
+	mockReceiverLink := mocks3.NewMockAMQPReceiverLink(t)
 	mockReceiverLink.On("Receive", mock.Anything, mock.Anything).Return(nil, connErr).Once()
 
 	opts := NewReceiverOptions()

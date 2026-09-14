@@ -29,7 +29,7 @@ func TestSender_Publish_Success_Via_Connector(t *testing.T) {
 	// ВАЖНО: Так как s.sender уже прогрет (Fast Path), метод getSender()
 	// вообще не пойдет к коннектору. GetConnection НЕ должен вызываться!
 
-	mockSenderLink := mocks3.NewMockAmqpSenderLink(t)
+	mockSenderLink := mocks3.NewMockAMQPSenderLink(t)
 	mockSenderLink.On("Send", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 	opts := NewSenderOptions()
@@ -79,7 +79,7 @@ func TestSender_Publish_Retry_And_Invalidate(t *testing.T) {
 	expectedSessErr := errors.New("connector session lost permanently")
 	mockConnector.On("GetConnection", mock.Anything).Return(nil, expectedSessErr).Once()
 
-	mockSenderLink := mocks3.NewMockAmqpSenderLink(t)
+	mockSenderLink := mocks3.NewMockAMQPSenderLink(t)
 	mockSenderLink.On("Send", mock.Anything, mock.Anything, mock.Anything).Return(linkErr).Once()
 
 	opts := NewSenderOptions()

@@ -10,14 +10,14 @@ import (
 )
 
 var prefix string
-var reqId atomic.Uint64
+var reqID atomic.Uint64
 
 func GetPrefix() string {
 	return prefix
 }
 
 func NextReqID() uint64 {
-	return reqId.Add(1)
+	return reqID.Add(1)
 }
 
 func init() {
@@ -28,7 +28,7 @@ func init() {
 	var buf [12]byte
 	var b64 string
 	for len(b64) < 10 {
-		rand.Read(buf[:])
+		_, _ = rand.Read(buf[:])
 		b64 = base64.StdEncoding.EncodeToString(buf[:])
 		b64 = strings.NewReplacer("+", "", "/", "").Replace(b64)
 	}

@@ -15,16 +15,16 @@ const (
 	DefaultShutdownTimeout time.Duration = 5 * time.Second
 )
 
-// AmqpSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
+// AMQPSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
 // которые нам нужны для управления его жизненным циклом.
-type AmqpSenderLink interface {
+type AMQPSenderLink interface {
 	Send(ctx context.Context, msg *amqp.Message, opts *amqp.SendOptions) error
 	Close(ctx context.Context) error
 }
 
-// AmqpReceiverLink описывает методы встроенного получателя Azure AMQP,
+// AMQPReceiverLink описывает методы встроенного получателя Azure AMQP,
 // необходимые для чтения, подтверждения и закрытия линка.
-type AmqpReceiverLink interface {
+type AMQPReceiverLink interface {
 	Receive(ctx context.Context, opts *amqp.ReceiveOptions) (*amqp.Message, error)
 	AcceptMessage(ctx context.Context, msg *amqp.Message) error
 	RejectMessage(ctx context.Context, msg *amqp.Message, err *amqp.Error) error

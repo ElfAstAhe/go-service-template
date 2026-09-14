@@ -28,7 +28,7 @@ const (
 	MediaTypeApplicationSmilXML      string = "application/smil+xml"
 	MediaTypeApplicationXhtmlXML     string = "application/xhtml+xml"
 	MediaTypeApplicationXML          string = "application/xml"
-	MediaTypeApplicationXmlDTD       string = "application/xml-dtd"
+	MediaTypeApplicationXMLDTD       string = "application/xml-dtd"
 	MediaTypeApplicationXsltXML      string = "application/xslt+xml"
 	MediaTypeApplicationZip          string = "application/zip"
 
