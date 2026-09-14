@@ -14,7 +14,7 @@ import (
 
 func TestTxManager_WithinTransaction(t *testing.T) {
 	// Инициализируем sqlmock
-	sqlDB, mockSql, err := sqlmock.New()
+	sqlDB, mockSQL, err := sqlmock.New()
 	require.NoError(t, err)
 	defer sqlDB.Close()
 
@@ -26,8 +26,8 @@ func TestTxManager_WithinTransaction(t *testing.T) {
 	tm := db.NewTxManager(mockDB)
 
 	t.Run("Success_Commit", func(t *testing.T) {
-		mockSql.ExpectBegin()
-		mockSql.ExpectCommit()
+		mockSQL.ExpectBegin()
+		mockSQL.ExpectCommit()
 
 		err := tm.WithinTransaction(context.Background(), nil, func(ctx context.Context) error {
 			// Проверяем, что транзакция попала в контекст
@@ -37,12 +37,12 @@ func TestTxManager_WithinTransaction(t *testing.T) {
 		})
 
 		assert.NoError(t, err)
-		assert.NoError(t, mockSql.ExpectationsWereMet())
+		assert.NoError(t, mockSQL.ExpectationsWereMet())
 	})
 
 	t.Run("Error_Rollback", func(t *testing.T) {
-		mockSql.ExpectBegin()
-		mockSql.ExpectRollback()
+		mockSQL.ExpectBegin()
+		mockSQL.ExpectRollback()
 
 		expectedErr := errors.New("business_logic_error")
 		err := tm.WithinTransaction(context.Background(), nil, func(ctx context.Context) error {
@@ -50,12 +50,12 @@ func TestTxManager_WithinTransaction(t *testing.T) {
 		})
 
 		assert.ErrorIs(t, err, expectedErr)
-		assert.NoError(t, mockSql.ExpectationsWereMet())
+		assert.NoError(t, mockSQL.ExpectationsWereMet())
 	})
 
 	t.Run("Panic_Recovery_Rollback", func(t *testing.T) {
-		mockSql.ExpectBegin()
-		mockSql.ExpectRollback()
+		mockSQL.ExpectBegin()
+		mockSQL.ExpectRollback()
 
 		err := tm.WithinTransaction(context.Background(), nil, func(ctx context.Context) error {
 			panic("something exploded")
@@ -63,13 +63,13 @@ func TestTxManager_WithinTransaction(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "panic recovery")
-		assert.NoError(t, mockSql.ExpectationsWereMet())
+		assert.NoError(t, mockSQL.ExpectationsWereMet())
 	})
 
 	t.Run("Nested_Calls_Reuse_Transaction", func(t *testing.T) {
 		// Ожидаем только один BEGIN/COMMIT, так как второй вызов вложенный
-		mockSql.ExpectBegin()
-		mockSql.ExpectCommit()
+		mockSQL.ExpectBegin()
+		mockSQL.ExpectCommit()
 
 		err := tm.WithinTransaction(context.Background(), nil, func(ctx context.Context) error {
 			return tm.WithinTransaction(ctx, nil, func(ctx context.Context) error {
@@ -78,6 +78,6 @@ func TestTxManager_WithinTransaction(t *testing.T) {
 		})
 
 		assert.NoError(t, err)
-		assert.NoError(t, mockSql.ExpectationsWereMet())
+		assert.NoError(t, mockSQL.ExpectationsWereMet())
 	})
 }

@@ -16,7 +16,7 @@ import (
 
 type Receiver struct {
 	opts   *ReceiverOptions
-	link   AmqpReceiverLink // Наш единственный фиксированный линк-получатель
+	link   AMQPReceiverLink // Наш единственный фиксированный линк-получатель
 	logger logger.Logger
 	mu     sync.RWMutex
 	initMu sync.Mutex // Защищает ленивую инициализацию линка от Thundering Herd
@@ -191,7 +191,7 @@ func (r *Receiver) GetTargetName() string {
 }
 
 //goland:noinspection DuplicatedCode
-func (r *Receiver) getReceiver(ctx context.Context) (AmqpReceiverLink, error) {
+func (r *Receiver) getReceiver(ctx context.Context) (AMQPReceiverLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock за наносекунды
 	r.mu.RLock()
 	if !utils.IsNil(r.link) {

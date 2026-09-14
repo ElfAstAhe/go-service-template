@@ -19,7 +19,7 @@ var jsonContentType = "application/json"
 
 type Sender struct {
 	opts   *SenderOptions
-	sender AmqpSenderLink // Единственный фиксированный линк-отправитель
+	sender AMQPSenderLink // Единственный фиксированный линк-отправитель
 	logger logger.Logger
 	mu     sync.RWMutex
 	initMu sync.Mutex // Защищает ленивую инициализацию линка от Thundering Herd
@@ -138,7 +138,7 @@ func (s *Sender) GetTargetName() string {
 }
 
 //goland:noinspection DuplicatedCode
-func (s *Sender) getSender(ctx context.Context) (AmqpSenderLink, error) {
+func (s *Sender) getSender(ctx context.Context) (AMQPSenderLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock
 	s.mu.RLock()
 	if !utils.IsNil(s.sender) {

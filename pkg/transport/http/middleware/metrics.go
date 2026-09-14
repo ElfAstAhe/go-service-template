@@ -35,10 +35,10 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 			}
 
 			// 3. Записываем Counter
-			metrics.HttpRequestsTotal.WithLabelValues(r.Method, path, status).Inc()
+			metrics.HTTPRequestsTotal.WithLabelValues(r.Method, path, status).Inc()
 
 			// 4. Записываем Histogram с Exemplar (Senior-way)
-			observer := metrics.HttpRequestDuration.WithLabelValues(r.Method, path)
+			observer := metrics.HTTPRequestDuration.WithLabelValues(r.Method, path)
 			if exemplar != nil {
 				if ex, ok := observer.(prometheus.ExemplarObserver); ok {
 					ex.ObserveWithExemplar(duration, exemplar)

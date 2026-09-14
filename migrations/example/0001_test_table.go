@@ -1,4 +1,4 @@
-package example_service
+package example
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func up0001(ctx context.Context, db *sql.DB) error {
 }
 
 func upCreateTableTest(ctx context.Context, db *sql.DB) error {
-	if _, err := db.Exec(sqlCreateTableTest); err != nil {
+	if _, err := db.ExecContext(ctx, sqlCreateTableTest); err != nil {
 		return errs.NewDBMigrationError("create table test", err)
 	}
 
@@ -48,7 +48,7 @@ func upCreateTableTest(ctx context.Context, db *sql.DB) error {
 }
 
 func upCreateIndexTestCode(ctx context.Context, db *sql.DB) error {
-	if _, err := db.Exec(sqlCreateIndexTestCode); err != nil {
+	if _, err := db.ExecContext(ctx, sqlCreateIndexTestCode); err != nil {
 		return errs.NewDBMigrationError("create index idx_test_code", err)
 	}
 
@@ -67,7 +67,7 @@ func down0001(ctx context.Context, db *sql.DB) error {
 }
 
 func downDropIndexTestCode(ctx context.Context, db *sql.DB) error {
-	if _, err := db.Exec(sqlDropIndexTestCode); err != nil {
+	if _, err := db.ExecContext(ctx, sqlDropIndexTestCode); err != nil {
 		return errs.NewDBMigrationError("drop index idx_test_code", err)
 	}
 
@@ -75,7 +75,7 @@ func downDropIndexTestCode(ctx context.Context, db *sql.DB) error {
 }
 
 func downDropTableTest(ctx context.Context, db *sql.DB) error {
-	if _, err := db.Exec(sqlDropTableTest); err != nil {
+	if _, err := db.ExecContext(ctx, sqlDropTableTest); err != nil {
 		return errs.NewDBMigrationError("drop table test", err)
 	}
 
