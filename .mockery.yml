@@ -40,6 +40,9 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/transport/amqp/azure:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/transport/amqp/kafka:
+    config:
+      all: true
   github.com/ElfAstAhe/go-service-template/pkg/infra/cache:
     config:
       all: true
