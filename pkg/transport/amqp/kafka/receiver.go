@@ -150,6 +150,7 @@ func (r *Receiver) Close(ctx context.Context) error {
 
 func (r *Receiver) GetTargetName() string { return r.opts.TargetName }
 
+//goland:noinspection DuplicatedCode
 func (r *Receiver) getReceiver(ctx context.Context) (KafkaReceiverLink, error) {
 	r.mu.RLock()
 	if !utils.IsNil(r.reader) {

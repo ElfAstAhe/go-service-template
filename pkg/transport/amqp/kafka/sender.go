@@ -109,6 +109,7 @@ func (s *Sender) Close(ctx context.Context) error {
 
 func (s *Sender) GetTargetName() string { return s.opts.TargetName }
 
+//goland:noinspection DuplicatedCode
 func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
 	s.mu.RLock()
 	if !utils.IsNil(s.writer) {
