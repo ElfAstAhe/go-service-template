@@ -82,11 +82,11 @@ bench: gen-sources gen-proto gen-mocks ## Запустить кэш-бенчма
 
 # Запуск static check
 static-check: ## Запустить статический анализ кода (пропуская автогенерируемый pkg/api)
-	staticcheck $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz")
+	staticcheck $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz|mocks")
 
 # Запуск линтера
 lint: ## Запустить линтер revive (пропуская автогенерируемый код)
-	revive $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz")
+	revive -exclude "_test\.go$$" $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz|mocks")
 
 # Очистка бинарников
 clean: ## Очистить скомпилированные файлы из папки ./bin
