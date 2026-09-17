@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -13,30 +12,13 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-/*
-	// Приведение интерфейса к конкретному типу Connector для извлечения настроек
-	localConn, ok := r.opts.Connector.(*Connector)
-	if !ok {
-		return nil, fmt.Errorf("invalid connector type, expected *kafka.Connector")
-	}
-
-	newReader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:        localConn.GetBrokers(),
-		Topic:          r.opts.TargetName,
-		GroupID:        r.opts.GroupID,
-		MinBytes:       10e3,
-		MaxBytes:       10e6,
-		CommitInterval: 0,
-	})
-
-*/
-
 type Receiver struct {
-	opts   *ReceiverOptions
-	reader KafkaReceiverLink
-	logger logger.Logger
-	mu     sync.RWMutex
-	initMu sync.Mutex
+	opts        *ReceiverOptions
+	reader      KafkaReceiverLink
+	logger      logger.Logger
+	kafkaLogger *logger.KafkaLogger
+	mu          sync.RWMutex
+	initMu      sync.Mutex
 }
 
 var _ pkgamqp.Receiver[any] = (*Receiver)(nil)
@@ -49,21 +31,26 @@ func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 	if err := clientOpts.Validate(); err != nil {
 		return nil, errs.NewTlCommonError("NewReceiver", "kafka receiver options validation failed", err)
 	}
+
+	log := clientOpts.Logger.GetLogger("kafka-receiver")
+
 	return &Receiver{
-		opts:   clientOpts,
-		logger: clientOpts.Logger.GetLogger("kafka-receiver"),
+		opts:        clientOpts,
+		logger:      log,
+		kafkaLogger: logger.NewKafkaLogger(log),
 	}, nil
 }
 
 func (r *Receiver) Receive(ctx context.Context, _ any) (pkgamqp.Message, error) {
-	kafkaReader, err := r.getReceiver(ctx)
+	receiverLink, err := r.getReceiver(ctx)
 	if err != nil {
 		return nil, errs.NewTlCommonError("Receive", "kafka receiver failed to get reader", err)
 	}
 
-	kafkaMsg, err := kafkaReader.FetchMessage(ctx)
+	kafkaMsg, err := receiverLink.FetchMessage(ctx)
 	if err != nil {
-		r.handleReceiverFailure(err)
+		// Сетевые ошибки FetchMessage обрабатывать Invalidate-ом больше не нужно:
+		// kafka.Reader восстанавливает коннекты сам в бэкграунде.
 		return nil, errs.NewTlCommonError("Receive", "kafka incoming packet error", err)
 	}
 
@@ -73,19 +60,14 @@ func (r *Receiver) Receive(ctx context.Context, _ any) (pkgamqp.Message, error) 
 		copy(finalPayload, kafkaMsg.Value)
 	}
 
-	resMsg := &Message{
-		Payload:    finalPayload,
-		Props:      make(map[string]any),
-		TargetName: r.opts.TargetName,
-	}
+	// Использован локальный конструктор NewMessage из нашего пакета (из message.go),
+	// вместо ручной сборки. Это делает логику маппинга заголовков и сохранения оригинала единой.
+	resMsg := NewMessage(kafkaMsg)
+	resMsg.TargetName = r.opts.TargetName
+
 	if len(kafkaMsg.Key) > 0 {
 		resMsg.Props["kafka_message_key"] = string(kafkaMsg.Key)
 	}
-
-	// ИСПРАВЛЕНИЕ: Гарантируем уникальную аллокацию структуры в куче для защиты от перезаписи в цикле
-	allocatedMsg := new(kafka.Message)
-	*allocatedMsg = kafkaMsg
-	resMsg.Props[sysMsgKey] = allocatedMsg
 
 	return resMsg, nil
 }
@@ -150,7 +132,7 @@ func (r *Receiver) Close(ctx context.Context) error {
 
 func (r *Receiver) GetTargetName() string { return r.opts.TargetName }
 
-//goland:noinspection DuplicatedCode
+// Double-Checked Locking теперь работает напрямую с пулом брокеров из опций
 func (r *Receiver) getReceiver(ctx context.Context) (KafkaReceiverLink, error) {
 	r.mu.RLock()
 	if !utils.IsNil(r.reader) {
@@ -169,25 +151,17 @@ func (r *Receiver) getReceiver(ctx context.Context) (KafkaReceiverLink, error) {
 	}
 	r.mu.RUnlock()
 
-	_, err := r.opts.Connector.GetConnection(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Приведение интерфейса к конкретному типу Connector для извлечения настроек
-	localConn, ok := r.opts.Connector.(*Connector)
-	if !ok {
-		return nil, fmt.Errorf("invalid connector type, expected *kafka.Connector")
-	}
-
+	// Инициализируем высокоуровневый пуллер напрямую из списка адресов
 	newReader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:        localConn.GetBrokers(),
+		Brokers:        r.opts.Brokers,
 		Topic:          r.opts.TargetName,
 		GroupID:        r.opts.GroupID,
 		MinBytes:       r.opts.MinBytes,
 		MaxBytes:       r.opts.MaxBytes,
 		MaxWait:        r.opts.MaxWait,
 		CommitInterval: 0,
+		Logger:         r.kafkaLogger.InfoLogger(),
+		ErrorLogger:    r.kafkaLogger.ErrorLogger(),
 	})
 
 	r.mu.Lock()
@@ -195,24 +169,4 @@ func (r *Receiver) getReceiver(ctx context.Context) (KafkaReceiverLink, error) {
 	r.mu.Unlock()
 
 	return newReader, nil
-}
-
-func (r *Receiver) handleReceiverFailure(err error) {
-	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-		return
-	}
-	r.logger.Warnf("Kafka packet reading failure detected: %v. Notifying connector...", err)
-	r.opts.Connector.Invalidate(err)
-
-	r.mu.Lock()
-	oldReader := r.reader
-	r.reader = nil
-	r.mu.Unlock()
-
-	// ОПТИМИЗАЦИЯ: Мягко тушим упавший ридер в фоне, чтобы предотвратить Goroutine Leak
-	if !utils.IsNil(oldReader) {
-		go func(rd KafkaReceiverLink) {
-			_ = rd.Close()
-		}(oldReader)
-	}
 }

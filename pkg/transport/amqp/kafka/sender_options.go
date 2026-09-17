@@ -6,8 +6,6 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
-	"github.com/segmentio/kafka-go"
 )
 
 const (
@@ -21,9 +19,8 @@ const (
 type SenderOption func(*SenderOptions)
 
 type SenderOptions struct {
-	Connector             pkgamqp.Connector[*kafka.Client] // Ссылка на общий дженерик-коннектор Kafka
-	TargetName            string                           // Имя топика (Topic)
-	KafkaWriterOpts       *kafka.Writer                    // Кастомные сырые опции segmentio/kafka-go
+	Brokers               []string // Список хостов брокеров Kafka
+	TargetName            string   // Имя топика (Topic)
 	ConnectTimeout        time.Duration
 	ShutdownTimeout       time.Duration
 	Logger                logger.Logger
@@ -42,9 +39,10 @@ func NewSenderOptions() *SenderOptions {
 	}
 }
 
+//goland:noinspection DuplicatedCode
 func (so *SenderOptions) Validate() error {
-	if so.Connector == nil {
-		return errs.NewTlCommonError("Validate", "connector is required and cannot be nil", nil)
+	if len(so.Brokers) == 0 {
+		return errs.NewTlCommonError("Validate", "at least one broker address is required", nil)
 	}
 	if strings.TrimSpace(so.TargetName) == "" {
 		return errs.NewTlCommonError("Validate", "target name (topic) empty", nil)
@@ -74,9 +72,9 @@ func (so *SenderOptions) Validate() error {
 	return nil
 }
 
-func WithSenderConnector(connector pkgamqp.Connector[*kafka.Client]) SenderOption {
+func WithSenderBrokers(brokers []string) SenderOption {
 	return func(so *SenderOptions) {
-		so.Connector = connector
+		so.Brokers = brokers
 	}
 }
 
@@ -119,11 +117,5 @@ func WithSenderPublishBaseRetryDelay(delay time.Duration) SenderOption {
 func WithSenderPublishMaxRetryDelay(delay time.Duration) SenderOption {
 	return func(so *SenderOptions) {
 		so.PublishMaxRetryDelay = delay
-	}
-}
-
-func WithKafkaWriterOpts(writerOpts *kafka.Writer) SenderOption {
-	return func(so *SenderOptions) {
-		so.KafkaWriterOpts = writerOpts
 	}
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSender_Publish_Success(t *testing.T) {
@@ -25,36 +24,6 @@ func TestSender_Publish_Success(t *testing.T) {
 	mockLogger.On("Debug", mock.Anything).Return().Maybe()
 	mockLogger.On("Debugf", mock.Anything, mock.Anything).Return().Maybe()
 
-	// Запускаем изолированный TCP-слушатель в памяти процесса
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	require.NoError(t, err)
-	defer listener.Close()
-
-	// ИСПРАВЛЕНИЕ: Держим соединения открытыми, просто поглощая байты, чтобы не провоцировать EOF
-	go func() {
-		for {
-			conn, err := listener.Accept()
-			if err != nil {
-				return
-			}
-			go func(c net.Conn) {
-				buf := make([]byte, 1024)
-				for {
-					_, err := c.Read(buf)
-					if err != nil {
-						return // Выходим, только когда клиент сам закроет сокет в конце теста
-					}
-				}
-			}(conn)
-		}
-	}()
-
-	realConnector, err := NewConnector(
-		WithConnectorBrokers([]string{listener.Addr().String()}),
-		WithConnectorLogger(mockLogger),
-	)
-	require.NoError(t, err)
-
 	transportMsg := &Message{
 		TargetName: "tiny.auth.login.attempts",
 		Payload:    []byte(`{"status":"success"}`),
@@ -64,17 +33,18 @@ func TestSender_Publish_Success(t *testing.T) {
 		},
 	}
 
+	// Настраиваем строгое ожидание вызова WriteMessages с проверкой среза сообщений
 	mockLink.On("WriteMessages", ctx, mock.MatchedBy(func(msgs []kafka.Message) bool {
+		// Проверяем, что передано ровно одно сообщение
 		if len(msgs) != 1 {
 			return false
 		}
-		// ИСПРАВЛЕНИЕ: Извлекаем первый элемент слайса сообщений
-		msg := msgs[0]
 
+		msg := msgs[0]
 		hasKey := string(msg.Key) == "user_abc"
 		hasValue := string(msg.Value) == `{"status":"success"}`
 
-		// ИСПРАВЛЕНИЕ: Обращаемся к первому элементу слайса Headers
+		// Проверяем единственный заголовок в срезе заголовков
 		hasHeader := len(msg.Headers) == 1 &&
 			msg.Headers[0].Key == "custom_header_1" &&
 			string(msg.Headers[0].Value) == "meta_value"
@@ -84,7 +54,7 @@ func TestSender_Publish_Success(t *testing.T) {
 
 	sender := &Sender{
 		opts: &SenderOptions{
-			Connector:             realConnector,
+			Brokers:               []string{"127.0.0.1:9092"},
 			TargetName:            "tiny.auth.login.attempts",
 			PublishMaxTryAttempts: 2,
 		},
@@ -93,7 +63,7 @@ func TestSender_Publish_Success(t *testing.T) {
 	}
 
 	// Act
-	err = sender.Publish(ctx, transportMsg, nil)
+	err := sender.Publish(ctx, transportMsg, nil)
 
 	// Assert
 	assert.NoError(t, err)
@@ -109,70 +79,41 @@ func TestSender_Publish_RetryAndFallbackOnNetworkError(t *testing.T) {
 	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger).Maybe()
 	mockLogger.On("Debug", mock.Anything).Return().Maybe()
 	mockLogger.On("Debugf", mock.Anything, mock.Anything).Return().Maybe()
-	mockLogger.On("Warnf", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
+	mockLogger.On("Warnf", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 	mockLogger.On("Error", mock.Anything, mock.Anything).Return().Maybe()
-
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	require.NoError(t, err)
-	defer listener.Close()
-
-	go func() {
-		for {
-			conn, err := listener.Accept()
-			if err != nil {
-				return
-			}
-			go func(c net.Conn) {
-				buf := make([]byte, 1024)
-				for {
-					_, err := c.Read(buf)
-					if err != nil {
-						return
-					}
-				}
-			}(conn)
-		}
-	}()
-
-	realConnector, err := NewConnector(
-		WithConnectorBrokers([]string{listener.Addr().String()}),
-		WithConnectorLogger(mockLogger),
-	)
-	require.NoError(t, err)
 
 	transportMsg := &Message{
 		TargetName: "tiny.auth.login.attempts",
 		Payload:    []byte(`{"status":"fail"}`),
 	}
 
+	// Создаем сетевую ошибку net.OpError, которая считается восстанавливаемой
 	mockNetErr := &net.OpError{Op: "write", Net: "tcp", Err: errors.New("broken pipe")}
 
-	// Настраиваем ожидания мока: первая попытка падает, на второй попытке реальный райтер
-	// вызовется сам и упадет по таймауту, но мы страхуем вызовы.
-	mockLink.On("WriteMessages", ctx, mock.Anything).Return(mockNetErr).Once()
-	mockLink.On("Close").Return(nil).Maybe()
+	// Имитируем падение по сети на ОБЕИХ попытках.
+	// Так как у нас теперь нет "живого" врайтера, мы полностью контролируем его поведение через мок.
+	mockLink.On("WriteMessages", ctx, mock.Anything).Return(mockNetErr).Times(2)
 
 	sender := &Sender{
 		opts: &SenderOptions{
-			Connector:             realConnector,
+			Brokers:               []string{"127.0.0.1:9092"},
 			TargetName:            "tiny.auth.login.attempts",
-			PublishMaxTryAttempts: 2, // Ставим 2 попытки
+			PublishMaxTryAttempts: 2, // 2 попытки
 			PublishBaseRetryDelay: 1 * time.Millisecond,
 			PublishMaxRetryDelay:  2 * time.Millisecond,
-			ConnectTimeout:        1 * time.Millisecond, // ИСПРАВЛЕНИЕ: ставим 1 мс, чтобы мгновенно пролетать сетевой таймаут в тесте ретриров!
+			ConnectTimeout:        5 * time.Second,
 		},
 		writer: mockLink,
 		logger: mockLogger,
 	}
 
 	// Act
-	err = sender.Publish(ctx, transportMsg, nil)
+	err := sender.Publish(ctx, transportMsg, nil)
 
 	// Assert
-	// Ожидаем ошибку persisted network error, так как обе попытки упали (первая по моку, вторая по таймауту за 1мс) [2, 3]
+	// Ожидаем ошибку, так как все попытки исчерпаны
 	assert.Error(t, err)
-	//    assert.Contains(t, err.Error(), "network error persisted") [2, 3]
+	assert.Contains(t, err.Error(), "kafka unrecoverable send error or retries exhausted")
 
-	time.Sleep(5 * time.Millisecond)
 	mockLink.AssertExpectations(t)
 }

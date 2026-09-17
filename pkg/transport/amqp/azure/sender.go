@@ -215,6 +215,7 @@ func (s *Sender) handleSendError(attempt int, err error) error {
 	return errs.NewTlCommonError("Publish", "azure sender unrecoverable send error", err)
 }
 
+//goland:noinspection DuplicatedCode
 func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 	shift := min(uint(attempt-1), 31)
 

@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand/v2"
 	"net"
 	"sync"
@@ -16,17 +15,21 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+// Sender реализует отправку сообщений в конкретный топик Kafka.
+// Поддерживает политики экспоненциального бэкоффа с джиттером.
 type Sender struct {
-	opts   *SenderOptions
-	writer KafkaSenderLink
-	logger logger.Logger
-	mu     sync.RWMutex
-	initMu sync.Mutex
+	opts        *SenderOptions
+	writer      KafkaSenderLink
+	logger      logger.Logger
+	kafkaLogger *logger.KafkaLogger
+	mu          sync.RWMutex
+	initMu      sync.Mutex
 }
 
-// Привязываем к вашему дженерик-интерфейсу с типом опций any
+// Привязываем структуру к общему интерфейсу amqp.Sender.
 var _ pkgamqp.Sender[any] = (*Sender)(nil)
 
+// NewSender создает новый экземпляр отправителя на основе переданных опций.
 func NewSender(opts ...SenderOption) (*Sender, error) {
 	clientOpts := NewSenderOptions()
 	for _, opt := range opts {
@@ -35,12 +38,17 @@ func NewSender(opts ...SenderOption) (*Sender, error) {
 	if err := clientOpts.Validate(); err != nil {
 		return nil, errs.NewTlCommonError("NewSender", "kafka sender options validation failed", err)
 	}
+
+	log := clientOpts.Logger.GetLogger("kafka-sender")
+
 	return &Sender{
-		opts:   clientOpts,
-		logger: clientOpts.Logger.GetLogger("kafka-sender"),
+		opts:        clientOpts,
+		logger:      log,
+		kafkaLogger: logger.NewKafkaLogger(log),
 	}, nil
 }
 
+// Publish отправляет сообщение в Kafka. Включает механизм повторных попыток при сетевых сбоях.
 func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message, _ any) error {
 	if utils.IsNil(msg) {
 		return errs.NewTlCommonError("Publish", "cannot publish nil message", nil)
@@ -63,19 +71,22 @@ func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message, _ any) error 
 		kafkaMsg := s.prepareMessage(msg)
 		err = kafkaWriter.WriteMessages(ctx, kafkaMsg)
 		if err == nil {
-			return nil
+			return nil // Успешная отправка
 		}
 
-		err = s.handleSendError(attempt, err)
-		if err != nil {
-			return err
+		// Логируем ошибку и проверяем, имеет ли смысл делать ретрай
+		if !s.isRecoverableError(err) || attempt == s.opts.PublishMaxTryAttempts {
+			return errs.NewTlCommonError("Publish", "kafka unrecoverable send error or retries exhausted", err)
 		}
 
+		s.logger.Warnf("Temporary error sending to Kafka (attempt %d/%d): %v. Retrying...", attempt, s.opts.PublishMaxTryAttempts, err)
 		s.waitBackoff(ctx, attempt)
 	}
+
 	return errs.NewTlCommonError("Publish", "kafka sender unexpected retry loop exit", nil)
 }
 
+// Close плавно завершает работу врайтера, дожидаясь отправки пакетов из буферов.
 func (s *Sender) Close(ctx context.Context) error {
 	s.mu.Lock()
 	writerToClose := s.writer
@@ -107,8 +118,13 @@ func (s *Sender) Close(ctx context.Context) error {
 	}
 }
 
-func (s *Sender) GetTargetName() string { return s.opts.TargetName }
+// GetTargetName возвращает имя топика назначения.
+func (s *Sender) GetTargetName() string {
+	return s.opts.TargetName
+}
 
+// getSender инициализирует или возвращает существующий линк врайтера (Double-Checked Locking паттерн).
+//
 //goland:noinspection DuplicatedCode
 func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
 	s.mu.RLock()
@@ -128,47 +144,32 @@ func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
 	}
 	s.mu.RUnlock()
 
-	_, err := s.opts.Connector.GetConnection(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Приведение интерфейса к конкретному типу Connector для извлечения настроек
-	localConn, ok := s.opts.Connector.(*Connector)
-	if !ok {
-		return nil, fmt.Errorf("invalid connector type, expected *kafka.Connector")
-	}
-
+	// Напрямую инициализируем современный потокобезопасный пуллер kafka.Writer
 	newWriter := &kafka.Writer{
-		Addr:         kafka.TCP(localConn.GetBrokers()...),
+		Addr:         kafka.TCP(s.opts.Brokers...),
 		Topic:        s.opts.TargetName,
 		Balancer:     &kafka.LeastBytes{},
-		MaxAttempts:  1, // Управление повторами на стороне нашего метода Publish
+		MaxAttempts:  1, // Повторами управляем сами в методе Publish с кастомным бэкоффом
 		WriteTimeout: s.opts.ConnectTimeout,
+		Logger:       s.kafkaLogger.InfoLogger(),
+		ErrorLogger:  s.kafkaLogger.ErrorLogger(),
 	}
 
 	s.mu.Lock()
 	s.writer = newWriter
 	s.mu.Unlock()
+
 	return newWriter, nil
 }
 
-func (s *Sender) handleSendError(attempt int, err error) error {
+// isRecoverableError определяет, является ли ошибка временной (сетевой), допуская повторную попытку.
+func (s *Sender) isRecoverableError(err error) bool {
 	var netErr net.Error
 	var kErr kafka.Error
-	if errors.As(err, &netErr) || errors.As(err, &kErr) {
-		if attempt < s.opts.PublishMaxTryAttempts {
-			s.opts.Connector.Invalidate(err)
-			s.mu.Lock()
-			s.writer = nil
-			s.mu.Unlock()
-			return nil
-		}
-		return errs.NewTlCommonError("Publish", "kafka sender network error persisted", err)
-	}
-	return errs.NewTlCommonError("Publish", "kafka unrecoverable send error", err)
+	return errors.As(err, &netErr) || errors.As(err, &kErr)
 }
 
+// waitBackoff вычисляет экспоненциальную задержку с добавлением случайного джиттера.
 func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 	shift := min(uint(attempt-1), 31)
 	delay := s.opts.PublishBaseRetryDelay * (1 << shift)
@@ -179,7 +180,7 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 
 	if delayMs > 5 {
 		maxJitterMs := delayMs / 5
-		jitterMs := rand.IntN(maxJitterMs)
+		jitterMs := rand.IntN(maxJitterMs) // Использование потокобезопасного v2 крипто-рандомайзера
 		jitter := time.Duration(jitterMs) * time.Millisecond
 		if rand.IntN(2) == 0 {
 			delay += jitter
@@ -196,18 +197,23 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 	}
 }
 
+// prepareMessage перекладывает полезную нагрузку и свойства нашего конверта в нативную структуру kafka.Message.
 func (s *Sender) prepareMessage(msg pkgamqp.Message) kafka.Message {
 	kafkaMsg := kafka.Message{Value: msg.GetPayload()}
-	if len(msg.GetProperties()) > 0 {
-		if keyVal, ok := msg.GetProperties()["kafka_message_key"]; ok {
+	props := msg.GetProperties()
+	if len(props) > 0 {
+		// Извлекаем ключ партиционирования Kafka
+		if keyVal, ok := props["kafka_message_key"]; ok {
 			if strKey, ok := keyVal.(string); ok {
 				kafkaMsg.Key = []byte(strKey)
 			}
 		}
+
+		// Перекладываем все остальные свойства в Headers
 		var headers []kafka.Header
-		for k, v := range msg.GetProperties() {
-			if k == "kafka_message_key" {
-				continue
+		for k, v := range props {
+			if k == "kafka_message_key" || k == sysKafkaMsgKey {
+				continue // Игнорируем служебные ключи нашего пакета
 			}
 			if strVal, ok := v.(string); ok {
 				headers = append(headers, kafka.Header{Key: k, Value: []byte(strVal)})

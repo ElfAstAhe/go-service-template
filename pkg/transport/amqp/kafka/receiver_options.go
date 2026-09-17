@@ -6,25 +6,24 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
 	"github.com/segmentio/kafka-go"
 )
 
 const (
 	DefaultReceiverConnectTimeout  time.Duration = 5 * time.Second
 	DefaultReceiverShutdownTimeout time.Duration = 5 * time.Second
-	DefaultReceiverMinBytes        int           = 10e3 // 10 KB — минимальный пакет для вычитки
-	DefaultReceiverMaxBytes        int           = 10e6 // 10 MB — максимальный пакет на одну итерацию
+	DefaultReceiverMinBytes        int           = 10e3 // 10 KB
+	DefaultReceiverMaxBytes        int           = 10e6 // 10 MB
 	DefaultReceiverMaxWait         time.Duration = 1 * time.Second
 )
 
 type ReceiverOption func(*ReceiverOptions)
 
 type ReceiverOptions struct {
-	Connector       pkgamqp.Connector[*kafka.Client] // Ссылка на наш общий дженерик-коннектор Kafka
-	TargetName      string                           // Имя конкретного топика (Topic)
-	GroupID         string                           // Идентификатор Consumer Group (Критично для Kafka)
-	KafkaReaderOpts *kafka.ReaderConfig              // Кастомные сырые опции segmentio/kafka-go
+	Brokers         []string            // Заменили Connector на прямой список хостов брокеров
+	TargetName      string              // Имя топика (Topic)
+	GroupID         string              // Идентификатор Consumer Group
+	KafkaReaderOpts *kafka.ReaderConfig // Дополнительные кастомные опции
 	ConnectTimeout  time.Duration
 	ShutdownTimeout time.Duration
 	Logger          logger.Logger
@@ -44,8 +43,8 @@ func NewReceiverOptions() *ReceiverOptions {
 }
 
 func (ro *ReceiverOptions) Validate() error {
-	if ro.Connector == nil {
-		return errs.NewTlCommonError("Validate", "connector is required and cannot be nil", nil)
+	if len(ro.Brokers) == 0 {
+		return errs.NewTlCommonError("Validate", "at least one broker address is required", nil)
 	}
 	if strings.TrimSpace(ro.TargetName) == "" {
 		return errs.NewTlCommonError("Validate", "target name (topic) cannot be empty", nil)
@@ -70,9 +69,9 @@ func (ro *ReceiverOptions) Validate() error {
 	return nil
 }
 
-func WithReceiverConnector(connector pkgamqp.Connector[*kafka.Client]) ReceiverOption {
+func WithReceiverBrokers(brokers []string) ReceiverOption {
 	return func(ro *ReceiverOptions) {
-		ro.Connector = connector
+		ro.Brokers = brokers
 	}
 }
 
