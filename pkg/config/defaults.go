@@ -77,7 +77,9 @@ const (
 	FlagRedisDB       string = "redis-db"
 )
 
+// ====================================================================
 // telemetry
+// ====================================================================
 const (
 	FlagTelemetryEnabled          string = "telemetry-enabled"
 	FlagTelemetryServiceName      string = "telemetry-service-name"
@@ -86,13 +88,17 @@ const (
 	FlagTelemetryTimeout          string = "telemetry-timeout"
 )
 
+// ====================================================================
 // runner defaults
+// ====================================================================
 const (
 	DefaultRunnerStopTimeout  time.Duration = 15 * time.Second
 	DefaultRunnerCloseTimeout time.Duration = 5 * time.Second
 )
 
+// ====================================================================
 // App defaults
+// ====================================================================
 const (
 	DefaultAppEnv          AppEnv        = AppEnvDevelopment
 	DefaultAppInitTimeout  time.Duration = 30 * time.Second
@@ -100,6 +106,9 @@ const (
 	DefaultAppCloseTimeout time.Duration = 5 * time.Second
 )
 
+// ====================================================================
+// App
+// ====================================================================
 const (
 	KeyAppEnv          string = "app.env"
 	KeyAppInitTimeout  string = "app.init_timeout"
@@ -107,7 +116,9 @@ const (
 	KeyAppCloseTimeout string = "app.close_timeout"
 )
 
+// ====================================================================
 // HTTP defaults
+// ====================================================================
 const (
 	DefaultHTTPAddress            string        = "localhost:8080"
 	DefaultHTTPSecure             bool          = false
@@ -118,6 +129,9 @@ const (
 	DefaultHTTPMaxRequestBodySize int           = 1024 * 1024 * 4
 )
 
+// ====================================================================
+// http
+// ====================================================================
 const (
 	KeyHTTPAddress            string = "http.address"
 	KeyHTTPReadTimeout        string = "http.read_timeout"
@@ -130,7 +144,9 @@ const (
 	KeyHTTPMaxRequestBodySize string = "http.max_request_body_size"
 )
 
+// ====================================================================
 // gRPC defaults
+// ====================================================================
 const (
 	DefaultGRPCAddress string = "localhost:50051"
 	// DefaultGRPCMaxConnIdle - Даем соединениям «отдохнуть», но не убиваем их сразу
@@ -145,6 +161,9 @@ const (
 	DefaultGRPCShutdownTimeout  time.Duration = 15 * time.Second
 )
 
+// ====================================================================
+// gRPC
+// ====================================================================
 const (
 	KeyGRPCAddress          string = "grpc.address"
 	KeyGRPCMaxConnIdle      string = "grpc.max-conn-idle"
@@ -156,18 +175,25 @@ const (
 	KeyGRPCShutdownTimeout  string = "grpc.shutdown_timeout"
 )
 
+// ====================================================================
 // logger defaults
+// ====================================================================
 const (
 	DefaultLogLevel  string = "info"
 	DefaultLogFormat string = "console"
 )
 
+// ====================================================================
+// logging
+// ====================================================================
 const (
 	KeyLogLevel  string = "log.level"
 	KeyLogFormat string = "log.format"
 )
 
+// ====================================================================
 // DB defaults (only pool settings)
+// ====================================================================
 const (
 	DefaultDBDriver              string        = ""
 	DefaultDBDSN                 string        = ""
@@ -177,6 +203,9 @@ const (
 	DefaultDBConnTimeout         time.Duration = 30 * time.Second
 )
 
+// ====================================================================
+// DB
+// ====================================================================
 const (
 	KeyDBDriver              string = "db.driver"
 	KeyDBDSN                 string = "db.dsn"
@@ -186,7 +215,9 @@ const (
 	KeyDBConnTimeout         string = "db.conn_timeout"
 )
 
+// ====================================================================
 // Telemetry defaults
+// ====================================================================
 const (
 	DefaultTelemetryEnabled          bool          = false
 	DefaultTelemetryExporterEndpoint string        = "localhost:4317"
@@ -194,6 +225,9 @@ const (
 	DefaultTelemetryTimeout          time.Duration = 5 * time.Second
 )
 
+// ====================================================================
+// telemetry
+// ====================================================================
 const (
 	KeyTelemetryEnabled          string = "telemetry.enabled"
 	KeyTelemetryServiceName      string = "telemetry.service_name"
@@ -202,13 +236,18 @@ const (
 	KeyTelemetryTimeout          string = "telemetry.timeout"
 )
 
+// ====================================================================
+// access defaults
+// ====================================================================
 const (
 	DefaultAuthSigningMethod   string        = "HS256"
 	DefaultAuthAccessTokenTTL  time.Duration = 15 * time.Minute
 	DefaultAuthRefreshTokenTTL time.Duration = 24 * time.Hour
 )
 
+// ====================================================================
 // Auth
+// ====================================================================
 const (
 	KeyAuthJWTSecret          string = "auth.jwt_secret"
 	KeyAuthJWTSigningMethod   string = "auth.jwt_signing_method"
@@ -218,7 +257,9 @@ const (
 	KeyAuthMasterPasswordSalt string = "auth.master_password_salt"
 )
 
+// ====================================================================
 // amqp connector
+// ====================================================================
 const (
 	DefaultAMQPConnectorURL             string        = "amqp://localhost:5672/"
 	DefaultAMQPConnectorConnectTimeout  time.Duration = 10 * time.Second
@@ -227,7 +268,9 @@ const (
 	DefaultAMQPConnectorShutdownTimeout time.Duration = 15 * time.Second
 )
 
+// ====================================================================
 // amqp sender
+// ====================================================================
 const (
 	DefaultAMQPSenderConnectTimeout        time.Duration = 10 * time.Second
 	DefaultAMQPSenderShutdownTimeout       time.Duration = 15 * time.Second
@@ -236,9 +279,72 @@ const (
 	DefaultAMQPSenderPublishMaxRetryDelay  time.Duration = 3 * time.Second
 )
 
+// ====================================================================
 // amqp receiver
+// ====================================================================
 const (
 	DefaultAMQPReceiverConnectTimeout  time.Duration = 10 * time.Second
 	DefaultAMQPReceiverShutdownTimeout time.Duration = 15 * time.Second
 	DefaultAMQPReceiverPrefetchCredit  int           = 100
+)
+
+// ====================================================================
+// Kafka Sender (Producer) Constants
+// ====================================================================
+const (
+	// DefaultKafkaSenderConnectTimeout задает лимит времени на установку сетевого соединения с брокерами.
+	DefaultKafkaSenderConnectTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaSenderShutdownTimeout определяет время, выделяемое врайтеру на плавное закрытие.
+	// 15 секунд гарантируют успешный сброс (flushing) асинхронных буферов из памяти на диски брокеров при остановке пода.
+	DefaultKafkaSenderShutdownTimeout time.Duration = 15 * time.Second
+
+	// DefaultKafkaSenderPublishMaxTryAttempts — количество попыток публикации сообщения при сетевых сбоях (Network Flaps).
+	// Повторами на транспортном уровне мы управляем сами в методе Publish.
+	DefaultKafkaSenderPublishMaxTryAttempts int = 2
+
+	// DefaultKafkaSenderPublishBaseRetryDelay — начальная задержка перед первой повторной отправкой для экспоненциального бэкоффа.
+	DefaultKafkaSenderPublishBaseRetryDelay time.Duration = 100 * time.Millisecond
+
+	// DefaultKafkaSenderPublishMaxRetryDelay — жесткий верхний лимит задержки между повторными попытками отправки.
+	DefaultKafkaSenderPublishMaxRetryDelay time.Duration = 3 * time.Second
+
+	// DefaultKafkaSenderInsecureConnection отключает строгую проверку SSL/TLS сертификатов брокеров (InsecureSkipVerify).
+	// По умолчанию false (проверка включена) для обеспечения безопасности в продакшн-окружении.
+	DefaultKafkaSenderInsecureConnection bool = false
+)
+
+// ====================================================================
+// Kafka Receiver (Consumer) Constants
+// ====================================================================
+const (
+	// DefaultKafkaReceiverConnectTimeout задает лимит времени на подключение к координатору группы брокеров.
+	DefaultKafkaReceiverConnectTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaReceiverShutdownTimeout — время на безопасную остановку чтения и корректный выход из Consumer Group.
+	DefaultKafkaReceiverShutdownTimeout time.Duration = 15 * time.Second
+
+	// DefaultKafkaReceiverMinBytes — минимальный объем данных (в байтах), который брокер должен собрать перед ответом.
+	// Снижено до 1024 (1 KB) для dev/test окружений, чтобы одиночные мелкие сообщения доставлялись без задержек.
+	DefaultKafkaReceiverMinBytes int = 1024
+
+	// DefaultKafkaReceiverMaxBytes — максимальный объем данных, принимаемый за одну сетевую трансляцию (итерацию Fetch).
+	// Значение 10e6 (10 MB) защищает consumer-группу от застревания при обработке «жирных» JSON-пакетов.
+	DefaultKafkaReceiverMaxBytes int = 10e6
+
+	// DefaultKafkaReceiverMaxWait — максимальное время ожидания брокера, если объем данных еще не достиг лимита MinBytes.
+	// Значение 500ms на dev/test экономит ресурсы CPU сервера, предотвращая «горячий цикл» пустых запросов.
+	DefaultKafkaReceiverMaxWait time.Duration = 500 * time.Millisecond
+
+	// DefaultKafkaReceiverInsecureConnection отключает проверку SSL/TLS сертификатов брокеров на стороне получателя.
+	DefaultKafkaReceiverInsecureConnection bool = false
+)
+
+// ====================================================================
+// Kafka Infrastructure Defaults
+// ====================================================================
+var (
+	// DefaultKafkaBrokers хранит срез хостов брокеров кластера по умолчанию.
+	// Использует "localhost:9092" для обеспечения бесшовной локальной разработки и тестирования.
+	DefaultKafkaBrokers = []string{"localhost:9092"}
 )

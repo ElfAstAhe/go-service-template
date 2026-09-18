@@ -1,0 +1,109 @@
+package config
+
+import (
+	"strings"
+	"time"
+
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+)
+
+// KafkaSenderConfig содержит настройки для отправки (публикации) сообщений в брокер Kafka.
+type KafkaSenderConfig struct {
+	// Brokers хранит срез хостов брокеров кластера Kafka (например, ["kafka-node1:9092", "kafka-node2:9092"]).
+	// Заменяет одиночный URL из AMQP, так как Kafka требует пул адресов для механизма Discovery.
+	Brokers []string `mapstructure:"brokers" json:"brokers,omitempty" yaml:"brokers,omitempty"`
+
+	// TargetName определяет имя целевого топика (Topic) в Kafka, куда будут отправляться сообщения.
+	TargetName string `mapstructure:"target_name" json:"target_name,omitempty" yaml:"target_name,omitempty"`
+
+	// ConnectTimeout задает ограничение по времени на установку сетевого соединения с брокерами.
+	ConnectTimeout time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"`
+
+	// ShutdownTimeout определяет время, выделяемое врайтеру на плавное закрытие (включая сброс буферов на диски брокеров).
+	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"`
+
+	// PublishMaxTryAttempts — максимальное количество попыток публикации сообщения при сетевых сбоях (Network Flaps).
+	PublishMaxTryAttempts int `mapstructure:"publish_max_try_attempts" json:"publish_max_try_attempts" yaml:"publish_max_try_attempts"`
+
+	// PublishBaseRetryDelay — начальная задержка перед первой повторной отправкой (используется для экспоненциального бэкоффа).
+	PublishBaseRetryDelay time.Duration `mapstructure:"publish_base_retry_delay" json:"publish_base_retry_delay,omitempty" yaml:"publish_base_retry_delay,omitempty"`
+
+	// PublishMaxRetryDelay — жесткий верхний лимит задержки между повторными попытками отправки.
+	PublishMaxRetryDelay time.Duration `mapstructure:"publish_max_retry_delay" json:"publish_max_retry_delay" yaml:"publish_max_retry_delay"`
+
+	// Безопасность и Аутентификация (SASL/PLAIN + TLS)
+	Username           string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
+	Password           string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
+	InsecureConnection bool   `mapstructure:"insecure_connection" json:"insecure_connection,omitempty" yaml:"insecure_connection,omitempty"`
+}
+
+func NewKafkaSenderConfig(
+	brokers []string,
+	targetName string,
+	connectTimeout time.Duration,
+	shutdownTimeout time.Duration,
+	publishMaxTryAttempts int,
+	publishBaseRetryDelay time.Duration,
+	publishMaxRetryDelay time.Duration,
+	username string,
+	password string,
+	insecureConnection bool,
+) *KafkaSenderConfig {
+	return &KafkaSenderConfig{
+		Brokers:               brokers,
+		TargetName:            targetName,
+		ConnectTimeout:        connectTimeout,
+		ShutdownTimeout:       shutdownTimeout,
+		PublishMaxTryAttempts: publishMaxTryAttempts,
+		PublishBaseRetryDelay: publishBaseRetryDelay,
+		PublishMaxRetryDelay:  publishMaxRetryDelay,
+		Username:              username,
+		Password:              password,
+		InsecureConnection:    insecureConnection,
+	}
+}
+
+func NewDefaultKafkaSenderConfig() *KafkaSenderConfig {
+	return NewKafkaSenderConfig(
+		DefaultKafkaBrokers,
+		"",
+		DefaultKafkaSenderConnectTimeout,
+		DefaultKafkaSenderShutdownTimeout,
+		DefaultKafkaSenderPublishMaxTryAttempts,
+		DefaultKafkaSenderPublishBaseRetryDelay,
+		DefaultKafkaSenderPublishMaxRetryDelay,
+		"",
+		"",
+		DefaultKafkaSenderInsecureConnection,
+	)
+}
+
+// Validate выполняет строгую проверку входящих параметров конфигурации отправителя.
+func (ksc *KafkaSenderConfig) Validate() error {
+	if len(ksc.Brokers) == 0 {
+		return errs.NewConfigValidateError("kafka sender", "Brokers", "at least one broker address is required", nil)
+	}
+	if strings.TrimSpace(ksc.TargetName) == "" {
+		return errs.NewConfigValidateError("kafka sender", "TargetName", "empty", nil)
+	}
+	if !(ksc.ConnectTimeout > 0) {
+		return errs.NewConfigValidateError("kafka sender", "ConnectTimeout", "less than 0", nil)
+	}
+	if !(ksc.ShutdownTimeout > 0) {
+		return errs.NewConfigValidateError("kafka sender", "ShutdownTimeout", "less than 0", nil)
+	}
+	if !(ksc.PublishMaxTryAttempts >= 1) {
+		return errs.NewConfigValidateError("kafka sender", "PublishMaxTryAttempts", "less than 1", nil)
+	}
+	if !(ksc.PublishBaseRetryDelay > 0) {
+		return errs.NewConfigValidateError("kafka sender", "PublishBaseRetryDelay", "less than 0", nil)
+	}
+	if !(ksc.PublishMaxRetryDelay > 0) {
+		return errs.NewConfigValidateError("kafka sender", "PublishMaxRetryDelay", "less than 0", nil)
+	}
+	if ksc.PublishBaseRetryDelay > ksc.PublishMaxRetryDelay {
+		return errs.NewConfigValidateError("kafka sender", "PublishMaxRetryDelay", "less than base delay", nil)
+	}
+
+	return nil
+}
