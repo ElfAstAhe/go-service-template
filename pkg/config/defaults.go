@@ -289,7 +289,7 @@ const (
 )
 
 // ====================================================================
-// Kafka Sender (Producer) Constants
+// Kafka Sender (Producer) Defaults
 // ====================================================================
 const (
 	// DefaultKafkaSenderConnectTimeout задает лимит времени на установку сетевого соединения с брокерами.
@@ -310,12 +310,29 @@ const (
 	DefaultKafkaSenderPublishMaxRetryDelay time.Duration = 3 * time.Second
 
 	// DefaultKafkaSenderInsecureConnection отключает строгую проверку SSL/TLS сертификатов брокеров (InsecureSkipVerify).
-	// По умолчанию false (проверка включена) для обеспечения безопасности в продакшн-окружении.
 	DefaultKafkaSenderInsecureConnection bool = false
+
+	// НОВЫЕ ПОЛЯ ПРОИЗВОДИТЕЛЬНОСТИ (Асинхронный батчинг)
+
+	// DefaultKafkaSenderBatchSize — лимит количества сообщений в локальном буфере перед отправкой пачки.
+	DefaultKafkaSenderBatchSize int = 100
+
+	// DefaultKafkaSenderBatchBytes — максимальный объем одной пачки в байтах (1 MB).
+	DefaultKafkaSenderBatchBytes int = 1048576
+
+	// DefaultKafkaSenderBatchTimeout — 10ms. Время ожидания накопления пачки.
+	// Исключает секундную задержку библиотеки по умолчанию, обеспечивая минимальный latency.
+	DefaultKafkaSenderBatchTimeout time.Duration = 10 * time.Millisecond
+
+	// DefaultKafkaSenderWriteTimeout — жесткий таймаут сокета на операцию отправки пачки в сеть.
+	DefaultKafkaSenderWriteTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaSenderRequiredAcks — уровень подтверждения записи брокером (-1 означает "all" — весь ISR пул).
+	DefaultKafkaSenderRequiredAcks int = -1
 )
 
 // ====================================================================
-// Kafka Receiver (Consumer) Constants
+// Kafka Receiver (Consumer) Defaults
 // ====================================================================
 const (
 	// DefaultKafkaReceiverConnectTimeout задает лимит времени на подключение к координатору группы брокеров.
@@ -338,13 +355,30 @@ const (
 
 	// DefaultKafkaReceiverInsecureConnection отключает проверку SSL/TLS сертификатов брокеров на стороне получателя.
 	DefaultKafkaReceiverInsecureConnection bool = false
+
+	// DefaultKafkaReceiverHeartbeatInterval — частота фонового пинга ("я жив") к координатору группы.
+	DefaultKafkaReceiverHeartbeatInterval time.Duration = 3 * time.Second
+
+	// DefaultKafkaReceiverSessionTimeout — таймаут отсутствия пингов, после которого брокер считает под мертвым и запускает ребаланс.
+	DefaultKafkaReceiverSessionTimeout time.Duration = 30 * time.Second
+
+	// DefaultKafkaReceiverRebalanceTimeout — время, выделяемое воркеру на доработку текущей пачки и сдачу партиций при ребалансе.
+	DefaultKafkaReceiverRebalanceTimeout time.Duration = 60 * time.Second
+
+	// DefaultKafkaReceiverReadTimeout — низкоуровневый таймаут сетевого сокета на чтение. Уходит в Dialer.
+	DefaultKafkaReceiverReadTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaReceiverMaxAttempts — количество попыток переподключения до возврата критической ошибки.
+	DefaultKafkaReceiverMaxAttempts int = 3
+
+	// DefaultKafkaReceiverQueueCapacity — емкость внутреннего фонового буфера предвыборки сообщений из сети.
+	DefaultKafkaReceiverQueueCapacity int = 100
+
+	// DefaultKafkaReceiverStartOffset определяет точку старта, если для Consumer Group еще нет сохраненного оффсета ("first" или "last").
+	DefaultKafkaReceiverStartOffset string = "first"
 )
 
-// ====================================================================
-// Kafka Infrastructure Defaults
-// ====================================================================
 var (
-	// DefaultKafkaBrokers хранит срез хостов брокеров кластера по умолчанию.
-	// Использует "localhost:9092" для обеспечения бесшовной локальной разработки и тестирования.
+	// DefaultKafkaBrokers хранит срез хостов брокеров кластера по умолчанию для локальной разработки.
 	DefaultKafkaBrokers = []string{"localhost:9092"}
 )
