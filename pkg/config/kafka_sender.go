@@ -10,7 +10,6 @@ import (
 // KafkaSenderConfig содержит настройки для отправки (публикации) сообщений в брокер Kafka.
 type KafkaSenderConfig struct {
 	// Brokers хранит срез хостов брокеров кластера Kafka (например, ["kafka-node1:9092", "kafka-node2:9092"]).
-	// Заменяет одиночный URL из AMQP, так как Kafka требует пул адресов для механизма Discovery.
 	Brokers []string `mapstructure:"brokers" json:"brokers,omitempty" yaml:"brokers,omitempty"`
 
 	// TargetName определяет имя целевого топика (Topic) в Kafka, куда будут отправляться сообщения.
@@ -35,8 +34,16 @@ type KafkaSenderConfig struct {
 	Username           string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
 	Password           string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 	InsecureConnection bool   `mapstructure:"insecure_connection" json:"insecure_connection,omitempty" yaml:"insecure_connection,omitempty"`
+
+	// Тонкие настройки асинхронного пакетирования (Батчинга) рантайма kafka-go
+	BatchSize    int           `mapstructure:"batch_size" json:"batch_size,omitempty" yaml:"batch_size,omitempty"`
+	BatchBytes   int           `mapstructure:"batch_bytes" json:"batch_bytes,omitempty" yaml:"batch_bytes,omitempty"`
+	BatchTimeout time.Duration `mapstructure:"batch_timeout" json:"batch_timeout,omitempty" yaml:"batch_timeout,omitempty"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout" json:"write_timeout,omitempty" yaml:"write_timeout,omitempty"`
+	RequiredAcks int           `mapstructure:"required_acks" json:"required_acks,omitempty" yaml:"required_acks,omitempty"`
 }
 
+// NewKafkaSenderConfig — полный конструктор структуры конфигурации отправителя.
 func NewKafkaSenderConfig(
 	brokers []string,
 	targetName string,
@@ -48,6 +55,11 @@ func NewKafkaSenderConfig(
 	username string,
 	password string,
 	insecureConnection bool,
+	batchSize int,
+	batchBytes int,
+	batchTimeout time.Duration,
+	writeTimeout time.Duration,
+	requiredAcks int,
 ) *KafkaSenderConfig {
 	return &KafkaSenderConfig{
 		Brokers:               brokers,
@@ -60,6 +72,11 @@ func NewKafkaSenderConfig(
 		Username:              username,
 		Password:              password,
 		InsecureConnection:    insecureConnection,
+		BatchSize:             batchSize,
+		BatchBytes:            batchBytes,
+		BatchTimeout:          batchTimeout,
+		WriteTimeout:          writeTimeout,
+		RequiredAcks:          requiredAcks,
 	}
 }
 
@@ -75,6 +92,11 @@ func NewDefaultKafkaSenderConfig() *KafkaSenderConfig {
 		"",
 		"",
 		DefaultKafkaSenderInsecureConnection,
+		DefaultKafkaSenderBatchSize,
+		DefaultKafkaSenderBatchBytes,
+		DefaultKafkaSenderBatchTimeout,
+		DefaultKafkaSenderWriteTimeout,
+		DefaultKafkaSenderRequiredAcks,
 	)
 }
 
@@ -95,14 +117,15 @@ func (ksc *KafkaSenderConfig) Validate() error {
 	if !(ksc.PublishMaxTryAttempts >= 1) {
 		return errs.NewConfigValidateError("kafka sender", "PublishMaxTryAttempts", "less than 1", nil)
 	}
-	if !(ksc.PublishBaseRetryDelay > 0) {
-		return errs.NewConfigValidateError("kafka sender", "PublishBaseRetryDelay", "less than 0", nil)
-	}
-	if !(ksc.PublishMaxRetryDelay > 0) {
-		return errs.NewConfigValidateError("kafka sender", "PublishMaxRetryDelay", "less than 0", nil)
-	}
 	if ksc.PublishBaseRetryDelay > ksc.PublishMaxRetryDelay {
 		return errs.NewConfigValidateError("kafka sender", "PublishMaxRetryDelay", "less than base delay", nil)
+	}
+	if ksc.BatchSize <= 0 || ksc.BatchBytes <= 0 {
+		return errs.NewConfigValidateError("kafka sender", "BatchSize/BatchBytes", "must be greater than 0", nil)
+	}
+	// Валидируем диапазон acks (разрешены только -1, 0, 1)
+	if ksc.RequiredAcks < -1 || ksc.RequiredAcks > 1 {
+		return errs.NewConfigValidateError("kafka sender", "RequiredAcks", "invalid value (must be -1, 0 or 1)", nil)
 	}
 
 	return nil

@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS kafka_offsets (
     updated_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
     -- ---------------------------------------------------------------------------
     constraint kafka_offsets_pk primary key (id),
-    constraint kafka_offsets_uk unique (consumer_group, topic),
-);
+    constraint kafka_offsets_uk unique (consumer_group, topic)
+)
 `
 	sqlDropTableKafkaOffsets string = `
 DROP TABLE IF EXISTS kafka_offsets
@@ -31,7 +31,7 @@ DROP TABLE IF EXISTS kafka_offsets
 	sqlCreateIndexKafkaOffsets string = `
 -- Индекс для мгновенной выборки всех оффсетов конкретного топика при старте или ребалансировке пода.
 -- Оптимизирует скорость инициализации метода SetOffset на больших объемах партиций.
-CREATE INDEX IF NOT EXISTS idx_kafka_offsets_lookup ON kafka_offsets (consumer_group, topic);
+CREATE INDEX IF NOT EXISTS idx_kafka_offsets_lookup ON kafka_offsets (consumer_group, topic)
 `
 	sqlDropIndexKafkaOffsets string = `
 drop index idx_kafka_offsets_lookup
