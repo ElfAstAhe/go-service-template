@@ -26,5 +26,9 @@ type Receiver[ReceiveOpts any] interface {
 	// Close мягко закрывает слушающий линк, не прерывая общую сессию коннектора.
 	Close(ctx context.Context) error
 
+	// GetTargetName информация о топике/очереди
 	GetTargetName() string
+
+	// Stats возвращает строго типизированную структуру метрик. No more map[string]any!
+	Stats() ReceiverStats
 }

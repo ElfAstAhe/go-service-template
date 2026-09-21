@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
@@ -10,20 +9,18 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-const (
-	DefaultConnectTimeout  time.Duration = 5 * time.Second
-	DefaultShutdownTimeout time.Duration = 5 * time.Second
-)
-
+//goland:noinspection GoNameStartsWithPackageName
 type KafkaSenderLink interface {
 	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
 	Close() error
 }
 
+//goland:noinspection GoNameStartsWithPackageName
 type KafkaReceiverLink interface {
 	FetchMessage(ctx context.Context) (kafka.Message, error)
 	CommitMessages(ctx context.Context, msgs ...kafka.Message) error
 	Close() error
+	Stats() kafka.ReaderStats
 }
 
 func ExtractOriginalKafkaMessage(msg pkgamqp.Message) (*kafka.Message, error) {

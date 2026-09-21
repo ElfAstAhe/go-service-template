@@ -216,3 +216,47 @@ func (_c *MockKafkaReceiverLink_FetchMessage_Call) RunAndReturn(run func(ctx con
 	_c.Call.Return(run)
 	return _c
 }
+
+// Stats provides a mock function for the type MockKafkaReceiverLink
+func (_mock *MockKafkaReceiverLink) Stats() kafka.ReaderStats {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Stats")
+	}
+
+	var r0 kafka.ReaderStats
+	if returnFunc, ok := ret.Get(0).(func() kafka.ReaderStats); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(kafka.ReaderStats)
+	}
+	return r0
+}
+
+// MockKafkaReceiverLink_Stats_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Stats'
+type MockKafkaReceiverLink_Stats_Call struct {
+	*mock.Call
+}
+
+// Stats is a helper method to define mock.On call
+func (_e *MockKafkaReceiverLink_Expecter) Stats() *MockKafkaReceiverLink_Stats_Call {
+	return &MockKafkaReceiverLink_Stats_Call{Call: _e.mock.On("Stats")}
+}
+
+func (_c *MockKafkaReceiverLink_Stats_Call) Run(run func()) *MockKafkaReceiverLink_Stats_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockKafkaReceiverLink_Stats_Call) Return(readerStats kafka.ReaderStats) *MockKafkaReceiverLink_Stats_Call {
+	_c.Call.Return(readerStats)
+	return _c
+}
+
+func (_c *MockKafkaReceiverLink_Stats_Call) RunAndReturn(run func() kafka.ReaderStats) *MockKafkaReceiverLink_Stats_Call {
+	_c.Call.Return(run)
+	return _c
+}
