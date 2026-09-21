@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"math/rand/v2"
 	"net"
@@ -32,6 +33,8 @@ type Sender struct {
 var _ pkgamqp.Sender[any] = (*Sender)(nil)
 
 // NewSender создает новый экземпляр отправителя на основе переданных опций.
+//
+//goland:noinspection GoUnusedExportedFunction
 func NewSender(opts ...SenderOption) (*Sender, error) {
 	clientOpts := NewSenderOptions()
 	for _, opt := range opts {
@@ -89,6 +92,8 @@ func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message, _ any) error 
 }
 
 // Close плавно завершает работу врайтера, дожидаясь отправки пакетов из буферов.
+//
+//goland:noinspection DuplicatedCode
 func (s *Sender) Close(ctx context.Context) error {
 	s.mu.Lock()
 	writerToClose := s.writer
@@ -126,11 +131,13 @@ func (s *Sender) GetTargetName() string {
 }
 
 // getSender инициализирует или возвращает существующий линк врайтера (Double-Checked Locking паттерн).
+//
+//goland:noinspection GoUnusedParameter
 func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
 	// Первая быстрая проверка под RLock (Fast Path)
 	s.mu.RLock()
 	if !utils.IsNil(s.writer) {
-		defer s.mu.RUnlock()
+		s.mu.RUnlock()
 		return s.writer, nil
 	}
 	s.mu.RUnlock()
@@ -142,7 +149,7 @@ func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
 	// Вторая проверка под RLock на случай, если параллельный поток успел создать врайтер, пока мы ждали initMu
 	s.mu.RLock()
 	if !utils.IsNil(s.writer) {
-		defer s.mu.RUnlock()
+		s.mu.RUnlock() // ИСПРАВЛЕНО: Явный анлок вместо дефера защищает от вечной блокировки
 		return s.writer, nil
 	}
 	s.mu.RUnlock()
@@ -157,37 +164,39 @@ func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
 	return newWriter, nil
 }
 
-// createWriter собирает структуру kafka.Writer, утилизируя все новые параметры асинхронного батчинга.
+// createWriter собирает структуру kafka.Writer, утилизируя параметры асинхронного батчинга и кастомные мутаторы.
 func (s *Sender) createWriter() *kafka.Writer {
-	writerCfg := &kafka.Writer{
+	// Собираем инстанс напрямую через поля структуры (Modern-Way)
+	newWriter := &kafka.Writer{
 		Addr:         kafka.TCP(s.opts.Brokers...),
 		Topic:        s.opts.TargetName,
 		Balancer:     &kafka.LeastBytes{},
-		MaxAttempts:  1,                   // Повторами управляем сами в методе Publish с кастомным бэкоффом
-		BatchSize:    s.opts.BatchSize,    // Лимит количества сообщений в пачке
-		BatchBytes:   s.opts.BatchBytes,   // Лимит веса пачки в байтах
-		BatchTimeout: s.opts.BatchTimeout, // Время ожидания сброса неполного батча
-		WriteTimeout: s.opts.WriteTimeout, // Сетевой таймаут сокета на запись пачки
-		RequiredAcks: s.opts.RequiredAcks, // Уровень квитирования репликами (-1, 0, 1)
-		Transport:    s.createTransport(), // Слой сетевой безопасности (SASL/TLS)
+		MaxAttempts:  1,                     // Повторами управляем сами в методе Publish с кастомным бэкоффом
+		BatchSize:    s.opts.BatchSize,      // Лимит количества сообщений в пачке
+		BatchBytes:   s.opts.BatchBytes,     // Лимит веса пачки в байтах (теперь честный int64)
+		BatchTimeout: s.opts.BatchTimeout,   // Время ожидания сброса неполного батча
+		WriteTimeout: s.opts.WriteTimeout,   // Сетевой таймаут сокета на запись пачки
+		ReadTimeout:  s.opts.ConnectTimeout, // Таймаут на чтение ответа брокера
+		RequiredAcks: s.opts.RequiredAcks,   // Уровень квитирования репликами (-1, 0, 1)
+		Transport:    s.createTransport(),   // Слой сетевой безопасности (SASL/TLS)
 		Logger:       s.kafkaLogger.InfoLogger(),
 		ErrorLogger:  s.kafkaLogger.ErrorLogger(),
 	}
 
-	// Если разработчик передал кастомный низкоуровневый WriterConf, берем его за основу,
-	// перетирая только критически важные для стабильности нашей обертки параметры
-	if s.opts.WriterConf != nil {
-		cfg := *s.opts.WriterConf
-		cfg.Addr = kafka.TCP(s.opts.Brokers...)
-		cfg.Topic = s.opts.TargetName
-		cfg.MaxAttempts = 1
-		cfg.Transport = s.createTransport()
-		cfg.Logger = s.kafkaLogger.InfoLogger()
-		cfg.ErrorLogger = s.kafkaLogger.ErrorLogger()
-		writerCfg = &cfg
+	// Если конечная система передала функцию конфигурации,
+	// скармливаем ей собранный объект. Она сможет переопределить любое поле (например, запустить Async: true).
+	if !utils.IsNil(s.opts.WriterCustomizerFunc) {
+		s.opts.WriterCustomizerFunc(newWriter)
+
+		// Страхуем критически важные для стабильности нашей обертки параметры от случайной перезаписи
+		newWriter.Addr = kafka.TCP(s.opts.Brokers...)
+		newWriter.Topic = s.opts.TargetName
+		newWriter.MaxAttempts = 1
+		newWriter.Logger = s.kafkaLogger.InfoLogger()
+		newWriter.ErrorLogger = s.kafkaLogger.ErrorLogger()
 	}
 
-	return writerCfg
+	return newWriter
 }
 
 // createTransport настраивает сетевой транспортный слой, подставляя переданный TLS и накладывая SASL.
@@ -197,7 +206,7 @@ func (s *Sender) createTransport() *kafka.Transport {
 	// Если передан готовый TLS (mTLS, Custom CA) или включена SASL-авторизация, инициализируем транспорт
 	if !utils.IsNil(s.opts.TLS) || strings.TrimSpace(s.opts.Username) != "" {
 		transport = &kafka.Transport{
-			TLS: s.opts.TLS, // Применяем готовый TLS-конфиг "как есть" из опций (может быть nil)
+			TLS: s.getTLS(), // Применяем готовый TLS-конфиг "как есть" из опций (может быть nil)
 		}
 
 		// Если в конфигурации передан Username, накладываем поверх безопасный SASL слой
@@ -216,6 +225,7 @@ func (s *Sender) createTransport() *kafka.Transport {
 func (s *Sender) isRecoverableError(err error) bool {
 	var netErr net.Error
 	var kErr kafka.Error
+
 	return errors.As(err, &netErr) || errors.As(err, &kErr)
 }
 
@@ -274,4 +284,12 @@ func (s *Sender) prepareMessage(msg pkgamqp.Message) kafka.Message {
 		kafkaMsg.Headers = headers
 	}
 	return kafkaMsg
+}
+
+func (s *Sender) getTLS() *tls.Config {
+	if !utils.IsNil(s.opts.TLS) {
+		return s.opts.TLS
+	}
+
+	return nil
 }

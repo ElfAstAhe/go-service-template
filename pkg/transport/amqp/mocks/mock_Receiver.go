@@ -386,3 +386,47 @@ func (_c *MockReceiver_Release_Call[ReceiveOpts]) RunAndReturn(run func(ctx cont
 	_c.Call.Return(run)
 	return _c
 }
+
+// Stats provides a mock function for the type MockReceiver
+func (_mock *MockReceiver[ReceiveOpts]) Stats() amqp.ReceiverStats {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Stats")
+	}
+
+	var r0 amqp.ReceiverStats
+	if returnFunc, ok := ret.Get(0).(func() amqp.ReceiverStats); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(amqp.ReceiverStats)
+	}
+	return r0
+}
+
+// MockReceiver_Stats_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Stats'
+type MockReceiver_Stats_Call[ReceiveOpts any] struct {
+	*mock.Call
+}
+
+// Stats is a helper method to define mock.On call
+func (_e *MockReceiver_Expecter[ReceiveOpts]) Stats() *MockReceiver_Stats_Call[ReceiveOpts] {
+	return &MockReceiver_Stats_Call[ReceiveOpts]{Call: _e.mock.On("Stats")}
+}
+
+func (_c *MockReceiver_Stats_Call[ReceiveOpts]) Run(run func()) *MockReceiver_Stats_Call[ReceiveOpts] {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockReceiver_Stats_Call[ReceiveOpts]) Return(receiverStats amqp.ReceiverStats) *MockReceiver_Stats_Call[ReceiveOpts] {
+	_c.Call.Return(receiverStats)
+	return _c
+}
+
+func (_c *MockReceiver_Stats_Call[ReceiveOpts]) RunAndReturn(run func() amqp.ReceiverStats) *MockReceiver_Stats_Call[ReceiveOpts] {
+	_c.Call.Return(run)
+	return _c
+}

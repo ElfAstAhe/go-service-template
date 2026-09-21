@@ -31,6 +31,8 @@ var _ pkgamqp.Receiver[any] = (*Receiver)(nil)
 
 // NewReceiver — конструктор компонента Receiver. Накатывает переданные функциональные опции,
 // инициализирует логгеры и возвращает готовый к работе экземпляр.
+//
+//goland:noinspection GoUnusedExportedFunction
 func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 	clientOpts := NewReceiverOptions()
 	for _, opt := range opts {
@@ -113,6 +115,8 @@ func (r *Receiver) Reject(ctx context.Context, msg pkgamqp.Message, err error) e
 
 // Release обрабатывает временные сбои (например, моргание БД). В нашей конфигурации ручного управления оффсетами
 // мы просто ничего не делаем. Сообщение будет прочитано заново после ребалансировки или перезапуска пода.
+//
+//goland:noinspection GoUnusedParameter
 func (r *Receiver) Release(ctx context.Context, msg pkgamqp.Message) error {
 	r.logger.Warnf("Kafka release called: message will be re-read upon partition rebalance.")
 	return nil
@@ -157,6 +161,8 @@ func (r *Receiver) Close(ctx context.Context) error {
 func (r *Receiver) GetTargetName() string { return r.opts.TargetName }
 
 // getReceiver инициализирует или возвращает существующий линк ридера (Double-Checked Locking паттерн).
+//
+//goland:noinspection DuplicatedCode,GoUnusedParameter
 func (r *Receiver) getReceiver(ctx context.Context) (KafkaReceiverLink, error) {
 	// Первая быстрая проверка под RLock (Fast Path)
 	r.mu.RLock()
@@ -257,4 +263,37 @@ func (r *Receiver) createReaderConfig(dialer *kafka.Dialer) kafka.ReaderConfig {
 	}
 
 	return readerCfg
+}
+
+// Stats возвращает строго типизированный технический снимок состояния рантайма Kafka.
+// Заполняет блоки COMMON и KAFKA, оставляя поля AMQP пустыми (они автоматически скроются в JSON).
+func (r *Receiver) Stats() pkgamqp.ReceiverStats {
+	r.mu.RLock()
+	if utils.IsNil(r.reader) {
+		r.mu.RUnlock()
+		return pkgamqp.ReceiverStats{
+			BrokerType: "kafka",
+			TargetName: r.opts.TargetName,
+			Status:     "disconnected",
+		}
+	}
+
+	stats := r.reader.Stats()
+	r.mu.RUnlock()
+
+	return pkgamqp.ReceiverStats{
+		// COMMON
+		BrokerType:    "kafka",
+		TargetName:    stats.Topic,
+		Status:        "connected",
+		TotalMessages: uint64(stats.Messages),
+		TotalErrors:   uint64(stats.Errors),
+		Lag:           stats.Lag,
+
+		// KAFKA
+		Partition:     stats.Partition,
+		Offset:        stats.Offset,
+		QueueLength:   stats.QueueLength,
+		QueueCapacity: stats.QueueCapacity,
+	}
 }

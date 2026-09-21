@@ -12,16 +12,16 @@ import (
 
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
-	defaultSenderConnectTimeout                           = 10 * time.Second
-	defaultSenderShutdownTimeout                          = 15 * time.Second
-	defaultSenderPublishMaxTryAttempts                    = 2
-	defaultSenderPublishBaseRetryDelay                    = 100 * time.Millisecond
-	defaultSenderPublishMaxRetryDelay                     = 3 * time.Second
-	defaultSenderBatchSize                                = 100
-	defaultSenderBatchBytes            int64              = 1048576
-	defaultSenderBatchTimeout                             = 10 * time.Millisecond
-	defaultSenderWriteTimeout                             = 10 * time.Second
-	defaultSenderRequiredAcks          kafka.RequiredAcks = -1
+	defaultSenderConnectTimeout              = 10 * time.Second
+	defaultSenderShutdownTimeout             = 15 * time.Second
+	defaultSenderPublishMaxTryAttempts       = 2
+	defaultSenderPublishBaseRetryDelay       = 100 * time.Millisecond
+	defaultSenderPublishMaxRetryDelay        = 3 * time.Second
+	defaultSenderBatchSize                   = 100
+	defaultSenderBatchBytes            int64 = 1048576
+	defaultSenderBatchTimeout                = 10 * time.Millisecond
+	defaultSenderWriteTimeout                = 10 * time.Second
+	defaultSenderRequiredAcks                = kafka.RequiredAcks(kafka.RequireAll)
 )
 
 // Дефолтный адрес хоста для локальной разработки
@@ -33,7 +33,7 @@ type SenderOption func(*SenderOptions)
 type SenderOptions struct {
 	Brokers               []string
 	TargetName            string
-	WriterConf            *kafka.Writer // Дополнительные низкоуровневые кастомные опции библиотеки kafka-go
+	WriterCustomizerFunc  func(*kafka.Writer)
 	TLS                   *tls.Config
 	ConnectTimeout        time.Duration
 	ShutdownTimeout       time.Duration
@@ -141,11 +141,14 @@ func WithSenderTargetName(targetName string) SenderOption {
 	return func(so *SenderOptions) { so.TargetName = targetName }
 }
 
-func WithKafkaWriterConfig(cfg *kafka.Writer) SenderOption {
-	return func(so *SenderOptions) { so.WriterConf = cfg }
+// WithSenderWriterCustomizer позволяет конечной системе тонко настроить любые специфичные поля kafka.Writer
+func WithSenderWriterCustomizer(customizer func(*kafka.Writer)) SenderOption {
+	return func(so *SenderOptions) {
+		so.WriterCustomizerFunc = customizer
+	}
 }
 
-func WithKafkaSenderTLS(tls *tls.Config) SenderOption {
+func WithSenderTLS(tls *tls.Config) SenderOption {
 	return func(so *SenderOptions) { so.TLS = tls }
 }
 

@@ -2,17 +2,11 @@ package azure
 
 import (
 	"context"
-	"time"
 
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
-)
-
-const (
-	DefaultConnectTimeout  time.Duration = 5 * time.Second
-	DefaultShutdownTimeout time.Duration = 5 * time.Second
 )
 
 // AMQPSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,

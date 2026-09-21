@@ -10,6 +10,11 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
+const (
+	defaultConnectTimeout  time.Duration = 5 * time.Second
+	defaultShutdownTimeout time.Duration = 5 * time.Second
+)
+
 type ConnectorOption func(*ConnectorOptions)
 
 type ConnectorOptions struct {
@@ -24,8 +29,8 @@ type ConnectorOptions struct {
 
 func NewConnectorOptions() *ConnectorOptions {
 	return &ConnectorOptions{
-		ConnectTimeout:  DefaultConnectTimeout,
-		ShutdownTimeout: DefaultShutdownTimeout,
+		ConnectTimeout:  defaultConnectTimeout,
+		ShutdownTimeout: defaultShutdownTimeout,
 	}
 }
 

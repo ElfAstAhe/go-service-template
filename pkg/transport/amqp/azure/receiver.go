@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"maps"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -20,6 +22,10 @@ type Receiver struct {
 	logger logger.Logger
 	mu     sync.RWMutex
 	initMu sync.Mutex // Защищает ленивую инициализацию линка от Thundering Herd
+	// поля для сбора рантайм-метрики со стороны Azure
+	totalMessagesCounter atomic.Uint64 // Потокобезопасный счетчик успешных сообщений
+	totalErrorsCounter   atomic.Uint64 // Потокобезопасный счетчик сетевых сбоев/ошибок
+	connectedAt          time.Time     // Таймштамп момента успешного открытия линка
 }
 
 // Привязываем структуру к итоговому интерфейсу пакета абстракций
@@ -52,10 +58,12 @@ func (r *Receiver) Receive(ctx context.Context, receiveOpts *amqp.ReceiveOptions
 	// Читаем сообщение из сокета (блокирующий вызов библиотеки Azure)
 	azureMsg, err := receiverLink.Receive(ctx, receiveOpts)
 	if err != nil {
+		r.totalErrorsCounter.Add(1) // <-- ИНКРЕМЕНТ: Фиксируем ошибку сети
 		r.handleReceiverFailure(err)
-
 		return nil, errs.NewTlCommonError("Receive", "azure receiver incoming packet error", err)
 	}
+
+	r.totalMessagesCounter.Add(1) // <-- ИНКРЕМЕНТ: Успешно прочитали пакет
 
 	// Высокопроизводительная сборка Payload через copy без лишних микро-аллокаций в куче
 	var finalPayload []byte
@@ -190,12 +198,61 @@ func (r *Receiver) GetTargetName() string {
 	return r.opts.TargetName
 }
 
+// Stats возвращает строго типизированный снимок состояния рантайма Azure AMQP (Service Bus).
+// Заполняет блоки COMMON и AMQP, оставляя поля KAFKA пустыми (они скроются в JSON через omitempty).
+func (r *Receiver) Stats() pkgamqp.ReceiverStats {
+	r.mu.RLock()
+	// Если соединение или линк еще не инициализированы
+	if utils.IsNil(r.link) {
+		r.mu.RUnlock()
+		return pkgamqp.ReceiverStats{
+			BrokerType: "azure-amqp",
+			TargetName: r.opts.TargetName, // Имя Queue или Subscription
+			Status:     "disconnected",
+		}
+	}
+
+	// Извлекаем низкоуровневые метрики линка, если ваша обертка над azure/go-amqp их трекает.
+	// В AMQP 1.0 статус проверяется через контекст или состояние линка r.link.Closed()
+	status := "connected"
+	// if r.link.Closed() { status = "disconnected" }
+
+	// Считываем внутренние атомарные счетчики, которые ресивер обновляет при каждом успешном Receive() и ошибках
+	totalMessages := r.totalMessagesCounter.Load()
+	totalErrors := r.totalErrorsCounter.Load()
+
+	r.mu.RUnlock()
+
+	return pkgamqp.ReceiverStats{
+		// ====================================================================
+		// COMMON Specific
+		// ====================================================================
+		BrokerType:    "azure-amqp",
+		TargetName:    r.opts.TargetName,
+		Status:        status,
+		TotalMessages: totalMessages, // Счетчик успешно обработанных пакетов фреймворком
+		TotalErrors:   totalErrors,   // Счетчик сетевых сбоев/ошибок десериализации
+		Lag:           -1,            // В AMQP 1.0 клиент не знает лаг. Для точного лага нужен Azure Management API (REST/SDK)
+		ConnectedAt:   r.connectedAt,
+
+		// ====================================================================
+		// AMQP Specific
+		// ====================================================================
+		// PrefetchCount показывает, сколько сообщений брокер может отправить в буфер линка без подтверждения (Credits)
+		PrefetchCount: int64(r.opts.LinkCredit),
+
+		// Если архитектура позволяет узнать количество конкурирующих консьюмеров (опционально)
+		ConsumerCount: 1,
+	}
+}
+
 //goland:noinspection DuplicatedCode
 func (r *Receiver) getReceiver(ctx context.Context) (AMQPReceiverLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock за наносекунды
 	r.mu.RLock()
 	if !utils.IsNil(r.link) {
-		defer r.mu.RUnlock()
+		r.mu.RUnlock()
+
 		return r.link, nil
 	}
 	r.mu.RUnlock()
@@ -207,7 +264,8 @@ func (r *Receiver) getReceiver(ctx context.Context) (AMQPReceiverLink, error) {
 	// 3. Double-check
 	r.mu.RLock()
 	if !utils.IsNil(r.link) {
-		defer r.mu.RUnlock()
+		r.mu.RUnlock()
+
 		return r.link, nil
 	}
 	r.mu.RUnlock()
@@ -238,6 +296,7 @@ func (r *Receiver) getReceiver(ctx context.Context) (AMQPReceiverLink, error) {
 
 	r.mu.Lock()
 	r.link = newReceiver
+	r.connectedAt = time.Now()
 	r.mu.Unlock()
 
 	return newReceiver, nil
