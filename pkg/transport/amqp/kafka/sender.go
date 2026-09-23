@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"math/rand/v2"
 	"net"
 	"strings"
@@ -74,7 +75,8 @@ func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message, _ any) error 
 		}
 
 		kafkaMsg := s.prepareMessage(msg)
-		err = kafkaWriter.WriteMessages(ctx, kafkaMsg)
+
+		err = s.internalWriteMessages(ctx, kafkaWriter, kafkaMsg)
 		if err == nil {
 			return nil // Успешная отправка
 		}
@@ -132,7 +134,7 @@ func (s *Sender) GetTargetName() string {
 
 // getSender инициализирует или возвращает существующий линк врайтера (Double-Checked Locking паттерн).
 //
-//goland:noinspection GoUnusedParameter
+//goland:noinspection GoUnusedParameter,DuplicatedCode
 func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
 	// Первая быстрая проверка под RLock (Fast Path)
 	s.mu.RLock()
@@ -292,4 +294,28 @@ func (s *Sender) getTLS() *tls.Config {
 	}
 
 	return nil
+}
+
+// internalWriteMessages оборачивает вызов библиотеки в блок recover для перехвата рантайм-паник.
+func (s *Sender) internalWriteMessages(ctx context.Context, writer KafkaSenderLink, messages ...kafka.Message) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			s.logger.Errorf("Kafka writer critically panicked during WriteMessages: %v", r)
+			// Превращаем панику в читаемую ошибку для логов
+			var recoveryErr error
+			if e, ok := r.(error); ok {
+				recoveryErr = errs.NewCommonError("panic recovery", e)
+			} else {
+				recoveryErr = errs.NewCommonError(fmt.Sprintf("panic recovery [%v]", r), nil)
+			}
+
+			// Перехватываем панику, логируем её и превращаем в обычную ошибку компиляции/рантайма
+			err = errs.NewTlCommonError("internalWriteMessages", fmt.Sprintf("kafka writer panic recovery: %v", r), recoveryErr)
+		}
+	}()
+
+	// Вызываем нативный метод библиотеки, присваиваем результат вызова именованной переменной err перед возвратом
+	err = writer.WriteMessages(ctx, messages...)
+
+	return err
 }
