@@ -203,20 +203,18 @@ func (s *Sender) createWriter() *kafka.Writer {
 
 // createTransport настраивает сетевой транспортный слой, подставляя переданный TLS и накладывая SASL.
 func (s *Sender) createTransport() *kafka.Transport {
-	var transport *kafka.Transport
+	var transport = &kafka.Transport{
+		DialTimeout: s.opts.ConnectTimeout,
+		IdleTimeout: s.opts.IdleTimeout,
+		ClientID:    s.opts.ClientID,
+		TLS:         s.getTLS(),
+	}
 
-	// Если передан готовый TLS (mTLS, Custom CA) или включена SASL-авторизация, инициализируем транспорт
-	if !utils.IsNil(s.opts.TLS) || strings.TrimSpace(s.opts.Username) != "" {
-		transport = &kafka.Transport{
-			TLS: s.getTLS(), // Применяем готовый TLS-конфиг "как есть" из опций (может быть nil)
-		}
-
-		// Если в конфигурации передан Username, накладываем поверх безопасный SASL слой
-		if strings.TrimSpace(s.opts.Username) != "" {
-			transport.SASL = plain.Mechanism{
-				Username: s.opts.Username,
-				Password: s.opts.Password,
-			}
+	// Если в конфигурации передан Username, накладываем поверх безопасный SASL слой
+	if strings.TrimSpace(s.opts.Username) != "" {
+		transport.SASL = plain.Mechanism{
+			Username: s.opts.Username,
+			Password: s.opts.Password,
 		}
 	}
 

@@ -13,6 +13,7 @@ import (
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
 	defaultSenderConnectTimeout              = 10 * time.Second
+	defaultSenderIdleTimeout                 = 30 * time.Second
 	defaultSenderShutdownTimeout             = 15 * time.Second
 	defaultSenderPublishMaxTryAttempts       = 2
 	defaultSenderPublishBaseRetryDelay       = 100 * time.Millisecond
@@ -31,11 +32,13 @@ type SenderOption func(*SenderOptions)
 
 // SenderOptions содержит параметры рантайма для сборки компонента Sender.
 type SenderOptions struct {
+	ClientID              string
 	Brokers               []string
 	TargetName            string
 	WriterCustomizerFunc  func(*kafka.Writer)
 	TLS                   *tls.Config
 	ConnectTimeout        time.Duration
+	IdleTimeout           time.Duration
 	ShutdownTimeout       time.Duration
 	PublishMaxTryAttempts int
 	PublishBaseRetryDelay time.Duration
@@ -55,6 +58,7 @@ func NewSenderOptions() *SenderOptions {
 	return &SenderOptions{
 		Brokers:               defaultSenderBrokers,
 		ConnectTimeout:        defaultSenderConnectTimeout,
+		IdleTimeout:           defaultSenderIdleTimeout,
 		ShutdownTimeout:       defaultSenderShutdownTimeout,
 		PublishMaxTryAttempts: defaultSenderPublishMaxTryAttempts,
 		PublishBaseRetryDelay: defaultSenderPublishBaseRetryDelay,
@@ -133,6 +137,12 @@ func (so *SenderOptions) Validate() error {
 // Fluent API методы для сборки опций отправителя
 // ====================================================================
 
+func WithSenderClientID(clientID string) SenderOption {
+	return func(so *SenderOptions) {
+		so.ClientID = clientID
+	}
+}
+
 func WithSenderBrokers(brokers []string) SenderOption {
 	return func(so *SenderOptions) { so.Brokers = brokers }
 }
@@ -154,6 +164,10 @@ func WithSenderTLS(tls *tls.Config) SenderOption {
 
 func WithSenderConnectTimeout(timeout time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.ConnectTimeout = timeout }
+}
+
+func WithSenderIdleTimeout(timeout time.Duration) SenderOption {
+	return func(so *SenderOptions) { so.IdleTimeout = timeout }
 }
 
 func WithSenderShutdownTimeout(timeout time.Duration) SenderOption {

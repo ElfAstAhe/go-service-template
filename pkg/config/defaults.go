@@ -295,6 +295,9 @@ const (
 	// DefaultKafkaSenderConnectTimeout задает лимит времени на установку сетевого соединения с брокерами.
 	DefaultKafkaSenderConnectTimeout time.Duration = 10 * time.Second
 
+	// DefaultKafkaSenderIdleTimeout задаёт время простоя
+	DefaultKafkaSenderIdleTimeout time.Duration = 60 * time.Second
+
 	// DefaultKafkaSenderShutdownTimeout определяет время, выделяемое врайтеру на плавное закрытие.
 	// 15 секунд гарантируют успешный сброс (flushing) асинхронных буферов из памяти на диски брокеров при остановке пода.
 	DefaultKafkaSenderShutdownTimeout time.Duration = 15 * time.Second

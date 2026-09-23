@@ -18,6 +18,9 @@ type KafkaSenderConfig struct {
 	// ConnectTimeout задает ограничение по времени на установку сетевого соединения с брокерами.
 	ConnectTimeout time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"`
 
+	// IdleTimeout задаёт время простоя
+	IdleTimeout time.Duration `mapstructure:"idle_timeout" json:"idle_timeout,omitempty" yaml:"idle_timeout,omitempty"`
+
 	// ShutdownTimeout определяет время, выделяемое врайтеру на плавное закрытие (включая сброс буферов на диски брокеров).
 	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"`
 
@@ -47,6 +50,7 @@ func NewKafkaSenderConfig(
 	brokers []string,
 	targetName string,
 	connectTimeout time.Duration,
+	idleTimeout time.Duration,
 	shutdownTimeout time.Duration,
 	publishMaxTryAttempts int,
 	publishBaseRetryDelay time.Duration,
@@ -63,6 +67,7 @@ func NewKafkaSenderConfig(
 		Brokers:               brokers,
 		TargetName:            targetName,
 		ConnectTimeout:        connectTimeout,
+		IdleTimeout:           idleTimeout,
 		ShutdownTimeout:       shutdownTimeout,
 		PublishMaxTryAttempts: publishMaxTryAttempts,
 		PublishBaseRetryDelay: publishBaseRetryDelay,
@@ -83,6 +88,7 @@ func NewDefaultKafkaSenderConfig() *KafkaSenderConfig {
 		DefaultKafkaBrokers,
 		"",
 		DefaultKafkaSenderConnectTimeout,
+		DefaultKafkaSenderIdleTimeout,
 		DefaultKafkaSenderShutdownTimeout,
 		DefaultKafkaSenderPublishMaxTryAttempts,
 		DefaultKafkaSenderPublishBaseRetryDelay,
@@ -107,6 +113,9 @@ func (ksc *KafkaSenderConfig) Validate() error {
 	}
 	if !(ksc.ConnectTimeout > 0) {
 		return errs.NewConfigValidateError("kafka sender", "ConnectTimeout", "less than 0", nil)
+	}
+	if !(ksc.IdleTimeout > 0) {
+		return errs.NewConfigValidateError("kafka sender", "IdleTimeout", "less than 0", nil)
 	}
 	if !(ksc.ShutdownTimeout > 0) {
 		return errs.NewConfigValidateError("kafka sender", "ShutdownTimeout", "less than 0", nil)
