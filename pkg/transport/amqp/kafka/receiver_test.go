@@ -33,6 +33,7 @@ func TestReceiver_Receive_Success_And_MemoryAllocation(t *testing.T) {
 		opts: &ReceiverOptions{
 			TargetName: "tiny.auth.login.attempts",
 			GroupID:    "auth-group",
+			Partition:  -1, // Дефолт для режима группы
 		},
 		reader: mockLink,
 		logger: mockLogger,
@@ -97,5 +98,93 @@ func TestReceiver_Accept_Success(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
+	mockLink.AssertExpectations(t)
+}
+
+// 3. НОВЫЙ ТЕСТ: Успешное чтение в режиме Direct Consumer (Без GroupID, по конкретной партиции)
+func TestReceiver_Receive_Standalone_Success(t *testing.T) {
+	// Arrange
+	ctx := context.Background()
+	mockLink := mocks2.NewMockKafkaReceiverLink(t)
+	mockLogger := mocks.NewMockLogger(t)
+
+	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger).Maybe()
+
+	expectedKafkaMsg := kafka.Message{
+		Topic:     "tiny.auth.login.attempts",
+		Partition: 3, // Читаем конкретную 3-ю партицию
+		Value:     []byte(`{"status":"success"}`),
+	}
+	mockLink.On("FetchMessage", ctx).Return(expectedKafkaMsg, nil)
+
+	receiver := &Receiver{
+		opts: &ReceiverOptions{
+			TargetName: "tiny.auth.login.attempts",
+			GroupID:    "", // Пустая группа включает Standalone режим
+			Partition:  3,
+		},
+		reader: mockLink,
+		logger: mockLogger,
+	}
+
+	// Act
+	msg, err := receiver.Receive(ctx, nil)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, msg)
+	assert.Equal(t, `{"status":"success"}`, string(msg.GetPayload()))
+
+	mockLink.AssertExpectations(t)
+}
+
+// TestReceiver_Stats_Success проверяет маппинг рантайм-статистики методом Stats()
+// и корректность заполнения блоков COMMON и KAFKA.
+func TestReceiver_Stats_Success(t *testing.T) {
+	// Arrange
+	mockLink := mocks2.NewMockKafkaReceiverLink(t)
+
+	// Наполняем мок нативной плоской структуры ReaderStats библиотеки kafka-go
+	expectedLibraryStats := kafka.ReaderStats{
+		Topic:         "tiny.auth.login.attempts",
+		Partition:     "0,1,2,3",
+		Messages:      1500, // В kafka-go это int64
+		Errors:        2,    // В kafka-go это int64
+		Offset:        1050,
+		Lag:           15,
+		QueueLength:   5,
+		QueueCapacity: 100,
+	}
+	mockLink.On("Stats").Return(expectedLibraryStats)
+
+	receiver := &Receiver{
+		opts: &ReceiverOptions{
+			TargetName: "tiny.auth.login.attempts",
+		},
+		reader: mockLink,
+	}
+
+	// Act
+	receiverStats := receiver.Stats()
+
+	// Assert
+	// 1. Проверяем блок COMMON Specific
+	assert.Equal(t, "kafka", receiverStats.BrokerType)
+	assert.Equal(t, "tiny.auth.login.attempts", receiverStats.TargetName)
+	assert.Equal(t, "connected", receiverStats.Status)
+	assert.Equal(t, uint64(1500), receiverStats.TotalMessages) // Проверяем честный uint64
+	assert.Equal(t, uint64(2), receiverStats.TotalErrors)      // Проверяем честный uint64
+	assert.Equal(t, int64(15), receiverStats.Lag)
+
+	// 2. Проверяем блок KAFKA Specific
+	assert.Equal(t, "0,1,2,3", receiverStats.Partition)
+	assert.Equal(t, int64(1050), receiverStats.Offset)
+	assert.Equal(t, int64(5), receiverStats.QueueLength)
+	assert.Equal(t, int64(100), receiverStats.QueueCapacity)
+
+	// 3. Проверяем, что блоки AMQP Specific остались нулевыми (скроются в JSON через omitempty)
+	assert.Zero(t, receiverStats.ConsumerCount)
+	assert.Zero(t, receiverStats.PrefetchCount)
+
 	mockLink.AssertExpectations(t)
 }

@@ -223,30 +223,36 @@ func (r *Receiver) createDealer() *kafka.Dialer {
 
 func (r *Receiver) createReaderConfig(dialer *kafka.Dialer) kafka.ReaderConfig {
 	// Маппим строковую политику точки старта в системную константу типа int64 библиотеки kafka-go
-	var startOffset = kafka.FirstOffset
+	var startOffset int64 = kafka.FirstOffset
 	if strings.ToLower(r.opts.StartOffset) == "last" {
 		startOffset = kafka.LastOffset
 	}
 
 	// Формируем базовую конфигурацию ReaderConfig, утилизируя все наши новые таймауты координации
 	readerCfg := kafka.ReaderConfig{
-		Brokers:           r.opts.Brokers,
-		Topic:             r.opts.TargetName,
-		GroupID:           r.opts.GroupID,
-		Dialer:            dialer,
-		MinBytes:          r.opts.MinBytes,
-		MaxBytes:          r.opts.MaxBytes,
-		MaxWait:           r.opts.MaxWait,
-		HeartbeatInterval: r.opts.HeartbeatInterval, // Фоновый пинг брокера
-		SessionTimeout:    r.opts.SessionTimeout,    // Время жизни сессии воркера
-		RebalanceTimeout:  r.opts.RebalanceTimeout,  // Время на сдачу оффсетов при ребалансировке групп
-		ReadBatchTimeout:  r.opts.ReadBatchTimeout,  // Сетевой таймаут сокета на вычитку одного батча
-		MaxAttempts:       r.opts.MaxAttempts,       // Количество попыток сетевых ретраев
-		QueueCapacity:     r.opts.QueueCapacity,     // Размер внутреннего фонового буфера сообщений
-		StartOffset:       startOffset,              // Точка старта при отсутствии оффсетов
-		CommitInterval:    0,                        // Переводим коммиты строго в синхронный ручной режим
-		Logger:            r.kafkaLogger.InfoLogger(),
-		ErrorLogger:       r.kafkaLogger.ErrorLogger(),
+		Brokers:          r.opts.Brokers,
+		Topic:            r.opts.TargetName,
+		Dialer:           dialer,
+		MinBytes:         r.opts.MinBytes,
+		MaxBytes:         r.opts.MaxBytes,
+		MaxWait:          r.opts.MaxWait,
+		ReadBatchTimeout: r.opts.ReadBatchTimeout, // Сетевой таймаут сокета на вычитку одного батча
+		MaxAttempts:      r.opts.MaxAttempts,      // Количество попыток сетевых ретраев
+		QueueCapacity:    r.opts.QueueCapacity,    // Размер внутреннего фонового буфера сообщений
+		StartOffset:      startOffset,             // Точка старта при отсутствии оффсетов
+		CommitInterval:   0,                       // Переводим коммиты строго в синхронный ручной режим
+		Logger:           r.kafkaLogger.InfoLogger(),
+		ErrorLogger:      r.kafkaLogger.ErrorLogger(),
+	}
+
+	// ХОД КОНЁМ: Разделяем параметры в зависимости от выбранного режима (Consumer Group vs Direct Partition)
+	if strings.TrimSpace(r.opts.GroupID) != "" {
+		readerCfg.GroupID = r.opts.GroupID
+		readerCfg.HeartbeatInterval = r.opts.HeartbeatInterval // Фоновый пинг брокера
+		readerCfg.SessionTimeout = r.opts.SessionTimeout       // Время жизни сессии воркера
+		readerCfg.RebalanceTimeout = r.opts.RebalanceTimeout   // Время на сдачу оффсетов при ребалансировке групп
+	} else {
+		readerCfg.Partition = r.opts.Partition // Переключаемся на чтение конкретной партиции напрямую
 	}
 
 	// Если разработчик передал кастомный низкоуровневый ReaderConf, берем его за основу,
@@ -255,11 +261,19 @@ func (r *Receiver) createReaderConfig(dialer *kafka.Dialer) kafka.ReaderConfig {
 		readerCfg = *r.opts.ReaderConf
 		readerCfg.Brokers = r.opts.Brokers
 		readerCfg.Topic = r.opts.TargetName
-		readerCfg.GroupID = r.opts.GroupID
 		readerCfg.Dialer = dialer
 		readerCfg.CommitInterval = 0
 		readerCfg.Logger = r.kafkaLogger.InfoLogger()
 		readerCfg.ErrorLogger = r.kafkaLogger.ErrorLogger()
+
+		// Повторяем разделение режимов для кастомного ReaderConf, защищая логику от затирания
+		if strings.TrimSpace(r.opts.GroupID) != "" {
+			readerCfg.GroupID = r.opts.GroupID
+			readerCfg.Partition = 0 // Сбрасываем в дефолт библиотеки, так как работает режим группы
+		} else {
+			readerCfg.GroupID = "" // Сбрасываем группу, так как работает Direct consumer
+			readerCfg.Partition = r.opts.Partition
+		}
 	}
 
 	return readerCfg

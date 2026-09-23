@@ -37,6 +37,7 @@ type ReceiverOptions struct {
 	Brokers           []string            // Прямой список хостов брокеров (вместо старого Connector)
 	TargetName        string              // Имя топика (Topic)
 	GroupID           string              // Идентификатор Consumer Group
+	Partition         int                 // идентификатор Direct consumer
 	ReaderConf        *kafka.ReaderConfig // Дополнительные низкоуровневые кастомные опции библиотеки kafka-go
 	TLS               *tls.Config
 	ConnectTimeout    time.Duration
@@ -60,6 +61,8 @@ type ReceiverOptions struct {
 func NewReceiverOptions() *ReceiverOptions {
 	return &ReceiverOptions{
 		Brokers:           defaultReceiverBrokers,
+		GroupID:           "",
+		Partition:         -1,
 		ConnectTimeout:    defaultReceiverConnectTimeout,
 		ShutdownTimeout:   defaultReceiverShutdownTimeout,
 		MinBytes:          defaultReceiverMinBytes,
@@ -85,11 +88,19 @@ func (ro *ReceiverOptions) Validate() error {
 	if strings.TrimSpace(ro.TargetName) == "" {
 		return errs.NewTlCommonError("Validate", "target name (topic) cannot be empty", nil)
 	}
-	if strings.TrimSpace(ro.GroupID) == "" {
-		return errs.NewTlCommonError("Validate", "group id (consumer group) cannot be empty", nil)
-	}
 	if ro.Logger == nil {
 		return errs.NewTlCommonError("Validate", "logger is required and cannot be nil", nil)
+	}
+
+	// ИСПРАВЛЕНО: Кросс-валидация режимов (Consumer Group vs Direct Partition Assignment)
+	hasGroup := strings.TrimSpace(ro.GroupID) != ""
+	hasPartition := ro.Partition >= 0
+
+	if !hasGroup && !hasPartition {
+		return errs.NewTlCommonError("Validate", "either GroupID must be set or Partition must be >= 0 for reader initialization", nil)
+	}
+	if hasGroup && hasPartition {
+		return errs.NewTlCommonError("Validate", "GroupID and Partition are mutually exclusive options and cannot be used together", nil)
 	}
 
 	// 2. Проверка базовых сетевых таймаутов
@@ -114,35 +125,34 @@ func (ro *ReceiverOptions) Validate() error {
 		return errs.NewTlCommonError("Validate", "MaxWait (broker poll wait) must be greater than 0", nil)
 	}
 
-	// 4. Проверка таймаутов координации группы (Новые поля)
-	if ro.HeartbeatInterval <= 0 {
-		return errs.NewTlCommonError("Validate", "HeartbeatInterval must be greater than 0", nil)
-	}
-	if ro.SessionTimeout <= 0 {
-		return errs.NewTlCommonError("Validate", "SessionTimeout must be greater than 0", nil)
-	}
-	if ro.RebalanceTimeout <= 0 {
-		return errs.NewTlCommonError("Validate", "RebalanceTimeout must be greater than 0", nil)
+	// 4. Проверка таймаутов координации группы (ИСПРАВЛЕНО: проверяем только для режима Consumer Group)
+	if hasGroup {
+		if ro.HeartbeatInterval <= 0 {
+			return errs.NewTlCommonError("Validate", "HeartbeatInterval must be greater than 0", nil)
+		}
+		if ro.SessionTimeout <= 0 {
+			return errs.NewTlCommonError("Validate", "SessionTimeout must be greater than 0", nil)
+		}
+		if ro.RebalanceTimeout <= 0 {
+			return errs.NewTlCommonError("Validate", "RebalanceTimeout must be greater than 0", nil)
+		}
+		// Золотое правило Kafka: сессия должна пережить как минимум 3 пропущенных пинга
+		if ro.SessionTimeout < ro.HeartbeatInterval*3 {
+			errMsg := fmt.Sprintf("session timeout (%v) must be at least 3 times greater than heartbeat interval (%v)", ro.SessionTimeout, ro.HeartbeatInterval)
+			return errs.NewTlCommonError("Validate", errMsg, nil)
+		}
 	}
 
-	// Золотое правило Kafka: сессия должна пережить как минимум 3 пропущенных пинга
-	if ro.SessionTimeout < ro.HeartbeatInterval*3 {
-		errMsg := fmt.Sprintf("session timeout (%v) must be at least 3 times greater than heartbeat interval (%v)", ro.SessionTimeout, ro.HeartbeatInterval)
-		return errs.NewTlCommonError("Validate", errMsg, nil)
-	}
-
-	// 5. Проверка сетевого таймаута сокета на чтение батча (Новое поле)
+	// 5. Проверка сетевого таймаута сокета на чтение батча
 	if ro.ReadBatchTimeout <= 0 {
 		return errs.NewTlCommonError("Validate", "ReadBatchTimeout must be greater than 0", nil)
 	}
-	// Сокетный таймаут ОБЯЗАН быть больше, чем время ожидания брокера MaxWait,
-	// иначе клиент закроет соединение по таймауту до того, как брокер успеет ответить при пустом топике
 	if ro.ReadBatchTimeout <= ro.MaxWait {
 		errMsg := fmt.Sprintf("ReadBatchTimeout (%v) must be strictly greater than MaxWait (%v) to prevent socket EOF on low-volume topics", ro.ReadBatchTimeout, ro.MaxWait)
 		return errs.NewTlCommonError("Validate", errMsg, nil)
 	}
 
-	// 6. Проверка параметров производительности (Новые поля)
+	// 6. Проверка параметров производительности
 	if ro.MaxAttempts <= 0 {
 		return errs.NewTlCommonError("Validate", "MaxAttempts (reconnect attempts) must be at least 1", nil)
 	}
@@ -150,7 +160,7 @@ func (ro *ReceiverOptions) Validate() error {
 		return errs.NewTlCommonError("Validate", "QueueCapacity (internal pre-fetch buffer) must be greater than 0", nil)
 	}
 
-	// 7. Валидация политики точки старта (Новое поле)
+	// 7. Валидация политики точки старта
 	startOffsetLower := strings.ToLower(strings.TrimSpace(ro.StartOffset))
 	if startOffsetLower != "first" && startOffsetLower != "last" {
 		errMsg := fmt.Sprintf("invalid StartOffset '%s', allowed values are strictly 'first' or 'last'", ro.StartOffset)
@@ -174,6 +184,12 @@ func WithReceiverTargetName(targetName string) ReceiverOption {
 
 func WithReceiverGroupID(groupID string) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.GroupID = groupID }
+}
+
+func WithReceiverPartition(partition int) ReceiverOption {
+	return func(ro *ReceiverOptions) {
+		ro.Partition = partition
+	}
 }
 
 func WithKafkaReaderConfig(cfg *kafka.ReaderConfig) ReceiverOption {

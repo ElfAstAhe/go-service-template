@@ -18,6 +18,9 @@ type KafkaReceiverConfig struct {
 	// GroupID — идентификатор группы потребителей (Consumer Group). Ключевой параметр Kafka для балансировки партиций.
 	GroupID string `mapstructure:"group_id" json:"group_id,omitempty" yaml:"group_id,omitempty"`
 
+	// Partition - идентификация партиции потребителя (Direct Consumer)
+	Partition int `mapstructure:"partition" json:"partition,omitempty" yaml:"partition,omitempty"`
+
 	// ConnectTimeout — таймаут на первичное подключение к координатору группы брокера.
 	ConnectTimeout time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"`
 
@@ -34,9 +37,8 @@ type KafkaReceiverConfig struct {
 	MaxWait time.Duration `mapstructure:"max_wait" json:"max_wait,omitempty" yaml:"max_wait,omitempty"`
 
 	// Безопасность и Аутентификация (SASL/PLAIN + TLS)
-	Username           string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
-	Password           string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
-	InsecureConnection bool   `mapstructure:"insecure_connection" json:"insecure_connection,omitempty" yaml:"insecure_connection,omitempty"`
+	Username string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
+	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 
 	// Расширенные таймауты координации группы и сокетов
 	HeartbeatInterval time.Duration `mapstructure:"heartbeat_interval" json:"heartbeat_interval,omitempty" yaml:"heartbeat_interval,omitempty"`
@@ -52,30 +54,44 @@ type KafkaReceiverConfig struct {
 
 // NewKafkaReceiverConfig — полный конструктор структуры конфигурации получателя.
 func NewKafkaReceiverConfig(
-	brokers []string, targetName, groupID string, connectTimeout, shutdownTimeout time.Duration,
-	minBytes, maxBytes int, maxWait time.Duration, username, password string, insecureConnection bool,
-	heartbeatInterval, sessionTimeout, rebalanceTimeout, readTimeout time.Duration,
-	maxAttempts, queueCapacity int, startOffset string,
+	brokers []string,
+	targetName,
+	groupID string,
+	partition int,
+	connectTimeout,
+	shutdownTimeout time.Duration,
+	minBytes int,
+	maxBytes int,
+	maxWait time.Duration,
+	username string,
+	password string,
+	heartbeatInterval time.Duration,
+	sessionTimeout time.Duration,
+	rebalanceTimeout time.Duration,
+	readTimeout time.Duration,
+	maxAttempts int,
+	queueCapacity int,
+	startOffset string,
 ) *KafkaReceiverConfig {
 	return &KafkaReceiverConfig{
-		Brokers:            brokers,
-		TargetName:         targetName,
-		GroupID:            groupID,
-		ConnectTimeout:     connectTimeout,
-		ShutdownTimeout:    shutdownTimeout,
-		MinBytes:           minBytes,
-		MaxBytes:           maxBytes,
-		MaxWait:            maxWait,
-		Username:           username,
-		Password:           password,
-		InsecureConnection: insecureConnection,
-		HeartbeatInterval:  heartbeatInterval,
-		SessionTimeout:     sessionTimeout,
-		RebalanceTimeout:   rebalanceTimeout,
-		ReadTimeout:        readTimeout,
-		MaxAttempts:        maxAttempts,
-		QueueCapacity:      queueCapacity,
-		StartOffset:        startOffset,
+		Brokers:           brokers,
+		TargetName:        targetName,
+		GroupID:           groupID,
+		Partition:         partition,
+		ConnectTimeout:    connectTimeout,
+		ShutdownTimeout:   shutdownTimeout,
+		MinBytes:          minBytes,
+		MaxBytes:          maxBytes,
+		MaxWait:           maxWait,
+		Username:          username,
+		Password:          password,
+		HeartbeatInterval: heartbeatInterval,
+		SessionTimeout:    sessionTimeout,
+		RebalanceTimeout:  rebalanceTimeout,
+		ReadTimeout:       readTimeout,
+		MaxAttempts:       maxAttempts,
+		QueueCapacity:     queueCapacity,
+		StartOffset:       startOffset,
 	}
 }
 
@@ -84,6 +100,7 @@ func NewDefaultKafkaReceiverConfig() *KafkaReceiverConfig {
 		DefaultKafkaBrokers,
 		"",
 		"",
+		-1,
 		DefaultKafkaReceiverConnectTimeout,
 		DefaultKafkaReceiverShutdownTimeout,
 		DefaultKafkaReceiverMinBytes,
@@ -91,7 +108,6 @@ func NewDefaultKafkaReceiverConfig() *KafkaReceiverConfig {
 		DefaultKafkaReceiverMaxWait,
 		"",
 		"",
-		DefaultKafkaReceiverInsecureConnection,
 		DefaultKafkaReceiverHeartbeatInterval,
 		DefaultKafkaReceiverSessionTimeout,
 		DefaultKafkaReceiverRebalanceTimeout,
@@ -110,8 +126,16 @@ func (krc *KafkaReceiverConfig) Validate() error {
 	if strings.TrimSpace(krc.TargetName) == "" {
 		return errs.NewConfigValidateError("kafka receiver", "TargetName", "empty (required parameter for start)", nil)
 	}
-	if strings.TrimSpace(krc.GroupID) == "" {
-		return errs.NewConfigValidateError("kafka receiver", "GroupID", "empty (required parameter for start)", nil)
+
+	hasGroup := strings.TrimSpace(krc.GroupID) != ""
+	hasPartition := krc.Partition >= 0 // ИСПРАВЛЕНО: Любое значение >= 0 означает, что партиция явно указана
+
+	// Проверка XOR: должно быть заполнено ровно одно из двух
+	if !hasGroup && !hasPartition {
+		return errs.NewConfigValidateError("kafka receiver", "GroupID/Partition", "either GroupID must be set or Partition must be >= 0", nil)
+	}
+	if hasGroup && hasPartition {
+		return errs.NewConfigValidateError("kafka receiver", "GroupID/Partition", "GroupID and Partition are mutually exclusive options", nil)
 	}
 	if !(krc.ConnectTimeout > 0) {
 		return errs.NewConfigValidateError("kafka receiver", "ConnectTimeout", "less than or equal to 0", nil)
@@ -122,9 +146,17 @@ func (krc *KafkaReceiverConfig) Validate() error {
 	if krc.MinBytes <= 0 || krc.MaxBytes <= 0 {
 		return errs.NewConfigValidateError("kafka receiver", "MinBytes/MaxBytes", "must be greater than 0", nil)
 	}
-	// Золотое правило Kafka: сессионный таймаут должен вмещать минимум 3 попытки отправки heartbeat пингов
-	if krc.SessionTimeout < krc.HeartbeatInterval*3 {
+	// Золотое правило Kafka (только для режима группы): сессионный таймаут должен вмещать минимум 3 попытки отправки heartbeat пингов
+	if hasGroup && krc.SessionTimeout < krc.HeartbeatInterval*3 {
 		return errs.NewConfigValidateError("kafka receiver", "SessionTimeout", "must be at least 3 times greater than heartbeat interval", nil)
 	}
+	if krc.ReadTimeout <= krc.MaxWait {
+		return errs.NewConfigValidateError("kafka receiver", "ReadTimeout", "must be strictly greater than MaxWait to prevent socket EOF on low-volume topics", nil)
+	}
+	startOffsetLower := strings.ToLower(strings.TrimSpace(krc.StartOffset))
+	if startOffsetLower != "first" && startOffsetLower != "last" {
+		return errs.NewConfigValidateError("kafka receiver", "StartOffset", "must be strictly 'first' or 'last'", nil)
+	}
+
 	return nil
 }
