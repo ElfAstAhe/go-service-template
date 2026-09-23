@@ -309,10 +309,7 @@ const (
 	// DefaultKafkaSenderPublishMaxRetryDelay — жесткий верхний лимит задержки между повторными попытками отправки.
 	DefaultKafkaSenderPublishMaxRetryDelay time.Duration = 3 * time.Second
 
-	// DefaultKafkaSenderInsecureConnection отключает строгую проверку SSL/TLS сертификатов брокеров (InsecureSkipVerify).
-	DefaultKafkaSenderInsecureConnection bool = false
-
-	// НОВЫЕ ПОЛЯ ПРОИЗВОДИТЕЛЬНОСТИ (Асинхронный батчинг)
+	// ПОЛЯ ПРОИЗВОДИТЕЛЬНОСТИ (Асинхронный батчинг)
 
 	// DefaultKafkaSenderBatchSize — лимит количества сообщений в локальном буфере перед отправкой пачки.
 	DefaultKafkaSenderBatchSize int = 100
@@ -352,9 +349,6 @@ const (
 	// DefaultKafkaReceiverMaxWait — максимальное время ожидания брокера, если объем данных еще не достиг лимита MinBytes.
 	// Значение 500ms на dev/test экономит ресурсы CPU сервера, предотвращая «горячий цикл» пустых запросов.
 	DefaultKafkaReceiverMaxWait time.Duration = 500 * time.Millisecond
-
-	// DefaultKafkaReceiverInsecureConnection отключает проверку SSL/TLS сертификатов брокеров на стороне получателя.
-	DefaultKafkaReceiverInsecureConnection bool = false
 
 	// DefaultKafkaReceiverHeartbeatInterval — частота фонового пинга ("я жив") к координатору группы.
 	DefaultKafkaReceiverHeartbeatInterval time.Duration = 3 * time.Second

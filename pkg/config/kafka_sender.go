@@ -31,9 +31,8 @@ type KafkaSenderConfig struct {
 	PublishMaxRetryDelay time.Duration `mapstructure:"publish_max_retry_delay" json:"publish_max_retry_delay" yaml:"publish_max_retry_delay"`
 
 	// Безопасность и Аутентификация (SASL/PLAIN + TLS)
-	Username           string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
-	Password           string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
-	InsecureConnection bool   `mapstructure:"insecure_connection" json:"insecure_connection,omitempty" yaml:"insecure_connection,omitempty"`
+	Username string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
+	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 
 	// Тонкие настройки асинхронного пакетирования (Батчинга) рантайма kafka-go
 	BatchSize    int           `mapstructure:"batch_size" json:"batch_size,omitempty" yaml:"batch_size,omitempty"`
@@ -54,7 +53,6 @@ func NewKafkaSenderConfig(
 	publishMaxRetryDelay time.Duration,
 	username string,
 	password string,
-	insecureConnection bool,
 	batchSize int,
 	batchBytes int,
 	batchTimeout time.Duration,
@@ -71,7 +69,6 @@ func NewKafkaSenderConfig(
 		PublishMaxRetryDelay:  publishMaxRetryDelay,
 		Username:              username,
 		Password:              password,
-		InsecureConnection:    insecureConnection,
 		BatchSize:             batchSize,
 		BatchBytes:            batchBytes,
 		BatchTimeout:          batchTimeout,
@@ -80,6 +77,7 @@ func NewKafkaSenderConfig(
 	}
 }
 
+// NewDefaultKafkaSenderConfig конструктор структуры конфигурации со значениями по умолчанию
 func NewDefaultKafkaSenderConfig() *KafkaSenderConfig {
 	return NewKafkaSenderConfig(
 		DefaultKafkaBrokers,
@@ -91,7 +89,6 @@ func NewDefaultKafkaSenderConfig() *KafkaSenderConfig {
 		DefaultKafkaSenderPublishMaxRetryDelay,
 		"",
 		"",
-		DefaultKafkaSenderInsecureConnection,
 		DefaultKafkaSenderBatchSize,
 		DefaultKafkaSenderBatchBytes,
 		DefaultKafkaSenderBatchTimeout,
