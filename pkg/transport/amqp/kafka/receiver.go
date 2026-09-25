@@ -205,6 +205,7 @@ func (r *Receiver) getDealerTLS() *tls.Config {
 func (r *Receiver) createDealer() *kafka.Dialer {
 	// Настраиваем сетевой Dialer сокета (уровень TCP/TLS соединений)
 	dialer := &kafka.Dialer{
+		ClientID:  r.opts.ClientID,
 		Timeout:   r.opts.ConnectTimeout,
 		DualStack: true,
 		TLS:       r.getDealerTLS(),
