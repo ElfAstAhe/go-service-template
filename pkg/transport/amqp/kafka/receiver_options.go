@@ -34,6 +34,7 @@ type ReceiverOption func(*ReceiverOptions)
 
 // ReceiverOptions содержит параметры рантайма для сборки компонента Receiver.
 type ReceiverOptions struct {
+	ClientID          string
 	Brokers           []string            // Прямой список хостов брокеров (вместо старого Connector)
 	TargetName        string              // Имя топика (Topic)
 	GroupID           string              // Идентификатор Consumer Group
@@ -173,6 +174,12 @@ func (ro *ReceiverOptions) Validate() error {
 // ====================================================================
 // Fluent API методы для сборки опций получателя
 // ====================================================================
+
+func WithReceiverClientID(clientID string) ReceiverOption {
+	return func(ro *ReceiverOptions) {
+		ro.ClientID = clientID
+	}
+}
 
 func WithReceiverBrokers(brokers []string) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.Brokers = brokers }
