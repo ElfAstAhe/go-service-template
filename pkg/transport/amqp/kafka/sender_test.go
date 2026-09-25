@@ -63,7 +63,7 @@ func TestSender_Publish_Success(t *testing.T) {
 	}
 
 	// Act
-	err := sender.Publish(ctx, transportMsg, nil)
+	err := sender.Publish(ctx, transportMsg)
 
 	// Assert
 	assert.NoError(t, err)
@@ -108,7 +108,7 @@ func TestSender_Publish_RetryAndFallbackOnNetworkError(t *testing.T) {
 	}
 
 	// Act
-	err := sender.Publish(ctx, transportMsg, nil)
+	err := sender.Publish(ctx, transportMsg)
 
 	// Assert
 	// Ожидаем ошибку, так как все попытки исчерпаны

@@ -27,7 +27,7 @@ type Receiver struct {
 }
 
 // Гарантируем соответствие общему интерфейсу amqp.Receiver на этапе компиляции.
-var _ pkgamqp.Receiver[any] = (*Receiver)(nil)
+var _ pkgamqp.Receiver = (*Receiver)(nil)
 
 // NewReceiver — конструктор компонента Receiver. Накатывает переданные функциональные опции,
 // инициализирует логгеры и возвращает готовый к работе экземпляр.
@@ -54,7 +54,7 @@ func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 
 // Receive блокирует текущий поток и дожидается поступления нового сообщения из Kafka.
 // Возвращает независимый конверт сообщения pkgamqp.Message.
-func (r *Receiver) Receive(ctx context.Context, _ any) (pkgamqp.Message, error) {
+func (r *Receiver) Receive(ctx context.Context) (pkgamqp.Message, error) {
 	// Получаем или лениво инициализируем живой инстанс ридера
 	receiverLink, err := r.getReceiver(ctx)
 	if err != nil {
@@ -223,7 +223,7 @@ func (r *Receiver) createDealer() *kafka.Dialer {
 
 func (r *Receiver) createReaderConfig(dialer *kafka.Dialer) kafka.ReaderConfig {
 	// Маппим строковую политику точки старта в системную константу типа int64 библиотеки kafka-go
-	var startOffset int64 = kafka.FirstOffset
+	var startOffset = kafka.FirstOffset
 	if strings.ToLower(r.opts.StartOffset) == "last" {
 		startOffset = kafka.LastOffset
 	}

@@ -26,7 +26,8 @@ type Sender struct {
 }
 
 // Привязываем структуру к итоговому интерфейсу пакета абстракций
-var _ pkgamqp.Sender[*amqp.SendOptions] = (*Sender)(nil)
+var _ pkgamqp.Sender = (*Sender)(nil)
+var _ AMQPSender = (*Sender)(nil)
 
 func NewSender(opts ...SenderOption) (*Sender, error) {
 	clientOpts := NewSenderOptions() // Все базовые дефолты таймаутов и бэккоффов внутри
@@ -45,12 +46,22 @@ func NewSender(opts ...SenderOption) (*Sender, error) {
 	}, nil
 }
 
-func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message, opts *amqp.SendOptions) error {
+func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message) error {
+	return s.PublishWithOpts(ctx, msg, s.getSendOpts())
+}
+
+func (s *Sender) PublishWithOpts(ctx context.Context, msg pkgamqp.Message, sendOpts *amqp.SendOptions) error {
 	s.logger.Debug("publish started")
 	defer s.logger.Debug("publish finished")
 
 	if utils.IsNil(msg) {
 		return errs.NewTlCommonError("Publish", "cannot publish nil message", nil)
+	}
+
+	// опции
+	opts := sendOpts
+	if utils.IsNil(opts) {
+		opts = s.getSendOpts()
 	}
 
 	for attempt := 1; attempt <= s.opts.PublishMaxTryAttempts; attempt++ {
@@ -142,7 +153,8 @@ func (s *Sender) getSender(ctx context.Context) (AMQPSenderLink, error) {
 	// 1. Быстрый путь (Fast Path): если линк жив, отдаем под RLock
 	s.mu.RLock()
 	if !utils.IsNil(s.sender) {
-		defer s.mu.RUnlock()
+		s.mu.RUnlock()
+
 		return s.sender, nil
 	}
 	s.mu.RUnlock()
@@ -154,7 +166,7 @@ func (s *Sender) getSender(ctx context.Context) (AMQPSenderLink, error) {
 	// 3. Double-check
 	s.mu.RLock()
 	if !utils.IsNil(s.sender) {
-		defer s.mu.RUnlock()
+		s.mu.RUnlock()
 
 		return s.sender, nil
 	}
@@ -189,36 +201,47 @@ func (s *Sender) getSender(ctx context.Context) (AMQPSenderLink, error) {
 	return newSender, nil
 }
 
+// handleSendError анализирует причину сбоя при отправке сообщения.
+// Если ошибка сетевая (Link/Session/Connection), метод атомарно сбрасывает локальный линк
+// и делегирует инвалидацию общему Connector, подготавливая ленивый реконнект для следующей попытки.
 func (s *Sender) handleSendError(attempt int, err error) error {
 	var linkErr *amqp.LinkError
 	var sessionErr *amqp.SessionError
 	var connErr *amqp.ConnError
 
+	// Кастим ошибку ко всем возможным уровням сетевых сбоев спецификации AMQP 1.0
 	isNetworkErr := errors.As(err, &linkErr) || errors.As(err, &sessionErr) || errors.As(err, &connErr)
 
 	if isNetworkErr {
 		if attempt < s.opts.PublishMaxTryAttempts {
 			s.logger.Warnf("AMQP network failure detected on attempt %d (%v). Notifying connector...", attempt, err)
 
-			// ИСПРАВЛЕНИЕ: Передаем ошибку в общий коннектор. Он сам разберется, какой уровень инвалидировать.
+			// Оповещаем глобальный коннектор. Он сам определит масштаб бедствия (сессия или весь сокет)
 			s.opts.Connector.Invalidate(err)
 
 			s.mu.Lock()
-			s.sender = nil // В любом случае сбрасываем локальный линк
+			s.sender = nil // Обнуляем локальный линк, провоцируя ленивое пересоздание в getSender
 			s.mu.Unlock()
-			return nil
+			return nil // Возвращаем nil, разрешая циклу Publish пойти на следующий ретрай
 		}
 
 		return errs.NewTlCommonError("Publish", fmt.Sprintf("azure sender network error persisted after retry %d", attempt), err)
 	}
 
+	// Любая не-сетевая ошибка (например, нарушение прав или битый payload) считается фатальной
 	return errs.NewTlCommonError("Publish", "azure sender unrecoverable send error", err)
 }
 
+// waitBackoff рассчитывает паузу перед повторной попыткой по формуле экспоненциального бэкоффа
+// и подмешивает к ней случайный джиттер (+/- 20%). Это размывает пиковую нагрузку на брокер
+// от множества упавших подов (защита от Thundering Herd эффекта).
+//
 //goland:noinspection DuplicatedCode
 func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
+	// Сдвиг битов ограничен, чтобы избежать переполнения типов (Overflow)
 	shift := min(uint(attempt-1), 31)
 
+	// Формула: BaseDelay * 2^(attempt-1)
 	delay := s.opts.PublishBaseRetryDelay * (1 << shift)
 	if delay > s.opts.PublishMaxRetryDelay || delay <= 0 {
 		delay = s.opts.PublishMaxRetryDelay
@@ -226,6 +249,7 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 
 	delayMs := int(delay / time.Millisecond)
 
+	// Если задержка существенна, подмешиваем 20%-й случайный джиттер
 	if delayMs > 5 {
 		maxJitterMs := delayMs / 5
 		jitterMs := rand.IntN(maxJitterMs)
@@ -244,19 +268,25 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 	defer timer.Stop()
 
 	select {
-	case <-timer.C:
-	case <-ctx.Done():
+	case <-timer.C: // Пауза успешно выдержана
+	case <-ctx.Done(): // Контекст отменился до истечения таймера (плавный выход)
 	}
 }
 
+// prepareMessage упаковывает абстрактное сообщение фреймворка в нативный конверт библиотеки go-amqp.
+// Переносит payload, системные ApplicationProperties и сохраняет нативные AMQP заголовки (Header).
 func (s *Sender) prepareMessage(msg pkgamqp.Message) *amqp.Message {
 	azureMsg := amqp.NewMessage(msg.GetPayload())
 	azureMsg.Properties = &amqp.MessageProperties{
 		ContentType: &jsonContentType,
 	}
+
+	// Маппим пользовательские свойства (метаданные/заголовки)
 	if len(msg.GetProperties()) > 0 {
 		azureMsg.ApplicationProperties = msg.GetProperties()
 	}
+
+	// Если пришел наш родной конверт Azure — извлекаем и сохраняем низкоуровневые AMQP-заголовки
 	if msgImpl, ok := msg.(*Message); ok {
 		if !utils.IsNil(msgImpl.Header) {
 			azureMsg.Header = msgImpl.Header
@@ -264,4 +294,21 @@ func (s *Sender) prepareMessage(msg pkgamqp.Message) *amqp.Message {
 	}
 
 	return azureMsg
+}
+
+// getSendOpts возвращает кастомные опции публикации, либо откатывается на дефолты брокера.
+func (s *Sender) getSendOpts() *amqp.SendOptions {
+	if utils.IsNil(s.opts.SendOpts) {
+		return s.buildDefaultOpts()
+	}
+
+	return s.opts.SendOpts
+}
+
+// buildDefaultOpts формирует безопасные дефолты публикации.
+// Выставляет Settled = true (режим At-Most-Once / Fire-and-Forget) для максимальной пропускной способности.
+func (s *Sender) buildDefaultOpts() *amqp.SendOptions {
+	return &amqp.SendOptions{
+		Settled: true,
+	}
 }

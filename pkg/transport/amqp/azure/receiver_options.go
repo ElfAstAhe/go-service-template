@@ -22,6 +22,7 @@ type ReceiverOptions struct {
 	Connector       pkgamqp.Connector[*amqp.Session] // Ссылка на наш общий дженерик-коннектор
 	TargetName      string                           // Имя конкретной очереди/топика для сингл-ресивера
 	ReceiverOpts    *amqp.ReceiverOptions            // Кастомные опции Azure AMQP
+	ReceiveOpts     *amqp.ReceiveOptions
 	ConnectTimeout  time.Duration
 	ShutdownTimeout time.Duration
 	Logger          logger.Logger
@@ -98,5 +99,11 @@ func WithReceiverLinkCredit(credit int32) ReceiverOption {
 func WithReceiverOpts(receiverOpts *amqp.ReceiverOptions) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.ReceiverOpts = receiverOpts
+	}
+}
+
+func WithReceiveOpts(receiveOpts *amqp.ReceiveOptions) ReceiverOption {
+	return func(ro *ReceiverOptions) {
+		ro.ReceiveOpts = receiveOpts
 	}
 }
