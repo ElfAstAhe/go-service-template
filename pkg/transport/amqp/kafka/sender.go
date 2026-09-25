@@ -31,7 +31,7 @@ type Sender struct {
 }
 
 // Привязываем структуру к общему интерфейсу amqp.Sender.
-var _ pkgamqp.Sender[any] = (*Sender)(nil)
+var _ pkgamqp.Sender = (*Sender)(nil)
 
 // NewSender создает новый экземпляр отправителя на основе переданных опций.
 //
@@ -55,7 +55,7 @@ func NewSender(opts ...SenderOption) (*Sender, error) {
 }
 
 // Publish отправляет сообщение в Kafka. Включает механизм повторных попыток при сетевых сбоях.
-func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message, _ any) error {
+func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message) error {
 	if utils.IsNil(msg) {
 		return errs.NewTlCommonError("Publish", "cannot publish nil message", nil)
 	}

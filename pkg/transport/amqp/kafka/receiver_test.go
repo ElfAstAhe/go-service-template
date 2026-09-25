@@ -40,7 +40,7 @@ func TestReceiver_Receive_Success_And_MemoryAllocation(t *testing.T) {
 	}
 
 	// Act
-	msg, err := receiver.Receive(ctx, nil)
+	msg, err := receiver.Receive(ctx)
 
 	// Assert
 	require.NoError(t, err)
@@ -128,7 +128,7 @@ func TestReceiver_Receive_Standalone_Success(t *testing.T) {
 	}
 
 	// Act
-	msg, err := receiver.Receive(ctx, nil)
+	msg, err := receiver.Receive(ctx)
 
 	// Assert
 	require.NoError(t, err)

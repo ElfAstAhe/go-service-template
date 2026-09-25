@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"sort"
+	// we need tz data
 	_ "time/tzdata"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"

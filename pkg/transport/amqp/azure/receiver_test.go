@@ -46,7 +46,7 @@ func TestReceiver_Receive_Success_And_Payload(t *testing.T) {
 	r.link = mockReceiverLink
 
 	// Act
-	msg, err := r.Receive(ctx, nil)
+	msg, err := r.Receive(ctx)
 
 	// Assert
 	require.NoError(t, err)
@@ -83,7 +83,7 @@ func TestReceiver_Receive_Failure_InvalidatesConnector(t *testing.T) {
 	r.link = mockReceiverLink
 
 	// Act
-	msg, err := r.Receive(ctx, nil)
+	msg, err := r.Receive(ctx)
 
 	// Assert
 	assert.Error(t, err)

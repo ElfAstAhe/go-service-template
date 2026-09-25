@@ -5,12 +5,10 @@ import (
 )
 
 // Receiver описывает чистый контракт для получения сообщений из конкретной очереди/топика AMQP 1.0.
-//
-//	ReceiveOpts — опции получателя конкретного кадра сообщения
-type Receiver[ReceiveOpts any] interface {
+type Receiver interface {
 	// Receive блокирует поток до тех пор, пока из настроенной очереди/топика
 	// не прилетит новое сообщение, либо пока не отменится контекст.
-	Receive(ctx context.Context, receiveOpts ReceiveOpts) (Message, error)
+	Receive(ctx context.Context) (Message, error)
 
 	// Accept подтверждает брокеру успешную обработку сообщения. Message удаляется из очереди.
 	Accept(ctx context.Context, msg Message) error

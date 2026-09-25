@@ -48,7 +48,7 @@ func TestSender_Publish_Success_Via_Connector(t *testing.T) {
 	msg := &Message{Payload: []byte(`{"action":"login"}`)}
 
 	// Act
-	err = s.Publish(ctx, msg, nil)
+	err = s.Publish(ctx, msg)
 
 	// Assert
 	assert.NoError(t, err)
@@ -99,7 +99,7 @@ func TestSender_Publish_Retry_And_Invalidate(t *testing.T) {
 	s.sender = mockSenderLink
 
 	// Act
-	err = s.Publish(ctx, &Message{Payload: []byte(`{}`)}, nil)
+	err = s.Publish(ctx, &Message{Payload: []byte(`{}`)})
 
 	// Assert
 	// Тест завершится с ошибкой инициализации соединения на 2-й попытке

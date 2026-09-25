@@ -4,4 +4,5 @@ import (
 	"time"
 )
 
-var ZeroTime time.Time = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+// ZeroTime - default zero value date and time
+var ZeroTime = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)

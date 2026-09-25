@@ -29,7 +29,8 @@ type Receiver struct {
 }
 
 // Привязываем структуру к итоговому интерфейсу пакета абстракций
-var _ pkgamqp.Receiver[*amqp.ReceiveOptions] = (*Receiver)(nil)
+var _ pkgamqp.Receiver = (*Receiver)(nil)
+var _ AMQPReceiver = (*Receiver)(nil)
 
 func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 	clientOpts := NewReceiverOptions() // Все базовые дефолты таймаутов и кредитов внутри
@@ -48,15 +49,24 @@ func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 	}, nil
 }
 
-func (r *Receiver) Receive(ctx context.Context, receiveOpts *amqp.ReceiveOptions) (pkgamqp.Message, error) {
+func (r *Receiver) Receive(ctx context.Context) (pkgamqp.Message, error) {
+	return r.ReceiveWithOpts(ctx, r.getReceiveOpts())
+}
+
+func (r *Receiver) ReceiveWithOpts(ctx context.Context, receiveOpts *amqp.ReceiveOptions) (pkgamqp.Message, error) {
 	// Получаем или лениво инициализируем линк очереди/топика
 	receiverLink, err := r.getReceiver(ctx)
 	if err != nil {
 		return nil, errs.NewTlCommonError("Receive", "azure receiver failed to get link", err)
 	}
 
+	// опции
+	opts := receiveOpts
+	if utils.IsNil(opts) {
+		opts = r.getReceiveOpts()
+	}
 	// Читаем сообщение из сокета (блокирующий вызов библиотеки Azure)
-	azureMsg, err := receiverLink.Receive(ctx, receiveOpts)
+	azureMsg, err := receiverLink.Receive(ctx, opts)
 	if err != nil {
 		r.totalErrorsCounter.Add(1) // <-- ИНКРЕМЕНТ: Фиксируем ошибку сети
 		r.handleReceiverFailure(err)
@@ -338,4 +348,16 @@ func (r *Receiver) handleReceiverFailure(err error) {
 	r.mu.Lock()
 	r.link = nil // Сбрасываем локальный линк, чтобы на следующем Receive() лениво его пересоздать
 	r.mu.Unlock()
+}
+
+func (r *Receiver) getReceiveOpts() *amqp.ReceiveOptions {
+	if utils.IsNil(r.opts.ReceiveOpts) {
+		return r.buildDefaultReceiveOpts()
+	}
+
+	return r.opts.ReceiveOpts
+}
+
+func (r *Receiver) buildDefaultReceiveOpts() *amqp.ReceiveOptions {
+	return &amqp.ReceiveOptions{}
 }
