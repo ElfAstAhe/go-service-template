@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	"github.com/ElfAstAhe/go-service-template/pkg/infra/metrics"
-	"github.com/ElfAstAhe/go-service-template/pkg/repository"
+	"github.com/ElfAstAhe/go-service-template/pkg/repository/metrics"
 )
 
 type TestMetricsRepository struct {
-	*repository.BaseCRUDMetricsRepository[*domain.Test, string]
+	*metrics.BaseCRUDMetricsRepository[*domain.Test, string]
 	repo domain.TestRepository
 }
 
@@ -18,7 +17,7 @@ var _ domain.TestRepository = (*TestMetricsRepository)(nil)
 
 func NewTestMetricsRepository(repo domain.TestRepository) *TestMetricsRepository {
 	return &TestMetricsRepository{
-		BaseCRUDMetricsRepository: repository.NewBaseCRUDMetricsRepository("TestRepository", repo),
+		BaseCRUDMetricsRepository: metrics.NewBaseCRUDMetricsRepository("TestRepository", repo),
 		repo:                      repo,
 	}
 }

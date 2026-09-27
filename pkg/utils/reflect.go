@@ -6,7 +6,11 @@ import (
 	"strings"
 )
 
-// GetTypeName возвращает наименование типа хоть в каком-либо виде
+// GetTypeName вычисляет и возвращает короткое текстовое наименование типа переданного объекта.
+//
+// Метод автоматически разыменовывает указатели любой вложенности (например, **Type -> Type)
+// и очищает строки анонимных типов или коллекций от длинных путей импорта (://github.com...).
+// Активно используется для динамической раздачи имен метрикам Prometheus и спанам OpenTelemetry.
 func GetTypeName(instance any) string {
 	if instance == nil {
 		return "nil"
@@ -14,23 +18,23 @@ func GetTypeName(instance any) string {
 
 	t := reflect.TypeOf(instance)
 
-	// Уходим от указателей (даже если их несколько: **Type)
+	// Уходим от указателей любой вложенности (разматываем **Type до базовой структуры)
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
-	// 1. Пытаемся взять чистое имя типа (например, "TestRepositoryImpl")
+	// 1. Пытаемся извлечь чистое, явное имя типа (например, "LoginAttemptsRepository")
 	name := t.Name()
 	if name != "" {
 		return name
 	}
 
-	// 2. Если имени нет (анонимная структура, map, slice), берем строковое представление
-	// t.String() вернет что-то вроде "struct { ID string }", "[]domain.Test" или "map[string]int"
+	// 2. Если имени нет (анонимная структура, map, slice) — берем строковое представление.
+	// t.String() вернет мета-описание: "struct { ID string }", "[]domain.Audit" или "map[string]int"
 	res := t.String()
 
-	// 3. Убираем длинные пути пакетов для лаконичности (оставляем только последний сегмент)
-	// Было: "://github.com" -> Стало: "domain.Test"
+	// 3. Срезаем длинные пути пакетов для лаконичности лейблов мониторинга.
+	// Было: "://github.comElfAstAhe/go-service-template/pkg/domain.Test" -> Стало: "domain.Test"
 	if lastSlash := strings.LastIndex(res, "/"); lastSlash != -1 {
 		res = res[lastSlash+1:]
 	}
@@ -38,6 +42,8 @@ func GetTypeName(instance any) string {
 	return res
 }
 
+// GetFullTypeName возвращает абсолютное, уникальное имя типа, включая полный путь импорта пакета.
+// Применяется для исключения коллизий имен при логировании или регистрации полиморфных сущностей в DI.
 func GetFullTypeName(instance any) string {
 	if instance == nil {
 		return "nil"
@@ -50,41 +56,41 @@ func GetFullTypeName(instance any) string {
 		t = t.Elem()
 	}
 
-	// 1. Пытаемся получить имя и путь пакета (например, "domain.User")
+	// 1. Извлекаем имя типа и его абсолютный пакетный путь
 	name := t.Name()
 	pkg := t.PkgPath()
 
 	if name != "" {
 		if pkg != "" {
-			// Возвращаем вместе с путем пакета, чтобы избежать коллизий
-			// Можно использовать только последнюю часть пути через path.Base(pkg)
+			// Формируем уникальный паспорт типа (например, "://github.comElfAstAhe/pkg/domain.User")
 			return fmt.Sprintf("%s.%s", pkg, name)
 		}
 
 		return name
 	}
 
-	// 2. Если имени нет (анонимная структура, слайс, мапа)
-	// t.String() вернет "[]domain.Audit" или "map[string]int"
+	// 2. Для анонимных структур, слайсов и мап возвращаем стандартную OTel-совместимую сигнатуру
 	return t.String()
 }
 
-// IsNil определяет, является ли параметр nil по значению
+// IsNil производит глубокую атомарную проверку значения на предмет равенства nil.
 //
-// Параметры:
-//   - val: любое значение
-//
-// Например: интерфейс после присвоения, допустим структуры, уже точно не будет nil, даже если значение структуры nil
+// ⚠️ Внимание (Инженерный нюанс Go):
+// Обычное сравнение (val == nil) вернет false, если в интерфейс упакован nil-указатель
+// на конкретную структуру (Typed nil interface ловушка). Этот метод использует рефлексию
+// для раскрытия внутреннего состояния интерфейса, гарантируя 100% защиту от паник nil pointer dereference.
 func IsNil(val any) bool {
 	if val == nil {
 		return true
 	}
 
 	v := reflect.ValueOf(val)
+	// Проверяем только те типы данных, которые физически могут быть неинициализированными (указатели, каналы, мапы)
 	switch v.Kind() {
 	case reflect.Pointer, reflect.Map, reflect.Slice, reflect.Chan, reflect.Interface, reflect.Func:
 		return v.IsNil()
 	default:
+		// Примитивные типы (int, string, bool) или плоские структуры никогда не бывают nil
 		return false
 	}
 }

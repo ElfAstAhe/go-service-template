@@ -45,8 +45,8 @@ func (_m *MockCipher) EXPECT() *MockCipher_Expecter {
 }
 
 // Decrypt provides a mock function for the type MockCipher
-func (_mock *MockCipher) Decrypt(bytes []byte) ([]byte, error) {
-	ret := _mock.Called(bytes)
+func (_mock *MockCipher) Decrypt(ciphertext []byte) ([]byte, error) {
+	ret := _mock.Called(ciphertext)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Decrypt")
@@ -55,17 +55,17 @@ func (_mock *MockCipher) Decrypt(bytes []byte) ([]byte, error) {
 	var r0 []byte
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func([]byte) ([]byte, error)); ok {
-		return returnFunc(bytes)
+		return returnFunc(ciphertext)
 	}
 	if returnFunc, ok := ret.Get(0).(func([]byte) []byte); ok {
-		r0 = returnFunc(bytes)
+		r0 = returnFunc(ciphertext)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func([]byte) error); ok {
-		r1 = returnFunc(bytes)
+		r1 = returnFunc(ciphertext)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -78,12 +78,12 @@ type MockCipher_Decrypt_Call struct {
 }
 
 // Decrypt is a helper method to define mock.On call
-//   - bytes []byte
-func (_e *MockCipher_Expecter) Decrypt(bytes any) *MockCipher_Decrypt_Call {
-	return &MockCipher_Decrypt_Call{Call: _e.mock.On("Decrypt", bytes)}
+//   - ciphertext []byte
+func (_e *MockCipher_Expecter) Decrypt(ciphertext any) *MockCipher_Decrypt_Call {
+	return &MockCipher_Decrypt_Call{Call: _e.mock.On("Decrypt", ciphertext)}
 }
 
-func (_c *MockCipher_Decrypt_Call) Run(run func(bytes []byte)) *MockCipher_Decrypt_Call {
+func (_c *MockCipher_Decrypt_Call) Run(run func(ciphertext []byte)) *MockCipher_Decrypt_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 []byte
 		if args[0] != nil {
@@ -96,19 +96,19 @@ func (_c *MockCipher_Decrypt_Call) Run(run func(bytes []byte)) *MockCipher_Decry
 	return _c
 }
 
-func (_c *MockCipher_Decrypt_Call) Return(bytes1 []byte, err error) *MockCipher_Decrypt_Call {
-	_c.Call.Return(bytes1, err)
+func (_c *MockCipher_Decrypt_Call) Return(plaintext []byte, err error) *MockCipher_Decrypt_Call {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
-func (_c *MockCipher_Decrypt_Call) RunAndReturn(run func(bytes []byte) ([]byte, error)) *MockCipher_Decrypt_Call {
+func (_c *MockCipher_Decrypt_Call) RunAndReturn(run func(ciphertext []byte) ([]byte, error)) *MockCipher_Decrypt_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // DecryptString provides a mock function for the type MockCipher
-func (_mock *MockCipher) DecryptString(s string) (string, error) {
-	ret := _mock.Called(s)
+func (_mock *MockCipher) DecryptString(ciphertext string) (string, error) {
+	ret := _mock.Called(ciphertext)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DecryptString")
@@ -117,15 +117,15 @@ func (_mock *MockCipher) DecryptString(s string) (string, error) {
 	var r0 string
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (string, error)); ok {
-		return returnFunc(s)
+		return returnFunc(ciphertext)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) string); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(ciphertext)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(ciphertext)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -138,12 +138,12 @@ type MockCipher_DecryptString_Call struct {
 }
 
 // DecryptString is a helper method to define mock.On call
-//   - s string
-func (_e *MockCipher_Expecter) DecryptString(s any) *MockCipher_DecryptString_Call {
-	return &MockCipher_DecryptString_Call{Call: _e.mock.On("DecryptString", s)}
+//   - ciphertext string
+func (_e *MockCipher_Expecter) DecryptString(ciphertext any) *MockCipher_DecryptString_Call {
+	return &MockCipher_DecryptString_Call{Call: _e.mock.On("DecryptString", ciphertext)}
 }
 
-func (_c *MockCipher_DecryptString_Call) Run(run func(s string)) *MockCipher_DecryptString_Call {
+func (_c *MockCipher_DecryptString_Call) Run(run func(ciphertext string)) *MockCipher_DecryptString_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -156,19 +156,19 @@ func (_c *MockCipher_DecryptString_Call) Run(run func(s string)) *MockCipher_Dec
 	return _c
 }
 
-func (_c *MockCipher_DecryptString_Call) Return(s1 string, err error) *MockCipher_DecryptString_Call {
-	_c.Call.Return(s1, err)
+func (_c *MockCipher_DecryptString_Call) Return(plaintext string, err error) *MockCipher_DecryptString_Call {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
-func (_c *MockCipher_DecryptString_Call) RunAndReturn(run func(s string) (string, error)) *MockCipher_DecryptString_Call {
+func (_c *MockCipher_DecryptString_Call) RunAndReturn(run func(ciphertext string) (string, error)) *MockCipher_DecryptString_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Encrypt provides a mock function for the type MockCipher
-func (_mock *MockCipher) Encrypt(bytes []byte) ([]byte, error) {
-	ret := _mock.Called(bytes)
+func (_mock *MockCipher) Encrypt(plaintext []byte) ([]byte, error) {
+	ret := _mock.Called(plaintext)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Encrypt")
@@ -177,17 +177,17 @@ func (_mock *MockCipher) Encrypt(bytes []byte) ([]byte, error) {
 	var r0 []byte
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func([]byte) ([]byte, error)); ok {
-		return returnFunc(bytes)
+		return returnFunc(plaintext)
 	}
 	if returnFunc, ok := ret.Get(0).(func([]byte) []byte); ok {
-		r0 = returnFunc(bytes)
+		r0 = returnFunc(plaintext)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func([]byte) error); ok {
-		r1 = returnFunc(bytes)
+		r1 = returnFunc(plaintext)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -200,12 +200,12 @@ type MockCipher_Encrypt_Call struct {
 }
 
 // Encrypt is a helper method to define mock.On call
-//   - bytes []byte
-func (_e *MockCipher_Expecter) Encrypt(bytes any) *MockCipher_Encrypt_Call {
-	return &MockCipher_Encrypt_Call{Call: _e.mock.On("Encrypt", bytes)}
+//   - plaintext []byte
+func (_e *MockCipher_Expecter) Encrypt(plaintext any) *MockCipher_Encrypt_Call {
+	return &MockCipher_Encrypt_Call{Call: _e.mock.On("Encrypt", plaintext)}
 }
 
-func (_c *MockCipher_Encrypt_Call) Run(run func(bytes []byte)) *MockCipher_Encrypt_Call {
+func (_c *MockCipher_Encrypt_Call) Run(run func(plaintext []byte)) *MockCipher_Encrypt_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 []byte
 		if args[0] != nil {
@@ -218,19 +218,19 @@ func (_c *MockCipher_Encrypt_Call) Run(run func(bytes []byte)) *MockCipher_Encry
 	return _c
 }
 
-func (_c *MockCipher_Encrypt_Call) Return(bytes1 []byte, err error) *MockCipher_Encrypt_Call {
-	_c.Call.Return(bytes1, err)
+func (_c *MockCipher_Encrypt_Call) Return(ciphertext []byte, err error) *MockCipher_Encrypt_Call {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
-func (_c *MockCipher_Encrypt_Call) RunAndReturn(run func(bytes []byte) ([]byte, error)) *MockCipher_Encrypt_Call {
+func (_c *MockCipher_Encrypt_Call) RunAndReturn(run func(plaintext []byte) ([]byte, error)) *MockCipher_Encrypt_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // EncryptString provides a mock function for the type MockCipher
-func (_mock *MockCipher) EncryptString(s string) (string, error) {
-	ret := _mock.Called(s)
+func (_mock *MockCipher) EncryptString(plaintext string) (string, error) {
+	ret := _mock.Called(plaintext)
 
 	if len(ret) == 0 {
 		panic("no return value specified for EncryptString")
@@ -239,15 +239,15 @@ func (_mock *MockCipher) EncryptString(s string) (string, error) {
 	var r0 string
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (string, error)); ok {
-		return returnFunc(s)
+		return returnFunc(plaintext)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) string); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(plaintext)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(plaintext)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -260,12 +260,12 @@ type MockCipher_EncryptString_Call struct {
 }
 
 // EncryptString is a helper method to define mock.On call
-//   - s string
-func (_e *MockCipher_Expecter) EncryptString(s any) *MockCipher_EncryptString_Call {
-	return &MockCipher_EncryptString_Call{Call: _e.mock.On("EncryptString", s)}
+//   - plaintext string
+func (_e *MockCipher_Expecter) EncryptString(plaintext any) *MockCipher_EncryptString_Call {
+	return &MockCipher_EncryptString_Call{Call: _e.mock.On("EncryptString", plaintext)}
 }
 
-func (_c *MockCipher_EncryptString_Call) Run(run func(s string)) *MockCipher_EncryptString_Call {
+func (_c *MockCipher_EncryptString_Call) Run(run func(plaintext string)) *MockCipher_EncryptString_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -278,12 +278,12 @@ func (_c *MockCipher_EncryptString_Call) Run(run func(s string)) *MockCipher_Enc
 	return _c
 }
 
-func (_c *MockCipher_EncryptString_Call) Return(s1 string, err error) *MockCipher_EncryptString_Call {
-	_c.Call.Return(s1, err)
+func (_c *MockCipher_EncryptString_Call) Return(ciphertext string, err error) *MockCipher_EncryptString_Call {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
-func (_c *MockCipher_EncryptString_Call) RunAndReturn(run func(s string) (string, error)) *MockCipher_EncryptString_Call {
+func (_c *MockCipher_EncryptString_Call) RunAndReturn(run func(plaintext string) (string, error)) *MockCipher_EncryptString_Call {
 	_c.Call.Return(run)
 	return _c
 }

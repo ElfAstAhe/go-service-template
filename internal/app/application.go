@@ -40,6 +40,7 @@ func NewApplication(opts ...Option) (*Application, error) {
 	err := errors.Join(
 		res.GetOrchestrator().Register(container.NewAppContainer(res.GetOrchestrator(), res.log)),
 		res.GetOrchestrator().Register(container.NewToolsContainer(res.GetOrchestrator(), res.log)),
+		res.GetOrchestrator().Register(container.NewInfraContainer(res.GetOrchestrator(), res.log)),
 		res.GetOrchestrator().Register(container.NewPgContainer(res.GetOrchestrator(), res.log)),
 		res.GetOrchestrator().Register(container.NewRepositoryContainer(res.GetOrchestrator(), res.log)),
 		res.GetOrchestrator().Register(container.NewUseCaseContainer(res.GetOrchestrator(), res.log)),
