@@ -11,12 +11,14 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// Рантайм-константы имен заголовков, кук и gRPC-метаданных по умолчанию.
 const (
 	DefaultHeaderName   string = "Authorization"
 	DefaultCookieName   string = "Authorization"
 	DefaultMetadataName string = "Authorization"
 )
 
+// Helper описывает высокоуровневый центральный контракт подсистемы аутентификации (Auth Facade).
 type Helper interface {
 	SubjectFromToken(token *jwt.Token) (*Subject, error)
 	SubjectFromTokenString(tokenString string) (*Subject, error)
@@ -29,6 +31,7 @@ type Helper interface {
 	TokenStringFromSubjet(subject *Subject) (string, error)
 }
 
+// HelperImpl реализует интерфейс Helper, координируя низкоуровневые транспортные JWT-хелперы фреймворка.
 type HelperImpl struct {
 	headerName    string
 	cookieName    string
@@ -38,8 +41,10 @@ type HelperImpl struct {
 	jwtGRPCHelper *helper.JWTGRPCHelper
 }
 
+// Гарантируем полное соответствие интерфейсу Helper на этапе компиляции
 var _ Helper = (*HelperImpl)(nil)
 
+// NewHelper — универсальный конструктор хелпера авторизации с кастомизацией сетевых имен.
 func NewHelper(
 	headerName string,
 	cookieName, metadataName string,
@@ -57,6 +62,7 @@ func NewHelper(
 	}
 }
 
+// NewDefaultHelper собирает хелпер авторизации, наполняя его дефолтными JWT-компонентами фреймворка.
 func NewDefaultHelper(secretKey string) *HelperImpl {
 	jwtHelper := helper.NewDefaultJWTHelper(secretKey)
 	jwtHTTPHelper := helper.NewJWTHTTPHelper(jwtHelper)
@@ -65,6 +71,7 @@ func NewDefaultHelper(secretKey string) *HelperImpl {
 	return NewDefaultHelperEx(jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
 }
 
+// NewDefaultHelperEx собирает хелпер на базе уже существующих инстансов транспортных адаптеров.
 func NewDefaultHelperEx(
 	jwtHelper *helper.JWTHelper,
 	jwtHTTPHelper *helper.JWTHTTPHelper,
@@ -73,6 +80,7 @@ func NewDefaultHelperEx(
 	return NewHelper(DefaultHeaderName, DefaultCookieName, DefaultMetadataName, jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
 }
 
+// SubjectFromToken распаковывает утверждения (Claims) валидного JWT-объекта и маппит их в доменную структуру Subject.
 func (ah *HelperImpl) SubjectFromToken(token *jwt.Token) (*Subject, error) {
 	if token == nil {
 		return nil, errs.NewInvalidArgumentError("token", "nil jwt token")
@@ -86,6 +94,7 @@ func (ah *HelperImpl) SubjectFromToken(token *jwt.Token) (*Subject, error) {
 	return NewSubject(claims.SubjectID, claims.Subject, SubjectType(claims.SubjectType), claims.Roles, nil), nil
 }
 
+// TokenFromSubject осуществляет обратную операцию: упаковывает доменный Subject в неподписанный объект jwt.Token.
 func (ah *HelperImpl) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
 	if subject == nil {
 		return nil, errs.NewInvalidArgumentError("subject", "nil user info")
@@ -94,6 +103,7 @@ func (ah *HelperImpl) TokenFromSubject(subject *Subject) (*jwt.Token, error) {
 	return ah.jwtHelper.BuildToken(subject.ID, subject.Name, string(subject.Type), false, ah.tokenRolesFromSubject(subject)...)
 }
 
+// tokenRolesFromSubject — внутренний хелпер вычленения ключей мапы ролей в плоский строковый срез без лишних аллокаций.
 func (ah *HelperImpl) tokenRolesFromSubject(subject *Subject) []string {
 	res := make([]string, 0, len(subject.Roles))
 	for key := range subject.Roles {
@@ -103,6 +113,7 @@ func (ah *HelperImpl) tokenRolesFromSubject(subject *Subject) []string {
 	return res
 }
 
+// TokenStringFromSubjet генерирует токен на базе Subject и сразу подписывает его, возвращая компактную финальную строку.
 func (ah *HelperImpl) TokenStringFromSubjet(subject *Subject) (string, error) {
 	token, err := ah.TokenFromSubject(subject)
 	if err != nil {
@@ -112,6 +123,7 @@ func (ah *HelperImpl) TokenStringFromSubjet(subject *Subject) (string, error) {
 	return ah.jwtHelper.BuildTokenStr(token)
 }
 
+// SubjectFromTokenString парсит сырую строку JWT, верифицирует подпись и возвращает доменный Subject.
 func (ah *HelperImpl) SubjectFromTokenString(tokenString string) (*Subject, error) {
 	token, err := ah.jwtHelper.ExtractTokenFromString(tokenString)
 	if err != nil {
@@ -121,6 +133,8 @@ func (ah *HelperImpl) SubjectFromTokenString(tokenString string) (*Subject, erro
 	return ah.SubjectFromToken(token)
 }
 
+// SubjectFromContext пытается извлечь Subject из context.Context.
+// После исправления FromContext метод теперь работает корректно и возвращает ошибку, если сессия пуста.
 func (ah *HelperImpl) SubjectFromContext(ctx context.Context) (*Subject, error) {
 	res := FromContext(ctx)
 	if res != nil {
@@ -130,6 +144,7 @@ func (ah *HelperImpl) SubjectFromContext(ctx context.Context) (*Subject, error) 
 	return nil, errs.NewUtlAuthError("user info not found", nil)
 }
 
+// HasSubjectInContext проверяет наличие авторизованного субъекта в контексте.
 func (ah *HelperImpl) HasSubjectInContext(ctx context.Context) bool {
 	userInfo, err := ah.SubjectFromContext(ctx)
 	if err != nil {
@@ -139,6 +154,7 @@ func (ah *HelperImpl) HasSubjectInContext(ctx context.Context) bool {
 	return userInfo != nil
 }
 
+// SubjectFromHTTPRequest выполняет двухканальное извлечение JWT (Cookie/Header) из входящего HTTP-запроса REST ручек.
 func (ah *HelperImpl) SubjectFromHTTPRequest(request *http.Request) (*Subject, error) {
 	cookieTokenString, cookieErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestCookie(ah.cookieName, request)
 	headerTokenString, headerErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestHeader(ah.headerName, request)
@@ -161,6 +177,7 @@ func (ah *HelperImpl) SubjectFromHTTPRequest(request *http.Request) (*Subject, e
 	return userInfo, nil
 }
 
+// SubjectFromGRPCMetadata извлекает и валидирует токен напрямую из переданной карты gRPC-метаданных (HTTP/2 заголовков).
 func (ah *HelperImpl) SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error) {
 	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromMetadata(ah.metadataName, md)
 	if err != nil {
@@ -175,6 +192,7 @@ func (ah *HelperImpl) SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error) 
 	return userInfo, nil
 }
 
+// SubjectFromGRPCContext извлекает и валидирует токен из входящего gRPC контекста context.Context.
 func (ah *HelperImpl) SubjectFromGRPCContext(gRPCCtx context.Context) (*Subject, error) {
 	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromContext(ah.metadataName, gRPCCtx)
 	if err != nil {

@@ -4,14 +4,21 @@ import (
 	"fmt"
 )
 
+// UtlError реализует нативный интерфейс error, специфицируя системные и инфраструктурные
+// ошибки, возникающие внутри утилит общего назначения пакета utils (Utility Layer Error).
+//
+// Инкапсулирует контекст сбоя: имя утилитарной операции (op), пользовательское текстовое
+// описание проблемы (msg) и ссылку на исходную корневую причину технического сбоя (err).
 type UtlError struct {
-	op  string
-	msg string
-	err error
+	op  string // Имя метода утилиты или хелпера, где произошел сбой (например, "DecompressReader.Read")
+	msg string // Человекочитаемое прикладное описание сути технической проблемы
+	err error  // Ссылка на исходную ошибку рантайма (например, ошибку ввода-вывода io.ErrUnexpectedEOF)
 }
 
+// Гарантируем строгое соответствие встроенному интерфейсу error на этапе компиляции
 var _ error = (*UtlError)(nil)
 
+// NewUtlError — фабричный конструктор ошибки утилитарного слоя фреймворка.
 func NewUtlError(op, msg string, err error) *UtlError {
 	return &UtlError{
 		op:  op,
@@ -20,18 +27,23 @@ func NewUtlError(op, msg string, err error) *UtlError {
 	}
 }
 
+// Error форматирует и возвращает развернутый строковый паспорт ошибки.
+// Динамически выстраивает текстовую строку, четко изолируя сбои подсистемы вспомогательных утилит.
 func (ue *UtlError) Error() string {
 	msg := fmt.Sprintf("UTL: %s error", ue.op)
 	if ue.msg != "" {
 		msg = fmt.Sprintf("%s %s", msg, ue.msg)
 	}
 	if ue.err != nil {
+		// Обогащаем текстовый вывод описанием нижележащего сбоя из стека вызовов утилиты
 		msg = fmt.Sprintf("%s %v", msg, ue.err)
 	}
 
 	return msg
 }
 
+// Unwrap возвращает исходную ошибку, инициировавшую сбой при работе со служебными хелперами.
+// Требуется для корректной работы функций errors.Is и errors.As в логгерах и транспортных хендлерах.
 func (ue *UtlError) Unwrap() error {
 	return ue.err
 }

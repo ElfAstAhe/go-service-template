@@ -8,6 +8,10 @@ import (
 )
 
 // AMQPConnectorConfig connector configuration
+//
+// Инкапсулирует конфигурационные параметры низкоуровневого сетевого подключения (Connector)
+// к брокерам сообщений по протоколу AMQP 0-9-1 (RabbitMQ). Вынесение операционных таймаутов
+// в дельту конфигурации является обязательным требованием для обеспечения отказоустойчивости.
 type AMQPConnectorConfig struct {
 	// host,port
 	URL string `mapstructure:"url" json:"url,omitempty" yaml:"url,omitempty"` // Хост и порт брокера (например, "localhost:5672")
@@ -48,12 +52,14 @@ func NewDefaultAMQPConnectorConfig() *AMQPConnectorConfig {
 		"",
 		"",
 		DefaultAMQPConnectorConnectTimeout,
-		DefaultAMQPConnectorShutdownTimeout,
 		DefaultAMQPConnectorWriteTimeout,
 		DefaultAMQPConnectorIdleTimeout,
+		DefaultAMQPConnectorShutdownTimeout,
 	)
 }
 
+// Validate осуществляет семантическую проверку параметров конфигурации на этапе стартапа (Bootstrap Phase).
+// Защищает рантайм от запуска коннектора с некорректными, пустыми или отрицательными сетевыми таймаутами.
 func (cc *AMQPConnectorConfig) Validate() error {
 	if strings.TrimSpace(cc.URL) == "" {
 		return errs.NewConfigValidateError("amqp connector", "URL", "empty", nil)

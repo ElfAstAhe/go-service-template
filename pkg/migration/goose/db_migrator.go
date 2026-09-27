@@ -11,14 +11,19 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-// DBMigrator is implementation of DBMigrator interface
+// DBMigrator реализует интерфейс migration.Migrator, используя в качестве движка утилиту Goose v3.
+//
+// Координирует безопасное, транзакционное применение SQL и Go-скриптов изменения схемы данных (DDL),
+// обеспечивая эволюцию структуры СУБД (PostgreSQL) в cloud-native средах.
 type DBMigrator struct {
-	db  db.DB
-	log logger.Logger
+	db  db.DB         // Ссылка на глобальный пул и конфигурацию соединения с БД
+	log logger.Logger // Изолированный системный логгер компонента
 }
 
+// Гарантируем соответствие контракту Migrator на этапе компиляции
 var _ migration.Migrator = (*DBMigrator)(nil)
 
+// NewDBMigrator — фабричный конструктор мигратора Goose.
 func NewDBMigrator(db db.DB, logger logger.Logger) (*DBMigrator, error) {
 	return &DBMigrator{
 		db:  db,
@@ -26,6 +31,9 @@ func NewDBMigrator(db db.DB, logger logger.Logger) (*DBMigrator, error) {
 	}, nil
 }
 
+// Initialize конфигурирует глобальные параметры рантайма Goose.
+// Настраивает SQL-диалект драйвера, переопределяет системную таблицу истории версий миграций
+// и инжектирует кастомный структурированный логгер фреймворка.
 func (g *DBMigrator) Initialize() error {
 	if err := goose.SetDialect(g.db.GetDriver()); err != nil {
 		return errs.NewDBMigrationError("error select dialect", err)
@@ -36,18 +44,21 @@ func (g *DBMigrator) Initialize() error {
 	return nil
 }
 
+// Up атомарно применяет все новые файлы миграций, переводя схему БД на актуальное состояние.
+// Защищен от фатальных паник рантайма (Panic Recovery паттерн).
 func (g *DBMigrator) Up(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			// Проверяем, является ли r ошибкой
+			// Проверяем тип объекта паники и безопасно приводим его к интерфейсу error
 			recoveryErr, ok := r.(error)
 			if !ok {
-				// Если это строка или что-то другое, приводим к виду error вручную
 				recoveryErr = errs.NewConfigError(fmt.Sprintf("panic [%v] recovery", r), nil)
 			}
 			err = errs.NewDBMigrationError("migrate up panic", recoveryErr)
 		}
 	}()
+
+	// Опция WithAllowMissing() разрешает накат старых пропущенных миграций (Out-of-order migrations)
 	if err := goose.UpContext(ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate up", err)
 	}
@@ -55,18 +66,19 @@ func (g *DBMigrator) Up(ctx context.Context) (err error) {
 	return nil
 }
 
+// Down осуществляет последовательный откат схемы базы данных на одну версию назад.
 func (g *DBMigrator) Down(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			// Проверяем, является ли r ошибкой
 			recoveryErr, ok := r.(error)
 			if !ok {
-				// Если это строка или что-то другое, приводим к виду error вручную
 				recoveryErr = errs.NewConfigError(fmt.Sprintf("panic [%v] recovery", r), nil)
 			}
-			err = errs.NewDBMigrationError("migrate up panic", recoveryErr)
+			// ИСПРАВЛЕНО: Текст ошибки изменен на маркер "migrate down panic"
+			err = errs.NewDBMigrationError("migrate down panic", recoveryErr)
 		}
 	}()
+
 	if err := goose.DownContext(ctx, g.db.GetDB(), ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate down", err)
 	}

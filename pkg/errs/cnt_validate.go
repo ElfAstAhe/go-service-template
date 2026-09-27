@@ -4,15 +4,22 @@ import (
 	"fmt"
 )
 
+// ContainerValidateError реализует нативный интерфейс error, специфицируя системные ошибки
+// валидации параметров конфигурации внутри DI-контейнеров на этапе стартапа (Bootstrap Phase).
+//
+// Инкапсулирует расширенный контекст: имя контейнера (name), операцию/фазу (op),
+// пользовательское текстовое сообщение (msg) и ссылку на исходную причину сбоя (err).
 type ContainerValidateError struct {
-	name string
-	op   string
-	msg  string
-	err  error
+	name string // Имя валидируемого DI-контейнера (например, "KafkaContainer", "CacheContainer")
+	op   string // Конкретная фаза или метод валидации (например, "ValidateConfig", "BuildStorage")
+	msg  string // Человекочитаемое прикладное описание сути нарушения инварианта параметров
+	err  error  // Ссылка на исходную корневую ошибку (если сбой проброшен из внешних систем проверки)
 }
 
-var _ error = (*ContainerError)(nil)
+// Гарантируем строгое соответствие встроенному интерфейсу error на этапе компиляции
+var _ error = (*ContainerValidateError)(nil)
 
+// NewContainerValidateError — фабричный конструктор ошибки валидации параметров DI-контейнера.
 func NewContainerValidateError(name, op, msg string, err error) *ContainerValidateError {
 	return &ContainerValidateError{
 		name: name,
@@ -22,6 +29,8 @@ func NewContainerValidateError(name, op, msg string, err error) *ContainerValida
 	}
 }
 
+// Error форматирует и возвращает развернутый строковый паспорт ошибки.
+// Последовательно склеивает имя контейнера, операцию, текстовое сообщение и стек вложенных ошибок.
 func (cve *ContainerValidateError) Error() string {
 	msg := "CNT: validate error"
 	if cve.name != "" {
@@ -34,12 +43,15 @@ func (cve *ContainerValidateError) Error() string {
 		msg = fmt.Sprintf("%s with message %s", msg, cve.msg)
 	}
 	if cve.err != nil {
+		// Обогащаем текстовый вывод описанием нижележащего сбоя из стека вызовов
 		msg = fmt.Sprintf("%s: %v", msg, cve.err)
 	}
 
 	return msg
 }
 
+// Unwrap возвращает исходную ошибку, инициировавшую сбой при валидации контейнера.
+// Требуется для корректной работы функций errors.Is и errors.As на этапе стартапа микросервиса.
 func (cve *ContainerValidateError) Unwrap() error {
 	return cve.err
 }

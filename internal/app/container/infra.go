@@ -40,7 +40,7 @@ func (ic *InfraContainer) Init(ctx context.Context) error {
 	// setup metrics
 	metrics.InitRepositoryMetrics()
 	metrics.InitHTTPMetrics()
-	InitGRPCMetrics()
+	//	InitGRPCMetrics()
 
 	return nil
 }

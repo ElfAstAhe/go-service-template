@@ -12,22 +12,32 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
+// BaseLazyContainer реализует интерфейс LazyContainer, расширяя базовый BaseContainer.
+//
+// Инкапсулирует механизмы отложенной инициализации (Lazy Loading) и многопоточной синхронизации
+// на базе паттерна Single Flight (каналов-обещаний Channel Promises). Это гарантирует строго
+// однократный вызов тяжелых конструкторов зависимостей в конкурентной Highload-среде.
 type BaseLazyContainer struct {
-	*BaseContainer
-	mu    sync.RWMutex
-	names map[string]struct{}
-	// Карта каналов-обещаний: если ключ есть, значит объект в процессе создания
-	inProgress map[string]chan struct{}
-	order      []string
-	providers  map[string]Provider
-	logger     logger.Logger
+	*BaseContainer                          // Встраиваем базовый контейнер для управления кэшированными инстансами
+	mu             sync.RWMutex             // RWMutex для защиты локального реестра провайдеров и карты обещаний
+	names          map[string]struct{}      // Индексированная карта всех известных контейнеру имен (провайдеров и инстансов)
+	inProgress     map[string]chan struct{} // Реестр активных фоновых потоков сборки (Channel Promises) для защиты от Thundering Herd
+	order          []string                 // Хронологический слайс имен в порядке регистрации для соблюдения этапов деструкции
+	providers      map[string]Provider      // Реестр легковесных замыканий-фабрик (конструкторов зависимостей)
+	logger         logger.Logger            // Изолированный структурированный логгер ленивого контейнера
 }
 
+// Гарантируем полное соответствие интерфейсам контейнеров на этапе компиляции
+var _ Container = (*BaseLazyContainer)(nil)
+var _ LazyContainer = (*BaseLazyContainer)(nil)
+
+// NewBaseLazyContainer — фабричный конструктор базового ленивого контейнера зависимостей.
 func NewBaseLazyContainer(
 	opts ...LazyOption,
 ) *BaseLazyContainer {
 	lazyOptions := &LazyOptions{}
 
+	// Вычисляем входящие мутаторы Fluent API
 	for _, o := range opts {
 		o(lazyOptions)
 	}
@@ -46,53 +56,52 @@ func NewBaseLazyContainer(
 	}
 }
 
-var _ Container = (*BaseLazyContainer)(nil)
-var _ LazyContainer = (*BaseLazyContainer)(nil)
-
+// GetInstance осуществляет строго однократное, потокобезопасное разрешение зависимости.
+// Если инстанс еще не создан, метод блокирует конкурентные потоки-ждуны до завершения сборки «первопроходцем».
 func (blc *BaseLazyContainer) GetInstance(name string) (any, error) {
 	blc.logger.Debugf("container %s get instance: started", blc.GetName())
 	defer blc.logger.Debugf("container %s get instance: finished", blc.GetName())
 
-	// 1. Быстрая проверка: вдруг уже создано?
+	// Шаг 1. Быстрый проход (Fast-Path): вдруг инстанс уже был собран и кэширован ранее?
 	if res, err := blc.BaseContainer.GetInstance(name); err == nil {
 		return res, nil
 	}
 
 	blc.mu.Lock()
-	// 2. Double-check под локом
+	// Шаг 2. Двойная проверка (Double-Checked Locking) под эксклюзивным локом
 	if res, err := blc.BaseContainer.GetInstance(name); err == nil {
 		blc.mu.Unlock()
 		return res, nil
 	}
 
-	// 3. Проверяем "обещание" (Promise)
+	// Шаг 3. Анализ обещаний (Promise Verification): если компонент уже собирается другой горутиной
 	if waiter, found := blc.inProgress[name]; found {
-		blc.mu.Unlock()
-		<-waiter // Ждем, пока первый поток закончит
-		return blc.BaseContainer.GetInstance(name)
+		blc.mu.Unlock()                            // Мгновенно отпускаем лок, давая дорогу другим читателям
+		<-waiter                                   // Элегантная неблокирующая CPU блокировка потока до момента закрытия канала (close)
+		return blc.BaseContainer.GetInstance(name) // Возвращаем результат, собранный соседом
 	}
 
-	// 4. Мы — "Первопроходцы".
+	// Шаг 4. Статус «Первопроходца»: текущий поток берет на себя обязательство по вызову фабрики.
 	ch := make(chan struct{})
 	blc.inProgress[name] = ch
 
 	provider, ok := blc.providers[name]
-	blc.mu.Unlock() // ОТПУСКАЕМ ГЛОБАЛЬНЫЙ ЛОК
+	blc.mu.Unlock() // 🧠 ВАЖНО: Отпускаем глобальный лок до старта тяжелых операций ввода-вывода (I/O)
 
-	// Гарантируем очистку канала при любом исходе (паника, ошибка, успех)
+	// Намертво страхуем систему дефером: канал обязан закрыться, даже если фабрика выкинет panic()
 	defer blc.notifyAndCleanup(name, ch)
 
 	if !ok {
 		return nil, errs.NewContainerError(blc.GetName(), fmt.Sprintf("provider [%s] not registered", name), nil)
 	}
 
-	// 5. Спокойно создаем объект ВНЕ лока.
+	// Шаг 5. Спокойно и изолированно исполняем конструктор ВНЕ мьютекса
 	res, err := provider()
 	if err != nil {
 		return nil, err
 	}
 
-	// 6. Регистрируем готовый результат (внутри BaseContainer свой Lock)
+	// Шаг 6. Фиксируем готовый результат в кэше базового контейнера (там отработает свой локальный Lock)
 	if regErr := blc.RegisterInstance(name, res); regErr != nil {
 		return nil, regErr
 	}
@@ -100,15 +109,17 @@ func (blc *BaseLazyContainer) GetInstance(name string) (any, error) {
 	return res, nil
 }
 
-// notifyAndCleanup — вспомогательный приватный метод
+// notifyAndCleanup атомарно вырезает обещание из карты рантайма и закрывает канал,
+// пробуждая и высвобождая все заблокированные горутины-ждуны (Fan-Out Broadcast).
 func (blc *BaseLazyContainer) notifyAndCleanup(name string, ch chan struct{}) {
 	blc.mu.Lock()
 	defer blc.mu.Unlock()
 
 	delete(blc.inProgress, name)
-	close(ch) // Сигнал всем "ждунам"
+	close(ch) // Сигнальный маркер для всех "ждунов"
 }
 
+// RegisterProvider регистрирует пассивную фабрику-замыкание во внутреннем словаре провайдеров.
 func (blc *BaseLazyContainer) RegisterProvider(name string, provider Provider) error {
 	blc.logger.Debugf("lazy container %s register provider: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s register provider: finished", blc.GetName())
@@ -120,7 +131,6 @@ func (blc *BaseLazyContainer) RegisterProvider(name string, provider Provider) e
 	blc.mu.Lock()
 	defer blc.mu.Unlock()
 
-	// check existence
 	if _, ok := blc.providers[name]; ok {
 		return errs.NewContainerError(blc.GetName(), fmt.Sprintf("provider %s already registered", name), nil)
 	}
@@ -134,6 +144,7 @@ func (blc *BaseLazyContainer) RegisterProvider(name string, provider Provider) e
 	return nil
 }
 
+// RegisterRunnableProvider — заглушка для будущей регистрации воркеров и серверов (Runners).
 func (blc *BaseLazyContainer) RegisterRunnableProvider(name string, provider Provider) error {
 	blc.logger.Debugf("lazy container %s register runnable provider: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s register runnable provider: finished", blc.GetName())
@@ -143,11 +154,10 @@ func (blc *BaseLazyContainer) RegisterRunnableProvider(name string, provider Pro
 	}
 
 	// ToDo: implement
-
 	return nil
 }
 
-// UnregisterProvider unregister any registered provider
+// UnregisterProvider принудительно удаляет фабрику из реестра с перестройкой среза хронологии порядка.
 func (blc *BaseLazyContainer) UnregisterProvider(name string) error {
 	blc.logger.Debugf("lazy container %s unregister provider: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s unregister provider: finished", blc.GetName())
@@ -170,7 +180,7 @@ func (blc *BaseLazyContainer) UnregisterProvider(name string) error {
 	return nil
 }
 
-// AllProviders return all registered providers
+// AllProviders экспортирует изолированный слепок текущей карты фабрик-провайдеров.
 func (blc *BaseLazyContainer) AllProviders() map[string]Provider {
 	blc.logger.Debugf("lazy container %s all providers: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s all providers: finished", blc.GetName())
@@ -186,6 +196,7 @@ func (blc *BaseLazyContainer) AllProviders() map[string]Provider {
 	return res
 }
 
+// AllNames возвращает полный хронологический массив идентификаторов всех известных ленивому контейнеру сущностей.
 func (blc *BaseLazyContainer) AllNames() []string {
 	blc.logger.Debugf("lazy container %s all names: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s all names: finished", blc.GetName())
@@ -199,6 +210,8 @@ func (blc *BaseLazyContainer) AllNames() []string {
 	return res
 }
 
+// IsRegistered проверяет под RLock-блокировкой, существует ли зарегистрированное имя
+// (будь то активный инстанс или еще не вызванный провайдер) в реестре ленивого контейнера.
 func (blc *BaseLazyContainer) IsRegistered(name string) bool {
 	blc.logger.Debugf("lazy container %s is registered: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s is registered: finished", blc.GetName())
@@ -211,7 +224,8 @@ func (blc *BaseLazyContainer) IsRegistered(name string) bool {
 	return ok
 }
 
-// Unregister remove provider and instance from lists, errors ignored
+// Unregister каскадно вырезает из памяти как декларативную фабрику-провайдер,
+// так и живой физический объект зависимости, полностью игнорируя промежуточные ошибки.
 func (blc *BaseLazyContainer) Unregister(name string) error {
 	blc.logger.Debugf("lazy container %s unregister: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s unregister: finished", blc.GetName())
@@ -223,12 +237,13 @@ func (blc *BaseLazyContainer) Unregister(name string) error {
 	blc.mu.Lock()
 	defer blc.mu.Unlock()
 
-	// remove from provider list
+	// Вырезаем фабрику-провайдер из реестра отложенной инициализации
 	delete(blc.providers, name)
-	// remove from instance list
+	// Принудительно выгружаем созданный объект из базового хранилища (ошибки подавляются)
 	_ = blc.BaseContainer.UnregisterInstance(name)
 
 	delete(blc.names, name)
+	// Схлопываем хронологический слайс порядка без лишних переаллокаций в куче
 	blc.order = slices.DeleteFunc(blc.order, func(item string) bool {
 		return item == name
 	})
@@ -236,6 +251,8 @@ func (blc *BaseLazyContainer) Unregister(name string) error {
 	return nil
 }
 
+// getProvider извлекает зарегистрированное замыкание-конструктор по его имени.
+//
 //lint:ignore U1000 This method is kept for future extensions or interface compatibility
 func (blc *BaseLazyContainer) getProvider(name string) (Provider, error) {
 	if !blc.isProviderRegistered(name) {
@@ -253,6 +270,8 @@ func (blc *BaseLazyContainer) getProvider(name string) (Provider, error) {
 	return provider, nil
 }
 
+// isProviderRegistered осуществляет атомарную проверку наличия фабрики в реестре провайдеров.
+//
 //lint:ignore U1000 This method is kept for future extensions or interface compatibility
 func (blc *BaseLazyContainer) isProviderRegistered(name string) bool {
 	blc.mu.RLock()
@@ -263,6 +282,7 @@ func (blc *BaseLazyContainer) isProviderRegistered(name string) bool {
 	return ok
 }
 
+// RegisterInstance расширяет базовый метод фиксации объектов, параллельно обновляя хронологию ленивого графа.
 func (blc *BaseLazyContainer) RegisterInstance(name string, instance any) error {
 	blc.logger.Debugf("lazy container %s register instance: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s register instance: finished", blc.GetName())
@@ -274,12 +294,12 @@ func (blc *BaseLazyContainer) RegisterInstance(name string, instance any) error 
 	blc.mu.Lock()
 	defer blc.mu.Unlock()
 
-	// 1. Пытаемся сохранить в базовый склад
+	// 1. Пытаемся сохранить объект во внутренний хэш-склад базового контейнера
 	if err := blc.BaseContainer.RegisterInstance(name, instance); err != nil {
 		return err
 	}
 
-	// 2. Если база приняла (не дубликат), фиксируем в нашем реестре
+	// 2. Если базовая мапа приняла объект (нет коллизий) — фиксируем его в хронологии деструкции
 	if _, ok := blc.names[name]; !ok {
 		blc.names[name] = struct{}{}
 		blc.order = append(blc.order, name)
@@ -288,6 +308,7 @@ func (blc *BaseLazyContainer) RegisterInstance(name string, instance any) error 
 	return nil
 }
 
+// UnregisterInstance выгружает объект из базового хранилища с синхронизацией локальных структур индексов.
 func (blc *BaseLazyContainer) UnregisterInstance(name string) error {
 	blc.logger.Debugf("lazy container %s unregister instance: started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s unregister instance: finished", blc.GetName())
@@ -299,12 +320,12 @@ func (blc *BaseLazyContainer) UnregisterInstance(name string) error {
 	blc.mu.Lock()
 	defer blc.mu.Unlock()
 
-	// 1. Удаляем из базы
+	// 1. Вырезаем физический инстанс из базовой мапы памяти
 	if err := blc.BaseContainer.UnregisterInstance(name); err != nil {
 		return err
 	}
 
-	// 2. Если объекта нет и в провайдерах — вычищаем из порядка
+	// 2. Если объекта больше нет и в качестве фабрики-провайдера — полностью стираем его упоминание
 	if _, isProvider := blc.providers[name]; !isProvider {
 		delete(blc.names, name)
 		blc.order = slices.DeleteFunc(blc.order, func(item string) bool {
@@ -315,13 +336,14 @@ func (blc *BaseLazyContainer) UnregisterInstance(name string) error {
 	return nil
 }
 
+// Close перехватывает процедуру Graceful Shutdown, параллельно и безопасно гася все лениво созданные инстансы.
 func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
 	blc.logger.Debugf("lazy container %s close started", blc.GetName())
 	defer blc.logger.Debugf("lazy container %s close finished", blc.GetName())
 
 	var wg sync.WaitGroup
 
-	// 1. Блокируем и собираем инстансы СТРОГО в порядке их регистрации (blc.order)
+	// 1. Блокируем и собираем созданные инстансы СТРОГО в хронологическом порядке их регистрации (blc.order)
 	blc.mu.RLock()
 	toClosing := make([]*closeInstance, 0, len(blc.order))
 	for _, name := range blc.order {
@@ -333,26 +355,23 @@ func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
 
 	blc.logger.Debugf("lazy container %s: got %d instances to close", blc.GetName(), len(toClosing))
 
-	// 2. Очищаем локальные структуры и базовый контейнер
+	// 2. Полностью обнуляем локальные реестры и карты под эксклюзивным Lock
 	blc.mu.Lock()
 	blc.providers = make(map[string]Provider)
 	blc.names = make(map[string]struct{})
 	blc.order = make([]string, 0)
 	blc.mu.Unlock()
 
-	// Используем логику безопасного закрытия, очищая BaseContainer
-	// Чтобы не дублировать логику с WaitGroup и селектами, мы можем вызвать базовый Close,
-	// но так как мапа там уже пуста, мы просто закрываем собранные элементы вручную:
 	closeChan := make(chan struct{})
 	closeErrs := utils.NewConcurrentList[error]()
 
+	// 3. Запускаем конкурентный веерный цикл параллельной деструкции ресурсов (Fan-Out Cleanup)
 	for _, toClose := range toClosing {
 		if inst, ok := toClose.Instance.(SimpleCloser); ok {
 			wg.Add(1)
 			go func(name string, closer SimpleCloser) {
 				blc.logger.Debugf("lazy container %s close: simple closer for instance %s start", blc.GetName(), name)
 				defer blc.logger.Debugf("lazy container %s close: simple closer for instance %s finish", blc.GetName(), name)
-
 				defer wg.Done()
 
 				if err := closer.Close(); err != nil {
@@ -367,7 +386,6 @@ func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
 			go func(name string, closer ContextCloser) {
 				blc.logger.Debugf("lazy container %s close: context closer for instance %s start", blc.GetName(), name)
 				defer blc.logger.Debugf("lazy container %s close: context closer for instance %s finish", blc.GetName(), name)
-
 				defer wg.Done()
 
 				if err := closer.Close(closeCtx); err != nil {
@@ -382,6 +400,7 @@ func (blc *BaseLazyContainer) Close(closeCtx context.Context) error {
 		}
 	}
 
+	// Селекторный барьер контроля жесткого тайм-аута остановки Kubernetes
 	go func() {
 		defer close(closeChan)
 		wg.Wait()

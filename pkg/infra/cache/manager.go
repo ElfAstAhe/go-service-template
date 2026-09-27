@@ -8,6 +8,10 @@ import (
 )
 
 // Manager — основная реализация интерфейса Cache[K, V]
+//
+// Выступает в роли высокоуровневого оркестратора (Cache Coordinator), управляющего
+// низкоуровневым хранилищем Storage[K]. Реализует паттерны кодирования через Codec[V]
+// и совмещает ленивую (Lazy Deletion) очистку с проактивной фоновой (Janitor Sweep).
 type Manager[K comparable, V any] struct {
 	// storage Хранилище данных кэша
 	storage Storage[K]
@@ -32,6 +36,9 @@ func New[K comparable, V any](
 	}
 }
 
+// Get выполняет потокобезопасное извлечение и десериализацию доменной сущности.
+// Запускает механизм ленивой очистки (Lazy Deletion): если наносекундный маркер времени смерти
+// истек, запись атомарно удаляется из памяти без возвращения бизнес-логике.
 func (cm *Manager[K, V]) Get(key K) (V, bool, error) {
 	buf, ok := cm.storage.Get(key)
 	if !ok {
@@ -43,7 +50,7 @@ func (cm *Manager[K, V]) Get(key K) (V, bool, error) {
 		return cm.nilValue, false, errs.NewCommonError("unmarshal failed", err)
 	}
 
-	// Проверка TTL (ленивое удаление)
+	// Проверка TTL (ленивое удаление) с точностью до наносекунд
 	if envelope.DieAt > 0 && time.Now().UnixNano() > envelope.DieAt {
 		cm.storage.Delete(key)
 		return cm.nilValue, false, nil
@@ -52,6 +59,7 @@ func (cm *Manager[K, V]) Get(key K) (V, bool, error) {
 	return envelope.Value, true, nil
 }
 
+// Set кодирует объект и его TTL в монолитный контейнер, после чего атомарно фиксирует его в памяти.
 func (cm *Manager[K, V]) Set(key K, value V, ttl time.Duration) error {
 	buf, err := cm.codec.Marshal(value, ttl)
 	if err != nil {
@@ -63,19 +71,24 @@ func (cm *Manager[K, V]) Set(key K, value V, ttl time.Duration) error {
 	return nil
 }
 
+// Delete осуществляет явное транзакционное удаление ключа и очистку индексов вытеснения.
 func (cm *Manager[K, V]) Delete(key K) {
 	cm.storage.Delete(key)
 }
 
+// Size возвращает текущую суммарную емкость заполненных элементов в хранилище.
 func (cm *Manager[K, V]) Size() int {
 	return cm.storage.Len()
 }
 
+// Clear выполняет полный жесткий сброс и очистку памяти всех сегментов кэша.
 func (cm *Manager[K, V]) Clear() {
 	cm.storage.Clear()
 }
 
-// CacheJanitor вызывается планировщиком для периодической очистки просрочки
+// CacheJanitor вызывается внешним планировщиком для периодической очистки просроченных по TTL записей.
+// Алгоритм разбит на два такта: быстрый неблокирующий сбор ключей (Mark) с защитой от переполнения батча
+// и последующая последовательная очистка (Sweep), что исключает долгие мьютекс-блокировки хранилища.
 func (cm *Manager[K, V]) CacheJanitor(ctx context.Context, eventTime time.Time) error {
 	now := eventTime.UnixNano()
 	var expiredKeys []K

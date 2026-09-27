@@ -5,6 +5,10 @@ import (
 )
 
 // LogConfig — уровни и формат логирования
+//
+// Инкапсулирует конфигурационные параметры подсистемы логирования фреймворка,
+// включая глубину фильтрации (Level), формат кодирования (Format) и пути вывода.
+// ToDo: Need refactoring!
 type LogConfig struct {
 	Level    string `mapstructure:"level" json:"level,omitempty" yaml:"level,omitempty"`    // debug, info, warn, error
 	Format   string `mapstructure:"format" json:"format,omitempty" yaml:"format,omitempty"` // json, console
@@ -22,6 +26,8 @@ func NewDefaultLogConfig() *LogConfig {
 	return NewLogConfig(DefaultLogLevel, DefaultLogFormat, "")
 }
 
+// Validate осуществляет семантическую проверку конфигурации логирования на этапе запуска приложения (Bootstrap Phase).
+// Предотвращает старт системы наблюдения с незаданными уровнями или пустыми форматами вывода.
 func (lc *LogConfig) Validate() error {
 	if lc.Level == "" {
 		return errs.NewConfigValidateError("log", "level", "must not be empty", nil)

@@ -8,6 +8,9 @@ import (
 )
 
 // HTTPConfig — настройки сервера и таймауты
+//
+// Инкапсулирует конфигурационные параметры HTTP/REST веб-сервера, включая адресацию,
+// лимиты размеров входящего трафика, сетевые таймауты сокетов и параметры шифрования TLS.
 type HTTPConfig struct {
 	Address            string        `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty"`
 	ReadTimeout        time.Duration `mapstructure:"read_timeout" json:"read_timeout,omitempty" yaml:"read_timeout,omitempty"`
@@ -58,6 +61,8 @@ func NewDefaultHTTPConfig() *HTTPConfig {
 	)
 }
 
+// Validate осуществляет семантическую и системную валидацию параметров HTTP-транспорта на этапе запуска (Bootstrap Phase).
+// Полностью пресекает попытки запуска веб-интерфейса с незаданными адресами, несмонтированными TLS-ключами или невалидными таймаутами.
 func (hc *HTTPConfig) Validate() error {
 	if hc.Address == "" {
 		return errs.NewConfigValidateError("http", "address", "must not be empty", nil)
@@ -81,6 +86,7 @@ func (hc *HTTPConfig) Validate() error {
 		if hc.CertificatePath == "" {
 			return errs.NewConfigValidateError("http", "certificate_path", "must not be empty", nil)
 		}
+		// Проактивно проверяем доступность и целостность ключевой пары в файловой системе (Fail-Fast паттерн)
 		if _, err := os.Stat(hc.PrivateKeyPath); err != nil {
 			return errs.NewConfigValidateError("http", "private_key_path", "must be a valid path", err)
 		}
