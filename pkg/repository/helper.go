@@ -36,21 +36,31 @@ func newHelper[T domain.Entity[ID], ID comparable](exec db.Executor, errDecipher
 // Публичные геттеры зависимостей рантайма
 // ====================================================================
 
-func (h *Helper[T, ID]) GetExecutor() db.Executor                      { return h.exec }
-func (h *Helper[T, ID]) GetErrDecipher() db.ErrorDecipher              { return h.errDecipher }
-func (h *Helper[T, ID]) GetInfo() *EntityInfo                          { return h.info }
-func (h *Helper[T, ID]) GetNilInstance() T                             { return h.nilInstance }
+// GetExecutor возвращает инжектированную реализацию db.Executor для управления подключениями к СУБД.
+func (h *Helper[T, ID]) GetExecutor() db.Executor { return h.exec }
+
+// GetErrDecipher возвращает переводчик системных ошибок СУБД в структурированные исключения фреймворка.
+func (h *Helper[T, ID]) GetErrDecipher() db.ErrorDecipher { return h.errDecipher }
+
+// GetInfo возвращает метаданные сущности EntityInfo (названия таблиц, полей и схемы).
+func (h *Helper[T, ID]) GetInfo() *EntityInfo { return h.info }
+
+// GetNilInstance возвращает дефолтный пустой литерал типа T для безопасных пустых возвратов при ошибках.
+func (h *Helper[T, ID]) GetNilInstance() T { return h.nilInstance }
+
+// GetCallbacks возвращает контейнер зарегистрированных хуков жизненного цикла BaseRepositoryCallbacks.
 func (h *Helper[T, ID]) GetCallbacks() *BaseRepositoryCallbacks[T, ID] { return h.callbacks }
 
-// Get выполняет низкоуровневое чтение одной строки, сканирование полей и запуск пост-хука AfterFind.
+// Get выполняет точечное чтение одной строки (SELECT BY ID) из СУБД.
+// Автоматически извлекает активный Querier из контекста транзакции, создаёт пустую заготовку сущности,
+// осуществляет сканирование записи и, если настроен, запускает пост-хук AfterFind.
+// Возвращает DalNotFoundError при отсутствии записи (sql.ErrNoRows).
 func (h *Helper[T, ID]) Get(ctx context.Context, sourceLabel string, sqlReq string, params ...any) (T, error) {
-	// Автоматически извлекаем активный Querier (текущую транзакцию Tx или голый пул DB)
 	querier := h.exec.GetQuerier(ctx)
 
 	row := querier.QueryRowContext(ctx, sqlReq, params...)
 	res := h.callbacks.NewEntityFactory()
 
-	// Сканируем запись через зарегистрированный колбек маппинга
 	err := h.callbacks.EntityScanner(row, sourceLabel, res)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -59,7 +69,6 @@ func (h *Helper[T, ID]) Get(ctx context.Context, sourceLabel string, sqlReq stri
 		return h.nilInstance, errs.NewDalError("Helper.Get", "get row failed", err)
 	}
 
-	// Если определен хук пост-обработки — обогащаем сущность перед отдачей наверх
 	if h.callbacks.AfterFind != nil {
 		return h.callbacks.AfterFind(res, params...)
 	}
@@ -67,7 +76,9 @@ func (h *Helper[T, ID]) Get(ctx context.Context, sourceLabel string, sqlReq stri
 	return res, nil
 }
 
-// List выполняет потоковую вычитку набора строк СУБД с защитой планировщика от отмены контекста.
+// List выполняет потоковую вычитку набора строк СУБД (SELECT LIST).
+// Защищает CPU планировщика от отмены контекста (проверяет ctx.Err на каждой итерации rows.Next).
+// Вызывает EntityScanner для каждой строки и пропускает результаты через AfterListYield для фильтрации/модификации.
 func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq string, params ...any) ([]T, error) {
 	querier := h.GetExecutor().GetQuerier(ctx)
 
@@ -79,7 +90,6 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 
 	res := make([]T, 0)
 	for rows.Next() {
-		// Предохранитель: останавливаем итерации, если вышестоящий контекст (например, HTTP) был отменен [1]
 		if err = ctx.Err(); err != nil {
 			if errors.Is(err, context.Canceled) {
 				return res, nil
@@ -90,13 +100,11 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 		isAddEntity := true
 		entity := h.GetCallbacks().NewEntityFactory()
 
-		// Маппим текущую строку выборки в объект
 		err = h.GetCallbacks().EntityScanner(rows, sourceLabel, entity, params...)
 		if err != nil {
 			return nil, errs.NewDalError("Helper.List", "scan rows failed", err)
 		}
 
-		// Вызываем хук фильтрации/модификации строки «на лету» (Yielder)
 		if h.GetCallbacks().AfterListYield != nil {
 			entity, isAddEntity, err = h.GetCallbacks().AfterListYield(entity, params...)
 			if err != nil {
@@ -104,7 +112,6 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 			}
 		}
 
-		// Если yielder стер сущность или сбросил флаг добавления — пропускаем шаг
 		if any(entity) == nil || !isAddEntity {
 			continue
 		}
@@ -112,7 +119,6 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 		res = append(res, entity)
 	}
 
-	// Проверяем, не прервался ли цикл rows.Next() из-за системной ошибки драйвера
 	if rows.Err() != nil {
 		return nil, errs.NewDalError("Helper.List", "after scan rows failed", rows.Err())
 	}
@@ -120,7 +126,9 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 	return res, nil
 }
 
-// Create координирует вставку записи: вызывает пред-хуки, выполняет инжектированный Creator и проверяет уникальность ID.
+// Create координирует транзакционную вставку (INSERT) новой записи в базу данных.
+// Последовательно выполняет пред-хуки BeforeCreate, запускает инжектированный SQL-замыкание Creator,
+// парсит возвращенные автогенерируемые ID и дешифрует вендоро-специфичные ошибки на предмет коллизий уникальности.
 func (h *Helper[T, ID]) Create(ctx context.Context, sourceLabel string, entity T, params ...any) (T, error) {
 	if h.GetCallbacks().BeforeCreate != nil {
 		if err := h.GetCallbacks().BeforeCreate(entity, params...); err != nil {
@@ -130,7 +138,6 @@ func (h *Helper[T, ID]) Create(ctx context.Context, sourceLabel string, entity T
 
 	querier := h.GetExecutor().GetQuerier(ctx)
 
-	// Запускаем пользовательскую SQL-функцию вставки
 	row, err := h.GetCallbacks().Creator(ctx, querier, entity, params...)
 	if err != nil {
 		return h.GetNilInstance(), errs.NewDalError("Helper.Create", "create entity execution failed", err)
@@ -139,7 +146,6 @@ func (h *Helper[T, ID]) Create(ctx context.Context, sourceLabel string, entity T
 	res := h.GetCallbacks().NewEntityFactory()
 	err = h.GetCallbacks().EntityScanner(row, sourceLabel, res, params...)
 	if err != nil {
-		// Дешифруем ошибку дублирования уникального индекса (Unique Violation)
 		if h.errDecipher.IsUniqueViolation(err) {
 			return h.GetNilInstance(), errs.NewDalAlreadyExistsError(h.GetInfo().Entity, entity.GetID(), err)
 		}
@@ -153,7 +159,9 @@ func (h *Helper[T, ID]) Create(ctx context.Context, sourceLabel string, entity T
 	return res, nil
 }
 
-// Change координирует обновление параметров записи: запускает пред-хуки и выполняет инжектированный Changer.
+// Change координирует транзакционное обновление (UPDATE) полей существующей доменной записи.
+// Последовательно запускает пред-хуки BeforeChange, выполняет прикладной SQL-код Changer
+// и осуществляет повторное сканирование обновленных полей с обработкой коллизий уникальных индексов.
 func (h *Helper[T, ID]) Change(ctx context.Context, sourceLabel string, entity T, params ...any) (T, error) {
 	if h.GetCallbacks().BeforeChange != nil {
 		if err := h.GetCallbacks().BeforeChange(entity, params...); err != nil {
@@ -163,7 +171,6 @@ func (h *Helper[T, ID]) Change(ctx context.Context, sourceLabel string, entity T
 
 	querier := h.GetExecutor().GetQuerier(ctx)
 
-	// Запускаем пользовательскую SQL-функцию апдейта
 	row, err := h.GetCallbacks().Changer(ctx, querier, entity, params...)
 	if err != nil {
 		return h.GetNilInstance(), errs.NewDalError("Helper.Change", "change entity execution failed", err)
@@ -185,7 +192,8 @@ func (h *Helper[T, ID]) Change(ctx context.Context, sourceLabel string, entity T
 	return res, nil
 }
 
-// Delete удаляет запись с обязательной жесткой проверкойRowsAffected (вернет ошибку, если запись не существовала).
+// Delete выполняет удаление (DELETE) записи по переданному SQL-шаблону с обязательным аудитом измененных строк.
+// Возвращает DalNotFoundError, если ни одна строка в таблице не была затронута (запись изначально отсутствовала).
 func (h *Helper[T, ID]) Delete(ctx context.Context, sqlReq string, params ...any) error {
 	querier := h.GetExecutor().GetQuerier(ctx)
 	res, err := querier.ExecContext(ctx, sqlReq, params...)
@@ -204,7 +212,7 @@ func (h *Helper[T, ID]) Delete(ctx context.Context, sqlReq string, params ...any
 	return nil
 }
 
-// DeleteNoCheck удаляет запись без верификации её предварительного существования (слепое удаление).
+// DeleteNoCheck осуществляет быстрое «слепое» удаление (DELETE) без предварительной верификации факта существования записи.
 func (h *Helper[T, ID]) DeleteNoCheck(ctx context.Context, sqlReq string, params ...any) error {
 	querier := h.GetExecutor().GetQuerier(ctx)
 	_, err := querier.ExecContext(ctx, sqlReq, params...)

@@ -26,6 +26,7 @@ type AMQPConnectorConfig struct {
 	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"` // Default: 3s
 }
 
+// NewAMQPConnectorConfig конструктор
 func NewAMQPConnectorConfig(
 	url string,
 	username string,
@@ -46,6 +47,7 @@ func NewAMQPConnectorConfig(
 	}
 }
 
+// NewDefaultAMQPConnectorConfig конструктор default настроек
 func NewDefaultAMQPConnectorConfig() *AMQPConnectorConfig {
 	return NewAMQPConnectorConfig(
 		DefaultAMQPConnectorURL,

@@ -414,10 +414,12 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) prepareDelete() (string, error) 
 	return sqlDelete, nil
 }
 
+// GetHelper возвращает ссылку на внутренний инфраструктурный движок выполнения операций.
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) GetHelper() *OwnedHelper[T, ID, OwnerID] {
 	return bor.helper
 }
 
+// GetQueryBuilders возвращает ссылку на зарегистрированный пулл билдеров SQL-запросов.
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) GetQueryBuilders() *BaseOwnedQueryBuilders {
 	return bor.queryBuilders
 }

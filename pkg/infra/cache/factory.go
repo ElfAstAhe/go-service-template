@@ -64,6 +64,8 @@ func defaultFactoryConfig[K comparable, V any]() *factoryConfig[K, V] {
 // - Двухуровневый гибридный кэш (with L2 Distributed Storage)
 //
 //goland:noinspection GoNameStartsWithPackageName
+//lint:ignore exported This name is kept for backward compatibility and domain clarity
+//revive:ignore
 func CacheFactory[K comparable, V any](opts ...Option[K, V]) (Cache[K, V], error) {
 	conf := defaultFactoryConfig[K, V]()
 

@@ -37,6 +37,8 @@ func NewJSONCodec[V any](factory EmptyItemFactory[V]) *JSONCodec[V] {
 
 // Marshal упаковывает доменный объект v и время его смерти по TTL в текстовый JSON-конверт Envelope[V].
 // Оптимизирует операции ввода-вывода (I/O) за счет стримингового кодирования прямо в буфер пула.
+//
+//goland:noinspection DuplicatedCode
 func (jc *JSONCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
 	if utils.IsNil(value) {
 		return nil, nil
@@ -47,7 +49,7 @@ func (jc *JSONCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
 	buf.Reset()
 	defer jc.pool.Put(buf) // Гарантируем возврат ресурса в пул для повторного использования
 
-	var dieAt int64 = 0
+	var dieAt int64
 	if ttl > 0 {
 		// Фиксируем Unix Timestamp смерти в наносекундах для сквозной точности
 		dieAt = time.Now().Add(ttl).UnixNano()

@@ -26,7 +26,7 @@ func NewJWTGRPCHelper(jwtHelper *JWTHelper) *JWTGRPCHelper {
 
 // ExtractTokenStringFromMetadata вытаскивает сырую строку токена из переданной gRPC-карты метаданных (metadata.MD).
 // Автоматически нормализует заголовок, срезая RFC-префикс «Bearer », если он присутствует.
-func (jgh *JWTGRPCHelper) ExtractTokenStringFromMetadata(metadataName string, md metadata.MD) (string, error) {
+func (jgh *JWTGRPCHelper) ExtractTokenStringFromMetadata(md metadata.MD, metadataName string) (string, error) {
 	if strings.TrimSpace(metadataName) == "" {
 		return "", errs.NewInvalidArgumentError("metadataName", "empty metadata name")
 	}
@@ -51,7 +51,7 @@ func (jgh *JWTGRPCHelper) ExtractTokenStringFromMetadata(metadataName string, md
 
 // ExtractTokenStringFromContext извлекает входящие метаданные (Incoming Metadata) напрямую из context.Context
 // gRPC-вызова и осуществляет безопасный поиск строки токена авторизации.
-func (jgh *JWTGRPCHelper) ExtractTokenStringFromContext(metadataName string, ctx context.Context) (string, error) {
+func (jgh *JWTGRPCHelper) ExtractTokenStringFromContext(ctx context.Context, metadataName string) (string, error) {
 	if strings.TrimSpace(metadataName) == "" {
 		return "", errs.NewInvalidArgumentError("metadataName", "empty metadata name")
 	}
@@ -62,7 +62,7 @@ func (jgh *JWTGRPCHelper) ExtractTokenStringFromContext(metadataName string, ctx
 		return "", errs.NewInvalidArgumentError("metadata", "no metadata found in incoming context")
 	}
 
-	res, err := jgh.ExtractTokenStringFromMetadata(metadataName, md)
+	res, err := jgh.ExtractTokenStringFromMetadata(md, metadataName)
 	if err != nil {
 		return "", errs.NewUtlJWTError("extract token string from metadata", err)
 	}
@@ -72,8 +72,8 @@ func (jgh *JWTGRPCHelper) ExtractTokenStringFromContext(metadataName string, ctx
 
 // ExtractTokenFromContext выполняет полный цикл gRPC-авторизации: извлекает строку токена из контекста метаданных
 // и передает её в базовый JWT-хелпер для математической верификации цифровой подписи и сроков экспирации.
-func (jgh *JWTGRPCHelper) ExtractTokenFromContext(metadataName string, ctx context.Context) (*jwt.Token, error) {
-	tokenString, err := jgh.ExtractTokenStringFromContext(metadataName, ctx)
+func (jgh *JWTGRPCHelper) ExtractTokenFromContext(ctx context.Context, metadataName string) (*jwt.Token, error) {
+	tokenString, err := jgh.ExtractTokenStringFromContext(ctx, metadataName)
 	if err != nil {
 		return nil, errs.NewUtlJWTError("extract token string from context", err)
 	}

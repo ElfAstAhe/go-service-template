@@ -17,14 +17,11 @@ const (
 	DefaultJWTIssuer             string        = "go-service-template" // Идентификатор издателя токена (Issuer)
 )
 
-const (
-	TokenPrefix string = "Bearer " // Стандартный префикс HTTP-заголовка Authorization
-)
+// TokenPrefix - jwt token http prefix
+const TokenPrefix string = "Bearer " // Стандартный префикс HTTP-заголовка Authorization
 
-// Глобальный синглтон дефолтного метода подписи, извлеченный из реестра golang-jwt.
-var (
-	DefaultJWTSigningMethod = jwt.GetSigningMethod(DefaultJWTSigningMethodName)
-)
+// DefaultJWTSigningMethod Глобальный синглтон дефолтного метода подписи, извлеченный из реестра golang-jwt.
+var DefaultJWTSigningMethod = jwt.GetSigningMethod(DefaultJWTSigningMethodName)
 
 // TokenIDBuilder описывает сигнатуру функции-генератора уникальных идентификаторов токенов (JTI).
 type TokenIDBuilder func() string

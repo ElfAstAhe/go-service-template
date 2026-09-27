@@ -38,7 +38,7 @@ type (
 	// AfterFindFunc — хук пост-обработки сущности сразу после её успешного извлечения из базы данных.
 	AfterFindFunc[T domain.Entity[ID], ID comparable] func(entity T, params ...any) (T, error)
 
-	// AfterListYield — хук-итератор, обрабатывающий каждую отдельную сущность в цикле вычитки слайса (List).
+	// AfterListYieldFunc — хук-итератор, обрабатывающий каждую отдельную сущность в цикле вычитки слайса (List).
 	// Булев флаг позволяет прервать итерацию (yield) досрочно.
 	AfterListYieldFunc[T domain.Entity[ID], ID comparable] func(entity T, params ...any) (T, bool, error)
 

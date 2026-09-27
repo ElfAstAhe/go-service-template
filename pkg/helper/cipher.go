@@ -7,14 +7,11 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-const (
-	// CipherStringPrefix Системные маркеры (Префиксы) для однозначной идентификации зашифрованного payload.
-	CipherStringPrefix string = "cipher::" // Текстовый префикс для строковых полей СУБД
-)
+// CipherStringPrefix Системные маркеры (Префиксы) для однозначной идентификации зашифрованного payload.
+const CipherStringPrefix string = "cipher::" // Текстовый префикс для строковых полей СУБД
 
-var (
-	CipherPrefix = []byte(CipherStringPrefix) // Бинарный префикс для потоков данных
-)
+// CipherPrefix Бинарный префикс для потоков данных
+var CipherPrefix = []byte(CipherStringPrefix)
 
 // Cipher описывает высокоуровневый контракт хелпера шифрования (Crypto Orchestrator).
 // Обогащает базовые алгоритмы логикой проверки состояния (IsEncrypted) и автоматического префиксирования.

@@ -12,7 +12,7 @@ import (
 // при пробросе транзакции сквозь слои приложения.
 type txKeyType struct{}
 
-var txKey txKeyType = txKeyType{}
+var txKey = txKeyType{}
 
 // TxManager реализует интерфейс TransactionManager, обеспечивая декларативное,
 // потокобезопасное и транзакционное выполнение доменных операций UseCase-слоя.

@@ -38,6 +38,8 @@ func NewGobCodec[V any](factory EmptyItemFactory[V]) *GobCodec[V] {
 
 // Marshal пакует объект v и время его смерти по TTL в монолитный бинарный конверт Envelope[V].
 // Утилизирует буферы из пула, минимизируя нагрузку на подсистему управления памятью.
+//
+//goland:noinspection DuplicatedCode
 func (gc *GobCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
 	if utils.IsNil(value) {
 		return nil, nil
@@ -48,7 +50,7 @@ func (gc *GobCodec[V]) Marshal(value V, ttl time.Duration) ([]byte, error) {
 	buf.Reset()
 	defer gc.pool.Put(buf) // Гарантируем возврат буфера в пул при выходе из метода
 
-	var dieAt int64 = 0
+	var dieAt int64
 	if ttl > 0 {
 		// Фиксируем абсолютную метку смерти в наносекундах для ультраточного контроля TTL
 		dieAt = time.Now().Add(ttl).UnixNano()

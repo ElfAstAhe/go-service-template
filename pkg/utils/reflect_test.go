@@ -73,13 +73,13 @@ func TestGetFullTypeName_WithTestify(t *testing.T) {
 }
 
 func TestIsNil_WithTestify(t *testing.T) {
-	var emptyPtr *TestStruct = nil
+	var emptyPtr *TestStruct
 	var anyWithNilPtr any = emptyPtr // Ловушка Go: интерфейс хранит тип (*TestStruct) и nil-значение
 
-	var emptySlice []int = nil
-	var emptyMap map[string]int = nil
-	var emptyChan chan int = nil
-	var emptyFunc func() = nil
+	var emptySlice []int
+	var emptyMap map[string]int
+	var emptyChan chan int
+	var emptyFunc func()
 
 	tests := []struct {
 		name     string

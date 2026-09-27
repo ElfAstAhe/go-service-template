@@ -15,6 +15,7 @@ type LogConfig struct {
 	FilePath string `mapstructure:"file_path" json:"file_path,omitempty" yaml:"file_path,omitempty,"`
 }
 
+// NewLogConfig — фабричный конструктор конфигурации подсистемы логирования.
 func NewLogConfig(level, format string, filePath string) *LogConfig {
 	return &LogConfig{
 		Level:  level,
@@ -22,6 +23,7 @@ func NewLogConfig(level, format string, filePath string) *LogConfig {
 	}
 }
 
+// NewDefaultLogConfig собирает конфигурацию логгера по умолчанию, наполняя её системными константными дефолтами.
 func NewDefaultLogConfig() *LogConfig {
 	return NewLogConfig(DefaultLogLevel, DefaultLogFormat, "")
 }
