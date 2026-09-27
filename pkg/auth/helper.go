@@ -156,8 +156,8 @@ func (ah *HelperImpl) HasSubjectInContext(ctx context.Context) bool {
 
 // SubjectFromHTTPRequest выполняет двухканальное извлечение JWT (Cookie/Header) из входящего HTTP-запроса REST ручек.
 func (ah *HelperImpl) SubjectFromHTTPRequest(request *http.Request) (*Subject, error) {
-	cookieTokenString, cookieErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestCookie(ah.cookieName, request)
-	headerTokenString, headerErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestHeader(ah.headerName, request)
+	cookieTokenString, cookieErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestCookie(request, ah.cookieName)
+	headerTokenString, headerErr := ah.jwtHTTPHelper.ExtractTokenStringFromRequestHeader(request, ah.headerName)
 	if cookieErr != nil && headerErr != nil {
 		return nil, errs.NewUtlAuthError("extract token string", errors.Join(cookieErr, headerErr))
 	}
@@ -179,7 +179,7 @@ func (ah *HelperImpl) SubjectFromHTTPRequest(request *http.Request) (*Subject, e
 
 // SubjectFromGRPCMetadata извлекает и валидирует токен напрямую из переданной карты gRPC-метаданных (HTTP/2 заголовков).
 func (ah *HelperImpl) SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error) {
-	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromMetadata(ah.metadataName, md)
+	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromMetadata(md, ah.metadataName)
 	if err != nil {
 		return nil, errs.NewUtlAuthError("extract token string", err)
 	}
@@ -194,7 +194,7 @@ func (ah *HelperImpl) SubjectFromGRPCMetadata(md metadata.MD) (*Subject, error) 
 
 // SubjectFromGRPCContext извлекает и валидирует токен из входящего gRPC контекста context.Context.
 func (ah *HelperImpl) SubjectFromGRPCContext(gRPCCtx context.Context) (*Subject, error) {
-	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromContext(ah.metadataName, gRPCCtx)
+	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromContext(gRPCCtx, ah.metadataName)
 	if err != nil {
 		return nil, errs.NewUtlAuthError("extract token string", err)
 	}

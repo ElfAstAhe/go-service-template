@@ -19,7 +19,7 @@ func TestJWTGRPCHelper(t *testing.T) {
 	t.Run("ExtractString: успешно извлекает с Bearer", func(t *testing.T) {
 		md := metadata.Pairs(mdName, helper.TokenPrefix+"my-token")
 
-		res, err := grpcHelper.ExtractTokenStringFromMetadata(mdName, md)
+		res, err := grpcHelper.ExtractTokenStringFromMetadata(md, mdName)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "my-token", res)
@@ -28,7 +28,7 @@ func TestJWTGRPCHelper(t *testing.T) {
 	t.Run("ExtractString: успешно извлекает БЕЗ Bearer", func(t *testing.T) {
 		md := metadata.Pairs(mdName, "raw-token")
 
-		res, err := grpcHelper.ExtractTokenStringFromMetadata(mdName, md)
+		res, err := grpcHelper.ExtractTokenStringFromMetadata(md, mdName)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "raw-token", res)
@@ -37,7 +37,7 @@ func TestJWTGRPCHelper(t *testing.T) {
 	t.Run("FromContext: ошибка если метаданных нет", func(t *testing.T) {
 		ctx := context.Background() // Пустой контекст без MD
 
-		_, err := grpcHelper.ExtractTokenStringFromContext(mdName, ctx)
+		_, err := grpcHelper.ExtractTokenStringFromContext(ctx, mdName)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "no metadata")
@@ -50,7 +50,7 @@ func TestJWTGRPCHelper(t *testing.T) {
 		// Помещаем MD в контекст (имитация входящего вызова)
 		ctx := metadata.NewIncomingContext(context.Background(), md)
 
-		token, err := grpcHelper.ExtractTokenFromContext(mdName, ctx)
+		token, err := grpcHelper.ExtractTokenFromContext(ctx, mdName)
 
 		require.NoError(t, err)
 		assert.True(t, token.Valid)
