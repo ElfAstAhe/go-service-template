@@ -23,6 +23,7 @@ type HTTPConfig struct {
 	MaxRequestBodySize int           `mapstructure:"max_request_body_size" json:"max_request_body_size,omitempty" yaml:"max_request_body_size,omitempty"`
 }
 
+// NewHTTPConfig конструктор
 func NewHTTPConfig(
 	address string,
 	readTimeout time.Duration,
@@ -47,6 +48,7 @@ func NewHTTPConfig(
 	}
 }
 
+// NewDefaultHTTPConfig конструктор настроек по умолчанию
 func NewDefaultHTTPConfig() *HTTPConfig {
 	return NewHTTPConfig(
 		"",

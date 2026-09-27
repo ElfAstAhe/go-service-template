@@ -22,6 +22,7 @@ type GRPCConfig struct {
 	ShutdownTimeout  time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"`
 }
 
+// NewGRPCConfig конструктор
 func NewGRPCConfig(
 	address string,
 	maxConnIdle,
@@ -44,6 +45,7 @@ func NewGRPCConfig(
 	}
 }
 
+// NewDefaultGRPCConfig констркутор настроек по умолчанию
 func NewDefaultGRPCConfig() *GRPCConfig {
 	return NewGRPCConfig(
 		DefaultGRPCAddress,
