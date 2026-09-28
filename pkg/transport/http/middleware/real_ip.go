@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/transport"
 )
 
+// Набор констант имен стандартных и проприетарных HTTP-заголовков для определения IP-адреса.
 const (
 	// HeaderXRealIP Формат: X-Real-IP: 203.0.113.195. Нюанс: Nginx или Ingress обычно вырезают из него цепочки и прописывают туда ровно один, проверенный IP-адрес предыдущего узла
 	HeaderXRealIP string = "X-Real-IP"
@@ -34,13 +35,14 @@ var defaultHeaders = []string{
 	HeaderXRealIP,
 }
 
+// RealIPExtractor инкапсулирует в себе логику и вайтлисты приоритетных HTTP-заголовков
+// для детерминированного определения реального IP-адреса клиента на сетевом уровне.
 type RealIPExtractor struct {
-	// Храним в map для мгновенного поиска O(1) вместо slices.Contains
-	allowedHeaders map[string]struct{}
-	// Сохраняем исходный порядок кастомных заголовков для шага 5
-	customHeaders []string
+	allowedHeaders map[string]struct{} // Храним в map для мгновенного поиска O(1) вместо slices.Contains
+	customHeaders  []string            // Сохраняем исходный порядок кастомных заголовков для шага 5
 }
 
+// NewCustomRealIPExtractor принимает произвольный список заголовков и собирает кастомный экземпляр экстрактора.
 func NewCustomRealIPExtractor(headers ...string) *RealIPExtractor {
 	allowed := make(map[string]struct{}, len(headers))
 	var custom []string
@@ -72,10 +74,12 @@ func NewCustomRealIPExtractor(headers ...string) *RealIPExtractor {
 	}
 }
 
+// NewDefaultRealIPExtractor собирает экстрактор с базовыми стандартными заголовками X-Forwarded-For и X-Real-IP.
 func NewDefaultRealIPExtractor() *RealIPExtractor {
 	return NewCustomRealIPExtractor(defaultHeaders...)
 }
 
+// NewRealIPExtractor собирает комплексный экстрактор, включающий в себя абсолютно все известные enterprise и CDN-заголовки.
 func NewRealIPExtractor() *RealIPExtractor {
 	return NewCustomRealIPExtractor(
 		HeaderXRealIP,
@@ -91,6 +95,8 @@ func NewRealIPExtractor() *RealIPExtractor {
 	)
 }
 
+// Handler встраивает экстрактор в каскадную цепочку обработки HTTP-запросов (http.Handler Middleware Pattern).
+// Извлекает реальный IP-адрес, упаковывает его в контекст горутины и прокидывает управление дальше по стеку.
 func (re *RealIPExtractor) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		if len(re.allowedHeaders) == 0 {
@@ -101,6 +107,8 @@ func (re *RealIPExtractor) Handler(next http.Handler) http.Handler {
 	})
 }
 
+// extractRemoteIP производит каскадный поочередный опрос заголовков согласно уровням приоритетов провайдеров.
+//
 //goland:noinspection DuplicatedCode
 func (re *RealIPExtractor) extractRemoteIP(r *http.Request) string {
 	if r == nil {
@@ -207,6 +215,7 @@ func (re *RealIPExtractor) extractRemoteIP(r *http.Request) string {
 	return strings.TrimSpace(r.RemoteAddr)
 }
 
+// cleanAndValidateIP выполняет очистку пробелов и строгую верификацию синтаксиса адреса через парсер net.ParseIP.
 func (re *RealIPExtractor) cleanAndValidateIP(ip string) string {
 	cleaned := strings.TrimSpace(ip)
 	if cleaned == "" {
@@ -215,5 +224,6 @@ func (re *RealIPExtractor) cleanAndValidateIP(ip string) string {
 	if net.ParseIP(cleaned) != nil {
 		return cleaned
 	}
+
 	return ""
 }

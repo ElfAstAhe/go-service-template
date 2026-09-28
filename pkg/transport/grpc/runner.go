@@ -24,10 +24,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// ServerProvider определяет сигнатуру функции-фабрики для сборки инстанса gRPC сервера.
 type ServerProvider func(conf *config.GRPCConfig) (*grpc.Server, error)
+
+// ServiceRegister определяет сигнатуру функции привязки protobuf-сервисов к серверу gRPC.
 type ServiceRegister func(server *grpc.Server) error
+
+// ServerLauncher определяет сигнатуру функции запуска TCP-слушателя сетевого gRPC сокета.
 type ServerLauncher func(server *grpc.Server, conf *config.GRPCConfig) error
 
+// Runner реализует интерфейс container.Runner, координируя жизненный цикл gRPC-сервера.
+// Инкапсулирует KeepAlive параметры, цепочки интерцепторов и логику Graceful Shutdown.
 type Runner struct {
 	name            string
 	server          *grpc.Server
@@ -40,8 +47,10 @@ type Runner struct {
 	env             config.AppEnv
 }
 
+// Гарантируем компиляционную верификацию соответствия интерфейсу container.Runner
 var _ container.Runner = (*Runner)(nil)
 
+// NewRunner — фабричный конструктор gRPC-раннера с защитной валидацией обязательных зависимостей.
 func NewRunner(opts ...Option) (*Runner, error) {
 	// new instance
 	res := &Runner{
@@ -76,9 +85,8 @@ func NewRunner(opts ...Option) (*Runner, error) {
 	return res, nil
 }
 
-// Start create, register and then start gRPC server
-//
-//	Attention! This method os blocked!
+// Start осуществляет сборку, регистрацию сервисов и запуск gRPC сетевого слушателя сокетов.
+// ВНИМАНИЕ! Данный метод является блокирующим. Игнорирует штатную ошибку grpc.ErrServerStopped.
 func (r *Runner) Start(ctx context.Context) error {
 	r.log.Debugf("Runner.Start %s start", r.GetName())
 	defer r.log.Debugf("Runner.Start %s finish", r.GetName())
@@ -114,6 +122,8 @@ func (r *Runner) Start(ctx context.Context) error {
 	return nil
 }
 
+// Stop инициирует контролируемое мягкое гашение (Graceful Shutdown) gRPC сервера.
+// Мониторит закрытие соединений в горутине, страхуя рантайм жестким сбросом srv.Stop() при таймауте.
 func (r *Runner) Stop(stopCtx context.Context) error {
 	r.log.Debugf("Runner.Stop %s start", r.GetName())
 	defer r.log.Debugf("Runner.Stop %s finish", r.GetName())
@@ -148,14 +158,17 @@ func (r *Runner) Stop(stopCtx context.Context) error {
 	return nil
 }
 
+// IsRunning возвращает текущий атомарный статус активности gRPC-сервера.
 func (r *Runner) IsRunning() bool {
 	return r.running.Load()
 }
 
+// GetName возвращает уникальное строковое наименование текущего экземпляра раннера.
 func (r *Runner) GetName() string {
 	return r.name
 }
 
+// defaultServerProvider — внутренний метод конфигурации KeepAlive параметров, трассировки и интерцепторов.
 func (r *Runner) defaultServerProvider(conf *config.GRPCConfig) (*grpc.Server, error) {
 	// Настраиваем KeepAlive на основе твоего GRPCConfig
 	kasp := keepalive.ServerParameters{
@@ -220,6 +233,7 @@ func (r *Runner) defaultServerProvider(conf *config.GRPCConfig) (*grpc.Server, e
 	return srv, nil
 }
 
+// defaultServerLauncher — внутренний метод аллокации сетевого TCP-слушателя net.Listen и запуска сервера.
 func (r *Runner) defaultServerLauncher(server *grpc.Server, conf *config.GRPCConfig) error {
 	r.log.Debugf("Runner.defaultServerLauncher %s start", r.GetName())
 	defer r.log.Debugf("Runner.defaultServerLauncher %s finish", r.GetName())

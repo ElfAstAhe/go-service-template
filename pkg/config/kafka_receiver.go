@@ -44,15 +44,24 @@ type KafkaReceiverConfig struct {
 	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 
 	// Расширенные таймауты координации группы и сокетов
-	HeartbeatInterval time.Duration `mapstructure:"heartbeat_interval" json:"heartbeat_interval,omitempty" yaml:"heartbeat_interval,omitempty"` // Частота фонового пинга ("я жив") к координатору группы
-	SessionTimeout    time.Duration `mapstructure:"session_timeout" json:"session_timeout,omitempty" yaml:"session_timeout,omitempty"`          // Таймаут отсутствия пингов, после которого брокер запускает ребаланс
-	RebalanceTimeout  time.Duration `mapstructure:"rebalance_timeout" json:"rebalance_timeout,omitempty" yaml:"rebalance_timeout,omitempty"`    // Время, выделяемое воркеру на сдачу партиций при ребалансе группы
-	ReadTimeout       time.Duration `mapstructure:"read_timeout" json:"read_timeout,omitempty" yaml:"read_timeout,omitempty"`                   // Низкоуровневый таймаут сетевого сокета на чтение
+
+	// HeartbeatInterval Частота фонового пинга ("я жив") к координатору группы
+	HeartbeatInterval time.Duration `mapstructure:"heartbeat_interval" json:"heartbeat_interval,omitempty" yaml:"heartbeat_interval,omitempty"`
+	// SessionTimeout Таймаут отсутствия пингов, после которого брокер запускает ребаланс
+	SessionTimeout time.Duration `mapstructure:"session_timeout" json:"session_timeout,omitempty" yaml:"session_timeout,omitempty"`
+	// RebalanceTimeout Время, выделяемое воркеру на сдачу партиций при ребалансе группы
+	RebalanceTimeout time.Duration `mapstructure:"rebalance_timeout" json:"rebalance_timeout,omitempty" yaml:"rebalance_timeout,omitempty"`
+	// ReadTimeout Низкоуровневый таймаут сетевого сокета на чтение
+	ReadTimeout time.Duration `mapstructure:"read_timeout" json:"read_timeout,omitempty" yaml:"read_timeout,omitempty"`
 
 	// Тонкие настройки производительности рантайма библиотеки kafka-go
-	MaxAttempts   int    `mapstructure:"max_attempts" json:"max_attempts,omitempty" yaml:"max_attempts,omitempty"`       // Лимит попыток переподключения до генерации критической ошибки
-	QueueCapacity int    `mapstructure:"queue_capacity" json:"queue_capacity,omitempty" yaml:"queue_capacity,omitempty"` // Емкость фонового внутреннего канала предвыборки данных из сети
-	StartOffset   string `mapstructure:"start_offset" json:"start_offset,omitempty" yaml:"start_offset,omitempty"`       // Точка старта при отсутствии сохраненных оффсетов ("first"/"last")
+
+	// MaxAttempts Лимит попыток переподключения до генерации критической ошибки
+	MaxAttempts int `mapstructure:"max_attempts" json:"max_attempts,omitempty" yaml:"max_attempts,omitempty"`
+	// QueueCapacity Емкость фонового внутреннего канала предвыборки данных из сети
+	QueueCapacity int `mapstructure:"queue_capacity" json:"queue_capacity,omitempty" yaml:"queue_capacity,omitempty"`
+	// StartOffset Точка старта при отсутствии сохраненных оффсетов ("first"/"last")
+	StartOffset string `mapstructure:"start_offset" json:"start_offset,omitempty" yaml:"start_offset,omitempty"`
 }
 
 // NewKafkaReceiverConfig — полный конструктор структуры конфигурации получателя.

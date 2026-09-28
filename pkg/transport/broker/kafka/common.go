@@ -4,18 +4,18 @@ import (
 	"context"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 	"github.com/segmentio/kafka-go"
 )
 
-// KafkaSenderLink описывает изолированный, абстрактный контракт для низкоуровневого продюсера Apache Kafka.
+// SenderLink описывает изолированный, абстрактный контракт для низкоуровневого продюсера Apache Kafka.
 //
 // Инкапсулирует операции пакетной публикации сообщений и освобождения сетевых дескрипторов врайтера.
 // Позволяет абстрагировать прикладной код от конкретной реализации (например, от структуры *kafka.Writer библиотеки segmentio).
 //
 //goland:noinspection GoNameStartsWithPackageName
-type KafkaSenderLink interface {
+type SenderLink interface {
 	// WriteMessages выполняет атомарную пакетную запись сообщений в топики брокера Kafka.
 	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
 
@@ -23,12 +23,12 @@ type KafkaSenderLink interface {
 	Close() error
 }
 
-// KafkaReceiverLink описывает изолированный, абстрактный контракт для низкоуровневого консьюмера Apache Kafka.
+// ReceiverLink описывает изолированный, абстрактный контракт для низкоуровневого консьюмера Apache Kafka.
 //
 // Инкапсулирует рутину поштучной вычитки сообщений (Fetch), коммита оффсетов и сбора рантайм-статистики читателя.
 //
 //goland:noinspection GoNameStartsWithPackageName
-type KafkaReceiverLink interface {
+type ReceiverLink interface {
 	// FetchMessage извлекает очередное сообщение из партиции топика без автоматической фиксации оффсета.
 	FetchMessage(ctx context.Context) (kafka.Message, error)
 
@@ -45,7 +45,7 @@ type KafkaReceiverLink interface {
 // ExtractOriginalKafkaMessage выполняет безопасное приведение полиморфного интерфейса сообщения фреймворка
 // к низкоуровневой структуре kafka.Message драйвера segmentio.
 // Защищает рантайм от паник времени выполнения посредством многоуровневых оборонительных проверок (Guard Clauses).
-func ExtractOriginalKafkaMessage(msg pkgamqp.Message) (*kafka.Message, error) {
+func ExtractOriginalKafkaMessage(msg broker.Message) (*kafka.Message, error) {
 	// 1. Барьер валидации ссылки: пресекаем обработку пустых интерфейсных объектов
 	if utils.IsNil(msg) {
 		return nil, errs.NewTlCommonError("ExtractOriginalKafkaMessage", "message is nil", nil)

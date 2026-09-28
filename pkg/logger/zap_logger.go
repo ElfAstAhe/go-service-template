@@ -99,26 +99,46 @@ func (zl *ZapLogger) Close() error {
 // Реализация методов интерфейса Logger через SugaredLogger (Сахарный слой)
 // ====================================================================
 
-func (zl *ZapLogger) Error(args ...any)                 { zl.logger.Sugar().Error(args...) }
+// Error записывает сообщение уровня ошибки в структурированный лог.
+func (zl *ZapLogger) Error(args ...any) { zl.logger.Sugar().Error(args...) }
+
+// Errorf записывает форматированное сообщение уровня ошибки согласно переданному шаблону.
 func (zl *ZapLogger) Errorf(format string, args ...any) { zl.logger.Sugar().Errorf(format, args...) }
+
+// ErrorW записывает сообщение уровня ошибки, обогащенное парами произвольных ключ-значений (структурированный контекст).
 func (zl *ZapLogger) ErrorW(msg string, keysAndValues ...any) {
 	zl.logger.Sugar().Errorw(msg, keysAndValues...)
 }
 
-func (zl *ZapLogger) Warn(args ...any)                 { zl.logger.Sugar().Warn(args...) }
+// Warn записывает сообщение уровня предупреждения в структурированный лог.
+func (zl *ZapLogger) Warn(args ...any) { zl.logger.Sugar().Warn(args...) }
+
+// Warnf записывает форматированное сообщение уровня предупреждения согласно переданному шаблону.
 func (zl *ZapLogger) Warnf(format string, args ...any) { zl.logger.Sugar().Warnf(format, args...) }
+
+// WarnW записывает сообщение уровня предупреждения, обогащенное парами произвольных ключ-значений.
 func (zl *ZapLogger) WarnW(msg string, keysAndValues ...any) {
 	zl.logger.Sugar().Warnw(msg, keysAndValues...)
 }
 
-func (zl *ZapLogger) Info(args ...any)                 { zl.logger.Sugar().Info(args...) }
+// Info записывает информационное сообщение общего назначения в структурированный лог.
+func (zl *ZapLogger) Info(args ...any) { zl.logger.Sugar().Info(args...) }
+
+// Infof записывает форматированное информационное сообщение согласно переданному шаблону.
 func (zl *ZapLogger) Infof(format string, args ...any) { zl.logger.Sugar().Infof(format, args...) }
+
+// InfoW записывает информационное сообщение, обогащенное парами произвольных ключ-значений.
 func (zl *ZapLogger) InfoW(msg string, keysAndValues ...any) {
 	zl.logger.Sugar().Infow(msg, keysAndValues...)
 }
 
-func (zl *ZapLogger) Debug(args ...any)                 { zl.logger.Sugar().Debug(args...) }
+// Debug записывает сообщение уровня отладки (Development/Tracing) в структурированный лог.
+func (zl *ZapLogger) Debug(args ...any) { zl.logger.Sugar().Debug(args...) }
+
+// Debugf записывает форматированное сообщение уровня отладки согласно переданному шаблону.
 func (zl *ZapLogger) Debugf(format string, args ...any) { zl.logger.Sugar().Debugf(format, args...) }
+
+// DebugW записывает сообщение уровня отладки, обогащенное парами произвольных ключ-значений.
 func (zl *ZapLogger) DebugW(msg string, keysAndValues ...any) {
 	zl.logger.Sugar().Debugw(msg, keysAndValues...)
 }

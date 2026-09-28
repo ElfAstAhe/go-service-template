@@ -13,7 +13,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl/plain"
@@ -23,7 +23,7 @@ import (
 // Поддерживает политики экспоненциального бэкоффа с джиттером.
 type Sender struct {
 	opts        *SenderOptions
-	writer      KafkaSenderLink
+	writer      SenderLink
 	logger      logger.Logger
 	kafkaLogger *logger.KafkaLogger
 	mu          sync.RWMutex
@@ -31,7 +31,7 @@ type Sender struct {
 }
 
 // Привязываем структуру к общему интерфейсу amqp.Sender.
-var _ pkgamqp.Sender = (*Sender)(nil)
+var _ broker.Sender = (*Sender)(nil)
 
 // NewSender создает новый экземпляр отправителя на основе переданных опций.
 //
@@ -55,7 +55,7 @@ func NewSender(opts ...SenderOption) (*Sender, error) {
 }
 
 // Publish отправляет сообщение в Kafka. Включает механизм повторных попыток при сетевых сбоях.
-func (s *Sender) Publish(ctx context.Context, msg pkgamqp.Message) error {
+func (s *Sender) Publish(ctx context.Context, msg broker.Message) error {
 	if utils.IsNil(msg) {
 		return errs.NewTlCommonError("Publish", "cannot publish nil message", nil)
 	}
@@ -135,7 +135,7 @@ func (s *Sender) GetTargetName() string {
 // getSender инициализирует или возвращает существующий линк врайтера (Double-Checked Locking паттерн).
 //
 //goland:noinspection GoUnusedParameter,DuplicatedCode
-func (s *Sender) getSender(ctx context.Context) (KafkaSenderLink, error) {
+func (s *Sender) getSender(ctx context.Context) (SenderLink, error) {
 	// Первая быстрая проверка под RLock (Fast Path)
 	s.mu.RLock()
 	if !utils.IsNil(s.writer) {
@@ -260,7 +260,7 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 }
 
 // prepareMessage перекладывает полезную нагрузку и свойства нашего конверта в нативную структуру kafka.Message.
-func (s *Sender) prepareMessage(msg pkgamqp.Message) kafka.Message {
+func (s *Sender) prepareMessage(msg broker.Message) kafka.Message {
 	kafkaMsg := kafka.Message{Value: msg.GetPayload()}
 	props := msg.GetProperties()
 	if len(props) > 0 {
@@ -286,6 +286,7 @@ func (s *Sender) prepareMessage(msg pkgamqp.Message) kafka.Message {
 	return kafkaMsg
 }
 
+// getTLS возвращает криптографическую TLS-конфигурацию или nil при ее отсутствии.
 func (s *Sender) getTLS() *tls.Config {
 	if !utils.IsNil(s.opts.TLS) {
 		return s.opts.TLS
@@ -295,7 +296,7 @@ func (s *Sender) getTLS() *tls.Config {
 }
 
 // internalWriteMessages оборачивает вызов библиотеки в блок recover для перехвата рантайм-паник.
-func (s *Sender) internalWriteMessages(ctx context.Context, writer KafkaSenderLink, messages ...kafka.Message) (err error) {
+func (s *Sender) internalWriteMessages(ctx context.Context, writer SenderLink, messages ...kafka.Message) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			s.logger.Errorf("Kafka writer critically panicked during WriteMessages: %v", r)

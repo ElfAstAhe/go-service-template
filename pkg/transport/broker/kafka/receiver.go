@@ -9,7 +9,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl/plain"
@@ -19,7 +19,7 @@ import (
 // Поддерживает работу в рамках распределенной Consumer Group и ручное управление смещениями.
 type Receiver struct {
 	opts        *ReceiverOptions    // Опции рантайма, переданные при создании
-	reader      KafkaReceiverLink   // Интерфейс обертки над низкоуровневым *kafka.Reader
+	reader      ReceiverLink        // Интерфейс обертки над низкоуровневым *kafka.Reader
 	logger      logger.Logger       // Системный логгер приложения
 	kafkaLogger *logger.KafkaLogger // Адаптер для перехвата внутренних логов библиотеки kafka-go
 	mu          sync.RWMutex        // Мьютекс для потокобезопасного чтения/записи активного ридера
@@ -27,7 +27,7 @@ type Receiver struct {
 }
 
 // Гарантируем соответствие общему интерфейсу amqp.Receiver на этапе компиляции.
-var _ pkgamqp.Receiver = (*Receiver)(nil)
+var _ broker.Receiver = (*Receiver)(nil)
 
 // NewReceiver — конструктор компонента Receiver. Накатывает переданные функциональные опции,
 // инициализирует логгеры и возвращает готовый к работе экземпляр.
@@ -54,7 +54,7 @@ func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 
 // Receive блокирует текущий поток и дожидается поступления нового сообщения из Kafka.
 // Возвращает независимый конверт сообщения pkgamqp.Message.
-func (r *Receiver) Receive(ctx context.Context) (pkgamqp.Message, error) {
+func (r *Receiver) Receive(ctx context.Context) (broker.Message, error) {
 	// Получаем или лениво инициализируем живой инстанс ридера
 	receiverLink, err := r.getReceiver(ctx)
 	if err != nil {
@@ -87,7 +87,7 @@ func (r *Receiver) Receive(ctx context.Context) (pkgamqp.Message, error) {
 }
 
 // Accept подтверждает брокеру успешную обработку кадра сообщения, фиксируя его смещение (Commit Offset) в Kafka.
-func (r *Receiver) Accept(ctx context.Context, msg pkgamqp.Message) error {
+func (r *Receiver) Accept(ctx context.Context, msg broker.Message) error {
 	// Извлекаем указатель на оригинальный пакет *kafka.Message с помощью нашего безопасного хелпера
 	kafkaMsgPtr, err := ExtractOriginalKafkaMessage(msg)
 	if err != nil {
@@ -108,7 +108,7 @@ func (r *Receiver) Accept(ctx context.Context, msg pkgamqp.Message) error {
 
 // Reject обрабатывает "битые" кадры или сообщения, завершившиеся критической бизнес-ошибкой.
 // В Kafka мы продвигаем смещение вперед (вызывая Accept), чтобы не заблокировать поток (Head-of-line blocking).
-func (r *Receiver) Reject(ctx context.Context, msg pkgamqp.Message, err error) error {
+func (r *Receiver) Reject(ctx context.Context, msg broker.Message, err error) error {
 	r.logger.Errorf("Message processing rejected: %v. Moving offset forward.", err)
 	return r.Accept(ctx, msg)
 }
@@ -117,7 +117,7 @@ func (r *Receiver) Reject(ctx context.Context, msg pkgamqp.Message, err error) e
 // мы просто ничего не делаем. Сообщение будет прочитано заново после ребалансировки или перезапуска пода.
 //
 //goland:noinspection GoUnusedParameter
-func (r *Receiver) Release(ctx context.Context, msg pkgamqp.Message) error {
+func (r *Receiver) Release(ctx context.Context, msg broker.Message) error {
 	r.logger.Warnf("Kafka release called: message will be re-read upon partition rebalance.")
 	return nil
 }
@@ -163,7 +163,7 @@ func (r *Receiver) GetTargetName() string { return r.opts.TargetName }
 // getReceiver инициализирует или возвращает существующий линк ридера (Double-Checked Locking паттерн).
 //
 //goland:noinspection DuplicatedCode,GoUnusedParameter
-func (r *Receiver) getReceiver(ctx context.Context) (KafkaReceiverLink, error) {
+func (r *Receiver) getReceiver(ctx context.Context) (ReceiverLink, error) {
 	// Первая быстрая проверка под RLock (Fast Path)
 	r.mu.RLock()
 	if !utils.IsNil(r.reader) {
@@ -194,6 +194,7 @@ func (r *Receiver) getReceiver(ctx context.Context) (KafkaReceiverLink, error) {
 	return newReader, nil
 }
 
+// getDealerTLS возвращает криптографическую TLS-конфигурацию или nil при ее отсутствии.
 func (r *Receiver) getDealerTLS() *tls.Config {
 	if !utils.IsNil(r.opts.TLS) {
 		return r.opts.TLS
@@ -202,6 +203,7 @@ func (r *Receiver) getDealerTLS() *tls.Config {
 	return nil
 }
 
+// createDealer собирает низкоуровневый сетевой Dialer сокета, опционально инжектируя SASL Plain аутентификацию.
 func (r *Receiver) createDealer() *kafka.Dialer {
 	// Настраиваем сетевой Dialer сокета (уровень TCP/TLS соединений)
 	dialer := &kafka.Dialer{
@@ -222,6 +224,7 @@ func (r *Receiver) createDealer() *kafka.Dialer {
 	return dialer
 }
 
+// createReaderConfig формирует структуру параметров kafka.ReaderConfig, гибко разделяя режимы Consumer Group и Direct Partition.
 func (r *Receiver) createReaderConfig(dialer *kafka.Dialer) kafka.ReaderConfig {
 	// Маппим строковую политику точки старта в системную константу типа int64 библиотеки kafka-go
 	var startOffset = kafka.FirstOffset
@@ -282,11 +285,11 @@ func (r *Receiver) createReaderConfig(dialer *kafka.Dialer) kafka.ReaderConfig {
 
 // Stats возвращает строго типизированный технический снимок состояния рантайма Kafka.
 // Заполняет блоки COMMON и KAFKA, оставляя поля AMQP пустыми (они автоматически скроются в JSON).
-func (r *Receiver) Stats() pkgamqp.ReceiverStats {
+func (r *Receiver) Stats() broker.ReceiverStats {
 	r.mu.RLock()
 	if utils.IsNil(r.reader) {
 		r.mu.RUnlock()
-		return pkgamqp.ReceiverStats{
+		return broker.ReceiverStats{
 			BrokerType: "kafka",
 			TargetName: r.opts.TargetName,
 			Status:     "disconnected",
@@ -296,7 +299,7 @@ func (r *Receiver) Stats() pkgamqp.ReceiverStats {
 	stats := r.reader.Stats()
 	r.mu.RUnlock()
 
-	return pkgamqp.ReceiverStats{
+	return broker.ReceiverStats{
 		// COMMON
 		BrokerType:    "kafka",
 		TargetName:    stats.Topic,

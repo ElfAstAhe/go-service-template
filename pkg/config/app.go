@@ -9,10 +9,17 @@ import (
 // AppConfig инкапсулирует глобальные метаданные среды окружения и системные
 // временные лимиты (таймауты) для управления фазами жизненного цикла микросервиса.
 type AppConfig struct {
-	Env          AppEnv        `mapstructure:"env" json:"env,omitempty" yaml:"env,omitempty"`                               // Режим запуска рантайма (dev, prod, test)
-	InitTimeout  time.Duration `mapstructure:"init_timeout" json:"init_timeout,omitempty" yaml:"init_timeout,omitempty"`    // Временной потолок на сборку и инициализацию DI-контейнеров (Bootstrap)
-	StopTimeout  time.Duration `mapstructure:"stop_timeout" json:"stop_timeout,omitempty" yaml:"stop_timeout,omitempty"`    // Временной потолок на мягкую остановку сетевых серверов и консьюмеров очередей
-	CloseTimeout time.Duration `mapstructure:"close_timeout" json:"close_timeout,omitempty" yaml:"close_timeout,omitempty"` // Временной потолок на каскадное закрытие и деаллокацию пулов памяти/сокетов СУБД
+	// Env режим запуска рантайма (dev, prod, test)
+	Env AppEnv `mapstructure:"env" json:"env,omitempty" yaml:"env,omitempty"`
+
+	// InitTimeout временной потолок на сборку и инициализацию DI-контейнеров (Bootstrap)
+	InitTimeout time.Duration `mapstructure:"init_timeout" json:"init_timeout,omitempty" yaml:"init_timeout,omitempty"`
+
+	// StopTimeout временной потолок на мягкую остановку сетевых серверов и консьюмеров очередей
+	StopTimeout time.Duration `mapstructure:"stop_timeout" json:"stop_timeout,omitempty" yaml:"stop_timeout,omitempty"`
+
+	// CloseTimeout временной потолок на каскадное закрытие и деаллокацию пулов памяти/сокетов СУБД
+	CloseTimeout time.Duration `mapstructure:"close_timeout" json:"close_timeout,omitempty" yaml:"close_timeout,omitempty"`
 }
 
 // NewAppConfig — фабричный конструктор центральной конфигурации приложения.

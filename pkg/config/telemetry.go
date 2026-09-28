@@ -9,11 +9,16 @@ import (
 // TelemetryConfig инкапсулирует конфигурационные параметры подсистемы распределенной
 // трассировки OpenTelemetry (OTel), управляя экспортом спанов в коллекторы (Jaeger, Tempo).
 type TelemetryConfig struct {
-	Enabled          bool          `mapstructure:"enabled" json:"enabled,omitempty" yaml:"enabled,omitempty"`                               // Глобальный флаг активации сбора и отправки трассировок
-	ExporterEndpoint string        `mapstructure:"exporter_endpoint" json:"exporter_endpoint,omitempty" yaml:"exporter_endpoint,omitempty"` // Сетевой gRPC/HTTP адрес OTLP коллектора (например, "localhost:4317")
-	ServiceName      string        `mapstructure:"service_name" json:"service_name,omitempty" yaml:"service_name,omitempty"`                // Имя текущего микросервиса для группировки спанов в UI визуализатора
-	SampleRate       float64       `mapstructure:"sample_rate" json:"sample_rate,omitempty" yaml:"sample_rate,omitempty"`                   // Коэффициент сэмплирования трассировок (строго от 0.0 до 1.0)
-	Timeout          time.Duration `mapstructure:"timeout" json:"timeout,omitempty" yaml:"timeout,omitempty"`                               // Сетевой таймаут сокета на операцию экспорта батча спанов
+	// Enabled Глобальный флаг активации сбора и отправки трассировок
+	Enabled bool `mapstructure:"enabled" json:"enabled,omitempty" yaml:"enabled,omitempty"`
+	// ExporterEndpoint Сетевой gRPC/HTTP адрес OTLP коллектора (например, "localhost:4317")
+	ExporterEndpoint string `mapstructure:"exporter_endpoint" json:"exporter_endpoint,omitempty" yaml:"exporter_endpoint,omitempty"`
+	// ServiceName Имя текущего микросервиса для группировки спанов в UI визуализатора
+	ServiceName string `mapstructure:"service_name" json:"service_name,omitempty" yaml:"service_name,omitempty"`
+	// SampleRate Коэффициент сэмплирования трассировок (строго от 0.0 до 1.0)
+	SampleRate float64 `mapstructure:"sample_rate" json:"sample_rate,omitempty" yaml:"sample_rate,omitempty"`
+	// Timeout Сетевой таймаут сокета на операцию экспорта батча спанов
+	Timeout time.Duration `mapstructure:"timeout" json:"timeout,omitempty" yaml:"timeout,omitempty"`
 }
 
 // NewTelemetryConfig — фабричный конструктор конфигурации подсистемы телеметрии.

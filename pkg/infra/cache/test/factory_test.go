@@ -13,7 +13,7 @@ func TestCacheFactory(t *testing.T) {
 	jsonCodec := cache.NewJSONCodec[string](factory)
 
 	t.Run("success_simple_cache", func(t *testing.T) {
-		c, err := cache.CacheFactory(
+		c, err := cache.Factory(
 			cache.WithCodec[string, string](jsonCodec),
 			cache.WithLRUEvictPolicy[string, string](),
 		)
@@ -26,7 +26,7 @@ func TestCacheFactory(t *testing.T) {
 	})
 
 	t.Run("success_l2_sharded_cache", func(t *testing.T) {
-		c, err := cache.CacheFactory(
+		c, err := cache.Factory(
 			cache.WithCodec[string, string](jsonCodec),
 			cache.WithL2Cache[string, string](),
 			cache.WithShardCount[string, string](16),
@@ -41,7 +41,7 @@ func TestCacheFactory(t *testing.T) {
 
 	t.Run("error_missing_codec", func(t *testing.T) {
 		// Не передаем кодек
-		c, err := cache.CacheFactory[string, string](
+		c, err := cache.Factory[string, string](
 			cache.WithLRUEvictPolicy[string, string](),
 		)
 
@@ -51,7 +51,7 @@ func TestCacheFactory(t *testing.T) {
 	})
 
 	t.Run("error_invalid_shard_count", func(t *testing.T) {
-		_, err := cache.CacheFactory(
+		_, err := cache.Factory(
 			cache.WithCodec[string, string](jsonCodec),
 			cache.WithShardCount[string, string](0), // Инвалидный каунт
 		)
@@ -62,7 +62,7 @@ func TestCacheFactory(t *testing.T) {
 
 	t.Run("check_default_policy", func(t *testing.T) {
 		// Не передаем политику, должна поставиться LRU по умолчанию (внутри фабрики)
-		c, err := cache.CacheFactory(
+		c, err := cache.Factory(
 			cache.WithCodec[string, string](jsonCodec),
 		)
 

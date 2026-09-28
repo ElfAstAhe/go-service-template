@@ -220,30 +220,37 @@ func (bp *BasePool[D]) worker(workerIndex int) {
 	}
 }
 
+// GetName возвращает уникальное текстовое наименование текущего экземпляра пула воркеров.
 func (bp *BasePool[D]) GetName() string {
 	return bp.name
 }
 
+// GetContext возвращает ссылку на внутренний контекст context.Context времени жизни пула.
 func (bp *BasePool[D]) GetContext() context.Context {
 	return bp.ctx
 }
 
+// GetContextCancel возвращает функцию-триггер context.CancelFunc для принудительной отмены контекста пула.
 func (bp *BasePool[D]) GetContextCancel() context.CancelFunc {
 	return bp.cancel
 }
 
+// GetLogger возвращает инстанс изолированного структурированного логгера, закрепленный за пулом.
 func (bp *BasePool[D]) GetLogger() logger.Logger {
 	return bp.log
 }
 
+// GetWaitGroup возвращает указатель на общую структуру sync.WaitGroup контроля запущенных дочерних горутин.
 func (bp *BasePool[D]) GetWaitGroup() *sync.WaitGroup {
 	return &bp.wg
 }
 
+// GetConfig возвращает ссылку на конфигурационный паспорт параметров пула BasePoolConfig.
 func (bp *BasePool[D]) GetConfig() *BasePoolConfig {
 	return bp.config
 }
 
+// IsRunning возвращает текущий атомарный статус активности пула (true — запущен и принимает задачи).
 func (bp *BasePool[D]) IsRunning() bool {
 	return bp.running.Load()
 }

@@ -1,4 +1,4 @@
-package amqp
+package azure
 
 import (
 	"context"
@@ -12,6 +12,8 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
+// Connector реализует интерфейс pkgamqp.Connector, управляя жизненным циклом сессии AMQP 1.0.
+// Реализует многопоточную отказоустойчивость посредством Double-Check Locking и ленивого восстановления связи.
 type Connector struct {
 	opts   *ConnectorOptions
 	mu     sync.RWMutex
@@ -21,8 +23,10 @@ type Connector struct {
 	logger logger.Logger
 }
 
+// Гарантируем компиляционную верификацию соответствия интерфейсу pkgamqp.Connector
 var _ pkgamqp.Connector[*amqp.Session] = (*Connector)(nil)
 
+// NewConnector — фабричный конструктор коннектора Azure AMQP с валидацией опций.
 func NewConnector(opts ...ConnectorOption) (*Connector, error) {
 	cOpts := NewConnectorOptions()
 	for _, opt := range opts {
@@ -41,8 +45,8 @@ func NewConnector(opts ...ConnectorOption) (*Connector, error) {
 	}, nil
 }
 
-// GetConnection — главная точка входа для всех сендеров и ресиверов.
-// Возвращает живую общую сессию. Если связь порвана, атомарно восстановит её.
+// GetConnection извлекает живую логическую сессию *amqp.Session.
+// Применяет паттерн Double-Check Locking и гарантирует, что только одна горутина пойдет восстанавливать сокет.
 //
 //goland:noinspection DuplicatedCode
 func (c *Connector) GetConnection(ctx context.Context) (*amqp.Session, error) {
@@ -124,7 +128,7 @@ func (c *Connector) GetConnection(ctx context.Context) (*amqp.Session, error) {
 		return nil, errs.NewTlCommonError("GetConnection", "failed to open logical amqp session", err)
 	}
 
-	// 6. Успех — фиксируем новые живые ресурсы в структуре
+	// 6. Успех — фиксируем новые живые ресурсы в структуру
 	c.mu.Lock()
 	c.conn = localConn
 	c.sess = session
@@ -133,7 +137,7 @@ func (c *Connector) GetConnection(ctx context.Context) (*amqp.Session, error) {
 	return session, nil
 }
 
-// Invalidate анализирует сетевую ошибку Go-AMQP и сбрасывает соответствующий уровень ресурсов.
+// Invalidate атомарно сбрасывает дескрипторы сессии или сокета на основе перехваченного типа сетевой ошибки.
 func (c *Connector) Invalidate(err error) {
 	if err == nil {
 		return
@@ -157,7 +161,8 @@ func (c *Connector) Invalidate(err error) {
 	}
 }
 
-// Close мягко закрывает общую сессию и физическое соединение всего микросервиса при завершении работы приложения.
+// Close осуществляет контролируемое плановое гашение (Graceful Shutdown) ресурсов коннектора.
+// Вырезает ссылки под мьютексом, уводя тяжелые вызовы Close библиотек в изолированную горутину с таймаутом.
 func (c *Connector) Close(ctx context.Context) error {
 	c.logger.Debug("connector shutdown started")
 	defer c.logger.Debug("connector shutdown finished")

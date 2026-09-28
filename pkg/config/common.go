@@ -21,9 +21,14 @@ func (ae appEnvList) Contains(env AppEnv) bool {
 
 // Набор констант поддерживаемых и валидируемых сред окружения (App Env Enum).
 const (
-	AppEnvProduction  AppEnv = "prod" // Промышленный контур (Production)
-	AppEnvDevelopment AppEnv = "dev"  // Контур локальной разработки и отладки (Development)
-	AppEnvTest        AppEnv = "test" // Контур автоматизированного тестирования (CI/CD / Testing)
+	// AppEnvProduction промышленный контур (Production)
+	AppEnvProduction AppEnv = "prod"
+
+	// AppEnvDevelopment контур локальной разработки и отладки (Development)
+	AppEnvDevelopment AppEnv = "dev"
+
+	// AppEnvTest контур автоматизированного тестирования (CI/CD / Testing)
+	AppEnvTest AppEnv = "test"
 )
 
 // Глобальный неизменяемый синглтон-реестр валидных окружений.

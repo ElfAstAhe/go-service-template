@@ -12,24 +12,30 @@ var (
 	// COMMON Metrics (Общие метрики для всех типов брокеров)
 	// ====================================================================
 
+	// ReceiverMessagesTotal фиксирует общее количество успешно прочитанных и обработанных сообщений.
 	ReceiverMessagesTotal *prometheus.GaugeVec
 
+	// ReceiverErrorsTotal считает сетевые сбои, таймауты сокетов или ошибки десериализации payload получателя.
 	ReceiverErrorsTotal *prometheus.GaugeVec
 
 	// ====================================================================
 	// KAFKA Specific Metrics (Только для архитектуры Kafka)
 	// ====================================================================
 
+	// ReceiverKafkaLag показывает текущее отставание консьюмера (количество невычитанных сообщений в партициях Kafka).
 	ReceiverKafkaLag *prometheus.GaugeVec
 
+	// ReceiverKafkaQueueLength трекает заполненность фонового буфера предвыборки в памяти консьюмера kafka-go.
 	ReceiverKafkaQueueLength *prometheus.GaugeVec
 
 	// ====================================================================
 	// AMQP Specific Metrics (Для классических MQ: Azure Service Bus, Artemis)
 	// ====================================================================
 
+	// ReceiverAMQPPrefetchCount показывает текущий лимит предвыборки (Flow Control Credits) AMQP линка.
 	ReceiverAMQPPrefetchCount *prometheus.GaugeVec
 
+	// ReceiverAMQPConsumerCount считает количество активных конкурирующих консьюмеров на очереди брокера.
 	ReceiverAMQPConsumerCount *prometheus.GaugeVec
 )
 
@@ -40,26 +46,27 @@ var (
 	// SENDER COMMON Metrics (Общие метрики для всех продюсеров)
 	// ====================================================================
 
-	// SenderPushedMessagesTotal фиксирует количество вызовов метода Publish
+	// SenderPushedMessagesTotal фиксирует общее количество вызовов метода Publish.
 	SenderPushedMessagesTotal *prometheus.CounterVec
 
-	// SenderPublishErrorsTotal считает критические сбои отправки (когда ретраи исчерпаны)
+	// SenderPublishErrorsTotal считает критические сбои отправки (когда ретраи исчерпаны).
 	SenderPublishErrorsTotal *prometheus.CounterVec
 
-	// SenderPublishRetriesTotal трекает стабильность сети (сколько раз сработал наш бэкофф с джиттером)
+	// SenderPublishRetriesTotal трекает стабильность сети (сколько раз сработал наш бэкофф с джиттером).
 	SenderPublishRetriesTotal *prometheus.CounterVec
 
-	// SenderPublishDurationHistogram замеряет скорость ответа брокера (Latency) в секундах
+	// SenderPublishDurationHistogram замеряет скорость ответа брокера (Latency) при публикации в секундах.
 	SenderPublishDurationHistogram *prometheus.HistogramVec
 
 	// ====================================================================
 	// SENDER KAFKA Specific Metrics (Только для батчинга Kafka)
 	// ====================================================================
 
-	// SenderKafkaBatchSize Gauge показывает, насколько плотно забиваются пачки перед пушем
+	// SenderKafkaBatchSize показывает, насколько плотно забиваются пачки (батчи) перед пушем в сеть.
 	SenderKafkaBatchSize *prometheus.GaugeVec
 )
 
+// InitBrokerReceiverMetrics инициализирует общие векторы метрик для подсистем вычитки сообщений (Consumers).
 func InitBrokerReceiverMetrics() {
 	ReceiverMessagesTotal = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "receiver_messages_total",
@@ -71,6 +78,7 @@ func InitBrokerReceiverMetrics() {
 	}, []string{"broker_type", "target_name"})
 }
 
+// InitBrokerReceiverAMQPMetrics инициализирует специфичные для протокола AMQP 0-9-1 / 1.0 метрики получателя.
 func InitBrokerReceiverAMQPMetrics() {
 	ReceiverAMQPPrefetchCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "receiver_amqp_prefetch_count",
@@ -82,6 +90,7 @@ func InitBrokerReceiverAMQPMetrics() {
 	}, []string{"broker_type", "target_name"})
 }
 
+// InitBrokerReceiverKafkaMetrics инициализирует специфичные для Apache Kafka метрики отставания и емкости получателя.
 func InitBrokerReceiverKafkaMetrics() {
 	ReceiverKafkaLag = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "receiver_kafka_lag",
@@ -93,6 +102,7 @@ func InitBrokerReceiverKafkaMetrics() {
 	}, []string{"broker_type", "target_name"})
 }
 
+// InitBrokerSenderMetrics инициализирует сквозные векторы метрик для подсистем публикации сообщений (Producers).
 func InitBrokerSenderMetrics() {
 	SenderPushedMessagesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "sender_messages_total",
@@ -113,6 +123,7 @@ func InitBrokerSenderMetrics() {
 	}, []string{"broker_type", "target_name"})
 }
 
+// InitBrokerSenderKafkaMetrics инициализирует специфичные метрики агрегации пачек для продюсера Apache Kafka.
 func InitBrokerSenderKafkaMetrics() {
 	SenderKafkaBatchSize = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "sender_kafka_batch_messages_count",

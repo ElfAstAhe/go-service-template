@@ -1,4 +1,4 @@
-package amqp
+package azure
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
 )
 
 // Константы рантайм-дефолтов для внутренней защиты отправителя Azure Service Bus.
@@ -25,7 +25,7 @@ type SenderOption func(*SenderOptions)
 // SenderOptions инкапсулирует все параметры рантайма, необходимые для безопасной сборки и работы Sender.
 type SenderOptions struct {
 	// Connector представляет собой ссылку на глобальный дженерик-коннектор для управления AMQP-сессиями.
-	Connector pkgamqp.Connector[*amqp.Session]
+	Connector broker.Connector[*amqp.Session]
 	// TargetName определяет точное имя целевой очереди (Queue) или топика (Topic) в Azure Service Bus.
 	TargetName string
 	// Opts содержит специфичные низкоуровневые настройки линка отправки библиотеки Azure go-amqp.
@@ -43,7 +43,7 @@ type SenderOptions struct {
 	PublishMaxRetryDelay time.Duration
 }
 
-// NewSenderOptions инициализирует структуру опций, сразу наполняя её безопасными базовыми таймаутами.
+// NewSenderOptions создает структуру опций, сразу наполняя её безопасными базовыми таймаутами.
 func NewSenderOptions() *SenderOptions {
 	return &SenderOptions{
 		ConnectTimeout:        DefaultSenderConnectTimeout,
@@ -93,42 +93,52 @@ func (so *SenderOptions) Validate() error {
 // Fluent API методы конфигурации
 // ====================================================================
 
-func WithSenderConnector(connector pkgamqp.Connector[*amqp.Session]) SenderOption {
+// WithSenderConnector инжектирует ссылку на глобальный менеджер AMQP-сессий коннектора.
+func WithSenderConnector(connector broker.Connector[*amqp.Session]) SenderOption {
 	return func(so *SenderOptions) { so.Connector = connector }
 }
 
+// WithSenderTargetName задает имя целевой очереди или топика назначения для публикации сообщений.
 func WithSenderTargetName(targetName string) SenderOption {
 	return func(so *SenderOptions) { so.TargetName = targetName }
 }
 
+// WithSenderConnectTimeout переопределяет время ожидания при создании сетевого линка отправки.
 func WithSenderConnectTimeout(timeout time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.ConnectTimeout = timeout }
 }
 
+// WithSenderShutdownTimeout переопределяет таймаут для мягкого гашения и сброса буферов линка продюсера.
 func WithSenderShutdownTimeout(timeout time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.ShutdownTimeout = timeout }
 }
 
+// WithSenderLogger инжектирует структурированный логгер для аудита операций публикации сообщений.
 func WithSenderLogger(log logger.Logger) SenderOption {
 	return func(so *SenderOptions) { so.Logger = log }
 }
 
+// WithSenderPublishMaxTryAttempts настраивает верхний лимит повторных попыток публикации (Retries).
 func WithSenderPublishMaxTryAttempts(maxTryAttempts int) SenderOption {
 	return func(so *SenderOptions) { so.PublishMaxTryAttempts = maxTryAttempts }
 }
 
+// WithSenderPublishBaseRetryDelay задает стартовый шаг временной задержки экспоненциального отката.
 func WithSenderPublishBaseRetryDelay(delay time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.PublishBaseRetryDelay = delay }
 }
 
+// WithSenderPublishMaxRetryDelay фиксирует жесткий потолок задержки ретрая для предотвращения бесконечного роста бэкоффа.
 func WithSenderPublishMaxRetryDelay(delay time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.PublishMaxRetryDelay = delay }
 }
 
+// WithSenderOpts позволяет передать низкоуровневые параметры конфигурации линка отправки библиотеки Azure go-amqp.
 func WithSenderOpts(senderOpts *amqp.SenderOptions) SenderOption {
 	return func(so *SenderOptions) { so.Opts = senderOpts }
 }
 
+// WithSendOpts настраивает базовые опции доставки единичных сообщений (например, флаг Settled).
 func WithSendOpts(opts *amqp.SendOptions) SenderOption {
 	return func(so *SenderOptions) { so.SendOpts = opts }
 }

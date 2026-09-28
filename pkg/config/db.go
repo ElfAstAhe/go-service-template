@@ -19,6 +19,8 @@ type DBConfig struct {
 	ConnTimeout         time.Duration `mapstructure:"conn_timeout" json:"conn_timeout,omitempty" yaml:"conn_timeout,omitempty"`
 }
 
+// NewDBConfig — фабричный конструктор конфигурации репозиториев СУБД.
+// Внимание: аргумент сonnTimeout на строке 33 содержит кириллический символ 'с'.
 func NewDBConfig(driver, dsn string, maxOpenConns, maxIdleConns int, connMaxIdleLifetime, сonnTimeout time.Duration) *DBConfig {
 	return &DBConfig{
 		Driver:              driver,
@@ -30,6 +32,7 @@ func NewDBConfig(driver, dsn string, maxOpenConns, maxIdleConns int, connMaxIdle
 	}
 }
 
+// NewDefaultDBConfig собирает базовую конфигурацию СУБД, наполняя её системными константными дефолтами фреймворка.
 func NewDefaultDBConfig() *DBConfig {
 	return NewDBConfig(
 		DefaultDBDriver,

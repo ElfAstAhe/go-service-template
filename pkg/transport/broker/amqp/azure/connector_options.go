@@ -1,4 +1,4 @@
-package amqp
+package azure
 
 import (
 	"context"
@@ -65,42 +65,49 @@ func (co *ConnectorOptions) Validate() error {
 // Fluent API методы конфигурации
 // ====================================================================
 
+// WithConnectorURL инжектирует целевой адрес (строку подключения) AMQP 1.0 брокера.
 func WithConnectorURL(url string) ConnectorOption {
 	return func(co *ConnectorOptions) {
 		co.URL = url
 	}
 }
 
+// WithConnectorConnectTimeout переопределяет стандартный лимит времени на установление сетевого соединения.
 func WithConnectorConnectTimeout(timeout time.Duration) ConnectorOption {
 	return func(co *ConnectorOptions) {
 		co.ConnectTimeout = timeout
 	}
 }
 
+// WithConnectorShutdownTimeout переопределяет таймаут планового гашения активных соединений и сессий.
 func WithConnectorShutdownTimeout(timeout time.Duration) ConnectorOption {
 	return func(co *ConnectorOptions) {
 		co.ShutdownTimeout = timeout
 	}
 }
 
+// WithConnectorDialFnTestGap инжектирует кастомную функцию дозвона, исключая сетевой I/O слой из юнит-тестов (Test Gap-Pattern).
 func WithConnectorDialFnTestGap(fn func(ctx context.Context, url string, opts *amqp.ConnOptions) (*amqp.Conn, error)) ConnectorOption {
 	return func(co *ConnectorOptions) {
 		co.DialFnTestGap = fn
 	}
 }
 
+// WithConnectorLogger инжектирует обособленный структурированный логгер для аудита сессий коннектора.
 func WithConnectorLogger(log logger.Logger) ConnectorOption {
 	return func(co *ConnectorOptions) {
 		co.Logger = log
 	}
 }
 
+// WithConnectorConnOpts инжектирует низкоуровневые параметры TLS и SASL конфигураций сокета amqp.ConnOptions.
 func WithConnectorConnOpts(connOpts *amqp.ConnOptions) ConnectorOption {
 	return func(co *ConnectorOptions) {
 		co.ConnOpts = connOpts
 	}
 }
 
+// WithConnectorSessionOpts инжектирует специфичные параметры лимитов открытых каналов amqp.SessionOptions.
 func WithConnectorSessionOpts(sessOpts *amqp.SessionOptions) ConnectorOption {
 	return func(co *ConnectorOptions) {
 		co.SessionOpts = sessOpts

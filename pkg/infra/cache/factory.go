@@ -56,7 +56,7 @@ func defaultFactoryConfig[K comparable, V any]() *factoryConfig[K, V] {
 	}
 }
 
-// CacheFactory — центральный декларативный конструктор (Abstract Factory) подсистемы кэширования фреймворка.
+// Factory — центральный декларативный конструктор (Abstract Factory) подсистемы кэширования фреймворка.
 //
 // На основе переданных функциональных опций автоматически собирает нужную топологию рантайма:
 // - Конкурентный однопоточный кэш (shardCount == 1)
@@ -66,7 +66,7 @@ func defaultFactoryConfig[K comparable, V any]() *factoryConfig[K, V] {
 //goland:noinspection GoNameStartsWithPackageName
 //lint:ignore exported This name is kept for backward compatibility and domain clarity
 //revive:ignore
-func CacheFactory[K comparable, V any](opts ...Option[K, V]) (Cache[K, V], error) {
+func Factory[K comparable, V any](opts ...Option[K, V]) (Cache[K, V], error) {
 	conf := defaultFactoryConfig[K, V]()
 
 	// Вычисляем входящие мутаторы Fluent API

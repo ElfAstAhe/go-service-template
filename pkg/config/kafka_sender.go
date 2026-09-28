@@ -41,11 +41,17 @@ type KafkaSenderConfig struct {
 	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
 
 	// Тонкие настройки асинхронного пакетирования (Батчинга) рантайма библиотеки kafka-go
-	BatchSize    int           `mapstructure:"batch_size" json:"batch_size,omitempty" yaml:"batch_size,omitempty"`          // Лимит количества сообщений в локальном буфере перед отправкой пачки
-	BatchBytes   int           `mapstructure:"batch_bytes" json:"batch_bytes,omitempty" yaml:"batch_bytes,omitempty"`       // Максимальный объем одной пачки в байтах перед сбросом в сеть
-	BatchTimeout time.Duration `mapstructure:"batch_timeout" json:"batch_timeout,omitempty" yaml:"batch_timeout,omitempty"` // Время ожидания накопления пачки (предотвращает зависание при низком RPS)
-	WriteTimeout time.Duration `mapstructure:"write_timeout" json:"write_timeout,omitempty" yaml:"write_timeout,omitempty"` // Жесткий таймаут сокета на непосредственную операцию записи пачки в сеть
-	RequiredAcks int           `mapstructure:"required_acks" json:"required_acks,omitempty" yaml:"required_acks,omitempty"` // Уровень подтверждения записи брокером (-1 = all, 0 = none, 1 = leader)
+
+	// BatchSize Лимит количества сообщений в локальном буфере перед отправкой пачки
+	BatchSize int `mapstructure:"batch_size" json:"batch_size,omitempty" yaml:"batch_size,omitempty"`
+	// BatchBytes Максимальный объем одной пачки в байтах перед сбросом в сеть
+	BatchBytes int `mapstructure:"batch_bytes" json:"batch_bytes,omitempty" yaml:"batch_bytes,omitempty"`
+	// BatchTimeout Время ожидания накопления пачки (предотвращает зависание при низком RPS)
+	BatchTimeout time.Duration `mapstructure:"batch_timeout" json:"batch_timeout,omitempty" yaml:"batch_timeout,omitempty"`
+	// WriteTimeout Жесткий таймаут сокета на непосредственную операцию записи пачки в сеть
+	WriteTimeout time.Duration `mapstructure:"write_timeout" json:"write_timeout,omitempty" yaml:"write_timeout,omitempty"`
+	// RequiredAcks Уровень подтверждения записи брокером (-1 = all, 0 = none, 1 = leader)
+	RequiredAcks int `mapstructure:"required_acks" json:"required_acks,omitempty" yaml:"required_acks,omitempty"`
 }
 
 // NewKafkaSenderConfig — полный конструктор структуры конфигурации отправителя.

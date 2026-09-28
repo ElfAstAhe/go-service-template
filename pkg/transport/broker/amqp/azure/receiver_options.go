@@ -1,4 +1,4 @@
-package amqp
+package azure
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
 )
 
 // Константы рантайм-дефолтов для внутренней защиты получателя Azure Service Bus.
@@ -23,7 +23,7 @@ type ReceiverOption func(*ReceiverOptions)
 // ReceiverOptions инкапсулирует все параметры рантайма, необходимые для безопасной сборки и работы Receiver.
 type ReceiverOptions struct {
 	// Connector представляет собой ссылку на глобальный дженерик-коннектор для управления AMQP-сессиями.
-	Connector pkgamqp.Connector[*amqp.Session] // Ссылка на наш общий дженерик-коннектор
+	Connector broker.Connector[*amqp.Session] // Ссылка на наш общий дженерик-коннектор
 	// TargetName определяет точное имя целевой очереди (Queue) или подписки на топик (Subscription).
 	TargetName string // Имя конкретной очереди/топика для сингл-ресивера
 	// ReceiverOpts содержит специфичные низкоуровневые настройки линка вычитки библиотеки Azure go-amqp.
@@ -76,48 +76,56 @@ func (ro *ReceiverOptions) Validate() error {
 // Fluent API методы конфигурации
 // ====================================================================
 
-func WithReceiverConnector(connector pkgamqp.Connector[*amqp.Session]) ReceiverOption {
+// WithReceiverConnector инжектирует ссылку на глобальный менеджер AMQP-сессий.
+func WithReceiverConnector(connector broker.Connector[*amqp.Session]) ReceiverOption {
 	return func(cro *ReceiverOptions) {
 		cro.Connector = connector
 	}
 }
 
+// WithReceiverTargetName задает имя целевой очереди или подписки брокера для вычитки сообщений.
 func WithReceiverTargetName(targetName string) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.TargetName = targetName
 	}
 }
 
+// WithReceiverConnectTimeout переопределяет время ожидания открытия сетевого линка получателя.
 func WithReceiverConnectTimeout(timeout time.Duration) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.ConnectTimeout = timeout
 	}
 }
 
+// WithReceiverShutdownTimeout переопределяет таймаут для мягкого гашения линка вычитки.
 func WithReceiverShutdownTimeout(timeout time.Duration) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.ShutdownTimeout = timeout
 	}
 }
 
+// WithReceiverLogger инжектирует структурированный логгер для аудита операций ресивера.
 func WithReceiverLogger(log logger.Logger) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.Logger = log
 	}
 }
 
+// WithReceiverLinkCredit настраивает Flow Control лимит (кредиты предвыборки пакетов в буфер).
 func WithReceiverLinkCredit(credit int32) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.LinkCredit = credit
 	}
 }
 
+// WithReceiverOpts позволяет передать низкоуровневые параметры durability-конфигурации Azure линка.
 func WithReceiverOpts(receiverOpts *amqp.ReceiverOptions) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.ReceiverOpts = receiverOpts
 	}
 }
 
+// WithReceiverReceiveOpts задает кастомные рантайм-параметры для одиночных сетевых вызовов чтения пакета.
 func WithReceiverReceiveOpts(receiveOpts *amqp.ReceiveOptions) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.ReceiveOpts = receiveOpts

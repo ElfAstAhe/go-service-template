@@ -156,6 +156,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAll(ctx context.Context, own
 	return bor.GetHelper().List(ctx, SourceLabelListAll, sqlList, ownerID)
 }
 
+// ValidateListAll верифицирует входящие параметры перед загрузкой списка данных
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAll(ownerID OwnerID) error {
 	return nil
 }
@@ -189,6 +190,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) ListAllByOwners(ctx context.Cont
 	return bor.GetHelper().ListByOwners(ctx, SourceLabelListAllByOwners, sqlListAllByOwners, ownerIDs)
 }
 
+// ValidateListAllByOwners верифицирует входящие пераметры перед загрузкой списка
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateListAllByOwners(ownerIDs ...OwnerID) error {
 	return nil
 }
@@ -364,6 +366,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) DeleteAll(ctx context.Context, o
 	return bor.GetHelper().DeleteNoCheck(ctx, sqlDeleteAll, ownerID)
 }
 
+// ValidateDeleteAll верифицирует входящие параметры перед удалением подчинённых экземпляров
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateDeleteAll(ownerID OwnerID) error { return nil }
 
 // prepareDeleteAll формирует SQL-запрос для каскадного удаления по owner_id.
@@ -396,6 +399,7 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) Delete(ctx context.Context, owne
 	return bor.GetHelper().Delete(ctx, sqlDelete, id)
 }
 
+// ValidateDelete верифицирует входящие переметры перед удалением экземпляра
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateDelete(ownerID OwnerID) error { return nil }
 
 // prepareDelete формирует SQL-запрос для удаления записи по первичному ключу.

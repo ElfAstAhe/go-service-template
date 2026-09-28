@@ -10,6 +10,7 @@ type ReceiverStats struct {
 	// ====================================================================
 	// COMMON Specific (Общие метрики для всех типов брокеров)
 	// ====================================================================
+
 	BrokerType    string    `json:"broker_type"`    // Тип брокера: "kafka", "artemis", "rabbitmq"
 	TargetName    string    `json:"target_name"`    // Имя топика брокера или очереди
 	Status        string    `json:"status"`         // Текущий статус: "connected", "disconnected", "rebalancing"
@@ -21,6 +22,7 @@ type ReceiverStats struct {
 	// ====================================================================
 	// KAFKA Specific (Метрики, применимые только к архитектуре Kafka)
 	// ====================================================================
+
 	Partition     string `json:"partition,omitempty"`      // Активная партиция кластера (или список партиций)
 	Offset        int64  `json:"offset,omitempty"`         // Текущее зафиксированное смещение (Offset) ридера
 	QueueLength   int64  `json:"queue_length,omitempty"`   // Текущая заполненность внутреннего буфера предвыборки в памяти
@@ -29,6 +31,7 @@ type ReceiverStats struct {
 	// ====================================================================
 	// AMQP Specific (Метрики, применимые только к классическим MQ: Artemis, RabbitMQ)
 	// ====================================================================
+
 	ConsumerCount int64 `json:"consumer_count,omitempty"` // Количество активных консьюмеров на данной очереди
 	PrefetchCount int64 `json:"prefetch_count,omitempty"` // Настройка лимита предвыборки (QoS Prefetch) на канале
 }

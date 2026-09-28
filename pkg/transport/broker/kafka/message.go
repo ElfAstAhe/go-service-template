@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 	"github.com/segmentio/kafka-go"
 )
@@ -16,7 +16,7 @@ type Message struct {
 	Props      map[string]any
 }
 
-var _ pkgamqp.Message = (*Message)(nil)
+var _ broker.Message = (*Message)(nil)
 
 // NewMessage собирает наш конверт из сырого сообщения библиотеки kafka-go.
 // Заголовки (Headers) из Kafka автоматически маппятся в общую карту Props.
