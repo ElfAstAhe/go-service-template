@@ -89,8 +89,8 @@ func (_c *MockEvictionPolicy_Evict_Call[K]) Run(run func()) *MockEvictionPolicy_
 	return _c
 }
 
-func (_c *MockEvictionPolicy_Evict_Call[K]) Return(v K, b bool) *MockEvictionPolicy_Evict_Call[K] {
-	_c.Call.Return(v, b)
+func (_c *MockEvictionPolicy_Evict_Call[K]) Return(key K, ok bool) *MockEvictionPolicy_Evict_Call[K] {
+	_c.Call.Return(key, ok)
 	return _c
 }
 

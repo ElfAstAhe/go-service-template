@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-// Константы gRPC метаданных (строго в нижнем регистре для HTTP/2)
+// Константы gRPC метаданных (строго в нижнем регистре для HTTP/2 спецификации)
 const (
 	HeaderXRealIP                = "x-real-ip"
 	HeaderXForwardedFor          = "x-forwarded-for"
@@ -30,12 +30,14 @@ var defaultHeaders = []string{
 	HeaderXRealIP,
 }
 
+// RealIPExtractorUSInterceptor представляет собой унарный интерцептор gRPC сервера,
+// отвечающий за детерминированное извлечение реального IP-адреса клиента из метаданных контекста HTTP/2.
 type RealIPExtractorUSInterceptor struct {
-	allowedHeaders map[string]struct{}
-	customHeaders  []string
+	allowedHeaders map[string]struct{} // Разрешенное для проверки множество заголовков ( whitelist )
+	customHeaders  []string            // Список пользовательских кастомных заголовков для фолбека
 }
 
-// NewRealIPExtractorUSInterceptor принимает список ожидаемых заголовков
+// NewRealIPExtractorUSInterceptor принимает список ожидаемых заголовков и собирает инстанс экстрактора.
 func NewRealIPExtractorUSInterceptor(headers ...string) *RealIPExtractorUSInterceptor {
 	allowed := make(map[string]struct{}, len(headers))
 	var custom []string
@@ -67,11 +69,12 @@ func NewRealIPExtractorUSInterceptor(headers ...string) *RealIPExtractorUSInterc
 	}
 }
 
+// NewDefaultRealIPExtractorUSInterceptor собирает экстрактор с дефолтными заголовками X-Forwarded-For и X-Real-IP.
 func NewDefaultRealIPExtractorUSInterceptor() *RealIPExtractorUSInterceptor {
 	return NewRealIPExtractorUSInterceptor(defaultHeaders...)
 }
 
-// UnaryServerInterceptor возвращает готовый интерцептор для gRPC сервера
+// UnaryServerInterceptor возвращает готовый интерцептор для gRPC сервера (Unary Server Interceptor).
 func (re *RealIPExtractorUSInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
@@ -79,16 +82,18 @@ func (re *RealIPExtractorUSInterceptor) UnaryServerInterceptor() grpc.UnaryServe
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (any, error) {
+		// Fast-Path: если вайтлист пуст — мгновенно передаем управление по цепочке без вычислений
 		if len(re.allowedHeaders) == 0 {
 			return handler(ctx, req)
 		}
 
 		ip := re.extractRemoteIP(ctx)
+		// Обогащаем context.Context верифицированным адресом и прокидываем его дальше
 		return handler(transport.WithRealIP(ctx, ip), req)
 	}
 }
 
-// Извлечение IP на основе контекста метаданных gRPC
+// Извлечение IP на основе контекста метаданных gRPC с каскадным соблюдением уровней приоритетов (Priority-based extraction).
 //
 //goland:noinspection DuplicatedCode
 func (re *RealIPExtractorUSInterceptor) extractRemoteIP(ctx context.Context) string {
@@ -108,7 +113,7 @@ func (re *RealIPExtractorUSInterceptor) extractRemoteIP(ctx context.Context) str
 		return ""
 	}
 
-	// 1. Приоритет I: Эксклюзивные заголовки защищенных CDN/Провайдеров облаков
+	// 1. Приоритет I: Эксклюзивные доверенные заголовки защищенных CDN/Провайдеров облаков
 	if _, ok := re.allowedHeaders[HeaderCFConnectingIP]; ok {
 		if ip := getMetadataValue(HeaderCFConnectingIP); ip != "" {
 			if cleanIP := re.cleanAndValidateIP(ip); cleanIP != "" {
@@ -145,7 +150,7 @@ func (re *RealIPExtractorUSInterceptor) extractRemoteIP(ctx context.Context) str
 		}
 	}
 
-	// 2. Приоритет II: Стандартный X-Forwarded-For
+	// 2. Приоритет II: Стандартный X-Forwarded-For (Берем строго первый элемент цепочки для защиты от Spoofing)
 	if _, ok := re.allowedHeaders[HeaderXForwardedFor]; ok {
 		if xff := getMetadataValue(HeaderXForwardedFor); xff != "" {
 			firstIP, _, _ := strings.Cut(xff, ",")
@@ -187,7 +192,7 @@ func (re *RealIPExtractorUSInterceptor) extractRemoteIP(ctx context.Context) str
 		}
 	}
 
-	// 5. Приоритет V: Кастомная специфика
+	// 5. Приоритет V: Кастомная специфика проекта
 	for _, header := range re.customHeaders {
 		if ip := getMetadataValue(header); ip != "" {
 			if cleanIP := re.cleanAndValidateIP(ip); cleanIP != "" {
@@ -196,11 +201,11 @@ func (re *RealIPExtractorUSInterceptor) extractRemoteIP(ctx context.Context) str
 		}
 	}
 
-	// 6. Финальный фолбек на сетевой сокет gRPC соединения
+	// 6. Финальный фолбек на физический сетевой сокет текущего gRPC соединения
 	return re.fallbackToPeer(ctx)
 }
 
-// Извлечение IP из физического peer gRPC
+// Извлечение IP из физического peer gRPC контекста при отсутствии доверенных заголовков проксирования.
 func (re *RealIPExtractorUSInterceptor) fallbackToPeer(ctx context.Context) string {
 	if pr, ok := peer.FromContext(ctx); ok && pr.Addr != nil {
 		host, _, err := net.SplitHostPort(pr.Addr.String())
@@ -214,6 +219,7 @@ func (re *RealIPExtractorUSInterceptor) fallbackToPeer(ctx context.Context) stri
 	return ""
 }
 
+// cleanAndValidateIP выполняет очистку пробелов и строгую верификацию синтаксиса адреса через парсер net.ParseIP.
 func (re *RealIPExtractorUSInterceptor) cleanAndValidateIP(ip string) string {
 	cleaned := strings.TrimSpace(ip)
 	if cleaned == "" {

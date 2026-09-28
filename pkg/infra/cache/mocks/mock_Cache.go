@@ -235,8 +235,8 @@ func (_c *MockCache_Get_Call[K, V]) Run(run func(key K)) *MockCache_Get_Call[K, 
 	return _c
 }
 
-func (_c *MockCache_Get_Call[K, V]) Return(v V, b bool, err error) *MockCache_Get_Call[K, V] {
-	_c.Call.Return(v, b, err)
+func (_c *MockCache_Get_Call[K, V]) Return(value V, ok bool, err error) *MockCache_Get_Call[K, V] {
+	_c.Call.Return(value, ok, err)
 	return _c
 }
 

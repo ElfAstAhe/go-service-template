@@ -15,7 +15,7 @@ import (
 func TestReceiver_Receive_Success_And_MemoryAllocation(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
-	mockLink := mocks2.NewMockKafkaReceiverLink(t)
+	mockLink := mocks2.NewMockReceiverLink(t)
 	mockLogger := mocks.NewMockLogger(t)
 
 	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger).Maybe()
@@ -65,7 +65,7 @@ func TestReceiver_Receive_Success_And_MemoryAllocation(t *testing.T) {
 func TestReceiver_Accept_Success(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
-	mockLink := mocks2.NewMockKafkaReceiverLink(t)
+	mockLink := mocks2.NewMockReceiverLink(t)
 
 	// Создаем наше упакованное сообщение, имитируя, что оно пришло из Receive()
 	kafkaMsg := kafka.Message{
@@ -105,7 +105,7 @@ func TestReceiver_Accept_Success(t *testing.T) {
 func TestReceiver_Receive_Standalone_Success(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
-	mockLink := mocks2.NewMockKafkaReceiverLink(t)
+	mockLink := mocks2.NewMockReceiverLink(t)
 	mockLogger := mocks.NewMockLogger(t)
 
 	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger).Maybe()
@@ -142,7 +142,7 @@ func TestReceiver_Receive_Standalone_Success(t *testing.T) {
 // и корректность заполнения блоков COMMON и KAFKA.
 func TestReceiver_Stats_Success(t *testing.T) {
 	// Arrange
-	mockLink := mocks2.NewMockKafkaReceiverLink(t)
+	mockLink := mocks2.NewMockReceiverLink(t)
 
 	// Наполняем мок нативной плоской структуры ReaderStats библиотеки kafka-go
 	expectedLibraryStats := kafka.ReaderStats{

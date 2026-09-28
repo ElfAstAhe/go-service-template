@@ -8,35 +8,12 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-const (
-	sqlCreateTableTest = `
-create table if not exists test (
-    id varchar(50) not null,
-    code varchar(50) not null,
-    name varchar(100) null,
-    description varchar(512) null,
-    created_at  timestamptz not null default now(),
-    modified_at timestamptz not null default now(),
-    constraint test_pk primary key (id),
-    constraint test_uk unique (code)
-)
-`
-	sqlDropTableTest = `
-drop table if exists test
-`
-	sqlCreateIndexTestCode = `create index if not exists idx_test_code on test (code asc)`
-	sqlDropIndexTestCode   = `drop index if exists idx_test_code`
-)
-
 func up0001(ctx context.Context, db *sql.DB) error {
 	if err := upCreateTableTest(ctx, db); err != nil {
 		return err
 	}
-	if err := upCreateIndexTestCode(ctx, db); err != nil {
-		return err
-	}
 
-	return nil
+	return upCreateIndexTestCode(ctx, db)
 }
 
 func upCreateTableTest(ctx context.Context, db *sql.DB) error {
@@ -59,11 +36,7 @@ func down0001(ctx context.Context, db *sql.DB) error {
 	if err := downDropIndexTestCode(ctx, db); err != nil {
 		return err
 	}
-	if err := downDropTableTest(ctx, db); err != nil {
-		return err
-	}
-
-	return nil
+	return downDropTableTest(ctx, db)
 }
 
 func downDropIndexTestCode(ctx context.Context, db *sql.DB) error {

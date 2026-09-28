@@ -17,7 +17,7 @@ import (
 func TestSender_Publish_Success(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
-	mockLink := mocks2.NewMockKafkaSenderLink(t)
+	mockLink := mocks2.NewMockSenderLink(t)
 
 	mockLogger := mocks.NewMockLogger(t)
 	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger).Maybe()
@@ -73,7 +73,7 @@ func TestSender_Publish_Success(t *testing.T) {
 func TestSender_Publish_RetryAndFallbackOnNetworkError(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
-	mockLink := mocks2.NewMockKafkaSenderLink(t)
+	mockLink := mocks2.NewMockSenderLink(t)
 
 	mockLogger := mocks.NewMockLogger(t)
 	mockLogger.On("GetLogger", mock.Anything).Return(mockLogger).Maybe()

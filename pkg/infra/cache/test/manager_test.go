@@ -122,13 +122,13 @@ func TestManager_Integration_JSON(t *testing.T) {
 	// Используем реальный кодек, но мокаем сторадж,
 	// чтобы не зависеть от реализации памяти/redis
 	mStorage := mocks.NewMockStorage[string](t)
-	codec := cache.NewJSONCodec[TestData](func() TestData {
-		return TestData{}
+	codec := cache.NewJSONCodec[Data](func() Data {
+		return Data{}
 	})
-	mgr := cache.New[string, TestData](mStorage, codec, 10)
+	mgr := cache.New[string, Data](mStorage, codec, 10)
 
 	key := "user-123"
-	val := TestData{ID: 1, Active: true}
+	val := Data{ID: 1, Active: true}
 	ttl := time.Hour
 
 	// 1. Тестируем Set
@@ -153,13 +153,13 @@ func TestManager_Integration_Gob(t *testing.T) {
 	// Используем реальный кодек, но мокаем сторадж,
 	// чтобы не зависеть от реализации памяти/redis
 	mStorage := mocks.NewMockStorage[string](t)
-	codec := cache.NewGobCodec[TestData](func() TestData {
-		return TestData{}
+	codec := cache.NewGobCodec[Data](func() Data {
+		return Data{}
 	})
-	mgr := cache.New[string, TestData](mStorage, codec, 10)
+	mgr := cache.New[string, Data](mStorage, codec, 10)
 
 	key := "user-123"
-	val := TestData{ID: 1, Active: true}
+	val := Data{ID: 1, Active: true}
 	ttl := time.Hour
 
 	// 1. Тестируем Set

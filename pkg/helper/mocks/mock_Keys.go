@@ -102,8 +102,8 @@ func (_c *MockKeys_Decrypt_Call[Priv, Pub]) Run(run func(data []byte, privateKey
 	return _c
 }
 
-func (_c *MockKeys_Decrypt_Call[Priv, Pub]) Return(bytes []byte, err error) *MockKeys_Decrypt_Call[Priv, Pub] {
-	_c.Call.Return(bytes, err)
+func (_c *MockKeys_Decrypt_Call[Priv, Pub]) Return(plaintext []byte, err error) *MockKeys_Decrypt_Call[Priv, Pub] {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
@@ -168,8 +168,8 @@ func (_c *MockKeys_DecryptString_Call[Priv, Pub]) Run(run func(data string, priv
 	return _c
 }
 
-func (_c *MockKeys_DecryptString_Call[Priv, Pub]) Return(s string, err error) *MockKeys_DecryptString_Call[Priv, Pub] {
-	_c.Call.Return(s, err)
+func (_c *MockKeys_DecryptString_Call[Priv, Pub]) Return(plaintext string, err error) *MockKeys_DecryptString_Call[Priv, Pub] {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
@@ -236,8 +236,8 @@ func (_c *MockKeys_Encrypt_Call[Priv, Pub]) Run(run func(data []byte, publicKey 
 	return _c
 }
 
-func (_c *MockKeys_Encrypt_Call[Priv, Pub]) Return(bytes []byte, err error) *MockKeys_Encrypt_Call[Priv, Pub] {
-	_c.Call.Return(bytes, err)
+func (_c *MockKeys_Encrypt_Call[Priv, Pub]) Return(ciphertext []byte, err error) *MockKeys_Encrypt_Call[Priv, Pub] {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
@@ -302,8 +302,8 @@ func (_c *MockKeys_EncryptString_Call[Priv, Pub]) Run(run func(data string, publ
 	return _c
 }
 
-func (_c *MockKeys_EncryptString_Call[Priv, Pub]) Return(s string, err error) *MockKeys_EncryptString_Call[Priv, Pub] {
-	_c.Call.Return(s, err)
+func (_c *MockKeys_EncryptString_Call[Priv, Pub]) Return(ciphertext string, err error) *MockKeys_EncryptString_Call[Priv, Pub] {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
@@ -361,8 +361,8 @@ func (_c *MockKeys_Generate_Call[Priv, Pub]) Run(run func()) *MockKeys_Generate_
 	return _c
 }
 
-func (_c *MockKeys_Generate_Call[Priv, Pub]) Return(s string, s1 string, err error) *MockKeys_Generate_Call[Priv, Pub] {
-	_c.Call.Return(s, s1, err)
+func (_c *MockKeys_Generate_Call[Priv, Pub]) Return(privateKeyStr string, publicKeyStr string, err error) *MockKeys_Generate_Call[Priv, Pub] {
+	_c.Call.Return(privateKeyStr, publicKeyStr, err)
 	return _c
 }
 
@@ -372,8 +372,8 @@ func (_c *MockKeys_Generate_Call[Priv, Pub]) RunAndReturn(run func() (string, st
 }
 
 // ParsePrivateKey provides a mock function for the type MockKeys
-func (_mock *MockKeys[Priv, Pub]) ParsePrivateKey(s string) (Priv, error) {
-	ret := _mock.Called(s)
+func (_mock *MockKeys[Priv, Pub]) ParsePrivateKey(hexString string) (Priv, error) {
+	ret := _mock.Called(hexString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ParsePrivateKey")
@@ -382,17 +382,17 @@ func (_mock *MockKeys[Priv, Pub]) ParsePrivateKey(s string) (Priv, error) {
 	var r0 Priv
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (Priv, error)); ok {
-		return returnFunc(s)
+		return returnFunc(hexString)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) Priv); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(hexString)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(Priv)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(hexString)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -405,12 +405,12 @@ type MockKeys_ParsePrivateKey_Call[Priv any, Pub any] struct {
 }
 
 // ParsePrivateKey is a helper method to define mock.On call
-//   - s string
-func (_e *MockKeys_Expecter[Priv, Pub]) ParsePrivateKey(s any) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
-	return &MockKeys_ParsePrivateKey_Call[Priv, Pub]{Call: _e.mock.On("ParsePrivateKey", s)}
+//   - hexString string
+func (_e *MockKeys_Expecter[Priv, Pub]) ParsePrivateKey(hexString any) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
+	return &MockKeys_ParsePrivateKey_Call[Priv, Pub]{Call: _e.mock.On("ParsePrivateKey", hexString)}
 }
 
-func (_c *MockKeys_ParsePrivateKey_Call[Priv, Pub]) Run(run func(s string)) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
+func (_c *MockKeys_ParsePrivateKey_Call[Priv, Pub]) Run(run func(hexString string)) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -428,14 +428,14 @@ func (_c *MockKeys_ParsePrivateKey_Call[Priv, Pub]) Return(v Priv, err error) *M
 	return _c
 }
 
-func (_c *MockKeys_ParsePrivateKey_Call[Priv, Pub]) RunAndReturn(run func(s string) (Priv, error)) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
+func (_c *MockKeys_ParsePrivateKey_Call[Priv, Pub]) RunAndReturn(run func(hexString string) (Priv, error)) *MockKeys_ParsePrivateKey_Call[Priv, Pub] {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ParsePublicKey provides a mock function for the type MockKeys
-func (_mock *MockKeys[Priv, Pub]) ParsePublicKey(s string) (Pub, error) {
-	ret := _mock.Called(s)
+func (_mock *MockKeys[Priv, Pub]) ParsePublicKey(hexString string) (Pub, error) {
+	ret := _mock.Called(hexString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ParsePublicKey")
@@ -444,17 +444,17 @@ func (_mock *MockKeys[Priv, Pub]) ParsePublicKey(s string) (Pub, error) {
 	var r0 Pub
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (Pub, error)); ok {
-		return returnFunc(s)
+		return returnFunc(hexString)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) Pub); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(hexString)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(Pub)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(hexString)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -467,12 +467,12 @@ type MockKeys_ParsePublicKey_Call[Priv any, Pub any] struct {
 }
 
 // ParsePublicKey is a helper method to define mock.On call
-//   - s string
-func (_e *MockKeys_Expecter[Priv, Pub]) ParsePublicKey(s any) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
-	return &MockKeys_ParsePublicKey_Call[Priv, Pub]{Call: _e.mock.On("ParsePublicKey", s)}
+//   - hexString string
+func (_e *MockKeys_Expecter[Priv, Pub]) ParsePublicKey(hexString any) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
+	return &MockKeys_ParsePublicKey_Call[Priv, Pub]{Call: _e.mock.On("ParsePublicKey", hexString)}
 }
 
-func (_c *MockKeys_ParsePublicKey_Call[Priv, Pub]) Run(run func(s string)) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
+func (_c *MockKeys_ParsePublicKey_Call[Priv, Pub]) Run(run func(hexString string)) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -490,7 +490,7 @@ func (_c *MockKeys_ParsePublicKey_Call[Priv, Pub]) Return(v Pub, err error) *Moc
 	return _c
 }
 
-func (_c *MockKeys_ParsePublicKey_Call[Priv, Pub]) RunAndReturn(run func(s string) (Pub, error)) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
+func (_c *MockKeys_ParsePublicKey_Call[Priv, Pub]) RunAndReturn(run func(hexString string) (Pub, error)) *MockKeys_ParsePublicKey_Call[Priv, Pub] {
 	_c.Call.Return(run)
 	return _c
 }

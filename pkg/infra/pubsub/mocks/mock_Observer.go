@@ -91,8 +91,8 @@ func (_c *MockObserver_GetName_Call[T]) RunAndReturn(run func() string) *MockObs
 }
 
 // OnNotify provides a mock function for the type MockObserver
-func (_mock *MockObserver[T]) OnNotify(context1 context.Context, v T) error {
-	ret := _mock.Called(context1, v)
+func (_mock *MockObserver[T]) OnNotify(ctx context.Context, event T) error {
+	ret := _mock.Called(ctx, event)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OnNotify")
@@ -100,7 +100,7 @@ func (_mock *MockObserver[T]) OnNotify(context1 context.Context, v T) error {
 
 	var r0 error
 	if returnFunc, ok := ret.Get(0).(func(context.Context, T) error); ok {
-		r0 = returnFunc(context1, v)
+		r0 = returnFunc(ctx, event)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -113,13 +113,13 @@ type MockObserver_OnNotify_Call[T any] struct {
 }
 
 // OnNotify is a helper method to define mock.On call
-//   - context1 context.Context
-//   - v T
-func (_e *MockObserver_Expecter[T]) OnNotify(context1 any, v any) *MockObserver_OnNotify_Call[T] {
-	return &MockObserver_OnNotify_Call[T]{Call: _e.mock.On("OnNotify", context1, v)}
+//   - ctx context.Context
+//   - event T
+func (_e *MockObserver_Expecter[T]) OnNotify(ctx any, event any) *MockObserver_OnNotify_Call[T] {
+	return &MockObserver_OnNotify_Call[T]{Call: _e.mock.On("OnNotify", ctx, event)}
 }
 
-func (_c *MockObserver_OnNotify_Call[T]) Run(run func(context1 context.Context, v T)) *MockObserver_OnNotify_Call[T] {
+func (_c *MockObserver_OnNotify_Call[T]) Run(run func(ctx context.Context, event T)) *MockObserver_OnNotify_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -142,7 +142,7 @@ func (_c *MockObserver_OnNotify_Call[T]) Return(err error) *MockObserver_OnNotif
 	return _c
 }
 
-func (_c *MockObserver_OnNotify_Call[T]) RunAndReturn(run func(context1 context.Context, v T) error) *MockObserver_OnNotify_Call[T] {
+func (_c *MockObserver_OnNotify_Call[T]) RunAndReturn(run func(ctx context.Context, event T) error) *MockObserver_OnNotify_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }

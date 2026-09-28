@@ -104,8 +104,8 @@ func (_c *MockEdDSAKeys_Decrypt_Call) Run(run func(data []byte, privateKey ed255
 	return _c
 }
 
-func (_c *MockEdDSAKeys_Decrypt_Call) Return(bytes []byte, err error) *MockEdDSAKeys_Decrypt_Call {
-	_c.Call.Return(bytes, err)
+func (_c *MockEdDSAKeys_Decrypt_Call) Return(plaintext []byte, err error) *MockEdDSAKeys_Decrypt_Call {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
@@ -170,8 +170,8 @@ func (_c *MockEdDSAKeys_DecryptString_Call) Run(run func(data string, privateKey
 	return _c
 }
 
-func (_c *MockEdDSAKeys_DecryptString_Call) Return(s string, err error) *MockEdDSAKeys_DecryptString_Call {
-	_c.Call.Return(s, err)
+func (_c *MockEdDSAKeys_DecryptString_Call) Return(plaintext string, err error) *MockEdDSAKeys_DecryptString_Call {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
@@ -238,8 +238,8 @@ func (_c *MockEdDSAKeys_Encrypt_Call) Run(run func(data []byte, publicKey ed2551
 	return _c
 }
 
-func (_c *MockEdDSAKeys_Encrypt_Call) Return(bytes []byte, err error) *MockEdDSAKeys_Encrypt_Call {
-	_c.Call.Return(bytes, err)
+func (_c *MockEdDSAKeys_Encrypt_Call) Return(ciphertext []byte, err error) *MockEdDSAKeys_Encrypt_Call {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
@@ -304,8 +304,8 @@ func (_c *MockEdDSAKeys_EncryptString_Call) Run(run func(data string, publicKey 
 	return _c
 }
 
-func (_c *MockEdDSAKeys_EncryptString_Call) Return(s string, err error) *MockEdDSAKeys_EncryptString_Call {
-	_c.Call.Return(s, err)
+func (_c *MockEdDSAKeys_EncryptString_Call) Return(ciphertext string, err error) *MockEdDSAKeys_EncryptString_Call {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
@@ -363,8 +363,8 @@ func (_c *MockEdDSAKeys_Generate_Call) Run(run func()) *MockEdDSAKeys_Generate_C
 	return _c
 }
 
-func (_c *MockEdDSAKeys_Generate_Call) Return(s string, s1 string, err error) *MockEdDSAKeys_Generate_Call {
-	_c.Call.Return(s, s1, err)
+func (_c *MockEdDSAKeys_Generate_Call) Return(privateKeyStr string, publicKeyStr string, err error) *MockEdDSAKeys_Generate_Call {
+	_c.Call.Return(privateKeyStr, publicKeyStr, err)
 	return _c
 }
 
@@ -374,8 +374,8 @@ func (_c *MockEdDSAKeys_Generate_Call) RunAndReturn(run func() (string, string, 
 }
 
 // ParsePrivateKey provides a mock function for the type MockEdDSAKeys
-func (_mock *MockEdDSAKeys) ParsePrivateKey(s string) (ed25519.PrivateKey, error) {
-	ret := _mock.Called(s)
+func (_mock *MockEdDSAKeys) ParsePrivateKey(hexString string) (ed25519.PrivateKey, error) {
+	ret := _mock.Called(hexString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ParsePrivateKey")
@@ -384,17 +384,17 @@ func (_mock *MockEdDSAKeys) ParsePrivateKey(s string) (ed25519.PrivateKey, error
 	var r0 ed25519.PrivateKey
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (ed25519.PrivateKey, error)); ok {
-		return returnFunc(s)
+		return returnFunc(hexString)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) ed25519.PrivateKey); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(hexString)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(ed25519.PrivateKey)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(hexString)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -407,12 +407,12 @@ type MockEdDSAKeys_ParsePrivateKey_Call struct {
 }
 
 // ParsePrivateKey is a helper method to define mock.On call
-//   - s string
-func (_e *MockEdDSAKeys_Expecter) ParsePrivateKey(s any) *MockEdDSAKeys_ParsePrivateKey_Call {
-	return &MockEdDSAKeys_ParsePrivateKey_Call{Call: _e.mock.On("ParsePrivateKey", s)}
+//   - hexString string
+func (_e *MockEdDSAKeys_Expecter) ParsePrivateKey(hexString any) *MockEdDSAKeys_ParsePrivateKey_Call {
+	return &MockEdDSAKeys_ParsePrivateKey_Call{Call: _e.mock.On("ParsePrivateKey", hexString)}
 }
 
-func (_c *MockEdDSAKeys_ParsePrivateKey_Call) Run(run func(s string)) *MockEdDSAKeys_ParsePrivateKey_Call {
+func (_c *MockEdDSAKeys_ParsePrivateKey_Call) Run(run func(hexString string)) *MockEdDSAKeys_ParsePrivateKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -430,14 +430,14 @@ func (_c *MockEdDSAKeys_ParsePrivateKey_Call) Return(privateKey ed25519.PrivateK
 	return _c
 }
 
-func (_c *MockEdDSAKeys_ParsePrivateKey_Call) RunAndReturn(run func(s string) (ed25519.PrivateKey, error)) *MockEdDSAKeys_ParsePrivateKey_Call {
+func (_c *MockEdDSAKeys_ParsePrivateKey_Call) RunAndReturn(run func(hexString string) (ed25519.PrivateKey, error)) *MockEdDSAKeys_ParsePrivateKey_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ParsePublicKey provides a mock function for the type MockEdDSAKeys
-func (_mock *MockEdDSAKeys) ParsePublicKey(s string) (ed25519.PublicKey, error) {
-	ret := _mock.Called(s)
+func (_mock *MockEdDSAKeys) ParsePublicKey(hexString string) (ed25519.PublicKey, error) {
+	ret := _mock.Called(hexString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ParsePublicKey")
@@ -446,17 +446,17 @@ func (_mock *MockEdDSAKeys) ParsePublicKey(s string) (ed25519.PublicKey, error) 
 	var r0 ed25519.PublicKey
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (ed25519.PublicKey, error)); ok {
-		return returnFunc(s)
+		return returnFunc(hexString)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) ed25519.PublicKey); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(hexString)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(ed25519.PublicKey)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(hexString)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -469,12 +469,12 @@ type MockEdDSAKeys_ParsePublicKey_Call struct {
 }
 
 // ParsePublicKey is a helper method to define mock.On call
-//   - s string
-func (_e *MockEdDSAKeys_Expecter) ParsePublicKey(s any) *MockEdDSAKeys_ParsePublicKey_Call {
-	return &MockEdDSAKeys_ParsePublicKey_Call{Call: _e.mock.On("ParsePublicKey", s)}
+//   - hexString string
+func (_e *MockEdDSAKeys_Expecter) ParsePublicKey(hexString any) *MockEdDSAKeys_ParsePublicKey_Call {
+	return &MockEdDSAKeys_ParsePublicKey_Call{Call: _e.mock.On("ParsePublicKey", hexString)}
 }
 
-func (_c *MockEdDSAKeys_ParsePublicKey_Call) Run(run func(s string)) *MockEdDSAKeys_ParsePublicKey_Call {
+func (_c *MockEdDSAKeys_ParsePublicKey_Call) Run(run func(hexString string)) *MockEdDSAKeys_ParsePublicKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -492,7 +492,7 @@ func (_c *MockEdDSAKeys_ParsePublicKey_Call) Return(publicKey ed25519.PublicKey,
 	return _c
 }
 
-func (_c *MockEdDSAKeys_ParsePublicKey_Call) RunAndReturn(run func(s string) (ed25519.PublicKey, error)) *MockEdDSAKeys_ParsePublicKey_Call {
+func (_c *MockEdDSAKeys_ParsePublicKey_Call) RunAndReturn(run func(hexString string) (ed25519.PublicKey, error)) *MockEdDSAKeys_ParsePublicKey_Call {
 	_c.Call.Return(run)
 	return _c
 }

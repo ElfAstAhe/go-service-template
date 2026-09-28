@@ -1,18 +1,35 @@
 package container
 
+// Provider определяет сигнатуру функционального конструктора (фабрики),
+// отвечающего за создание нетипизированного объекта-зависимости (any) и обработку ошибок сборки.
 type Provider func() (any, error)
 
+// LazyContainer расширяет базовый интерфейс Container, специфицируя контракт
+// высокопроизводительного контейнера с поддержкой отложенной (ленивой) инициализации зависимостей.
+//
+// 💡 Архитектурный паттерн (Lazy Loading / IoC Provider):
+// Контейнер аккумулирует декларативные фабрики (Providers), откладывая физическую аллокацию памяти
+// под тяжелые инфраструктурные компоненты (пулы СУБД, клиенты Redis, брокеры очередей)
+// до момента их фактического первого запроса через Service Locator.
 type LazyContainer interface {
-	Container
+	Container // Наследует базовые методы проверки регистрации и извлечения инстансов
 
-	// RegisterProvider register non runnable provider
+	// RegisterProvider регистрирует пассивный, неисполняемый провайдер зависимости.
+	// Применяется для репозиториев, доменных UseCase-сервисов и утилит.
 	RegisterProvider(name string, provider Provider) error
-	// RegisterRunnableProvider register runnable provider
+
+	// RegisterRunnableProvider регистрирует исполняемый провайдер (компонент, реализующий интерфейс Runner).
+	// Сигнализирует оркестратору о необходимости включения собранного инстанса в общий цикл асинхронного запуска.
 	RegisterRunnableProvider(name string, provider Provider) error
-	// UnregisterProvider unregister any registered provider
+
+	// UnregisterProvider принудительно удаляет декларативную фабрику-провайдер из реестра контейнера.
 	UnregisterProvider(name string) error
-	// Unregister remove provider and instance from lists, errors ignored
+
+	// Unregister каскадно вычищает из внутренних мап контейнера как сам провайдер,
+	// так и уже созданный и сохраненный в кэше живой инстанс зависимости. Ошибки рантайма игнорируются.
 	Unregister(name string) error
-	// AllProviders return all registered providers
+
+	// AllProviders возвращает изолированную карту (реестр) всех зарегистрированных фабрик-провайдеров.
+	// Используется оркестраторами для сквозного аудита и валидации графа зависимостей.
 	AllProviders() map[string]Provider
 }

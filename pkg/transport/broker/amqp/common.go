@@ -5,32 +5,51 @@ import (
 
 	"github.com/Azure/go-amqp"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	pkgamqp "github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
+	"github.com/ElfAstAhe/go-service-template/pkg/transport/broker"
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-// AMQPSenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
+// SenderLink описывает методы встроенного отправителя библиотеки Azure AMQP,
 // которые нам нужны для управления его жизненным циклом.
 //
-//goland:noinspection GoNameStartsWithPackageName
-type AMQPSenderLink interface {
-	Send(ctx context.Context, msg *amqp.Message, opts *amqp.SendOptions) error
-	Close(ctx context.Context) error
-}
-
-// AMQPReceiverLink описывает методы встроенного получателя Azure AMQP,
-// необходимые для чтения, подтверждения и закрытия линка.
+// Абстрагирует прикладной код от конкретной реализации продюсера библиотеки go-amqp.
 //
 //goland:noinspection GoNameStartsWithPackageName
-type AMQPReceiverLink interface {
-	Receive(ctx context.Context, opts *amqp.ReceiveOptions) (*amqp.Message, error)
-	AcceptMessage(ctx context.Context, msg *amqp.Message) error
-	RejectMessage(ctx context.Context, msg *amqp.Message, err *amqp.Error) error
-	ReleaseMessage(ctx context.Context, msg *amqp.Message) error
+type SenderLink interface {
+	// Send осуществляет публикацию низкоуровневого сообщения msg в брокер с опциями opts.
+	Send(ctx context.Context, msg *amqp.Message, opts *amqp.SendOptions) error
+
+	// Close плавно закрывает активный линк отправки сообщений в рамках контекста ctx.
 	Close(ctx context.Context) error
 }
 
-func ExtractOriginalMessage(msg pkgamqp.Message) (*amqp.Message, error) {
+// ReceiverLink описывает методы встроенного получателя Azure AMQP,
+// необходимые для чтения, подтверждения и закрытия линка.
+//
+// Абстрагирует прикладной код от конкретной реализации консьюмера библиотеки go-amqp.
+//
+//goland:noinspection GoNameStartsWithPackageName
+type ReceiverLink interface {
+	// Receive выполняет извлечение сообщения из AMQP-линка с заданными опциями.
+	Receive(ctx context.Context, opts *amqp.ReceiveOptions) (*amqp.Message, error)
+
+	// AcceptMessage подтверждает успешную обработку (positive acknowledgment/settle) сообщения брокером.
+	AcceptMessage(ctx context.Context, msg *amqp.Message) error
+
+	// RejectMessage отклоняет сообщение (negative acknowledgment) с фиксацией ошибки, отправляя его в DLQ.
+	RejectMessage(ctx context.Context, msg *amqp.Message, err *amqp.Error) error
+
+	// ReleaseMessage освобождает сообщение, возвращая его обратно в очередь для повторной вычитки другими потоками.
+	ReleaseMessage(ctx context.Context, msg *amqp.Message) error
+
+	// Close плавно закрывает активный линк получения сообщений в рамках контекста ctx.
+	Close(ctx context.Context) error
+}
+
+// ExtractOriginalMessage выполняет приведение полиморфного интерфейса сообщения фреймворка
+// к низкоуровневой структуре amqp.Message драйвера Azure go-amqp.
+// Защищает рантайм от паник времени выполнения посредством многоуровневых оборонительных проверок (Guard Clauses).
+func ExtractOriginalMessage(msg broker.Message) (*amqp.Message, error) {
 	if utils.IsNil(msg) {
 		return nil, errs.NewTlCommonError("ExtractOriginalMessage", "message is nil", nil)
 	}

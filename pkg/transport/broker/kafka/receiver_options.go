@@ -30,9 +30,10 @@ const (
 // defaultReceiverBrokers хранит локальный адрес по умолчанию
 var defaultReceiverBrokers = []string{"localhost:9092"}
 
+// ReceiverOption определяет функциональный тип для конфигурации опций получателя Kafka (Fluent API).
 type ReceiverOption func(*ReceiverOptions)
 
-// ReceiverOptions содержит параметры рантайма для сборки компонента Receiver.
+// ReceiverOptions содержит параметры рантайма, необходимые для безопасной сборки и работы консьюмера Kafka.
 type ReceiverOptions struct {
 	ClientID          string
 	Brokers           []string            // Прямой список хостов брокеров (вместо старого Connector)
@@ -126,7 +127,7 @@ func (ro *ReceiverOptions) Validate() error {
 		return errs.NewTlCommonError("Validate", "MaxWait (broker poll wait) must be greater than 0", nil)
 	}
 
-	// 4. Проверка таймаутов координации группы (ИСПРАВЛЕНО: проверяем только для режима Consumer Group)
+	// 4. Проверка таймаутов координации группы (ИСПРАВЛЕНО: проверяем только для regime Consumer Group)
 	if hasGroup {
 		if ro.HeartbeatInterval <= 0 {
 			return errs.NewTlCommonError("Validate", "HeartbeatInterval must be greater than 0", nil)
@@ -171,50 +172,56 @@ func (ro *ReceiverOptions) Validate() error {
 	return nil
 }
 
-// ====================================================================
-// Fluent API методы для сборки опций получателя
-// ====================================================================
-
+// WithReceiverClientID задает уникальный строковый ClientID идентификатор текущего консьюмера для Kafka-кластера.
 func WithReceiverClientID(clientID string) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.ClientID = clientID
 	}
 }
 
+// WithReceiverBrokers инжектирует список целевых сетевых адресов брокеров Kafka.
 func WithReceiverBrokers(brokers []string) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.Brokers = brokers }
 }
 
+// WithReceiverTargetName задает строковое имя целевого топика Kafka, из которого будет производиться чтение.
 func WithReceiverTargetName(targetName string) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.TargetName = targetName }
 }
 
+// WithReceiverGroupID инжектирует идентификатор Consumer Group для распределенной вычитки топика.
 func WithReceiverGroupID(groupID string) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.GroupID = groupID }
 }
 
+// WithReceiverPartition переключает консьюмер на чтение конкретной физической партиции топика напрямую.
 func WithReceiverPartition(partition int) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.Partition = partition
 	}
 }
 
+// WithKafkaReaderConfig позволяет передать низкоуровневую структуру параметров kafka.ReaderConfig напрямую.
 func WithKafkaReaderConfig(cfg *kafka.ReaderConfig) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.ReaderConf = cfg }
 }
 
+// WithKafkaReceiverTLS инжектирует криптографические TLS-параметры шифрования сетевого трафика.
 func WithKafkaReceiverTLS(tls *tls.Config) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.TLS = tls }
 }
 
+// WithReceiverConnectTimeout задает лимит времени на установление первичного сетевого соединения с кластером.
 func WithReceiverConnectTimeout(timeout time.Duration) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.ConnectTimeout = timeout }
 }
 
+// WithReceiverShutdownTimeout задает таймаут на плавное освобождение ресурсов и сдачу оффсетов при выходе.
 func WithReceiverShutdownTimeout(timeout time.Duration) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.ShutdownTimeout = timeout }
 }
 
+// WithReceiverFetchBounds настраивает границы размеров пакетов и время ожидания накопления данных брокером.
 func WithReceiverFetchBounds(minBytes, maxBytes int, maxWait time.Duration) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.MinBytes = minBytes
@@ -223,10 +230,12 @@ func WithReceiverFetchBounds(minBytes, maxBytes int, maxWait time.Duration) Rece
 	}
 }
 
+// WithReceiverLogger инжектирует структурированный логгер фреймворка для аудита рантайма получателя.
 func WithReceiverLogger(log logger.Logger) ReceiverOption {
 	return func(ro *ReceiverOptions) { ro.Logger = log }
 }
 
+// WithReceiverSecurity задает строковые параметры авторизации SASL Plain для доступа к защищенным топикам.
 func WithReceiverSecurity(username, password string) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.Username = username
@@ -234,6 +243,7 @@ func WithReceiverSecurity(username, password string) ReceiverOption {
 	}
 }
 
+// WithReceiverGroupTimeouts гранулярно настраивает параметры сессий, фоновых пингов и ребалансировок Consumer Group.
 func WithReceiverGroupTimeouts(heartbeat, session, rebalance, readBatch time.Duration) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.HeartbeatInterval = heartbeat
@@ -243,6 +253,7 @@ func WithReceiverGroupTimeouts(heartbeat, session, rebalance, readBatch time.Dur
 	}
 }
 
+// WithReceiverRuntimePerformance конфигурирует параметры внутренней производительности, лимиты ретраев и размер фонового буфера.
 func WithReceiverRuntimePerformance(maxAttempts, queueCapacity int, startOffset string) ReceiverOption {
 	return func(ro *ReceiverOptions) {
 		ro.MaxAttempts = maxAttempts

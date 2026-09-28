@@ -28,9 +28,10 @@ const (
 // Дефолтный адрес хоста для локальной разработки
 var defaultSenderBrokers = []string{"localhost:9092"}
 
+// SenderOption определяет функциональный тип для конфигурации опций отправителя Kafka (Fluent API).
 type SenderOption func(*SenderOptions)
 
-// SenderOptions содержит параметры рантайма для сборки компонента Sender.
+// SenderOptions содержит параметры рантайма, необходимые для сборки и работы продюсера Kafka.
 type SenderOptions struct {
 	ClientID              string
 	Brokers               []string
@@ -137,47 +138,56 @@ func (so *SenderOptions) Validate() error {
 // Fluent API методы для сборки опций отправителя
 // ====================================================================
 
+// WithSenderClientID задает строковый ClientID идентификатор текущего продюсера для брокера Kafka.
 func WithSenderClientID(clientID string) SenderOption {
 	return func(so *SenderOptions) {
 		so.ClientID = clientID
 	}
 }
 
+// WithSenderBrokers инжектирует список сетевых адресов хостов кластера Kafka.
 func WithSenderBrokers(brokers []string) SenderOption {
 	return func(so *SenderOptions) { so.Brokers = brokers }
 }
 
+// WithSenderTargetName настраивает строковое имя целевого топика, в который будет идти публикация событий.
 func WithSenderTargetName(targetName string) SenderOption {
 	return func(so *SenderOptions) { so.TargetName = targetName }
 }
 
-// WithSenderWriterCustomizer позволяет конечной системе тонко настроить любые специфичные поля kafka.Writer
+// WithSenderWriterCustomizer позволяет сторонним пакетам переопределить низкоуровневые поля конфигурации kafka.Writer.
 func WithSenderWriterCustomizer(customizer func(*kafka.Writer)) SenderOption {
 	return func(so *SenderOptions) {
 		so.WriterCustomizerFunc = customizer
 	}
 }
 
+// WithSenderTLS инжектирует криптографические TLS параметры шифрования сетевого трафика.
 func WithSenderTLS(tls *tls.Config) SenderOption {
 	return func(so *SenderOptions) { so.TLS = tls }
 }
 
+// WithSenderConnectTimeout задает лимит времени на установление сетевого соединения с кластером брокеров.
 func WithSenderConnectTimeout(timeout time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.ConnectTimeout = timeout }
 }
 
+// WithSenderIdleTimeout настраивает таймаут закрытия неиспользуемых простаивающих сетевых соединений в пуле.
 func WithSenderIdleTimeout(timeout time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.IdleTimeout = timeout }
 }
 
+// WithSenderShutdownTimeout задает таймаут на каскадный сброс буферов (Flush) и закрытие врайтера.
 func WithSenderShutdownTimeout(timeout time.Duration) SenderOption {
 	return func(so *SenderOptions) { so.ShutdownTimeout = timeout }
 }
 
+// WithSenderLogger инжектирует структурированный логгер фреймворка для аудита рантайма продюсера.
 func WithSenderLogger(log logger.Logger) SenderOption {
 	return func(so *SenderOptions) { so.Logger = log }
 }
 
+// WithSenderPublishRetry настраивает параметры экспоненциального бэкоффа ретраев при публикации сообщений.
 func WithSenderPublishRetry(maxAttempts int, baseDelay, maxDelay time.Duration) SenderOption {
 	return func(so *SenderOptions) {
 		so.PublishMaxTryAttempts = maxAttempts
@@ -186,6 +196,7 @@ func WithSenderPublishRetry(maxAttempts int, baseDelay, maxDelay time.Duration) 
 	}
 }
 
+// WithSenderSecurity инжектирует параметры авторизации SASL Plain для доступа к защищенным топикам кластера.
 func WithSenderSecurity(username, password string) SenderOption {
 	return func(so *SenderOptions) {
 		so.Username = username
@@ -193,6 +204,7 @@ func WithSenderSecurity(username, password string) SenderOption {
 	}
 }
 
+// WithSenderBatchOptions гранулярно настраивает лимиты пачек поштучно, в байтах, по времени сброса и параметрам Acks.
 func WithSenderBatchOptions(batchSize int, batchBytes int64, batchTimeout, writeTimeout time.Duration, requiredAcks kafka.RequiredAcks) SenderOption {
 	return func(so *SenderOptions) {
 		so.BatchSize = batchSize

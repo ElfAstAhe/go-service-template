@@ -48,8 +48,8 @@ func (_m *MockPublisher[T]) EXPECT() *MockPublisher_Expecter[T] {
 }
 
 // Notify provides a mock function for the type MockPublisher
-func (_mock *MockPublisher[T]) Notify(context1 context.Context, v T) {
-	_mock.Called(context1, v)
+func (_mock *MockPublisher[T]) Notify(ctx context.Context, event T) {
+	_mock.Called(ctx, event)
 	return
 }
 
@@ -59,13 +59,13 @@ type MockPublisher_Notify_Call[T any] struct {
 }
 
 // Notify is a helper method to define mock.On call
-//   - context1 context.Context
-//   - v T
-func (_e *MockPublisher_Expecter[T]) Notify(context1 any, v any) *MockPublisher_Notify_Call[T] {
-	return &MockPublisher_Notify_Call[T]{Call: _e.mock.On("Notify", context1, v)}
+//   - ctx context.Context
+//   - event T
+func (_e *MockPublisher_Expecter[T]) Notify(ctx any, event any) *MockPublisher_Notify_Call[T] {
+	return &MockPublisher_Notify_Call[T]{Call: _e.mock.On("Notify", ctx, event)}
 }
 
-func (_c *MockPublisher_Notify_Call[T]) Run(run func(context1 context.Context, v T)) *MockPublisher_Notify_Call[T] {
+func (_c *MockPublisher_Notify_Call[T]) Run(run func(ctx context.Context, event T)) *MockPublisher_Notify_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -88,7 +88,7 @@ func (_c *MockPublisher_Notify_Call[T]) Return() *MockPublisher_Notify_Call[T] {
 	return _c
 }
 
-func (_c *MockPublisher_Notify_Call[T]) RunAndReturn(run func(context1 context.Context, v T)) *MockPublisher_Notify_Call[T] {
+func (_c *MockPublisher_Notify_Call[T]) RunAndReturn(run func(ctx context.Context, event T)) *MockPublisher_Notify_Call[T] {
 	_c.Run(run)
 	return _c
 }

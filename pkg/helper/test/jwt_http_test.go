@@ -18,7 +18,7 @@ func TestJWTHTTPHelper(t *testing.T) {
 		headers := http.Header{}
 		headers.Set(headerName, "Bearer my-token")
 
-		res, err := httpHelper.ExtractTokenStringFromHeader(headerName, headers)
+		res, err := httpHelper.ExtractTokenStringFromHeader(headers, headerName)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "my-token", res)
@@ -30,7 +30,7 @@ func TestJWTHTTPHelper(t *testing.T) {
 			Value: "my-cookie-token",
 		}
 
-		res, err := httpHelper.ExtractTokenStringFromCookie("session", cookie)
+		res, err := httpHelper.ExtractTokenStringFromCookie(cookie, "session")
 
 		assert.NoError(t, err)
 		assert.Equal(t, "my-cookie-token", res)
@@ -41,7 +41,7 @@ func TestJWTHTTPHelper(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/", nil)
 		req.Header.Set(headerName, "Bearer "+tokenStr)
 
-		token, err := httpHelper.ExtractTokenFromRequestHeader(headerName, req)
+		token, err := httpHelper.ExtractTokenFromRequestHeader(req, headerName)
 
 		require.NoError(t, err)
 		assert.True(t, token.Valid)

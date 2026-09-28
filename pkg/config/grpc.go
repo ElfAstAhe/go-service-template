@@ -7,6 +7,9 @@ import (
 )
 
 // GRPCConfig — настройки gRPC сервера
+//
+// Инкапсулирует конфигурационные параметры gRPC-транспорта, включая адресацию,
+// параметры управления жизненным циклом HTTP/2 соединений и KeepAlive-политики.
 type GRPCConfig struct {
 	Address         string        `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty"`
 	MaxConnIdle     time.Duration `mapstructure:"max_conn_idle" json:"max_conn_idle,omitempty" yaml:"max_conn_idle,omitempty"`
@@ -19,6 +22,7 @@ type GRPCConfig struct {
 	ShutdownTimeout  time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"`
 }
 
+// NewGRPCConfig конструктор
 func NewGRPCConfig(
 	address string,
 	maxConnIdle,
@@ -41,6 +45,7 @@ func NewGRPCConfig(
 	}
 }
 
+// NewDefaultGRPCConfig констркутор настроек по умолчанию
 func NewDefaultGRPCConfig() *GRPCConfig {
 	return NewGRPCConfig(
 		DefaultGRPCAddress,
@@ -53,6 +58,8 @@ func NewDefaultGRPCConfig() *GRPCConfig {
 		DefaultGRPCShutdownTimeout)
 }
 
+// Validate осуществляет семантическую проверку параметров gRPC-транспорта на этапе запуска приложения (Bootstrap Phase).
+// Предотвращает запуск транспортного узла с пустым адресом слушателя или отрицательными таймаутами.
 func (gc *GRPCConfig) Validate() error {
 	if gc.Address == "" {
 		return errs.NewConfigValidateError("gRPC", "address", "must not be empty", nil)

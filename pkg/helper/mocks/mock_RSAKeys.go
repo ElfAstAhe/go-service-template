@@ -104,8 +104,8 @@ func (_c *MockRSAKeys_Decrypt_Call) Run(run func(data []byte, privateKey *rsa.Pr
 	return _c
 }
 
-func (_c *MockRSAKeys_Decrypt_Call) Return(bytes []byte, err error) *MockRSAKeys_Decrypt_Call {
-	_c.Call.Return(bytes, err)
+func (_c *MockRSAKeys_Decrypt_Call) Return(plaintext []byte, err error) *MockRSAKeys_Decrypt_Call {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
@@ -170,8 +170,8 @@ func (_c *MockRSAKeys_DecryptString_Call) Run(run func(data string, privateKey *
 	return _c
 }
 
-func (_c *MockRSAKeys_DecryptString_Call) Return(s string, err error) *MockRSAKeys_DecryptString_Call {
-	_c.Call.Return(s, err)
+func (_c *MockRSAKeys_DecryptString_Call) Return(plaintext string, err error) *MockRSAKeys_DecryptString_Call {
+	_c.Call.Return(plaintext, err)
 	return _c
 }
 
@@ -238,8 +238,8 @@ func (_c *MockRSAKeys_Encrypt_Call) Run(run func(data []byte, publicKey *rsa.Pub
 	return _c
 }
 
-func (_c *MockRSAKeys_Encrypt_Call) Return(bytes []byte, err error) *MockRSAKeys_Encrypt_Call {
-	_c.Call.Return(bytes, err)
+func (_c *MockRSAKeys_Encrypt_Call) Return(ciphertext []byte, err error) *MockRSAKeys_Encrypt_Call {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
@@ -304,8 +304,8 @@ func (_c *MockRSAKeys_EncryptString_Call) Run(run func(data string, publicKey *r
 	return _c
 }
 
-func (_c *MockRSAKeys_EncryptString_Call) Return(s string, err error) *MockRSAKeys_EncryptString_Call {
-	_c.Call.Return(s, err)
+func (_c *MockRSAKeys_EncryptString_Call) Return(ciphertext string, err error) *MockRSAKeys_EncryptString_Call {
+	_c.Call.Return(ciphertext, err)
 	return _c
 }
 
@@ -363,8 +363,8 @@ func (_c *MockRSAKeys_Generate_Call) Run(run func()) *MockRSAKeys_Generate_Call 
 	return _c
 }
 
-func (_c *MockRSAKeys_Generate_Call) Return(s string, s1 string, err error) *MockRSAKeys_Generate_Call {
-	_c.Call.Return(s, s1, err)
+func (_c *MockRSAKeys_Generate_Call) Return(privateKeyStr string, publicKeyStr string, err error) *MockRSAKeys_Generate_Call {
+	_c.Call.Return(privateKeyStr, publicKeyStr, err)
 	return _c
 }
 
@@ -374,8 +374,8 @@ func (_c *MockRSAKeys_Generate_Call) RunAndReturn(run func() (string, string, er
 }
 
 // ParsePrivateKey provides a mock function for the type MockRSAKeys
-func (_mock *MockRSAKeys) ParsePrivateKey(s string) (*rsa.PrivateKey, error) {
-	ret := _mock.Called(s)
+func (_mock *MockRSAKeys) ParsePrivateKey(hexString string) (*rsa.PrivateKey, error) {
+	ret := _mock.Called(hexString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ParsePrivateKey")
@@ -384,17 +384,17 @@ func (_mock *MockRSAKeys) ParsePrivateKey(s string) (*rsa.PrivateKey, error) {
 	var r0 *rsa.PrivateKey
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (*rsa.PrivateKey, error)); ok {
-		return returnFunc(s)
+		return returnFunc(hexString)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) *rsa.PrivateKey); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(hexString)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*rsa.PrivateKey)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(hexString)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -407,12 +407,12 @@ type MockRSAKeys_ParsePrivateKey_Call struct {
 }
 
 // ParsePrivateKey is a helper method to define mock.On call
-//   - s string
-func (_e *MockRSAKeys_Expecter) ParsePrivateKey(s any) *MockRSAKeys_ParsePrivateKey_Call {
-	return &MockRSAKeys_ParsePrivateKey_Call{Call: _e.mock.On("ParsePrivateKey", s)}
+//   - hexString string
+func (_e *MockRSAKeys_Expecter) ParsePrivateKey(hexString any) *MockRSAKeys_ParsePrivateKey_Call {
+	return &MockRSAKeys_ParsePrivateKey_Call{Call: _e.mock.On("ParsePrivateKey", hexString)}
 }
 
-func (_c *MockRSAKeys_ParsePrivateKey_Call) Run(run func(s string)) *MockRSAKeys_ParsePrivateKey_Call {
+func (_c *MockRSAKeys_ParsePrivateKey_Call) Run(run func(hexString string)) *MockRSAKeys_ParsePrivateKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -430,14 +430,14 @@ func (_c *MockRSAKeys_ParsePrivateKey_Call) Return(privateKey *rsa.PrivateKey, e
 	return _c
 }
 
-func (_c *MockRSAKeys_ParsePrivateKey_Call) RunAndReturn(run func(s string) (*rsa.PrivateKey, error)) *MockRSAKeys_ParsePrivateKey_Call {
+func (_c *MockRSAKeys_ParsePrivateKey_Call) RunAndReturn(run func(hexString string) (*rsa.PrivateKey, error)) *MockRSAKeys_ParsePrivateKey_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ParsePublicKey provides a mock function for the type MockRSAKeys
-func (_mock *MockRSAKeys) ParsePublicKey(s string) (*rsa.PublicKey, error) {
-	ret := _mock.Called(s)
+func (_mock *MockRSAKeys) ParsePublicKey(hexString string) (*rsa.PublicKey, error) {
+	ret := _mock.Called(hexString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ParsePublicKey")
@@ -446,17 +446,17 @@ func (_mock *MockRSAKeys) ParsePublicKey(s string) (*rsa.PublicKey, error) {
 	var r0 *rsa.PublicKey
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(string) (*rsa.PublicKey, error)); ok {
-		return returnFunc(s)
+		return returnFunc(hexString)
 	}
 	if returnFunc, ok := ret.Get(0).(func(string) *rsa.PublicKey); ok {
-		r0 = returnFunc(s)
+		r0 = returnFunc(hexString)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*rsa.PublicKey)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(s)
+		r1 = returnFunc(hexString)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -469,12 +469,12 @@ type MockRSAKeys_ParsePublicKey_Call struct {
 }
 
 // ParsePublicKey is a helper method to define mock.On call
-//   - s string
-func (_e *MockRSAKeys_Expecter) ParsePublicKey(s any) *MockRSAKeys_ParsePublicKey_Call {
-	return &MockRSAKeys_ParsePublicKey_Call{Call: _e.mock.On("ParsePublicKey", s)}
+//   - hexString string
+func (_e *MockRSAKeys_Expecter) ParsePublicKey(hexString any) *MockRSAKeys_ParsePublicKey_Call {
+	return &MockRSAKeys_ParsePublicKey_Call{Call: _e.mock.On("ParsePublicKey", hexString)}
 }
 
-func (_c *MockRSAKeys_ParsePublicKey_Call) Run(run func(s string)) *MockRSAKeys_ParsePublicKey_Call {
+func (_c *MockRSAKeys_ParsePublicKey_Call) Run(run func(hexString string)) *MockRSAKeys_ParsePublicKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -492,7 +492,7 @@ func (_c *MockRSAKeys_ParsePublicKey_Call) Return(publicKey *rsa.PublicKey, err 
 	return _c
 }
 
-func (_c *MockRSAKeys_ParsePublicKey_Call) RunAndReturn(run func(s string) (*rsa.PublicKey, error)) *MockRSAKeys_ParsePublicKey_Call {
+func (_c *MockRSAKeys_ParsePublicKey_Call) RunAndReturn(run func(hexString string) (*rsa.PublicKey, error)) *MockRSAKeys_ParsePublicKey_Call {
 	_c.Call.Return(run)
 	return _c
 }

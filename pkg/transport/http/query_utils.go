@@ -10,6 +10,8 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
+// GetQueryInt извлекает параметр строки запроса по ключу и преобразует его в тип int.
+// Возвращает InvalidArgumentError, если параметр отсутствует или не может быть распарсен как число.
 func GetQueryInt(r *http.Request, key string) (int, error) {
 	val := r.URL.Query().Get(key)
 	if val == "" {
@@ -23,6 +25,7 @@ func GetQueryInt(r *http.Request, key string) (int, error) {
 	return res, nil
 }
 
+// GetQueryIntDefault извлекает целочисленный параметр строки запроса, возвращая defaultValue в случае его отсутствия или ошибки парсинга.
 func GetQueryIntDefault(r *http.Request, key string, defaultValue int) int {
 	res, err := GetQueryInt(r, key)
 	if err != nil {
@@ -32,6 +35,8 @@ func GetQueryIntDefault(r *http.Request, key string, defaultValue int) int {
 	return res
 }
 
+// GetQueryString извлекает строковый параметр из строки запроса.
+// Возвращает InvalidArgumentError, если параметр пуст или отсутствует.
 func GetQueryString(r *http.Request, key string) (string, error) {
 	res := r.URL.Query().Get(key)
 	if res == "" {
@@ -41,6 +46,7 @@ func GetQueryString(r *http.Request, key string) (string, error) {
 	return res, nil
 }
 
+// GetQueryStringDefault извлекает строковый параметр строки запроса, возвращая defaultValue в случае его отсутствия.
 func GetQueryStringDefault(r *http.Request, key string, defaultValue string) string {
 	res, err := GetQueryString(r, key)
 	if err != nil {
@@ -50,6 +56,8 @@ func GetQueryStringDefault(r *http.Request, key string, defaultValue string) str
 	return res
 }
 
+// GetQueryBool извлекает параметр строки запроса и интерпретирует его как логический тип bool (true/false).
+// Поддерживает стандартные литералы strconv.ParseBool. Возвращает ошибку при невалидном синтаксисе.
 func GetQueryBool(r *http.Request, key string) (bool, error) {
 	val := r.URL.Query().Get(key)
 	if val == "" {
@@ -63,6 +71,7 @@ func GetQueryBool(r *http.Request, key string) (bool, error) {
 	return res, nil
 }
 
+// GetQueryBoolDefault извлекает логический параметр строки запроса, возвращая defaultValue в случае его отсутствия или сбоя.
 func GetQueryBoolDefault(r *http.Request, key string, defaultValue bool) bool {
 	res, err := GetQueryBool(r, key)
 	if err != nil {
@@ -72,6 +81,8 @@ func GetQueryBoolDefault(r *http.Request, key string, defaultValue bool) bool {
 	return res
 }
 
+// GetQueryTime извлекает временной параметр строки запроса и парсит его согласно строгому стандарту ISO-8601 (time.RFC3339).
+// Если параметр отсутствует, возвращает системный маркер utils.ZeroTime без генерации ошибки.
 func GetQueryTime(r *http.Request, key string) (time.Time, error) {
 	val := r.URL.Query().Get(key)
 	if val == "" {
@@ -85,6 +96,7 @@ func GetQueryTime(r *http.Request, key string) (time.Time, error) {
 	return res, nil
 }
 
+// GetQueryTimeDefault извлекает временной параметр, возвращая defaultValue в случае синтаксической ошибки парсинга таймштампа.
 func GetQueryTimeDefault(r *http.Request, key string, defaultValue time.Time) time.Time {
 	res, err := GetQueryTime(r, key)
 	if err != nil {
@@ -94,6 +106,7 @@ func GetQueryTimeDefault(r *http.Request, key string, defaultValue time.Time) ti
 	return res
 }
 
+// GetQueryStringArray извлекает параметр строки запроса, расщепляя его через запятую на плоский строковый срез []string.
 func GetQueryStringArray(r *http.Request, key string) ([]string, error) {
 	val := r.URL.Query().Get(key)
 	if val == "" {
@@ -103,6 +116,7 @@ func GetQueryStringArray(r *http.Request, key string) ([]string, error) {
 	return strings.Split(val, ","), nil
 }
 
+// GetQueryStringArrayDefault извлекает массив строк, возвращая defaultValue в случае отсутствия оригинального параметра.
 func GetQueryStringArrayDefault(r *http.Request, key string, defaultValue []string) []string {
 	res, err := GetQueryStringArray(r, key)
 	if err != nil {
@@ -112,6 +126,8 @@ func GetQueryStringArrayDefault(r *http.Request, key string, defaultValue []stri
 	return res
 }
 
+// GetQueryIntArray извлекает переданный через запятую список значений и преобразует их в целочисленный срез []int.
+// Оптимизировано: сразу выполняет предварительное выделение памяти (pre-allocation) под итоговую коллекцию.
 func GetQueryIntArray(r *http.Request, key string) ([]int, error) {
 	val := r.URL.Query().Get(key)
 	if val == "" {
@@ -130,6 +146,7 @@ func GetQueryIntArray(r *http.Request, key string) ([]int, error) {
 	return intArr, nil
 }
 
+// GetQueryIntArrayDefault извлекает массив чисел, возвращая дефолтный срез defaultValue при провале валидации или парсинга.
 func GetQueryIntArrayDefault(r *http.Request, key string, defaultValue []int) []int {
 	res, err := GetQueryIntArray(r, key)
 	if err != nil {

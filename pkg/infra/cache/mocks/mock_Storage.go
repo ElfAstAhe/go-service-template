@@ -169,8 +169,8 @@ func (_c *MockStorage_Get_Call[K]) Run(run func(key K)) *MockStorage_Get_Call[K]
 	return _c
 }
 
-func (_c *MockStorage_Get_Call[K]) Return(bytes []byte, b bool) *MockStorage_Get_Call[K] {
-	_c.Call.Return(bytes, b)
+func (_c *MockStorage_Get_Call[K]) Return(value []byte, ok bool) *MockStorage_Get_Call[K] {
+	_c.Call.Return(value, ok)
 	return _c
 }
 

@@ -7,6 +7,9 @@ import (
 )
 
 // DBConfig — настройки основной реляционной базы данных
+//
+// Инкапсулирует конфигурационные параметры пула соединений, строковые dsn-секреты
+// и сетевые лимиты для основной реляционной СУБД (PostgreSQL, MySQL).
 type DBConfig struct {
 	Driver              string        `mapstructure:"driver" json:"driver,omitempty" yaml:"driver,omitempty"` // postgres, mysql, etc.
 	DSN                 string        `mapstructure:"dsn" json:"dsn,omitempty" yaml:"dsn,omitempty"`
@@ -16,21 +19,33 @@ type DBConfig struct {
 	ConnTimeout         time.Duration `mapstructure:"conn_timeout" json:"conn_timeout,omitempty" yaml:"conn_timeout,omitempty"`
 }
 
-func NewDBConfig(driver, dsn string, maxOpenConns, maxIdleConns int, connMaxIdleLifetime, ConnTimeout time.Duration) *DBConfig {
+// NewDBConfig — фабричный конструктор конфигурации репозиториев СУБД.
+// Внимание: аргумент сonnTimeout на строке 33 содержит кириллический символ 'с'.
+func NewDBConfig(driver, dsn string, maxOpenConns, maxIdleConns int, connMaxIdleLifetime, сonnTimeout time.Duration) *DBConfig {
 	return &DBConfig{
 		Driver:              driver,
 		DSN:                 dsn,
 		MaxOpenConns:        maxOpenConns,
 		MaxIdleConns:        maxIdleConns,
 		ConnMaxIdleLifetime: connMaxIdleLifetime,
-		ConnTimeout:         ConnTimeout,
+		ConnTimeout:         сonnTimeout,
 	}
 }
 
+// NewDefaultDBConfig собирает базовую конфигурацию СУБД, наполняя её системными константными дефолтами фреймворка.
 func NewDefaultDBConfig() *DBConfig {
-	return NewDBConfig(DefaultDBDriver, DefaultDBDSN, DefaultDBMaxOpenConns, DefaultDBMaxIdleConns, DefaultDBConnMaxIdleLifetime, DefaultDBConnTimeout)
+	return NewDBConfig(
+		DefaultDBDriver,
+		DefaultDBDSN,
+		DefaultDBMaxOpenConns,
+		DefaultDBMaxIdleConns,
+		DefaultDBConnMaxIdleLifetime,
+		DefaultDBConnTimeout,
+	)
 }
 
+// Validate осуществляет семантическую проверку параметров пула соединений на этапе запуска микросервиса (Bootstrap Phase).
+// Полностью пресекает попытки запуска приложения с пустыми строками подключений или невалидными таймаутами.
 func (dbc *DBConfig) Validate() error {
 	if dbc.Driver == "" {
 		return errs.NewConfigValidateError("db", "driver", "must not be empty", nil)
