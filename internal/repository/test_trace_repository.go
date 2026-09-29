@@ -25,7 +25,7 @@ func NewTestTraceRepository(repo domain.TestRepository) *TestTraceRepository {
 }
 
 func (ttr *TestTraceRepository) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
-	ctx, span := ttr.GetTracer().Start(ctx, fmt.Sprintf("%s.FindByCode", ttr.BaseCRUDTraceRepository.GetRepositoryName()))
+	ctx, span := ttr.GetTracer().Start(ctx, fmt.Sprintf("%s.FindByCode", ttr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.code", code))
 	defer span.End()
 

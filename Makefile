@@ -9,7 +9,7 @@ VERSION=1.0.0
 BUILD_TIME=$(shell date +'%Y/%m/%d_%H:%M:%S')
 STAGE=DEV
 
-.PHONY: gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run test bench static-check lint clean update-deps
+.PHONY: gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run test bench static-check lint lint-revive clean update-deps
 # Показывает это руководство (выполняется по умолчанию)
 help:
 	@echo "Доступные команды для сборки и тестирования:"
@@ -84,8 +84,12 @@ bench: gen-sources gen-proto gen-mocks ## Запустить кэш-бенчма
 static-check: ## Запустить статический анализ кода (пропуская автогенерируемый pkg/api)
 	staticcheck $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz|mocks")
 
-# Запуск линтера
-lint: ## Запустить линтер revive (пропуская автогенерируемый код)
+# Запуск линтера golangci-lint
+lint: ## Запустить линтер golangci-lint (пропуск internal, pkg/api, cmd/gen-tz)
+	golangci-lint run
+
+# Запуск линтера revive
+lint-revive: ## Запустить линтер revive (пропуская автогенерируемый код)
 	revive -exclude "_test\.go$$" $$(go list ./... | grep -vE "pkg/api|cmd/gen-tz|mocks")
 
 # Очистка бинарников

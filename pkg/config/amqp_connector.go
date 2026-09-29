@@ -66,16 +66,16 @@ func (cc *AMQPConnectorConfig) Validate() error {
 	if strings.TrimSpace(cc.URL) == "" {
 		return errs.NewConfigValidateError("amqp connector", "URL", "empty", nil)
 	}
-	if !(cc.ConnectTimeout > 0) {
+	if cc.ConnectTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp connector", "ConnectTimeout", "less than 0", nil)
 	}
-	if !(cc.ShutdownTimeout > 0) {
+	if cc.ShutdownTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp connector", "ShutdownTimeout", "less than 0", nil)
 	}
-	if !(cc.WriteTimeout > 0) {
+	if cc.WriteTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp connector", "WriteTimeout", "less than 0", nil)
 	}
-	if !(cc.IdleTimeout > 0) {
+	if cc.IdleTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp connector", "IdleTimeout", "less than 0", nil)
 	}
 

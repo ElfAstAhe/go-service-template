@@ -89,6 +89,15 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 	defer bs.GetLogger().Debugf("scheduler %s started", bs.GetName())
 
 	bs.ctx, bs.cancel = context.WithCancel(ctx)
+
+	// Guard Clause against context leaks (Gosec G118 fix)
+	isStartedSuccessfully := false
+	defer func() {
+		if !isStartedSuccessfully && bs.cancel != nil {
+			bs.cancel()
+		}
+	}()
+
 	if bs.timer == nil {
 		bs.timer = time.NewTimer(bs.GetConfig().StartInterval)
 	} else {

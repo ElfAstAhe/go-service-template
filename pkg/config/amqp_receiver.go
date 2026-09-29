@@ -54,13 +54,13 @@ func (rc *AMQPReceiverConfig) Validate() error {
 	if strings.TrimSpace(rc.TargetName) == "" {
 		return errs.NewConfigValidateError("amqp receiver", "TargetName", "empty", nil)
 	}
-	if !(rc.ConnectTimeout > 0) {
+	if rc.ConnectTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp receiver", "ConnectTimeout", "less than 0", nil)
 	}
-	if !(rc.ShutdownTimeout > 0) {
+	if rc.ShutdownTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp receiver", "ShutdownTimeout", "less than 0", nil)
 	}
-	if !(rc.PrefetchCredit > 0) {
+	if rc.PrefetchCredit <= 0 {
 		return errs.NewConfigValidateError("amqp receiver", "PrefetchCredit", "less than 0", nil)
 	}
 

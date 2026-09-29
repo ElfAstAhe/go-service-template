@@ -24,7 +24,7 @@ func NewTestMetricsRepository(repo domain.TestRepository) *TestMetricsRepository
 
 func (tmr *TestMetricsRepository) FindByCode(ctx context.Context, code string) (res *domain.Test, err error) {
 	defer func(start time.Time) {
-		metrics.ObserveRepositoryOp(tmr.BaseCRUDMetricsRepository.GetRepositoryName(), "FindByCode", err, start)
+		metrics.ObserveRepositoryOp(tmr.GetRepositoryName(), "FindByCode", err, start)
 	}(time.Now())
 
 	return tmr.repo.FindByCode(ctx, code)

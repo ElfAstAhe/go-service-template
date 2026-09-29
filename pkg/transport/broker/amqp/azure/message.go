@@ -46,7 +46,7 @@ func (m *Message) GetProperties() map[string]any {
 // ExtractOriginalMessage безопасно извлекает нативный объект *amqp.Message из карты свойств Props.
 // Используется воркерами для ручного контроля жизненного цикла сетевых пакетов брокера.
 func (m *Message) ExtractOriginalMessage() (any, error) {
-	if !(len(m.Props) > 0) {
+	if len(m.Props) == 0 {
 		return nil, errs.NewTlCommonError("ExtractOriginalMessage", "envelope props empty", nil)
 	}
 	raw, exists := m.Props[sysMsgKey]

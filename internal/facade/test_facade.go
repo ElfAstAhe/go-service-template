@@ -85,7 +85,7 @@ func (tf *TestFacadeImpl) List(ctx context.Context, limit, offset int) ([]*dto.T
 }
 
 func (tf *TestFacadeImpl) validateList(limit, offset int) error {
-	if !(limit > 0) {
+	if limit <= 0 {
 		return errs.NewInvalidArgumentError("limit", "must be greater than 0")
 	}
 	if offset < 0 {

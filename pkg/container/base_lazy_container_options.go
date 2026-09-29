@@ -20,7 +20,7 @@ func WithLazyName(name string) LazyOption {
 		if o.Options == nil {
 			o.Options = &Options{}
 		}
-		o.Options.Name = name
+		o.Name = name
 	}
 }
 
@@ -30,7 +30,7 @@ func WithLazyOrchestrator(orchestrator Orchestrator) LazyOption {
 		if o.Options == nil {
 			o.Options = &Options{}
 		}
-		o.Options.Orchestrator = orchestrator
+		o.Orchestrator = orchestrator
 	}
 }
 
@@ -40,6 +40,6 @@ func WithLazyLogger(logger logger.Logger) LazyOption {
 		if o.Options == nil {
 			o.Options = &Options{}
 		}
-		o.Options.Logger = logger
+		o.Logger = logger
 	}
 }

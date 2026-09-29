@@ -16,5 +16,3 @@ const (
 	GRPCContainerName       string = "gRPC-container"
 	WorkerContainerName     string = "worker-container"
 )
-
-const ()

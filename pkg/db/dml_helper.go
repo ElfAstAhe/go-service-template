@@ -1,6 +1,7 @@
 package db
 
 import (
+	//nolint:gosec // G501: using in table/index/etc. naming generation
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -55,6 +56,7 @@ func buildFieldNamesHash(fieldNames ...string) string {
 	}
 
 	// Хэшируем склеенный payload для получения константной длины строки
+	//nolint:gosec // G401: Хэшируем склеенный payload для получения константной длины строки
 	hasher := md5.New()
 	hasher.Write([]byte(builder.String()))
 

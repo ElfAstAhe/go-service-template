@@ -30,7 +30,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer startupLogger.Close()
+	defer func() {
+		_ = startupLogger.Close()
+	}()
 	startupLogger = startupLogger.GetLogger("main")
 
 	// 1. Загрузка конфигурации
@@ -50,7 +52,9 @@ func main() {
 
 		panic(err)
 	}
-	defer zapLogger.Close()
+	defer func() {
+		_ = zapLogger.Close()
+	}()
 
 	// 3. Создание приложения
 	startupLogger.Info("create application")
@@ -65,7 +69,7 @@ func main() {
 	startupLogger.Info("init application")
 	if err := appl.Init(); err != nil {
 		startupLogger.Errorf("failed to init application: %v", err)
-		appl.Close()
+		_ = appl.Close()
 		panic(errs.NewCommonError("failed to init application", err))
 	}
 
