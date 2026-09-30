@@ -5,17 +5,22 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/usecase"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
+	pkgdom "github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	pkguc "github.com/ElfAstAhe/go-service-template/pkg/usecase"
 )
 
-//goland:noinspection DuplicatedCode
-func (ucc *UseCaseContainer) providerTM() (any, error) {
-	dbInst, err := container.GetInstance[db.DB](InstanceDB)
+func (ucc *UseCaseContainer) providerUnitOfWork() (any, error) {
+	tmInst, err := container.GetInstance[db.TransactionManager](InstanceTM)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+	tmOptsInst, err := container.GetInstance[*db.TransactionOptions](InstanceTMOpts)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
 
-	return db.NewTxManager(dbInst), nil
+	return pkguc.NewUnitOfWork(tmInst, tmOptsInst), nil
 }
 
 //goland:noinspection DuplicatedCode
@@ -48,7 +53,7 @@ func (ucc *UseCaseContainer) providerTestListUC() (any, error) {
 
 //goland:noinspection DuplicatedCode
 func (ucc *UseCaseContainer) providerTestSaveUC() (any, error) {
-	trMan, err := container.GetInstance[db.TransactionManager](InstanceTM)
+	uwInst, err := container.GetInstance[pkgdom.UnitOfWork](InstanceUnitOfWork)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -57,12 +62,12 @@ func (ucc *UseCaseContainer) providerTestSaveUC() (any, error) {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
 
-	return usecase.NewTestSaveUseCase(trMan, repoTest), nil
+	return usecase.NewTestSaveUseCase(uwInst, repoTest), nil
 }
 
 //goland:noinspection DuplicatedCode
 func (ucc *UseCaseContainer) providerTestDeleteUC() (any, error) {
-	trMan, err := container.GetInstance[db.TransactionManager](InstanceTM)
+	uwInst, err := container.GetInstance[pkgdom.UnitOfWork](InstanceUnitOfWork)
 	if err != nil {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -71,5 +76,5 @@ func (ucc *UseCaseContainer) providerTestDeleteUC() (any, error) {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
 
-	return usecase.NewTestDeleteUseCase(trMan, repoTest), nil
+	return usecase.NewTestDeleteUseCase(uwInst, repoTest), nil
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	dommocks "github.com/ElfAstAhe/go-service-template/internal/domain/mocks"
-	"github.com/ElfAstAhe/go-service-template/pkg/db/mocks"
+	mocks2 "github.com/ElfAstAhe/go-service-template/pkg/domain/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -20,18 +20,18 @@ func TestTestGetUseCase_Delete(t *testing.T) {
 	tests := []struct {
 		name         string
 		input        string
-		prepareMocks func(mTM *mocks.MockTransactionManager, mRepo *dommocks.MockTestRepository)
+		prepareMocks func(mUW *mocks2.MockUnitOfWork, mRepo *dommocks.MockTestRepository)
 		expectedErr  string
 	}{
 		{
 			name:  "Success: entity delete",
 			input: inputSuccess,
-			prepareMocks: func(mTM *mocks.MockTransactionManager, mRepo *dommocks.MockTestRepository) {
+			prepareMocks: func(mUW *mocks2.MockUnitOfWork, mRepo *dommocks.MockTestRepository) {
 				// эмулируем успешную транзакцию
-				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
+				mUW.On("Execute", mock.Anything, mock.Anything).
 					Return(nil).
 					Run(func(args mock.Arguments) {
-						fn := args.Get(2).(func(context.Context) error)
+						fn := args.Get(1).(func(context.Context) error)
 						_ = fn(ctx)
 					})
 
@@ -42,11 +42,11 @@ func TestTestGetUseCase_Delete(t *testing.T) {
 		{
 			name:  "Error: delete failed ",
 			input: inputFail,
-			prepareMocks: func(mTM *mocks.MockTransactionManager, mRepo *dommocks.MockTestRepository) {
-				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
+			prepareMocks: func(mUW *mocks2.MockUnitOfWork, mRepo *dommocks.MockTestRepository) {
+				mUW.On("Execute", mock.Anything, mock.Anything).
 					Return(errors.New("db error")).
 					Run(func(args mock.Arguments) {
-						fn := args.Get(2).(func(context.Context) error)
+						fn := args.Get(1).(func(context.Context) error)
 						_ = fn(ctx)
 					})
 
@@ -60,9 +60,9 @@ func TestTestGetUseCase_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// prepare
 			mRepo := new(dommocks.MockTestRepository)
-			mTM := new(mocks.MockTransactionManager)
-			tt.prepareMocks(mTM, mRepo)
-			uc := NewTestDeleteUseCase(mTM, mRepo)
+			mUW := new(mocks2.MockUnitOfWork)
+			tt.prepareMocks(mUW, mRepo)
+			uc := NewTestDeleteUseCase(mUW, mRepo)
 
 			// act
 			err := uc.Delete(ctx, tt.input)
@@ -76,7 +76,7 @@ func TestTestGetUseCase_Delete(t *testing.T) {
 			}
 
 			mRepo.AssertExpectations(t)
-			mTM.AssertExpectations(t)
+			mUW.AssertExpectations(t)
 		})
 	}
 }

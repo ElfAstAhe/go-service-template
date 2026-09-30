@@ -8,7 +8,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
 	dommocks "github.com/ElfAstAhe/go-service-template/internal/domain/mocks"
-	"github.com/ElfAstAhe/go-service-template/pkg/db/mocks"
+	mocks2 "github.com/ElfAstAhe/go-service-template/pkg/domain/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,20 +24,20 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 	tests := []struct {
 		name         string
 		input        *domain.Test
-		prepareMocks func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager)
+		prepareMocks func(mRepo *dommocks.MockTestRepository, mUW *mocks2.MockUnitOfWork)
 		expectedRes  *domain.Test
 		expectedErr  string // Подстрока ошибки для проверки
 	}{
 		{
 			name:  "Success: entity created",
 			input: inputCreate,
-			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mUW *mocks2.MockUnitOfWork) {
 				// Эмулируем успешную транзакцию
-				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
+				mUW.On("Execute", mock.Anything, mock.Anything).
 					Return(nil).
 					Run(func(args mock.Arguments) {
 						// Вызываем callback-функцию, которую передали в TransactionManager
-						fn := args.Get(2).(func(context.Context) error)
+						fn := args.Get(1).(func(context.Context) error)
 						_ = fn(ctx)
 					})
 				mRepo.On("Create", mock.Anything, inputCreate).Return(expectedCreate, nil)
@@ -48,12 +48,12 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 		{
 			name:  "Success: entity changed",
 			input: inputChange,
-			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mUW *mocks2.MockUnitOfWork) {
 				// эмулируем успешную транзакцию
-				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
+				mUW.On("Execute", mock.Anything, mock.Anything).
 					Return(nil).
 					Run(func(args mock.Arguments) {
-						fn := args.Get(2).(func(context.Context) error)
+						fn := args.Get(1).(func(context.Context) error)
 						_ = fn(ctx)
 					})
 				mRepo.On("Change", mock.Anything, inputChange).Return(expectedChange, nil)
@@ -64,11 +64,11 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 		{
 			name:  "Error: repository failure create",
 			input: inputCreate,
-			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
-				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mUW *mocks2.MockUnitOfWork) {
+				mUW.On("Execute", mock.Anything, mock.Anything).
 					Return(errors.New("db error")).
 					Run(func(args mock.Arguments) {
-						fn := args.Get(2).(func(context.Context) error)
+						fn := args.Get(1).(func(context.Context) error)
 						_ = fn(ctx)
 					})
 				mRepo.On("Create", mock.Anything, inputCreate).Return(nil, errors.New("sql fail"))
@@ -79,11 +79,11 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 		{
 			name:  "Error: repository failure change",
 			input: inputChange,
-			prepareMocks: func(mRepo *dommocks.MockTestRepository, mTM *mocks.MockTransactionManager) {
-				mTM.On("WithinTransaction", mock.Anything, mock.Anything, mock.Anything).
+			prepareMocks: func(mRepo *dommocks.MockTestRepository, mUW *mocks2.MockUnitOfWork) {
+				mUW.On("Execute", mock.Anything, mock.Anything).
 					Return(errors.New("db error")).
 					Run(func(args mock.Arguments) {
-						fn := args.Get(2).(func(context.Context) error)
+						fn := args.Get(1).(func(context.Context) error)
 						_ = fn(ctx)
 					})
 				mRepo.On("Change", mock.Anything, inputChange).Return(nil, errors.New("sql fail"))
@@ -97,10 +97,10 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// setup
 			mRepo := new(dommocks.MockTestRepository)
-			mTM := new(mocks.MockTransactionManager)
-			tt.prepareMocks(mRepo, mTM)
+			mUW := new(mocks2.MockUnitOfWork)
+			tt.prepareMocks(mRepo, mUW)
 
-			uc := NewTestSaveUseCase(mTM, mRepo)
+			uc := NewTestSaveUseCase(mUW, mRepo)
 
 			// act
 			actual, err := uc.Save(ctx, tt.input)
@@ -116,7 +116,7 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 			}
 
 			mRepo.AssertExpectations(t)
-			mTM.AssertExpectations(t)
+			mUW.AssertExpectations(t)
 		})
 	}
 }
