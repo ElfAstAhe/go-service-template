@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	usecase "github.com/ElfAstAhe/go-service-template/pkg/db"
+	pkgdom "github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
@@ -15,22 +15,22 @@ type TestSaveUseCase interface {
 }
 
 type TestSaveInteractor struct {
-	tm   usecase.TransactionManager
+	uw   pkgdom.UnitOfWork
 	repo domain.TestRepository
 }
 
 var _ TestSaveUseCase = (*TestSaveInteractor)(nil)
 
-func NewTestSaveUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestSaveInteractor {
+func NewTestSaveUseCase(uw pkgdom.UnitOfWork, repo domain.TestRepository) *TestSaveInteractor {
 	return &TestSaveInteractor{
-		tm:   tm,
+		uw:   uw,
 		repo: repo,
 	}
 }
 
 func (ts *TestSaveInteractor) Save(ctx context.Context, model *domain.Test) (*domain.Test, error) {
 	var res *domain.Test
-	err := ts.tm.WithinTransaction(ctx, nil, func(ctx context.Context) error {
+	err := ts.uw.Execute(ctx, func(ctx context.Context) error {
 		var txErr error
 		if !model.IsExists() {
 			res, txErr = ts.repo.Create(ctx, model)

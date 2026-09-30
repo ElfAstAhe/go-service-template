@@ -32,7 +32,7 @@ func New(conf *config.DBConfig) (*DB, error) {
 		return nil, errs.NewDalError("NewDB", "failed to open pgx db", err)
 	}
 
-	appDB, err := setup(pg, conf)
+	appDB, err := Setup(pg, conf)
 	if err != nil {
 		return nil, errs.NewDalError("NewPgDB", "failed setup db connection", err)
 	}
@@ -40,8 +40,8 @@ func New(conf *config.DBConfig) (*DB, error) {
 	return appDB, nil
 }
 
-// setup initializes connection pool limits including max open/idle counts and lifetime bounds.
-func setup(pg *sql.DB, conf *config.DBConfig) (*DB, error) {
+// Setup initializes connection pool limits including max open/idle counts and lifetime bounds.
+func Setup(pg *sql.DB, conf *config.DBConfig) (*DB, error) {
 	pg.SetMaxIdleConns(conf.MaxIdleConns)
 	pg.SetMaxOpenConns(conf.MaxOpenConns)
 	pg.SetConnMaxIdleTime(conf.ConnMaxIdleLifetime)

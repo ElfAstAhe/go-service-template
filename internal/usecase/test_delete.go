@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
-	usecase "github.com/ElfAstAhe/go-service-template/pkg/db"
+	pkgdom "github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
@@ -15,21 +15,24 @@ type TestDeleteUseCase interface {
 }
 
 type TestDeleteInteractor struct {
-	tm   usecase.TransactionManager
+	uw   pkgdom.UnitOfWork
 	repo domain.TestRepository
 }
 
 var _ TestDeleteUseCase = (*TestDeleteInteractor)(nil)
 
-func NewTestDeleteUseCase(tm usecase.TransactionManager, repo domain.TestRepository) *TestDeleteInteractor {
+func NewTestDeleteUseCase(
+	uw pkgdom.UnitOfWork,
+	repo domain.TestRepository,
+) *TestDeleteInteractor {
 	return &TestDeleteInteractor{
-		tm:   tm,
+		uw:   uw,
 		repo: repo,
 	}
 }
 
 func (td *TestDeleteInteractor) Delete(ctx context.Context, id string) error {
-	err := td.tm.WithinTransaction(ctx, nil, func(ctx context.Context) error {
+	err := td.uw.Execute(ctx, func(ctx context.Context) error {
 		return td.repo.Delete(ctx, id)
 	})
 	if err != nil {

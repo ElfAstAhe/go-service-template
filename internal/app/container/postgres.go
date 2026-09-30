@@ -14,6 +14,8 @@ import (
 const (
 	InstanceDB         string = "DB"
 	InstanceDBMigrator string = "DBMigrator"
+	InstanceTM         string = "TransactionManager"
+	InstanceTMOpts     string = "TransactionManagerOpts"
 )
 
 // PgContainer database connection and data migrations
@@ -42,6 +44,8 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 	err := errors.Join(
 		pc.RegisterProvider(InstanceDB, pc.providerDB),
 		pc.RegisterProvider(InstanceDBMigrator, pc.providerDBMigrator),
+		pc.RegisterProvider(InstanceTM, pc.providerTM),
+		pc.RegisterProvider(InstanceTMOpts, pc.providerTMOpts),
 	)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: register providers failed", err)
