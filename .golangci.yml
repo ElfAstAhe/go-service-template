@@ -3,7 +3,6 @@ version: "2"
 
 run:
   # Проверяем исключительно новые дифф-изменения рантайма (HEAD~1)
-  new-from-rev: HEAD~1
   modules-download-mode: readonly
   tests: false
   go: "1.26"
