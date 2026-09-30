@@ -88,6 +88,15 @@ func (bp *BasePool[D]) Start(ctx context.Context) error {
 
 	// Инициализируем контекст пула на базе родительского контекста приложения
 	bp.ctx, bp.cancel = context.WithCancel(ctx)
+
+	// Guard Clause against context leaks (Gosec G118 fix)
+	isStartedSuccessfully := false
+	defer func() {
+		if !isStartedSuccessfully && bp.cancel != nil {
+			bp.cancel()
+		}
+	}()
+
 	// Аллоцируем буферизованный канал задач согласно лимитам DataCapacity
 	bp.dataChan = make(chan D, bp.GetConfig().DataCapacity)
 

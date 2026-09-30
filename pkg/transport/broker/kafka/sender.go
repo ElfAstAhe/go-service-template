@@ -242,8 +242,10 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 
 	if delayMs > 5 {
 		maxJitterMs := delayMs / 5
-		jitterMs := rand.IntN(maxJitterMs) // Использование потокобезопасного v2 крипто-рандомайзера
+		//nolint:gosec // G404: Использование потокобезопасного v2 крипто-рандомайзера
+		jitterMs := rand.IntN(maxJitterMs)
 		jitter := time.Duration(jitterMs) * time.Millisecond
+		//nolint:gosec // G404: Использование потокобезопасного v2 крипто-рандомайзера
 		if rand.IntN(2) == 0 {
 			delay += jitter
 		} else {

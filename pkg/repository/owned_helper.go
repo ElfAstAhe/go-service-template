@@ -35,7 +35,9 @@ func (oh *OwnedHelper[T, ID, OwnerID]) ListByOwners(ctx context.Context, sourceL
 	if err != nil {
 		return nil, errs.NewDalError("OwnedHelper.ListByOwners", "query rows failed", err)
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	res := make(map[OwnerID][]T)
 	for rows.Next() {

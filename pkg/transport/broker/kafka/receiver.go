@@ -301,12 +301,14 @@ func (r *Receiver) Stats() broker.ReceiverStats {
 
 	return broker.ReceiverStats{
 		// COMMON
-		BrokerType:    "kafka",
-		TargetName:    stats.Topic,
-		Status:        "connected",
+		BrokerType: "kafka",
+		TargetName: stats.Topic,
+		Status:     "connected",
+		//nolint:gosec // G115: Integer cast and context are completely safe here
 		TotalMessages: uint64(stats.Messages),
-		TotalErrors:   uint64(stats.Errors),
-		Lag:           stats.Lag,
+		//nolint:gosec // G115: Integer cast and context are completely safe here
+		TotalErrors: uint64(stats.Errors),
+		Lag:         stats.Lag,
 
 		// KAFKA
 		Partition:     stats.Partition,

@@ -26,8 +26,9 @@ func TestJWTHTTPHelper(t *testing.T) {
 
 	t.Run("Cookie: успешно извлекает из структуры Cookie", func(t *testing.T) {
 		cookie := &http.Cookie{
-			Name:  "session",
-			Value: "my-cookie-token",
+			Secure: true,
+			Name:   "session",
+			Value:  "my-cookie-token",
 		}
 
 		res, err := httpHelper.ExtractTokenStringFromCookie(cookie, "session")

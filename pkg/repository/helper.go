@@ -86,7 +86,9 @@ func (h *Helper[T, ID]) List(ctx context.Context, sourceLabel string, sqlReq str
 	if err != nil {
 		return nil, errs.NewDalError("Helper.List", "query execution failed", err)
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	res := make([]T, 0)
 	for rows.Next() {
@@ -205,7 +207,7 @@ func (h *Helper[T, ID]) Delete(ctx context.Context, sqlReq string, params ...any
 	if err != nil {
 		return errs.NewDalError("Helper.Delete", "rows affected read failed", err)
 	}
-	if !(rowsAffected > 0) {
+	if rowsAffected <= 0 {
 		return errs.NewDalNotFoundError(h.GetInfo().Entity, params, nil)
 	}
 

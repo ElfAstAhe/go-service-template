@@ -96,7 +96,7 @@ func (hc *HTTPConfig) Validate() error {
 			return errs.NewConfigValidateError("http", "certificate_path", "must be a valid path", err)
 		}
 	}
-	if !(hc.MaxRequestBodySize >= 0) {
+	if hc.MaxRequestBodySize < 0 {
 		return errs.NewConfigValidateError("http", "max_request_body_size", "must be greater or equal than zero", nil)
 	}
 

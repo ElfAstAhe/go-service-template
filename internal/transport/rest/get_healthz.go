@@ -7,7 +7,7 @@ import (
 func (cr *AppChiRouter) getHealthz(rw http.ResponseWriter, r *http.Request) {
 	if cr.healthz() {
 		rw.WriteHeader(http.StatusOK)
-		rw.Write([]byte("OK"))
+		_, _ = rw.Write([]byte("OK"))
 
 		return
 	}

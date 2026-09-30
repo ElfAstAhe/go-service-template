@@ -151,10 +151,10 @@ func (krc *KafkaReceiverConfig) Validate() error {
 	if hasGroup && hasPartition {
 		return errs.NewConfigValidateError("kafka receiver", "GroupID/Partition", "GroupID and Partition are mutually exclusive options", nil)
 	}
-	if !(krc.ConnectTimeout > 0) {
+	if krc.ConnectTimeout <= 0 {
 		return errs.NewConfigValidateError("kafka receiver", "ConnectTimeout", "less than or equal to 0", nil)
 	}
-	if !(krc.ShutdownTimeout > 0) {
+	if krc.ShutdownTimeout <= 0 {
 		return errs.NewConfigValidateError("kafka receiver", "ShutdownTimeout", "less than or equal to 0", nil)
 	}
 	if krc.MinBytes <= 0 || krc.MaxBytes <= 0 {

@@ -117,10 +117,10 @@ func (bor *BaseOwnedRepository[T, ID, OwnerID]) List(ctx context.Context, ownerI
 
 // ValidateList верифицирует входящие параметры пагинации.
 func (bor *BaseOwnedRepository[T, ID, OwnerID]) ValidateList(ownerID OwnerID, limit, offset int) error {
-	if !(limit > 0) {
+	if limit <= 0 {
 		return errs.NewDalError("BaseOwnedRepository.ValidateList", "limit must be greater 0", nil)
 	}
-	if !(offset >= 0) {
+	if offset < 0 {
 		return errs.NewDalError("BaseOwnedRepository.ValidateList", "offset must be equal or greater 0", nil)
 	}
 

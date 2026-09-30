@@ -19,7 +19,9 @@ func DecodeJSON(r *http.Request, dst any) error {
 	// 1. Ограничиваем чтение (например, 1Мб), чтобы не выесть RAM.
 	// MaxBytesReader автоматически вернет ошибку, если тело больше установленного лимита.
 	r.Body = http.MaxBytesReader(nil, r.Body, 1024*1024)
-	defer r.Body.Close()
+	defer func() {
+		_ = r.Body.Close()
+	}()
 
 	dec := json.NewDecoder(r.Body)
 

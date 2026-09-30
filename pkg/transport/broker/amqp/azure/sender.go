@@ -114,6 +114,8 @@ func (s *Sender) PublishWithOpts(ctx context.Context, msg broker.Message, sendOp
 }
 
 // Close выполняет плавную остановку текущего линка-отправителя без деструкции общей сессии.
+//
+//goland:noinspection DuplicatedCode
 func (s *Sender) Close(ctx context.Context) error {
 	s.logger.Debug("close started")
 	defer s.logger.Debug("close finished")
@@ -263,9 +265,11 @@ func (s *Sender) waitBackoff(ctx context.Context, attempt int) {
 	// Если задержка существенна, подмешиваем 20%-й случайный джиттер
 	if delayMs > 5 {
 		maxJitterMs := delayMs / 5
+		//nolint:gosec // G404: Использование потокобезопасного v2 крипто-рандомайзера
 		jitterMs := rand.IntN(maxJitterMs)
 		jitter := time.Duration(jitterMs) * time.Millisecond
 
+		//nolint:gosec // G404: Использование потокобезопасного v2 крипто-рандомайзера
 		if rand.IntN(2) == 0 {
 			delay += jitter
 		} else {

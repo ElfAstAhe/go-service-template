@@ -19,6 +19,8 @@ const (
 )
 
 // CLI-флаги подсистемы безопасности, шифрования и авторизации (IAM/Auth).
+//
+//nolint:gosec // G101 : это флаги (параметры)
 const (
 	FlagAuthJWTSecret          string = "auth-jwt-secret"           // CLI-флаг секретной соли HMAC подписи JWT токенов
 	FlagAuthJWTSigningMethod   string = "auth-jwt-signing-method"   // CLI-флаг алгоритма подписи JWT (например, HS256)
@@ -51,6 +53,8 @@ const (
 )
 
 // CLI-флаги для настройки HTTP/REST веб-сервера (размеры тела запросов, TLS и таймауты).
+//
+//nolint:gosec // G101 : это флаги (параметры)
 const (
 	FlagHTTPAddress            string = "http-address"               // CLI-флаг сетевого адреса HTTP слушателя
 	FlagHTTPReadTimeout        string = "http-read-timeout"          // CLI-флаг лимита времени чтения заголовков и боди запроса
@@ -120,6 +124,8 @@ const (
 )
 
 // Строковые ключи Viper-маппинга для иерархического связывания параметров HTTP/REST сервера.
+//
+//nolint:gosec // G101 : это ключи
 const (
 	KeyHTTPAddress            string = "http.address"
 	KeyHTTPReadTimeout        string = "http.read_timeout"
@@ -249,6 +255,8 @@ const (
 // Auth
 // ====================================================================
 // Строковые ключи Viper-маппинга для иерархического связывания секретов подсистемы безопасности и IAM.
+//
+//nolint:gosec // G101 : это ключи
 const (
 	KeyAuthJWTSecret          string = "auth.jwt_secret"
 	KeyAuthJWTSigningMethod   string = "auth.jwt_signing_method"

@@ -121,16 +121,16 @@ func (ksc *KafkaSenderConfig) Validate() error {
 	if strings.TrimSpace(ksc.TargetName) == "" {
 		return errs.NewConfigValidateError("kafka sender", "TargetName", "empty", nil)
 	}
-	if !(ksc.ConnectTimeout > 0) {
+	if ksc.ConnectTimeout <= 0 {
 		return errs.NewConfigValidateError("kafka sender", "ConnectTimeout", "less than 0", nil)
 	}
-	if !(ksc.IdleTimeout > 0) {
+	if ksc.IdleTimeout <= 0 {
 		return errs.NewConfigValidateError("kafka sender", "IdleTimeout", "less than 0", nil)
 	}
-	if !(ksc.ShutdownTimeout > 0) {
+	if ksc.ShutdownTimeout <= 0 {
 		return errs.NewConfigValidateError("kafka sender", "ShutdownTimeout", "less than 0", nil)
 	}
-	if !(ksc.PublishMaxTryAttempts >= 1) {
+	if ksc.PublishMaxTryAttempts < 1 {
 		return errs.NewConfigValidateError("kafka sender", "PublishMaxTryAttempts", "less than 1", nil)
 	}
 	if ksc.PublishBaseRetryDelay > ksc.PublishMaxRetryDelay {

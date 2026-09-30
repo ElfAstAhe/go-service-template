@@ -148,6 +148,7 @@ func (ss *ShardStorage[K]) keyHasher(key K) uint64 {
 		// Высокопроизводительный Fast-Path: отображаем область памяти числовой переменной
 		// напрямую в слайс байт, полностью минуя кучу (Zero-Heap Allocation)
 		size := unsafe.Sizeof(v)
+		//nolint:gosec // G103:
 		b := unsafe.Slice((*byte)(unsafe.Pointer(&v)), size)
 		_, _ = h.Write(b)
 	default:

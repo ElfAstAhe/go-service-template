@@ -62,19 +62,19 @@ func (sc *AMQPSenderConfig) Validate() error {
 	if strings.TrimSpace(sc.TargetName) == "" {
 		return errs.NewConfigValidateError("amqp sender", "TargetName", "empty", nil)
 	}
-	if !(sc.ConnectTimeout > 0) {
+	if sc.ConnectTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp sender", "ConnectTimeout", "less than 0", nil)
 	}
-	if !(sc.ShutdownTimeout > 0) {
+	if sc.ShutdownTimeout <= 0 {
 		return errs.NewConfigValidateError("amqp sender", "ShutdownTimeout", "less than 0", nil)
 	}
-	if !(sc.PublishMaxTryAttempts > 1) {
+	if sc.PublishMaxTryAttempts < 2 {
 		return errs.NewConfigValidateError("amqp sender", "PublishMaxTryAttempts", "less than 1", nil)
 	}
-	if !(sc.PublishBaseRetryDelay > 0) {
+	if sc.PublishBaseRetryDelay <= 0 {
 		return errs.NewConfigValidateError("amqp sender", "PublishBaseRetryDelay", "less than 0", nil)
 	}
-	if !(sc.PublishMaxRetryDelay > 0) {
+	if sc.PublishMaxRetryDelay <= 0 {
 		return errs.NewConfigValidateError("amqp sender", "PublishMaxRetryDelay", "less than 0", nil)
 	}
 	// Валидация математической консистентности: базовый шаг не может превышать максимальный потолок

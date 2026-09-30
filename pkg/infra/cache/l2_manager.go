@@ -47,7 +47,7 @@ func (l2m *L2Manager[K, V]) Get(key K) (V, bool, error) {
 	// Если элемент отсутствует в кэше — консервируем zero-value «заглушку» на 2 минуты
 	if !ok {
 		// Игнорируем ошибку записи, так как приоритетом является возврат исходного статуса ok
-		_ = l2m.Manager.Set(key, res, negativeGetTTL)
+		_ = l2m.Set(key, res, negativeGetTTL)
 	}
 
 	return res, ok, nil
