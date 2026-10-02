@@ -388,6 +388,21 @@ const (
 	DefaultKafkaReceiverStartOffset string = "first"
 )
 
+// ====================================================================
+// Worker Pool Defaults
+// ====================================================================
+// Системные параметры по умолчанию для worker pool
+const (
+	// DefaultPoolWorkerCount - кол-во обработчиков
+	DefaultPoolWorkerCount int = 2
+	// DefaultPoolDataCapacity - емкость внутреннего фонового буфера
+	DefaultPoolDataCapacity int = 100
+	// DefaultPoolCompleteProcess - признак завершения обработки при закрытии
+	DefaultPoolCompleteProcess bool = true
+	// DefaultPoolShutdownTimeout - время на безопасную остановку и корректное завершение
+	DefaultPoolShutdownTimeout time.Duration = 5 * time.Second
+)
+
 // Глобальные переменные-синглтоны для инициализации сетевой топологии брокеров очередей.
 var (
 	// DefaultKafkaBrokers хранит срез хостов брокеров кластера по умолчанию для локальной разработки.

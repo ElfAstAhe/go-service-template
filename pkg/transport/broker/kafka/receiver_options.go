@@ -172,6 +172,10 @@ func (ro *ReceiverOptions) Validate() error {
 	return nil
 }
 
+// ====================================================================
+// Fluent API методы для сборки опций отправителя получателя
+// ====================================================================
+
 // WithReceiverClientID задает уникальный строковый ClientID идентификатор текущего консьюмера для Kafka-кластера.
 func WithReceiverClientID(clientID string) ReceiverOption {
 	return func(ro *ReceiverOptions) {

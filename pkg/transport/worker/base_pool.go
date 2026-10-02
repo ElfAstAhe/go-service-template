@@ -12,44 +12,21 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
-// BasePoolConfig инкапсулирует конфигурационные параметры емкости и политик останова пула воркеров.
-type BasePoolConfig struct {
-	WorkerCount     int           // Количество параллельно запущенных горутин-обработчиков
-	DataCapacity    int           // Буферная емкость внутреннего канала задач (Backpressure window)
-	CompleteProcess bool          // Флаг: вычитывать ли буфер до конца при закрытии канала (true) или тушить экстренно (false)
-	StopTimeout     time.Duration // Временной лимит (таймаут) на мягкое завершение обработки перед принудительным выходом
-}
-
-// NewBasePoolConfig — фабричный конструктор конфигурации пула потоков.
-func NewBasePoolConfig(
-	workerCount,
-	dataCapacity int,
-	completeProcess bool,
-	stopTimeout time.Duration,
-) *BasePoolConfig {
-	return &BasePoolConfig{
-		WorkerCount:     workerCount,
-		DataCapacity:    dataCapacity,
-		CompleteProcess: completeProcess,
-		StopTimeout:     stopTimeout,
-	}
-}
-
 // BasePool реализует интерфейсы CommonWorker, Pool и container.Runner, представляя собой
 // промышленный высокопроизводительный пул конкурентных воркеров (Generic Worker Pool).
 //
 // Оркестрирует распределение строго типизированных задач D по пулу горутин, контролирует атомарные статусы
 // жизненного цикла и предоставляет гибкие сценарии плавного тушения буферов (Graceful Shutdown).
 type BasePool[D any] struct {
-	name       string             // Уникальное имя пула для детализации контекстов логирования и метрик
-	ctx        context.Context    // Контекст времени жизни горутин пула
-	cancel     context.CancelFunc // Функция экстренной отмены рантайма пула
-	wg         sync.WaitGroup     // WaitGroup контроля физического завершения циклов всех воркеров пула
-	dataChan   chan D             // Потокобезопасный буферизованный сетевой канал распределения задач
-	jobHandler JobHandler[D]      // Потребительский прикладной обработчик бизнес-логики задачи
-	config     *BasePoolConfig    // Указатель на конфигурационные параметры пула
-	log        logger.Logger      // Изолированный структурированный логгер компонента
-	running    *atomic.Bool       // Атомарный флаг активности, защищающий от двойного запуска/останова
+	name       string              // Уникальное имя пула для детализации контекстов логирования и метрик
+	ctx        context.Context     // Контекст времени жизни горутин пула
+	cancel     context.CancelFunc  // Функция экстренной отмены рантайма пула
+	wg         sync.WaitGroup      // WaitGroup контроля физического завершения циклов всех воркеров пула
+	dataChan   chan D              // Потокобезопасный буферизованный сетевой канал распределения задач
+	jobHandler JobHandler[D]       // Потребительский прикладной обработчик бизнес-логики задачи
+	opts       *BasePoolOptions[D] // указатель на параметры пула
+	log        logger.Logger       // Изолированный структурированный логгер компонента
+	running    *atomic.Bool        // Атомарный флаг активности, защищающий от двойного запуска/останова
 }
 
 // Проверяем строгое соответствие контрактам и интерфейсам на этапе компиляции
@@ -57,23 +34,28 @@ var _ CommonWorker = (*BasePool[string])(nil)
 var _ Pool[string] = (*BasePool[string])(nil)
 var _ container.Runner = (*BasePool[string])(nil)
 
-// NewBasePool — фабричный конструктор дженерик-пула воркеров.
-func NewBasePool[D any](
-	name string,
-	config *BasePoolConfig,
-	jobHandler JobHandler[D],
-	logger logger.Logger,
-) *BasePool[D] {
+// NewBasePool - конструктор дженерик-пула воркеров.
+func NewBasePool[D any](options ...BasePoolOption[D]) (*BasePool[D], error) {
+	opts := NewBasePoolOptions[D]()
+
+	for _, opt := range options {
+		opt(opts)
+	}
+
+	if err := opts.Validate(); err != nil {
+		return nil, errs.NewTlCommonError("NewBasePool[D]", "validate options failed", err)
+	}
+
 	res := &BasePool[D]{
-		name:       name,
-		config:     config,
-		jobHandler: jobHandler,
-		log:        logger.GetLogger(name),
+		name:       opts.Name,
+		jobHandler: opts.JobHandler,
+		opts:       opts,
+		log:        opts.Logger.GetLogger(opts.Name),
 		running:    new(atomic.Bool),
 	}
 	res.running.Store(false)
 
-	return res
+	return res, nil
 }
 
 // Start осуществляет атомарный запуск пула горутин-обработчиков (FIFO распределение).
@@ -87,6 +69,7 @@ func (bp *BasePool[D]) Start(ctx context.Context) error {
 	defer bp.GetLogger().Debugf("worker pool %s started", bp.GetName())
 
 	// Инициализируем контекст пула на базе родительского контекста приложения
+	//nolint:gosec // G118 :
 	bp.ctx, bp.cancel = context.WithCancel(ctx)
 
 	// Guard Clause against context leaks (Gosec G118 fix)
@@ -98,10 +81,10 @@ func (bp *BasePool[D]) Start(ctx context.Context) error {
 	}()
 
 	// Аллоцируем буферизованный канал задач согласно лимитам DataCapacity
-	bp.dataChan = make(chan D, bp.GetConfig().DataCapacity)
+	bp.dataChan = make(chan D, bp.GetOpts().DataCapacity)
 
 	// Конкурентно разворачиваем веер фиксированного количества горутин-воркеров
-	for i := 0; i < bp.GetConfig().WorkerCount; i++ {
+	for i := 0; i < bp.GetOpts().WorkerCount; i++ {
 		bp.GetWaitGroup().Add(1)
 		go bp.worker(i)
 	}
@@ -122,7 +105,7 @@ func (bp *BasePool[D]) Stop(stopCtx context.Context) error {
 	close(bp.dataChan)
 
 	// 2. Стратегия Fast-Shutdown: если завершение буфера не требуется — принудительно гасим контекст
-	if !bp.GetConfig().CompleteProcess && bp.GetContextCancel() != nil {
+	if !bp.GetOpts().CompleteProcess && bp.GetContextCancel() != nil {
 		bp.GetLogger().Debugf("worker pool %s is not complete data channel processing, cancel pool context", bp.GetName())
 		bp.GetContextCancel()()
 	}
@@ -139,7 +122,7 @@ func (bp *BasePool[D]) Stop(stopCtx context.Context) error {
 	select {
 	case <-stopChan:
 		bp.GetLogger().Debugf("worker pool %s stopped gracefully, all data processed", bp.GetName())
-	case <-time.After(bp.config.StopTimeout):
+	case <-time.After(bp.opts.StopTimeout):
 		// Защита от вечного зависания: выходим по локальному лимиту времени пула
 		bp.GetLogger().Debugf("worker pool %s stop timed out, force stopping, some data not processed and will be lost", bp.GetName())
 	case <-stopCtx.Done():
@@ -254,9 +237,9 @@ func (bp *BasePool[D]) GetWaitGroup() *sync.WaitGroup {
 	return &bp.wg
 }
 
-// GetConfig возвращает ссылку на конфигурационный паспорт параметров пула BasePoolConfig.
-func (bp *BasePool[D]) GetConfig() *BasePoolConfig {
-	return bp.config
+// GetOpts возвращает ссылку на опции пула BasePoolOptions.
+func (bp *BasePool[D]) GetOpts() *BasePoolOptions[D] {
+	return bp.opts
 }
 
 // IsRunning возвращает текущий атомарный статус активности пула (true — запущен и принимает задачи).
