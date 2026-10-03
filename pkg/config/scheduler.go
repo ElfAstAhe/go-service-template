@@ -11,7 +11,7 @@ type SchedulerConfig struct {
 	// StartInterval Первичная задержка (холодное смещение) перед самым первым тиком таймера
 	StartInterval time.Duration `mapstructure:"start_interval" json:"start_interval,omitempty" yaml:"start_interval,omitempty"`
 
-	// SchedulerInterval Фиксированный интервал периодического повторения задач (период)
+	// ScheduleInterval Фиксированный интервал периодического повторения задач (период)
 	ScheduleInterval time.Duration `mapstructure:"schedule_interval" json:"schedule_interval,omitempty" yaml:"schedule_interval,omitempty"`
 
 	// StopTimeout Временной лимит (таймаут) на мягкое завершение активной итерации обработчика

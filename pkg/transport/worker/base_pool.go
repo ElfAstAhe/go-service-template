@@ -12,6 +12,8 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
+const poolNameTemplate string = "worker-pool-%s"
+
 // BasePool реализует интерфейсы CommonWorker, Pool и container.Runner, представляя собой
 // промышленный высокопроизводительный пул конкурентных воркеров (Generic Worker Pool).
 //
@@ -47,10 +49,10 @@ func NewBasePool[D any](options ...BasePoolOption[D]) (*BasePool[D], error) {
 	}
 
 	res := &BasePool[D]{
-		name:       opts.Name,
+		name:       fmt.Sprintf(poolNameTemplate, opts.Name),
 		jobHandler: opts.JobHandler,
 		opts:       opts,
-		log:        opts.Logger.GetLogger(opts.Name),
+		log:        opts.Logger.GetLogger(fmt.Sprintf(poolNameTemplate, opts.Name)),
 		running:    new(atomic.Bool),
 	}
 	res.running.Store(false)

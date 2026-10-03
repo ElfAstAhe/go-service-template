@@ -12,6 +12,8 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
+const schedulerNameTemplate string = "scheduler-%s"
+
 // BaseScheduler реализует интерфейсы CommonWorker, Scheduler и container.Runner,
 // представляя собой отказоустойчивую базовую основу фонового планировщика задач (Cron/Scheduler Base).
 //
@@ -45,10 +47,10 @@ func NewBaseScheduler(options ...BaseSchedulerOption) (*BaseScheduler, error) {
 	}
 
 	res := &BaseScheduler{
-		name:            opts.Name,
+		name:            fmt.Sprintf(schedulerNameTemplate, opts.Name),
 		timerDispatcher: opts.TimerDispatcher,
 		opts:            opts,
-		log:             opts.Logger.GetLogger(opts.Name),
+		log:             opts.Logger.GetLogger(fmt.Sprintf(schedulerNameTemplate, opts.Name)),
 		running:         new(atomic.Bool),
 	}
 	res.running.Store(false)

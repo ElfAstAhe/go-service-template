@@ -22,13 +22,26 @@ type BasePoolOption[D any] func(*BasePoolOptions[D])
 
 // BasePoolOptions содержит параметры рантайма, необходимые для безопасной сборки и работы worker pool.
 type BasePoolOptions[D any] struct {
-	Name            string        // Наименование воркера
-	WorkerCount     int           // Количество параллельно запущенных горутин-обработчиков
-	DataCapacity    int           // Буферная емкость внутреннего канала задач (Backpressure window)
-	CompleteProcess bool          // Флаг: вычитывать ли буфер до конца при закрытии канала (true) или тушить экстренно (false)
-	StopTimeout     time.Duration // Временной лимит (таймаут) на мягкое завершение обработки перед принудительным выходом
-	Logger          logger.Logger // Логгер
-	JobHandler      JobHandler[D]
+	// Name Наименование воркера
+	Name string
+
+	// WorkerCount Количество параллельно запущенных горутин-обработчиков
+	WorkerCount int
+
+	// DataCapacity Буферная емкость внутреннего канала задач (Backpressure window)
+	DataCapacity int
+
+	// CompleteProcess Флаг: вычитывать ли буфер до конца при закрытии канала (true) или тушить экстренно (false)
+	CompleteProcess bool
+
+	// StopTimeout Временной лимит (таймаут) на мягкое завершение обработки перед принудительным выходом
+	StopTimeout time.Duration
+
+	// Logger Логгер
+	Logger logger.Logger
+
+	// JobHandler обработчик
+	JobHandler JobHandler[D]
 }
 
 // NewBasePoolOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.

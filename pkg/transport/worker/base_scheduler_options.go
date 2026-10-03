@@ -21,12 +21,23 @@ type BaseSchedulerOption func(*BaseSchedulerOptions)
 
 // BaseSchedulerOptions содержит параметры рантайма, необходимые для безопасной сборки и работы scheduler.
 type BaseSchedulerOptions struct {
-	Name             string
-	StartInterval    time.Duration
+	// Name Наименование воркера
+	Name string
+
+	// StartInterval Первичная задержка (холодное смещение) перед самым первым тиком таймера
+	StartInterval time.Duration
+
+	// ScheduleInterval Фиксированный интервал периодического повторения задач (период)
 	ScheduleInterval time.Duration
-	StopTimeout      time.Duration // Временной лимит (таймаут) на мягкое завершение обработки перед принудительным выходом
-	Logger           logger.Logger // Логгер
-	TimerDispatcher  TimerDispatcher
+
+	// StopTimeout Временной лимит (таймаут) на мягкое завершение активной итерации обработчика
+	StopTimeout time.Duration
+
+	// Logger логгер
+	Logger logger.Logger
+
+	// TimerDispatcher обработчик события таймер
+	TimerDispatcher TimerDispatcher
 }
 
 // NewBaseSchedulerOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.

@@ -6,28 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
-	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
-// BaseSchedulerDispatcherConfig объединяет конфигурационные параметры пула потоков
-// и временные интервалы таймера для комплексного диспетчера периодических задач.
-type BaseSchedulerDispatcherConfig struct {
-	SchedulerConfig *BaseSchedulerConfig // Настройки временных интервалов и тиков планировщика
-	PoolConfig      *BasePoolConfig      // Настройки емкости, количества горутин и политик пула воркеров
-}
-
-// NewBaseSchedulerDispatcherConfig — фабричный конструктор конфигурации комплексного диспетчера.
-func NewBaseSchedulerDispatcherConfig(
-	schedulerConfig *BaseSchedulerConfig,
-	poolConfig *BasePoolConfig,
-) *BaseSchedulerDispatcherConfig {
-	return &BaseSchedulerDispatcherConfig{
-		SchedulerConfig: schedulerConfig,
-		PoolConfig:      poolConfig,
-	}
-}
+const schedulerDispatcherNameTemplate string = "scheduler-dispatcher-%s"
 
 // BaseSchedulerDispatcher реализует интерфейсы CommonWorker, Scheduler и container.Runner,
 // являясь строго типизированным оркестратором периодических задач (Generic Scheduler Dispatcher Pattern).
@@ -36,10 +20,12 @@ func NewBaseSchedulerDispatcherConfig(
 // За счет асинхронного веерного распределения задач полностью защищает системные таймеры Go от дрейфа времени,
 // изолируя фазу извлечения данных (Data Fetching) от тяжелой параллельной бизнес-обработки (Job Processing).
 type BaseSchedulerDispatcher[D comparable] struct {
-	*BaseScheduler                                // Встраивание (Embedding) базового планировщика для управления событиями таймера
-	workerPool     Pool[D]                        // Ссылка на строго типизированный внутренний пул конкурентных воркеров
-	config         *BaseSchedulerDispatcherConfig // Указатель на агрегированную структуру конфигурационных параметров
-	dataProvider   DispatcherDataProvider[D]      // Провайдер-поставщик пачек данных для обработки по расписанию
+	ctx          context.Context
+	cancel       context.CancelFunc
+	scheduler    *BaseScheduler                     // Встраивание (Embedding) базового планировщика для управления событиями таймера
+	workerPool   Pool[D]                            // Ссылка на строго типизированный внутренний пул конкурентных воркеров
+	opts         *BaseSchedulerDispatcherOptions[D] // Указатель на агрегированную структуру конфигурационных параметров
+	dataProvider DispatcherDataProvider[D]          // Провайдер-поставщик пачек данных для обработки по расписанию
 }
 
 // Гарантируем строгое соответствие контрактам и интерфейсам фреймворка на этапе компиляции
@@ -49,15 +35,17 @@ var _ container.Runner = (*BaseSchedulerDispatcher[string])(nil)
 
 // NewBaseSchedulerDispatcher — фабричный конструктор строго типизированного комплексного диспетчера.
 // Автоматически инициализирует внутренний BasePool и связывает его с циклом событий встроенного планировщика.
-func NewBaseSchedulerDispatcher[D comparable](
-	name string,
-	config *BaseSchedulerDispatcherConfig,
-	dataProvider DispatcherDataProvider[D],
-	jobHandler JobHandler[D],
-	log logger.Logger,
-) *BaseSchedulerDispatcher[D] {
+func NewBaseSchedulerDispatcher[D comparable](options ...BaseSchedulerDispatcherOption[D]) (*BaseSchedulerDispatcher[D], error) {
+	opts := NewBaseSchedulerDispatcherOptions()
+	for _, opt := range options {
+		opt(opts)
+	}
+	if err := opts.Validate(); err != nil {
+		panic(err)
+	}
+
 	res := &BaseSchedulerDispatcher[D]{
-		config:       config,
+		name:         fmt.Sprintf(schedulerDispatcherNameTemplate, opts.Name),
 		dataProvider: dataProvider,
 		workerPool:   NewBasePool[D](name, config.PoolConfig, jobHandler, log),
 	}
@@ -137,7 +125,7 @@ func (bsd *BaseSchedulerDispatcher[D]) timerDispatcher(ctx context.Context, even
 	return nil
 }
 
-// GetConfig возвращает ссылку на конфигурационный паспорт агрегированных параметров диспетчера BaseSchedulerDispatcherConfig.
-func (bsd *BaseSchedulerDispatcher[D]) GetConfig() *BaseSchedulerDispatcherConfig {
-	return bsd.config
+// GetOpts возвращает ссылку на конфигурационный паспорт агрегированных параметров диспетчера BaseSchedulerDispatcherConfig.
+func (bsd *BaseSchedulerDispatcher[D]) GetOpts() *BaseSchedulerDispatcherOptions[D] {
+	return bsd.opts
 }
