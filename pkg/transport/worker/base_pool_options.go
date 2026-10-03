@@ -6,14 +6,15 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
-	defaultWorkerCount     int           = 2
-	defaultDataCapacity    int           = 64
-	defaultCompleteProcess bool          = true
-	defaultStopTimeout     time.Duration = time.Second * 5
+	defaultPoolWorkerCount     int           = 2
+	defaultPoolDataCapacity    int           = 64
+	defaultPoolCompleteProcess bool          = true
+	defaultPoolStopTimeout     time.Duration = time.Second * 5
 )
 
 // BasePoolOption определяет функциональный тип для конфигурации опций (Fluent API).
@@ -33,15 +34,14 @@ type BasePoolOptions[D any] struct {
 // NewBasePoolOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
 func NewBasePoolOptions[D any]() *BasePoolOptions[D] {
 	return &BasePoolOptions[D]{
-		WorkerCount:     defaultWorkerCount,
-		DataCapacity:    defaultDataCapacity,
-		CompleteProcess: defaultCompleteProcess,
-		StopTimeout:     defaultStopTimeout,
+		WorkerCount:     defaultPoolWorkerCount,
+		DataCapacity:    defaultPoolDataCapacity,
+		CompleteProcess: defaultPoolCompleteProcess,
+		StopTimeout:     defaultPoolStopTimeout,
 	}
 }
 
-// Validate проверяет корректность абсолютно всех опций рантайма перед сборкой Receiver.
-// Защищает приложение от паник библиотеки kafka-go и некорректного поведения консьюмера.
+// Validate проверяет корректность абсолютно всех опций рантайма перед сборкой worker pool.
 func (bpo *BasePoolOptions[D]) Validate() error {
 	if strings.TrimSpace(bpo.Name) == "" {
 		return errs.NewTlCommonError("Validate", "name is required", nil)
@@ -55,12 +55,18 @@ func (bpo *BasePoolOptions[D]) Validate() error {
 	if bpo.StopTimeout <= 0 {
 		return errs.NewTlCommonError("Validate", "stop timeout is required", nil)
 	}
+	if utils.IsNil(bpo.JobHandler) {
+		return errs.NewTlCommonError("Validate", "job handler is required", nil)
+	}
+	if utils.IsNil(bpo.Logger) {
+		return errs.NewTlCommonError("Validate", "logger is required", nil)
+	}
 
 	return nil
 }
 
 // ====================================================================
-// Fluent API методы для сборки опций отправителя
+// Fluent API методы для сборки опций worker pool
 // ====================================================================
 
 // WithPoolName настраивает наименование worker pool
@@ -98,6 +104,14 @@ func WithPoolStopTimeout[D any](stopTimeout time.Duration) BasePoolOption[D] {
 	}
 }
 
+// WithPoolLogger настраивает worker pool logger
+func WithPoolLogger[D any](logger logger.Logger) BasePoolOption[D] {
+	return func(options *BasePoolOptions[D]) {
+		options.Logger = logger
+	}
+}
+
+// WithPoolJobHandler настраивает обработчик
 func WithPoolJobHandler[D any](handler JobHandler[D]) BasePoolOption[D] {
 	return func(options *BasePoolOptions[D]) {
 		options.JobHandler = handler

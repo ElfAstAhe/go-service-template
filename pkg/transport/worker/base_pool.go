@@ -69,7 +69,7 @@ func (bp *BasePool[D]) Start(ctx context.Context) error {
 	defer bp.GetLogger().Debugf("worker pool %s started", bp.GetName())
 
 	// Инициализируем контекст пула на базе родительского контекста приложения
-	//nolint:gosec // G118 :
+	//nolint:gosec // G118 : worker background context
 	bp.ctx, bp.cancel = context.WithCancel(ctx)
 
 	// Guard Clause against context leaks (Gosec G118 fix)

@@ -399,8 +399,21 @@ const (
 	DefaultPoolDataCapacity int = 100
 	// DefaultPoolCompleteProcess - признак завершения обработки при закрытии
 	DefaultPoolCompleteProcess bool = true
-	// DefaultPoolShutdownTimeout - время на безопасную остановку и корректное завершение
-	DefaultPoolShutdownTimeout time.Duration = 5 * time.Second
+	// DefaultPoolStopTimeout - время на безопасную остановку и корректное завершение
+	DefaultPoolStopTimeout time.Duration = 5 * time.Second
+)
+
+// ====================================================================
+// Scheduler Defaults
+// ====================================================================
+// Системные параметры по умолчанию для scheduler
+const (
+	// DefaultSchedulerStartInterval - первичная задержка (холодное смещение) перед самым первым тиком таймера
+	DefaultSchedulerStartInterval time.Duration = time.Second
+	// DefaultSchedulerScheduleInterval - фиксированный интервал периодического повторения задач (период)
+	DefaultSchedulerScheduleInterval time.Duration = 5 * time.Second
+	// DefaultSchedulerStopTimeout - Временной лимит (таймаут) на мягкое завершение активной итерации обработчика
+	DefaultSchedulerStopTimeout time.Duration = 5 * time.Second
 )
 
 // Глобальные переменные-синглтоны для инициализации сетевой топологии брокеров очередей.

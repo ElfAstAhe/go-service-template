@@ -12,30 +12,6 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
-// TimerDispatcher определяет строго типизированную сигнатуру прикладной функции-обработчика,
-// которая вызывается при каждом срабатывании (тике) планировщика.
-type TimerDispatcher func(ctx context.Context, eventTime time.Time) error
-
-// BaseSchedulerConfig инкапсулирует конфигурационные параметры интервалов запуска фоновых задач по расписанию.
-type BaseSchedulerConfig struct {
-	StartInterval    time.Duration // Первичная задержка (холодное смещение) перед самым первым тиком таймера
-	ScheduleInterval time.Duration // Фиксированный интервал периодического повторения задач (период)
-	StopTimeout      time.Duration // Временной лимит (таймаут) на мягкое завершение активной итерации обработчика
-}
-
-// NewBaseSchedulerConfig — фабричный конструктор конфигурации планировщика.
-func NewBaseSchedulerConfig(
-	startInterval time.Duration,
-	scheduleInterval time.Duration,
-	stopTimeout time.Duration,
-) *BaseSchedulerConfig {
-	return &BaseSchedulerConfig{
-		StartInterval:    startInterval,
-		ScheduleInterval: scheduleInterval,
-		StopTimeout:      stopTimeout,
-	}
-}
-
 // BaseScheduler реализует интерфейсы CommonWorker, Scheduler и container.Runner,
 // представляя собой отказоустойчивую базовую основу фонового планировщика задач (Cron/Scheduler Base).
 //
@@ -48,7 +24,7 @@ type BaseScheduler struct {
 	wg              sync.WaitGroup
 	timer           *time.Timer
 	timerDispatcher TimerDispatcher
-	config          *BaseSchedulerConfig
+	opts            *BaseSchedulerOptions
 	log             logger.Logger
 	running         *atomic.Bool
 }
@@ -59,22 +35,25 @@ var _ Scheduler = (*BaseScheduler)(nil)
 var _ container.Runner = (*BaseScheduler)(nil)
 
 // NewBaseScheduler — фабричный конструктор базового планировщика периодических задач.
-func NewBaseScheduler(
-	name string,
-	timerDispatcher TimerDispatcher,
-	config *BaseSchedulerConfig,
-	log logger.Logger,
-) *BaseScheduler {
+func NewBaseScheduler(options ...BaseSchedulerOption) (*BaseScheduler, error) {
+	opts := NewBaseSchedulerOptions()
+	for _, option := range options {
+		option(opts)
+	}
+	if err := opts.Validate(); err != nil {
+
+	}
+
 	res := &BaseScheduler{
-		name:            name,
-		timerDispatcher: timerDispatcher,
-		config:          config,
-		log:             log.GetLogger(name),
+		name:            opts.Name,
+		timerDispatcher: opts.TimerDispatcher,
+		opts:            opts,
+		log:             opts.Logger.GetLogger(opts.Name),
 		running:         new(atomic.Bool),
 	}
 	res.running.Store(false)
 
-	return res
+	return res, nil
 }
 
 // Start осуществляет атомарный запуск цикла планировщика и взводит таймер на стартовое смещение StartInterval.
@@ -88,18 +67,11 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 	bs.GetLogger().Debugf("scheduler %s starting", bs.GetName())
 	defer bs.GetLogger().Debugf("scheduler %s started", bs.GetName())
 
+	//nolint:gosec // G118 : worker background context
 	bs.ctx, bs.cancel = context.WithCancel(ctx)
 
-	// Guard Clause against context leaks (Gosec G118 fix)
-	isStartedSuccessfully := false
-	defer func() {
-		if !isStartedSuccessfully && bs.cancel != nil {
-			bs.cancel()
-		}
-	}()
-
 	if bs.timer == nil {
-		bs.timer = time.NewTimer(bs.GetConfig().StartInterval)
+		bs.timer = time.NewTimer(bs.GetOpts().StartInterval)
 	} else {
 		if !bs.timer.Stop() {
 			select {
@@ -107,7 +79,7 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 			default:
 			}
 		}
-		bs.timer.Reset(bs.GetConfig().StartInterval)
+		bs.timer.Reset(bs.GetOpts().StartInterval)
 	}
 	bs.GetWaitGroup().Add(1)
 	go bs.timerEventListener()
@@ -145,7 +117,7 @@ func (bs *BaseScheduler) Stop(stopCtx context.Context) error {
 	select {
 	case <-stopChan:
 		bs.GetLogger().Debugf("scheduler %s stopped gracefully", bs.GetName())
-	case <-time.After(bs.config.StopTimeout):
+	case <-time.After(bs.opts.StopTimeout):
 		bs.GetLogger().Debugf("scheduler %s stop timed out, force stopping", bs.GetName())
 	case <-stopCtx.Done():
 		bs.GetLogger().Debugf("scheduler %s stopped by stop context, force stopping", bs.GetName())
@@ -176,7 +148,7 @@ func (bs *BaseScheduler) timerEventListener() {
 				bs.GetLogger().Warnf("scheduler %s time event %s dispatcher not applied", bs.GetName(), eventTime.Format(time.DateTime))
 			}
 
-			bs.timer.Reset(bs.GetConfig().ScheduleInterval)
+			bs.timer.Reset(bs.GetOpts().ScheduleInterval)
 		}
 	}
 }
@@ -216,7 +188,7 @@ func (bs *BaseScheduler) GetTimer() *time.Timer {
 	return bs.timer
 }
 
-// GetConfig возвращает ссылку на конфигурационный паспорт параметров интервалов планировщика BaseSchedulerConfig.
-func (bs *BaseScheduler) GetConfig() *BaseSchedulerConfig {
-	return bs.config
+// GetOpts возвращает ссылку на конфигурационный паспорт параметров интервалов планировщика BaseSchedulerOptions.
+func (bs *BaseScheduler) GetOpts() *BaseSchedulerOptions {
+	return bs.opts
 }
