@@ -12,6 +12,10 @@ import (
 // Пробрасывает workerIndex (порядковый ID потока), позволяя логике использовать изолированные локальные ресурсы.
 type JobHandler[D any] func(ctx context.Context, workerIndex int, data D) error
 
+// TimerDispatcher определяет строго типизированную сигнатуру прикладной функции-обработчика,
+// которая вызывается при каждом срабатывании (тике) планировщика.
+type TimerDispatcher func(ctx context.Context, eventTime time.Time) error
+
 // DispatcherDataProvider определяет сигнатуру функции-провайдера данных для периодических планировщиков (Schedulers).
 // Использует ограничение comparable для возможности быстрой дедупликации или фильтрации извлекаемых пачек задач.
 type DispatcherDataProvider[D comparable] func(ctx context.Context, eventTime time.Time) ([]D, error)

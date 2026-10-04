@@ -64,9 +64,9 @@ func BenchmarkManager_FullCycle(b *testing.B) {
 	for _, tc := range codecs {
 		b.Run(tc.name, func(b *testing.B) {
 			c, _ := cache.Factory(
-				cache.WithShardCount[string, BenchData](64),
-				cache.WithCodec[string, BenchData](tc.codec),
-				cache.WithLRUEvictPolicy[string, BenchData](),
+				cache.WithCacheShardCount[string, BenchData](64),
+				cache.WithCacheCodec[string, BenchData](tc.codec),
+				cache.WithCacheLRUEvictPolicy[string, BenchData](),
 			)
 			b.ResetTimer()
 			b.RunParallel(func(pb *testing.PB) {

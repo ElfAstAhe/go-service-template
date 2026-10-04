@@ -388,6 +388,53 @@ const (
 	DefaultKafkaReceiverStartOffset string = "first"
 )
 
+// ====================================================================
+// Worker Pool Defaults
+// ====================================================================
+// Системные параметры по умолчанию для worker pool
+const (
+	// DefaultPoolWorkerCount - кол-во обработчиков
+	DefaultPoolWorkerCount int = 2
+	// DefaultPoolDataCapacity - емкость внутреннего фонового буфера
+	DefaultPoolDataCapacity int = 100
+	// DefaultPoolCompleteProcess - признак завершения обработки при закрытии
+	DefaultPoolCompleteProcess bool = true
+	// DefaultPoolStopTimeout - время на безопасную остановку и корректное завершение
+	DefaultPoolStopTimeout time.Duration = 5 * time.Second
+)
+
+// ====================================================================
+// Scheduler Defaults
+// ====================================================================
+// Системные параметры по умолчанию для scheduler
+const (
+	// DefaultSchedulerStartInterval - первичная задержка (холодное смещение) перед самым первым тиком таймера
+	DefaultSchedulerStartInterval time.Duration = time.Second
+	// DefaultSchedulerScheduleInterval - фиксированный интервал периодического повторения задач (период)
+	DefaultSchedulerScheduleInterval time.Duration = 5 * time.Second
+	// DefaultSchedulerStopTimeout - Временной лимит (таймаут) на мягкое завершение активной итерации обработчика
+	DefaultSchedulerStopTimeout time.Duration = 5 * time.Second
+)
+
+// ====================================================================
+// Scheduler Dispatcher Defaults
+// ====================================================================
+// Системные параметры по умолчанию для scheduler
+const (
+	// DefaultSchedulerDispatcherPoolWorkerCount - кол-во обработчиков
+	DefaultSchedulerDispatcherPoolWorkerCount int = 2
+	// DefaultSchedulerDispatcherPoolDataCapacity - емкость внутреннего фонового буфера
+	DefaultSchedulerDispatcherPoolDataCapacity int = 100
+	// DefaultSchedulerDispatcherPoolCompleteProcess - признак завершения обработки при закрытии
+	DefaultSchedulerDispatcherPoolCompleteProcess bool = true
+	// DefaultSchedulerDispatcherSchedulerStartInterval - первичная задержка (холодное смещение) перед самым первым тиком таймера
+	DefaultSchedulerDispatcherSchedulerStartInterval time.Duration = time.Second
+	// DefaultSchedulerDispatcherSchedulerScheduleInterval - фиксированный интервал периодического повторения задач (период)
+	DefaultSchedulerDispatcherSchedulerScheduleInterval time.Duration = 5 * time.Second
+	// DefaultSchedulerDispatcherStopTimeout - Временной лимит (таймаут) на мягкое завершение активной итерации обработчика
+	DefaultSchedulerDispatcherStopTimeout time.Duration = 5 * time.Second
+)
+
 // Глобальные переменные-синглтоны для инициализации сетевой топологии брокеров очередей.
 var (
 	// DefaultKafkaBrokers хранит срез хостов брокеров кластера по умолчанию для локальной разработки.
