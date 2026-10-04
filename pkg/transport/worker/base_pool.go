@@ -39,11 +39,9 @@ var _ container.Runner = (*BasePool[string])(nil)
 // NewBasePool - конструктор дженерик-пула воркеров.
 func NewBasePool[D any](options ...BasePoolOption[D]) (*BasePool[D], error) {
 	opts := NewBasePoolOptions[D]()
-
 	for _, opt := range options {
 		opt(opts)
 	}
-
 	if err := opts.Validate(); err != nil {
 		return nil, errs.NewTlCommonError("NewBasePool[D]", "validate options failed", err)
 	}
@@ -64,7 +62,9 @@ func NewBasePool[D any](options ...BasePoolOption[D]) (*BasePool[D], error) {
 func (bp *BasePool[D]) Start(ctx context.Context) error {
 	// Использование CAS операции исключает гонки данных при повторных или параллельных вызовах Start
 	if !bp.running.CompareAndSwap(false, true) {
-		return errs.NewCommonError(fmt.Sprintf("worker pool %s already started", bp.GetName()), nil)
+		//		return errs.NewCommonError(fmt.Sprintf("worker pool %s already started", bp.GetName()), nil)
+
+		return nil
 	}
 
 	bp.GetLogger().Debugf("worker pool %s starting", bp.GetName())
@@ -73,14 +73,6 @@ func (bp *BasePool[D]) Start(ctx context.Context) error {
 	// Инициализируем контекст пула на базе родительского контекста приложения
 	//nolint:gosec // G118 : worker background context
 	bp.ctx, bp.cancel = context.WithCancel(ctx)
-
-	// Guard Clause against context leaks (Gosec G118 fix)
-	isStartedSuccessfully := false
-	defer func() {
-		if !isStartedSuccessfully && bp.cancel != nil {
-			bp.cancel()
-		}
-	}()
 
 	// Аллоцируем буферизованный канал задач согласно лимитам DataCapacity
 	bp.dataChan = make(chan D, bp.GetOpts().DataCapacity)
@@ -97,7 +89,9 @@ func (bp *BasePool[D]) Start(ctx context.Context) error {
 // Stop выполняет фазу контролируемой мягкой остановки пула с верификацией флагов завершения буфера.
 func (bp *BasePool[D]) Stop(stopCtx context.Context) error {
 	if !bp.running.CompareAndSwap(true, false) {
-		return errs.NewCommonError(fmt.Sprintf("worker pool %s not running", bp.GetName()), nil)
+		//		return errs.NewCommonError(fmt.Sprintf("worker pool %s not running", bp.GetName()), nil)
+
+		return nil
 	}
 
 	bp.GetLogger().Debugf("worker pool %s stopping", bp.GetName())

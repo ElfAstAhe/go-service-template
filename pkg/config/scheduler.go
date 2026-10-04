@@ -40,7 +40,7 @@ func NewDefaultSchedulerConfig() *SchedulerConfig {
 	)
 }
 
-// Validate выполняет строгую семантическую и математическую валидацию параметров worker pool на этапе запуска (Bootstrap Phase).
+// Validate выполняет строгую семантическую и математическую валидацию параметров scheduler на этапе запуска (Bootstrap Phase).
 func (sc *SchedulerConfig) Validate() error {
 	if sc.StartInterval <= 0 {
 		return errs.NewConfigValidateError("scheduler", "start interval", "start interval is required", nil)

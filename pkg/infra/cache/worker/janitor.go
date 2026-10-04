@@ -18,7 +18,7 @@ type Janitor struct {
 // Прозрачно связывает метод CacheJanitor кэш-менеджера со встроенным циклом планировщика задач.
 func NewJanitor[K comparable, V any](
 	name string,
-	conf *worker.BaseSchedulerConfig,
+	opts *worker.BaseSchedulerOptions,
 	c cache.Cache[K, V],
 	log logger.Logger,
 ) *Janitor {

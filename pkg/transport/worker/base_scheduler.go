@@ -43,7 +43,7 @@ func NewBaseScheduler(options ...BaseSchedulerOption) (*BaseScheduler, error) {
 		option(opts)
 	}
 	if err := opts.Validate(); err != nil {
-
+		return nil, errs.NewTlCommonError("NewBaseScheduler", "validate option failed", err)
 	}
 
 	res := &BaseScheduler{
@@ -63,7 +63,8 @@ func NewBaseScheduler(options ...BaseSchedulerOption) (*BaseScheduler, error) {
 // Возвращает CommonError, если планировщик уже запущен (защита от дублирования потоков выполнения).
 func (bs *BaseScheduler) Start(ctx context.Context) error {
 	if !bs.running.CompareAndSwap(false, true) {
-		return errs.NewCommonError(fmt.Sprintf("scheduler %s already started", bs.GetName()), nil)
+		//		return errs.NewCommonError(fmt.Sprintf("scheduler %s already started", bs.GetName()), nil)
+		return nil
 	}
 
 	bs.GetLogger().Debugf("scheduler %s starting", bs.GetName())
@@ -95,7 +96,8 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 // Возвращает CommonError, если компонент не находится в состоянии выполнения.
 func (bs *BaseScheduler) Stop(stopCtx context.Context) error {
 	if !bs.running.CompareAndSwap(true, false) {
-		return errs.NewCommonError(fmt.Sprintf("scheduler %s is not running", bs.GetName()), nil)
+		//		return errs.NewCommonError(fmt.Sprintf("scheduler %s is not running", bs.GetName()), nil)
+		return nil
 	}
 
 	if bs.timer != nil {

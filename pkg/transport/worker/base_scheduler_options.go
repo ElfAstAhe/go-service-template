@@ -77,7 +77,7 @@ func (bso *BaseSchedulerOptions) Validate() error {
 // Fluent API методы для сборки опций scheduler
 // ====================================================================
 
-// WithSchedulerName настраивает наименование worker pool
+// WithSchedulerName настраивает наименование
 func WithSchedulerName(name string) BaseSchedulerOption {
 	return func(options *BaseSchedulerOptions) {
 		options.Name = name
