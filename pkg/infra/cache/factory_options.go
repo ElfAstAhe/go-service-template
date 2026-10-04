@@ -6,10 +6,14 @@ import (
 )
 
 const (
-	DefaultCacheL2             bool   = false
-	DefaultCacheShardCount     uint64 = 1
-	DefaultCacheMaxSize        int    = 10000
-	DefaultCacheJanitorMaxSize int    = 1000
+	// DefaultCacheL2 использовать L2 cache manager реализацию
+	DefaultCacheL2 bool = false
+	// DefaultCacheShardCount использовать обычное хранилище (RawStorage)
+	DefaultCacheShardCount uint64 = 1
+	// DefaultCacheMaxSize максимальное кол-во элементов в cache хранилище
+	DefaultCacheMaxSize int = 10000
+	// DefaultCacheJanitorMaxSize максимальное кол-во элементов обработки cache санитаром
+	DefaultCacheJanitorMaxSize int = 1000
 )
 
 // FactoryOption определяет функциональный тип конфигуратора (Fluent API) для сборки кэш-системы.

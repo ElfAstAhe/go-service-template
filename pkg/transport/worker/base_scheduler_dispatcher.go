@@ -98,6 +98,7 @@ func (bsd *BaseSchedulerDispatcher[D]) Start(ctx context.Context) error {
 	bsd.GetLogger().Debugf("scheduler dispatcher %s starting", bsd.GetName())
 	defer bsd.GetLogger().Debugf("scheduler dispatcher %s started", bsd.GetName())
 
+	//nolint:gosec // G118 : global worker context
 	bsd.ctx, bsd.cancel = context.WithCancel(ctx)
 
 	if err := bsd.startWorkers(bsd.ctx, bsd.workerPool, bsd.scheduler); err != nil {

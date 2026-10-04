@@ -169,6 +169,7 @@ func WithSchedulerDispatcherDataProvider[D comparable](dataProvider DispatcherDa
 	}
 }
 
+// WithSchedulerDispatcherLogger настраивает scheduler dispatcher logger
 func WithSchedulerDispatcherLogger[D comparable](logger logger.Logger) BaseSchedulerDispatcherOption[D] {
 	return func(options *BaseSchedulerDispatcherOptions[D]) {
 		options.Logger = logger
