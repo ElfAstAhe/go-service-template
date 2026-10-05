@@ -11,12 +11,12 @@ import (
 
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
-	defaultSchedulerDispatcherPoolWorkerCount           int           = 2
-	defaultSchedulerDispatcherPoolDataCapacity          int           = 64
-	defaultSchedulerDispatcherPoolCompleteProcess       bool          = true
-	defaultSchedulerDispatcherSchedulerStartInterval    time.Duration = time.Second
-	defaultSchedulerDispatcherSchedulerScheduleInterval time.Duration = time.Second * 5
-	defaultSchedulerDispatcherStopTimeout               time.Duration = time.Second * 5
+	DefaultSchedulerDispatcherPoolWorkerCount           int           = 2
+	DefaultSchedulerDispatcherPoolDataCapacity          int           = 64
+	DefaultSchedulerDispatcherPoolCompleteProcess       bool          = true
+	DefaultSchedulerDispatcherSchedulerStartInterval    time.Duration = time.Second
+	DefaultSchedulerDispatcherSchedulerScheduleInterval time.Duration = time.Second * 5
+	DefaultSchedulerDispatcherStopTimeout               time.Duration = time.Second * 5
 )
 
 // BaseSchedulerDispatcherOption определяет функциональный тип для конфигурации опций (Fluent API).
@@ -58,12 +58,12 @@ type BaseSchedulerDispatcherOptions[D comparable] struct {
 // NewBaseSchedulerDispatcherOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
 func NewBaseSchedulerDispatcherOptions[D comparable]() *BaseSchedulerDispatcherOptions[D] {
 	return &BaseSchedulerDispatcherOptions[D]{
-		WorkerCount:      defaultSchedulerDispatcherPoolWorkerCount,
-		DataCapacity:     defaultSchedulerDispatcherPoolDataCapacity,
-		CompleteProcess:  defaultSchedulerDispatcherPoolCompleteProcess,
-		StartInterval:    defaultSchedulerDispatcherSchedulerStartInterval,
-		ScheduleInterval: defaultSchedulerDispatcherSchedulerScheduleInterval,
-		StopTimeout:      defaultSchedulerDispatcherStopTimeout,
+		WorkerCount:      DefaultSchedulerDispatcherPoolWorkerCount,
+		DataCapacity:     DefaultSchedulerDispatcherPoolDataCapacity,
+		CompleteProcess:  DefaultSchedulerDispatcherPoolCompleteProcess,
+		StartInterval:    DefaultSchedulerDispatcherSchedulerStartInterval,
+		ScheduleInterval: DefaultSchedulerDispatcherSchedulerScheduleInterval,
+		StopTimeout:      DefaultSchedulerDispatcherStopTimeout,
 	}
 }
 

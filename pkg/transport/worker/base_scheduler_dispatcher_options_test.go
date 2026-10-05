@@ -12,12 +12,12 @@ import (
 func TestNewBaseSchedulerDispatcherOptions_Defaults(t *testing.T) {
 	opts := NewBaseSchedulerDispatcherOptions[string]()
 
-	assert.Equal(t, defaultSchedulerDispatcherPoolWorkerCount, opts.WorkerCount)
-	assert.Equal(t, defaultSchedulerDispatcherPoolDataCapacity, opts.DataCapacity)
-	assert.Equal(t, defaultSchedulerDispatcherPoolCompleteProcess, opts.CompleteProcess)
-	assert.Equal(t, defaultSchedulerDispatcherSchedulerStartInterval, opts.StartInterval)
-	assert.Equal(t, defaultSchedulerDispatcherSchedulerScheduleInterval, opts.ScheduleInterval)
-	assert.Equal(t, defaultSchedulerDispatcherStopTimeout, opts.StopTimeout)
+	assert.Equal(t, DefaultSchedulerDispatcherPoolWorkerCount, opts.WorkerCount)
+	assert.Equal(t, DefaultSchedulerDispatcherPoolDataCapacity, opts.DataCapacity)
+	assert.Equal(t, DefaultSchedulerDispatcherPoolCompleteProcess, opts.CompleteProcess)
+	assert.Equal(t, DefaultSchedulerDispatcherSchedulerStartInterval, opts.StartInterval)
+	assert.Equal(t, DefaultSchedulerDispatcherSchedulerScheduleInterval, opts.ScheduleInterval)
+	assert.Equal(t, DefaultSchedulerDispatcherStopTimeout, opts.StopTimeout)
 	assert.Empty(t, opts.Name)
 	assert.Nil(t, opts.Logger)
 	assert.Nil(t, opts.JobHandler)

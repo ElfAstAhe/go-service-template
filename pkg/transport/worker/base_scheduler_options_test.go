@@ -12,9 +12,9 @@ import (
 func TestNewBaseSchedulerOptions_Defaults(t *testing.T) {
 	opts := NewBaseSchedulerOptions()
 
-	assert.Equal(t, defaultSchedulerStartInterval, opts.StartInterval)
-	assert.Equal(t, defaultSchedulerScheduleInterval, opts.ScheduleInterval)
-	assert.Equal(t, defaultSchedulerStopTimeout, opts.StopTimeout)
+	assert.Equal(t, DefaultSchedulerStartInterval, opts.StartInterval)
+	assert.Equal(t, DefaultSchedulerScheduleInterval, opts.ScheduleInterval)
+	assert.Equal(t, DefaultSchedulerStopTimeout, opts.StopTimeout)
 	assert.Empty(t, opts.Name)
 	assert.Nil(t, opts.Logger)
 	assert.Nil(t, opts.TimerDispatcher)

@@ -11,9 +11,9 @@ import (
 
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
-	defaultSchedulerStartInterval    time.Duration = time.Second
-	defaultSchedulerScheduleInterval time.Duration = time.Second * 5
-	defaultSchedulerStopTimeout      time.Duration = time.Second * 5
+	DefaultSchedulerStartInterval    time.Duration = time.Second
+	DefaultSchedulerScheduleInterval time.Duration = time.Second * 5
+	DefaultSchedulerStopTimeout      time.Duration = time.Second * 5
 )
 
 // BaseSchedulerOption определяет функциональный тип для конфигурации опций (Fluent API).
@@ -43,9 +43,9 @@ type BaseSchedulerOptions struct {
 // NewBaseSchedulerOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
 func NewBaseSchedulerOptions() *BaseSchedulerOptions {
 	return &BaseSchedulerOptions{
-		StartInterval:    defaultSchedulerStartInterval,
-		ScheduleInterval: defaultSchedulerScheduleInterval,
-		StopTimeout:      defaultSchedulerStopTimeout,
+		StartInterval:    DefaultSchedulerStartInterval,
+		ScheduleInterval: DefaultSchedulerScheduleInterval,
+		StopTimeout:      DefaultSchedulerStopTimeout,
 	}
 }
 
