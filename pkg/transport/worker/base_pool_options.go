@@ -11,10 +11,10 @@ import (
 
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
-	defaultPoolWorkerCount     int           = 2
-	defaultPoolDataCapacity    int           = 64
-	defaultPoolCompleteProcess bool          = true
-	defaultPoolStopTimeout     time.Duration = time.Second * 5
+	DefaultPoolWorkerCount     int           = 2
+	DefaultPoolDataCapacity    int           = 64
+	DefaultPoolCompleteProcess bool          = true
+	DefaultPoolStopTimeout     time.Duration = time.Second * 5
 )
 
 // BasePoolOption определяет функциональный тип для конфигурации опций (Fluent API).
@@ -47,10 +47,10 @@ type BasePoolOptions[D any] struct {
 // NewBasePoolOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
 func NewBasePoolOptions[D any]() *BasePoolOptions[D] {
 	return &BasePoolOptions[D]{
-		WorkerCount:     defaultPoolWorkerCount,
-		DataCapacity:    defaultPoolDataCapacity,
-		CompleteProcess: defaultPoolCompleteProcess,
-		StopTimeout:     defaultPoolStopTimeout,
+		WorkerCount:     DefaultPoolWorkerCount,
+		DataCapacity:    DefaultPoolDataCapacity,
+		CompleteProcess: DefaultPoolCompleteProcess,
+		StopTimeout:     DefaultPoolStopTimeout,
 	}
 }
 

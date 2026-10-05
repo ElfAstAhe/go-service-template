@@ -12,10 +12,10 @@ import (
 func TestNewBasePoolOptions_Defaults(t *testing.T) {
 	opts := NewBasePoolOptions[string]()
 
-	assert.Equal(t, defaultPoolWorkerCount, opts.WorkerCount)
-	assert.Equal(t, defaultPoolDataCapacity, opts.DataCapacity)
-	assert.Equal(t, defaultPoolCompleteProcess, opts.CompleteProcess)
-	assert.Equal(t, defaultPoolStopTimeout, opts.StopTimeout)
+	assert.Equal(t, DefaultPoolWorkerCount, opts.WorkerCount)
+	assert.Equal(t, DefaultPoolDataCapacity, opts.DataCapacity)
+	assert.Equal(t, DefaultPoolCompleteProcess, opts.CompleteProcess)
+	assert.Equal(t, DefaultPoolStopTimeout, opts.StopTimeout)
 	assert.Empty(t, opts.Name)
 	assert.Nil(t, opts.Logger)
 	assert.Nil(t, opts.JobHandler)
