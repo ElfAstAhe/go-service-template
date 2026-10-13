@@ -10,6 +10,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 const poolNameTemplate string = "worker-pool-%s"
@@ -196,7 +197,7 @@ func (bp *BasePool[D]) worker(workerIndex int) {
 				return
 			}
 			// Запуск прикладной бизнес-логики обработчика
-			if bp.jobHandler != nil {
+			if !utils.IsNil(bp.jobHandler) {
 				err := bp.jobHandler(bp.GetContext(), workerIndex, data)
 				if err != nil {
 					bp.GetLogger().Errorf("worker pool %s worker %v job failed:  %v", bp.GetName(), workerIndex, err)

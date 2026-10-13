@@ -28,6 +28,7 @@ type BaseApplication struct {
 	cancel       context.CancelFunc     // Функция-триггер для атомарной отмены контекста и запуска остановки подов
 	wg           sync.WaitGroup         // WaitGroup контроля завершения системных горутин верхнего уровня
 	ready        *atomic.Bool           // Атомарный флаг готовности (Readiness) для интеграции с Kubernetes Health Probes
+	errRunners   chan error             // Канал ошибок запуска Runner
 }
 
 var _ Application = (*BaseApplication)(nil)
@@ -83,10 +84,15 @@ func (app *BaseApplication) Run() error {
 
 	// Выставляем атомарный флаг готовности к приему трафика кластера
 	app.ready.Store(true)
+	app.logger.Info("application is running and waiting for events")
 
-	app.logger.Info("application is running and waiting for app context cancel")
 	// 3. Блокируем главный поток main.go, ожидая сигнала отмены корневого контекста
-	<-app.ctx.Done()
+	select {
+	case <-app.ctx.Done():
+		app.logger.Info("main app context cancel signal received")
+	case err := <-app.errRunners:
+		app.logger.Errorf("fatal runner error caught in main loop: %v. initiating shutdown...", err)
+	}
 
 	// Снимаем статус готовности: K8s перестает направлять трафик на данный под
 	app.ready.Store(false)
@@ -99,6 +105,9 @@ func (app *BaseApplication) Run() error {
 	app.logger.Info("application is waiting for runners stopped")
 	app.WaitForStop()
 
+	// Смыли за собой
+	app.errRunners = nil
+
 	return err
 }
 
@@ -109,6 +118,8 @@ func (app *BaseApplication) Start() error {
 		return err
 	}
 
+	app.errRunners = make(chan error, len(runners)+1)
+
 	for _, r := range runners {
 		app.wg.Add(1)
 		go func(runner container.Runner) {
@@ -117,9 +128,12 @@ func (app *BaseApplication) Start() error {
 
 			// Запускаем бесконечный цикл обработки раннера с пробросом корневого контекста
 			if err := runner.Start(app.ctx); err != nil {
-				app.logger.Errorf("runner [%s] failed: %v", runner.GetName(), err)
-				// 🛡️ Защитный барьер: при падении любого раннера гасим все приложение для предотвращения зомби-процессов
-				app.cancel()
+				app.logger.Errorf("runner [%s] execution failed: %v", runner.GetName(), err)
+
+				select {
+				case app.errRunners <- err:
+				default:
+				}
 			}
 		}(r)
 	}
@@ -144,10 +158,8 @@ func (app *BaseApplication) Stop() error {
 	defer stopCancel()
 
 	var (
-		stopWg sync.WaitGroup
-		mu     sync.Mutex
-		// ToDo: переделать на ConcurrentList
-		stopErrs []error
+		stopWg   sync.WaitGroup
+		stopErrs = utils.NewConcurrentList[error]()
 	)
 
 	// Параллельно веерно (Fan-Out) гасим каждый раннер в рамках выделенного лимита времени
@@ -156,15 +168,14 @@ func (app *BaseApplication) Stop() error {
 		go func(runner container.Runner) {
 			defer stopWg.Done()
 			if err := runner.Stop(stopCtx); err != nil {
-				mu.Lock()
-				stopErrs = append(stopErrs, err)
-				mu.Unlock()
+				stopErrs.Append(err)
 			}
 		}(r)
 	}
 
 	stopWg.Wait()
-	return errors.Join(stopErrs...) // Агрегируем пачку ошибок закрытия интерфейсов в единую цепочку Go 1.22+
+
+	return errors.Join(stopErrs.Snapshot()...) // Агрегируем пачку ошибок закрытия интерфейсов в единую цепочку Go 1.22+
 }
 
 // Close осуществляет финальный такт тотального уничтожения и деаллокации пулов памяти/сокетов СУБД.
