@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
+	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/migration"
@@ -51,22 +51,22 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 		return errs.NewContainerError(pc.GetName(), "container init: register providers failed", err)
 	}
 	// init db instance
-	db, err := container.GetInstance[*postgres.PgDB](InstanceDB)
+	dbInst, err := container.GetInstance[db.DB](InstanceDB)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: init db failed", err)
 	}
 	// check db connection
-	err = db.Ping(initCtx)
+	err = dbInst.Ping(initCtx)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: check db failed", err)
 	}
 	// data migration
-	migrator, err := container.GetInstance[migration.Migrator](InstanceDBMigrator)
+	migratorInst, err := container.GetInstance[migration.Migrator](InstanceDBMigrator)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: init migrator failed", err)
 	}
 	// migrate up
-	err = migrator.Up(initCtx)
+	err = migratorInst.Up(initCtx)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: up migrator failed", err)
 	}

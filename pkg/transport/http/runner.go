@@ -84,7 +84,9 @@ func (r *Runner) Start(ctx context.Context) error {
 
 	// Атомарный CAS-барьер защиты от повторных или гоночных вызовов старта
 	if !r.running.CompareAndSwap(false, true) {
-		return errs.NewTlCommonError("Runner.Start", fmt.Sprintf("runner %s already started", r.GetName()), nil)
+		//return errs.NewTlCommonError("Runner.Start", fmt.Sprintf("runner %s already started", r.GetName()), nil)
+
+		return nil
 	}
 	var err error
 
@@ -115,7 +117,9 @@ func (r *Runner) Stop(stopCtx context.Context) error {
 
 	// Атомарный CAS-барьер защиты от вызова останова на неработающем компоненте
 	if !r.running.CompareAndSwap(true, false) {
-		return errs.NewTlCommonError("Runner.Stop", fmt.Sprintf("runner %s not running", r.GetName()), nil)
+		//return errs.NewTlCommonError("Runner.Stop", fmt.Sprintf("runner %s not running", r.GetName()), nil)
+
+		return nil
 	}
 
 	var srv *http.Server
