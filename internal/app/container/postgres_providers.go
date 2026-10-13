@@ -11,6 +11,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/migration/goose"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func (pc *PgContainer) providerDB() (any, error) {

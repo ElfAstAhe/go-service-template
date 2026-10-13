@@ -93,7 +93,8 @@ func (r *Runner) Start(ctx context.Context) error {
 
 	// switch running flag
 	if !r.running.CompareAndSwap(false, true) {
-		return errs.NewTlCommonError("Runner.Start", fmt.Sprintf("runner %s already started", r.GetName()), nil)
+		//		return errs.NewTlCommonError("Runner.Start", fmt.Sprintf("runner %s already started", r.GetName()), nil)
+		return nil
 	}
 	var err error
 	// create server instance
@@ -129,7 +130,8 @@ func (r *Runner) Stop(stopCtx context.Context) error {
 	defer r.log.Debugf("Runner.Stop %s finish", r.GetName())
 
 	if !r.running.CompareAndSwap(true, false) {
-		return errs.NewTlCommonError("Runner.Stop", fmt.Sprintf("runner %s not running", r.GetName()), nil)
+		//		return errs.NewTlCommonError("Runner.Stop", fmt.Sprintf("runner %s not running", r.GetName()), nil)
+		return nil
 	}
 
 	var srv *grpc.Server
