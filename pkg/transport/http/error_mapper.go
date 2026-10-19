@@ -31,7 +31,7 @@ func MapToHTTPStatus(err error) int {
 		return http.StatusForbidden
 	}
 
-	// 404 NotFound (Физическое отсутствие записи в СУБД, sql.ErrNoRows)
+	// 404 NotFound (Физическое отсутствие записи в СУБД)
 	if transport.IsNotFound(err) {
 		return http.StatusNotFound
 	}
@@ -46,6 +46,6 @@ func MapToHTTPStatus(err error) int {
 		return http.StatusGone
 	}
 
-	// Предохранитель (Security Shield): маскируем сырые системные ошибки СУБД/Кафки под константный 500 код
+	// Предохранитель (Security Shield): маскируем сырые системные ошибки под константный 500 код
 	return http.StatusInternalServerError
 }
