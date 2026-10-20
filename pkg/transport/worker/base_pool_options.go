@@ -11,10 +11,10 @@ import (
 
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
-	DefaultPoolWorkerCount     int           = 2
-	DefaultPoolDataCapacity    int           = 64
-	DefaultPoolCompleteProcess bool          = true
-	DefaultPoolStopTimeout     time.Duration = time.Second * 5
+	DefaultPoolWorkerCount     int  = 2
+	DefaultPoolDataCapacity    int  = 64
+	DefaultPoolCompleteProcess bool = true
+	DefaultPoolStopTimeout          = time.Second * 5
 )
 
 // BasePoolOption определяет функциональный тип для конфигурации опций (Fluent API).
@@ -55,6 +55,8 @@ func NewBasePoolOptions[D any]() *BasePoolOptions[D] {
 }
 
 // Validate проверяет корректность абсолютно всех опций рантайма перед сборкой worker pool.
+//
+//goland:noinspection DuplicatedCode
 func (bpo *BasePoolOptions[D]) Validate() error {
 	if strings.TrimSpace(bpo.Name) == "" {
 		return errs.NewTlCommonError("Validate", "name is required", nil)

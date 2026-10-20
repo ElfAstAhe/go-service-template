@@ -61,3 +61,18 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/app:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/ext/domain:
+    config:
+      all: true
+  github.com/ElfAstAhe/go-service-template/pkg/ext/transport:
+    config:
+      all: true
+  github.com/ElfAstAhe/go-service-template/pkg/ext/transport/worker:
+    config:
+      all: true
+  github.com/ElfAstAhe/go-service-template/pkg/ext/transport/worker/tailcutter:
+    config:
+      all: true
+  github.com/ElfAstAhe/go-service-template/pkg/ext/usecase:
+    config:
+      all: true
