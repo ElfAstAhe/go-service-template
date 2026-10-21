@@ -12,45 +12,45 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
-const schedulerNameTemplate string = "scheduler-%s"
+const periodicSchedulerNameTemplate string = "periodic-scheduler-%s"
 
-// BaseScheduler реализует интерфейсы CommonWorker, Scheduler и container.Runner,
+// PeriodicScheduler реализует интерфейсы Common, Scheduler и container.Runner,
 // представляя собой отказоустойчивую базовую основу фонового планировщика задач (Cron/Scheduler Base).
 //
 // Управляет циклом выполнения периодических процедур (например, Janitor-воркеров очистки сессий)
 // на базе низкоуровневых таймеров ядра Go, гарантируя отсутствие дрейфа времени и мягкий Graceful Shutdown.
-type BaseScheduler struct {
+type PeriodicScheduler struct {
 	name            string
 	ctx             context.Context
 	cancel          context.CancelFunc
 	wg              sync.WaitGroup
 	timer           *time.Timer
 	timerDispatcher TimerDispatcher
-	opts            *BaseSchedulerOptions
+	opts            *PeriodicSchedulerOptions
 	log             logger.Logger
 	running         *atomic.Bool
 }
 
 // Гарантируем соответствие контрактам и интерфейсам на этапе компиляции
-var _ CommonWorker = (*BaseScheduler)(nil)
-var _ Scheduler = (*BaseScheduler)(nil)
-var _ container.Runner = (*BaseScheduler)(nil)
+var _ Common = (*PeriodicScheduler)(nil)
+var _ Scheduler = (*PeriodicScheduler)(nil)
+var _ container.Runner = (*PeriodicScheduler)(nil)
 
-// NewBaseScheduler — фабричный конструктор базового планировщика периодических задач.
-func NewBaseScheduler(options ...BaseSchedulerOption) (*BaseScheduler, error) {
-	opts := NewBaseSchedulerOptions()
+// NewPeriodicScheduler — фабричный конструктор базового планировщика периодических задач.
+func NewPeriodicScheduler(options ...PeriodicSchedulerOption) (*PeriodicScheduler, error) {
+	opts := NewPeriodicSchedulerOptions()
 	for _, option := range options {
 		option(opts)
 	}
 	if err := opts.Validate(); err != nil {
-		return nil, errs.NewTlCommonError("NewBaseScheduler", "validate option failed", err)
+		return nil, errs.NewTlCommonError("NewPeriodicScheduler", "validate option failed", err)
 	}
 
-	res := &BaseScheduler{
-		name:            fmt.Sprintf(schedulerNameTemplate, opts.Name),
+	res := &PeriodicScheduler{
+		name:            fmt.Sprintf(periodicSchedulerNameTemplate, opts.Name),
 		timerDispatcher: opts.TimerDispatcher,
 		opts:            opts,
-		log:             opts.Logger.GetLogger(fmt.Sprintf(schedulerNameTemplate, opts.Name)),
+		log:             opts.Logger.GetLogger(fmt.Sprintf(periodicSchedulerNameTemplate, opts.Name)),
 		running:         new(atomic.Bool),
 	}
 	res.running.Store(false)
@@ -61,14 +61,13 @@ func NewBaseScheduler(options ...BaseSchedulerOption) (*BaseScheduler, error) {
 // Start осуществляет атомарный запуск цикла планировщика и взводит таймер на стартовое смещение StartInterval.
 // Выделяет внутренний контекст выполнения и разворачивает асинхронную горутину прослушивания тиков.
 // Возвращает CommonError, если планировщик уже запущен (защита от дублирования потоков выполнения).
-func (bs *BaseScheduler) Start(ctx context.Context) error {
+func (bs *PeriodicScheduler) Start(ctx context.Context) error {
 	if !bs.running.CompareAndSwap(false, true) {
-		//		return errs.NewCommonError(fmt.Sprintf("scheduler %s already started", bs.GetName()), nil)
 		return nil
 	}
 
-	bs.GetLogger().Debugf("scheduler %s starting", bs.GetName())
-	defer bs.GetLogger().Debugf("scheduler %s started", bs.GetName())
+	bs.GetLogger().Debugf("periodic scheduler %s Start start", bs.GetName())
+	defer bs.GetLogger().Debugf("periodic scheduler %s Start finish", bs.GetName())
 
 	//nolint:gosec // G118 : worker background context
 	bs.ctx, bs.cancel = context.WithCancel(ctx)
@@ -84,7 +83,7 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 		}
 		bs.timer.Reset(bs.GetOpts().StartInterval)
 	}
-	bs.GetWaitGroup().Add(1)
+	bs.wg.Add(1)
 	go bs.timerEventListener()
 
 	return nil
@@ -94,9 +93,8 @@ func (bs *BaseScheduler) Start(ctx context.Context) error {
 // Принудительно очищает и деактивирует системные таймеры в ядре ОС, отменяет контекст выполнения
 // фонового Event Loop и ожидает физического завершения активной итерации обработчика в рамках лимита StopTimeout.
 // Возвращает CommonError, если компонент не находится в состоянии выполнения.
-func (bs *BaseScheduler) Stop(stopCtx context.Context) error {
+func (bs *PeriodicScheduler) Stop(stopCtx context.Context) error {
 	if !bs.running.CompareAndSwap(true, false) {
-		//		return errs.NewCommonError(fmt.Sprintf("scheduler %s is not running", bs.GetName()), nil)
 		return nil
 	}
 
@@ -108,48 +106,58 @@ func (bs *BaseScheduler) Stop(stopCtx context.Context) error {
 			}
 		}
 	}
-	if bs.GetContextCancel() != nil {
-		bs.GetContextCancel()()
+	if bs.cancel != nil {
+		bs.cancel()
 	}
 
 	stopChan := make(chan struct{})
 	go func() {
-		bs.GetWaitGroup().Wait()
+		bs.wg.Wait()
 		close(stopChan)
 	}()
-	bs.GetLogger().Debugf("scheduler %s waiting for workers to stop", bs.GetName())
+	bs.GetLogger().Debugf("periodic scheduler %s waiting for workers to stop", bs.GetName())
 	select {
 	case <-stopChan:
-		bs.GetLogger().Debugf("scheduler %s stopped gracefully", bs.GetName())
+		bs.GetLogger().Debugf("periodic scheduler %s stopped gracefully", bs.GetName())
 	case <-time.After(bs.opts.StopTimeout):
-		bs.GetLogger().Debugf("scheduler %s stop timed out, force stopping", bs.GetName())
+		bs.GetLogger().Debugf("periodic scheduler %s stop timed out, force stopping", bs.GetName())
 	case <-stopCtx.Done():
-		bs.GetLogger().Debugf("scheduler %s stopped by stop context, force stopping", bs.GetName())
+		bs.GetLogger().Debugf("periodic scheduler %s stopped by stop context, force stopping", bs.GetName())
 	}
 
 	return nil
 }
 
+// GetName возвращает уникальное текстовое наименование текущего экземпляра планировщика.
+func (bs *PeriodicScheduler) GetName() string {
+	return bs.name
+}
+
+// IsRunning возвращает текущий атомарный статус активности и здоровья планировщика (true — запущен и слушает тики).
+func (bs *PeriodicScheduler) IsRunning() bool {
+	return bs.running.Load()
+}
+
 // timerEventListener — внутренний (неэкспортируемый) бесконечный цикл обработки временных тиков (Event Loop).
-func (bs *BaseScheduler) timerEventListener() {
-	bs.GetLogger().Debugf("scheduler %s timer event listener start", bs.GetName())
-	defer bs.GetLogger().Debugf("scheduler %s timer event listener finish", bs.GetName())
-	defer bs.GetWaitGroup().Done()
+func (bs *PeriodicScheduler) timerEventListener() {
+	bs.GetLogger().Debugf("periodic scheduler %s timeEventListener start", bs.GetName())
+	defer bs.GetLogger().Debugf("periodic scheduler %s timerEventListener finish", bs.GetName())
+	defer bs.wg.Done()
 
 	for {
 		select {
 		case <-bs.GetContext().Done():
-			bs.GetLogger().Debugf("scheduler %s context done, stop time event listener", bs.GetName())
+			bs.GetLogger().Debugf("periodic scheduler %s context done, stop time event listener", bs.GetName())
 
 			return
 		case eventTime := <-bs.timer.C:
-			bs.GetLogger().Debugf("scheduler %s timer event listener, time event fired: %s", bs.GetName(), eventTime.Format(time.DateTime))
+			bs.GetLogger().Debugf("periodic scheduler %s timer event listener, time event fired: %s", bs.GetName(), eventTime.Format(time.DateTime))
 			if bs.timerDispatcher != nil {
 				if err := bs.timerDispatcher(bs.ctx, eventTime); err != nil {
-					bs.GetLogger().Errorf("scheduler %s time event %s dispatcher failed: %v", bs.GetName(), eventTime.Format(time.DateTime), err)
+					bs.GetLogger().Errorf("periodic scheduler %s time event %s dispatcher failed: %v", bs.GetName(), eventTime.Format(time.DateTime), err)
 				}
 			} else {
-				bs.GetLogger().Warnf("scheduler %s time event %s dispatcher not applied", bs.GetName(), eventTime.Format(time.DateTime))
+				bs.GetLogger().Warnf("periodic scheduler %s time event %s dispatcher not applied", bs.GetName(), eventTime.Format(time.DateTime))
 			}
 
 			bs.timer.Reset(bs.GetOpts().ScheduleInterval)
@@ -157,42 +165,22 @@ func (bs *BaseScheduler) timerEventListener() {
 	}
 }
 
-// GetName возвращает уникальное текстовое наименование текущего экземпляра планировщика.
-func (bs *BaseScheduler) GetName() string {
-	return bs.name
-}
-
 // GetContext возвращает ссылку на внутренний контекст context.Context времени жизни планировщика.
-func (bs *BaseScheduler) GetContext() context.Context {
+func (bs *PeriodicScheduler) GetContext() context.Context {
 	return bs.ctx
 }
 
-// GetContextCancel возвращает функцию-триггер context.CancelFunc для принудительной плановой или экстренной отмены контекста.
-func (bs *BaseScheduler) GetContextCancel() context.CancelFunc {
-	return bs.cancel
-}
-
-// GetWaitGroup возвращает указатель на общую структуру sync.WaitGroup контроля запущенных дочерних потоков.
-func (bs *BaseScheduler) GetWaitGroup() *sync.WaitGroup {
-	return &bs.wg
-}
-
 // GetLogger возвращает изолированный инстанс структурированного логгера, закрепленный за планировщиком.
-func (bs *BaseScheduler) GetLogger() logger.Logger {
+func (bs *PeriodicScheduler) GetLogger() logger.Logger {
 	return bs.log
 }
 
-// IsRunning возвращает текущий атомарный статус активности и здоровья планировщика (true — запущен и слушает тики).
-func (bs *BaseScheduler) IsRunning() bool {
-	return bs.running.Load()
-}
-
 // GetTimer возвращает указатель на нативный системный объект низкоуровневого таймера *time.Timer ядра Go.
-func (bs *BaseScheduler) GetTimer() *time.Timer {
+func (bs *PeriodicScheduler) GetTimer() *time.Timer {
 	return bs.timer
 }
 
-// GetOpts возвращает ссылку на конфигурационный паспорт параметров интервалов планировщика BaseSchedulerOptions.
-func (bs *BaseScheduler) GetOpts() *BaseSchedulerOptions {
+// GetOpts возвращает ссылку на конфигурационный паспорт параметров интервалов планировщика PeriodicSchedulerOptions.
+func (bs *PeriodicScheduler) GetOpts() *PeriodicSchedulerOptions {
 	return bs.opts
 }

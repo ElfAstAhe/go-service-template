@@ -7,11 +7,11 @@ import (
 
 // Janitor представляет собой фоновый строго типизированный воркер-планировщик (Scheduler Worker).
 //
-// Инкапсулирует работу с BaseScheduler фреймворка, периодически запуская такт проактивной
+// Инкапсулирует работу с PeriodicScheduler фреймворка, периодически запуская такт проактивной
 // очистки просроченных по TTL записей (Garbage Collection) в оперативной памяти кэш-системы.
 type Janitor[K comparable, V any] struct {
-	*worker.BaseScheduler // Встраиваем базовый планировщик для управления жизненным циклом и тикерами
-	opts                  *JanitorOptions[K, V]
+	*worker.PeriodicScheduler // Встраиваем базовый планировщик для управления жизненным циклом и тикерами
+	opts                      *JanitorOptions[K, V]
 }
 
 // NewJanitor — фабричный конструктор фонового очистителя кэша.
@@ -26,20 +26,20 @@ func NewJanitor[K comparable, V any](options ...JanitorOption[K, V]) (*Janitor[K
 	}
 
 	// scheduler
-	scheduler, err := worker.NewBaseScheduler(
-		worker.WithSchedulerName(opts.Name),
-		worker.WithSchedulerStartInterval(opts.StartInterval),
-		worker.WithSchedulerScheduleInterval(opts.ScheduleInterval),
-		worker.WithSchedulerStopTimeout(opts.StopTimeout),
-		worker.WithSchedulerLogger(opts.Logger),
-		worker.WithSchedulerTimerDispatcher(opts.Cache.CacheJanitor),
+	scheduler, err := worker.NewPeriodicScheduler(
+		worker.WithPeriodicSchedulerName(opts.Name),
+		worker.WithPeriodicSchedulerStartInterval(opts.StartInterval),
+		worker.WithPeriodicSchedulerScheduleInterval(opts.ScheduleInterval),
+		worker.WithPeriodicSchedulerStopTimeout(opts.StopTimeout),
+		worker.WithPeriodicSchedulerLogger(opts.Logger),
+		worker.WithPeriodicSchedulerTimerDispatcher(opts.Cache.CacheJanitor),
 	)
 	if err != nil {
 		return nil, errs.NewTlCommonError("NewJanitor[K, V]", "base scheduler creation failed", err)
 	}
 
 	return &Janitor[K, V]{
-		opts:          opts,
-		BaseScheduler: scheduler,
+		opts:              opts,
+		PeriodicScheduler: scheduler,
 	}, nil
 }

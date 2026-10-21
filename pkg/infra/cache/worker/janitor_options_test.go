@@ -21,7 +21,7 @@ const (
 func TestNewJanitorOptions_Defaults(t *testing.T) {
 	opts := NewJanitorOptions[string, int]()
 
-	assert.NotNil(t, opts.BaseSchedulerOptions)
+	assert.NotNil(t, opts.PeriodicSchedulerOptions)
 	assert.Equal(t, defaultSchedulerStartInterval, opts.StartInterval)
 	assert.Equal(t, defaultSchedulerScheduleInterval, opts.ScheduleInterval)
 	assert.Equal(t, defaultSchedulerStopTimeout, opts.StopTimeout)

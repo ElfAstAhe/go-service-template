@@ -26,9 +26,9 @@ const (
 type Option func(*Options)
 
 // Options содержит конфигурационные параметры для планировщика обрезки хвостов данных.
-// Включает в себя базовые опции диспетчера через эмбеддинг BaseSchedulerDispatcherOptions.
+// Включает в себя базовые опции диспетчера через эмбеддинг PeriodicDispatcherOptions.
 type Options struct {
-	*worker.BaseSchedulerDispatcherOptions[string]
+	*worker.PeriodicDispatcherOptions[string]
 	TailGetUC    usecase.TailGetUseCase[string]
 	TailCutUC    usecase.TailCutUseCase[string]
 	DataInterval time.Duration
@@ -39,9 +39,9 @@ type Options struct {
 // с базовыми настройками диспетчера и значениями интервалов по умолчанию.
 func NewTailCutterOptions() *Options {
 	res := &Options{
-		BaseSchedulerDispatcherOptions: tailCutterBuildDefaultDispatcherOptions(),
-		DataInterval:                   defaultTailCutterDataInterval,
-		CutEnabled:                     defaultTailCutterCutEnabled,
+		PeriodicDispatcherOptions: tailCutterBuildDefaultDispatcherOptions(),
+		DataInterval:              defaultTailCutterDataInterval,
+		CutEnabled:                defaultTailCutterCutEnabled,
 	}
 
 	return res
@@ -176,8 +176,8 @@ func WithLogger(log logger.Logger) Option {
 	}
 }
 
-func tailCutterBuildDefaultDispatcherOptions() *worker.BaseSchedulerDispatcherOptions[string] {
-	res := worker.NewBaseSchedulerDispatcherOptions[string]()
+func tailCutterBuildDefaultDispatcherOptions() *worker.PeriodicDispatcherOptions[string] {
+	res := worker.NewPeriodicDispatcherOptions[string]()
 	for _, option := range tailCutterDefaultDispatcherOptionList() {
 		option(res)
 	}
@@ -185,12 +185,12 @@ func tailCutterBuildDefaultDispatcherOptions() *worker.BaseSchedulerDispatcherOp
 	return res
 }
 
-func tailCutterDefaultDispatcherOptionList() []worker.BaseSchedulerDispatcherOption[string] {
-	return []worker.BaseSchedulerDispatcherOption[string]{
-		worker.WithSchedulerDispatcherPoolWorkerCount[string](defaultTailCutterWorkerCount),
-		worker.WithSchedulerDispatcherPoolDataCapacity[string](defaultTailCutterDataCapacity),
-		worker.WithSchedulerDispatcherPoolCompleteProcess[string](defaultTailCutterCompleteProcess),
-		worker.WithSchedulerDispatcherSchedulerStartInterval[string](defaultTailCutterStartInterval),
-		worker.WithSchedulerDispatcherSchedulerScheduleInterval[string](defaultTailCutterScheduleInterval),
+func tailCutterDefaultDispatcherOptionList() []worker.PeriodicDispatcherOption[string] {
+	return []worker.PeriodicDispatcherOption[string]{
+		worker.WithPeriodicDispatcherPoolWorkerCount[string](defaultTailCutterWorkerCount),
+		worker.WithPeriodicDispatcherPoolDataCapacity[string](defaultTailCutterDataCapacity),
+		worker.WithPeriodicDispatcherPoolCompleteProcess[string](defaultTailCutterCompleteProcess),
+		worker.WithPeriodicDispatcherSchedulerStartInterval[string](defaultTailCutterStartInterval),
+		worker.WithPeriodicDispatcherSchedulerScheduleInterval[string](defaultTailCutterScheduleInterval),
 	}
 }

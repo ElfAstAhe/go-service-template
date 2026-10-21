@@ -10,14 +10,14 @@ import (
 )
 
 func TestNewBaseSchedulerDispatcherOptions_Defaults(t *testing.T) {
-	opts := NewBaseSchedulerDispatcherOptions[string]()
+	opts := NewPeriodicDispatcherOptions[string]()
 
-	assert.Equal(t, DefaultSchedulerDispatcherPoolWorkerCount, opts.WorkerCount)
-	assert.Equal(t, DefaultSchedulerDispatcherPoolDataCapacity, opts.DataCapacity)
-	assert.Equal(t, DefaultSchedulerDispatcherPoolCompleteProcess, opts.CompleteProcess)
-	assert.Equal(t, DefaultSchedulerDispatcherSchedulerStartInterval, opts.StartInterval)
-	assert.Equal(t, DefaultSchedulerDispatcherSchedulerScheduleInterval, opts.ScheduleInterval)
-	assert.Equal(t, DefaultSchedulerDispatcherStopTimeout, opts.StopTimeout)
+	assert.Equal(t, DefaultPeriodicDispatcherPoolWorkerCount, opts.WorkerCount)
+	assert.Equal(t, DefaultPeriodicDispatcherPoolDataCapacity, opts.DataCapacity)
+	assert.Equal(t, DefaultPeriodicDispatcherPoolCompleteProcess, opts.CompleteProcess)
+	assert.Equal(t, DefaultPeriodicDispatcherSchedulerStartInterval, opts.StartInterval)
+	assert.Equal(t, DefaultPeriodicDispatcherSchedulerScheduleInterval, opts.ScheduleInterval)
+	assert.Equal(t, DefaultPeriodicDispatcherStopTimeout, opts.StopTimeout)
 	assert.Empty(t, opts.Name)
 	assert.Nil(t, opts.Logger)
 	assert.Nil(t, opts.JobHandler)
@@ -26,21 +26,21 @@ func TestNewBaseSchedulerDispatcherOptions_Defaults(t *testing.T) {
 
 func TestBaseSchedulerDispatcherOptions_FluentAPI(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(t)
-	var dummyHandler JobHandler[string] = func(ctx context.Context, workerIndex int, data string) error { return nil }
+	var dummyHandler PoolJobHandler[string] = func(ctx context.Context, workerIndex int, data string) error { return nil }
 	var dummyProvider DispatcherDataProvider[string] = func(ctx context.Context, eventTime time.Time) ([]string, error) { return nil, nil }
 
-	opts := NewBaseSchedulerDispatcherOptions[string]()
+	opts := NewPeriodicDispatcherOptions[string]()
 
-	WithSchedulerDispatcherName[string]("custom-dispatcher")(opts)
-	WithSchedulerDispatcherPoolWorkerCount[string](5)(opts)
-	WithSchedulerDispatcherPoolDataCapacity[string](256)(opts)
-	WithSchedulerDispatcherPoolCompleteProcess[string](false)(opts)
-	WithSchedulerDispatcherPoolJobHandler[string](dummyHandler)(opts)
-	WithSchedulerDispatcherSchedulerStartInterval[string](time.Millisecond * 25)(opts)
-	WithSchedulerDispatcherSchedulerScheduleInterval[string](time.Second * 10)(opts)
-	WithSchedulerDispatcherStopTimeout[string](time.Second * 4)(opts)
-	WithSchedulerDispatcherDataProvider[string](dummyProvider)(opts)
-	WithSchedulerDispatcherLogger[string](mockLogger)(opts)
+	WithPeriodicDispatcherName[string]("custom-dispatcher")(opts)
+	WithPeriodicDispatcherPoolWorkerCount[string](5)(opts)
+	WithPeriodicDispatcherPoolDataCapacity[string](256)(opts)
+	WithPeriodicDispatcherPoolCompleteProcess[string](false)(opts)
+	WithPeriodicDispatcherPoolJobHandler[string](dummyHandler)(opts)
+	WithPeriodicDispatcherSchedulerStartInterval[string](time.Millisecond * 25)(opts)
+	WithPeriodicDispatcherSchedulerScheduleInterval[string](time.Second * 10)(opts)
+	WithPeriodicDispatcherStopTimeout[string](time.Second * 4)(opts)
+	WithPeriodicDispatcherDataProvider[string](dummyProvider)(opts)
+	WithPeriodicDispatcherLogger[string](mockLogger)(opts)
 
 	assert.Equal(t, "custom-dispatcher", opts.Name)
 	assert.Equal(t, 5, opts.WorkerCount)
@@ -55,17 +55,17 @@ func TestBaseSchedulerDispatcherOptions_FluentAPI(t *testing.T) {
 }
 
 func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
-	var validHandler JobHandler[string] = func(ctx context.Context, workerIndex int, data string) error { return nil }
+	var validHandler PoolJobHandler[string] = func(ctx context.Context, workerIndex int, data string) error { return nil }
 	var validProvider DispatcherDataProvider[string] = func(ctx context.Context, eventTime time.Time) ([]string, error) { return nil, nil }
 
 	tests := []struct {
 		name    string
-		modify  func(*testing.T, *BaseSchedulerDispatcherOptions[string])
+		modify  func(*testing.T, *PeriodicDispatcherOptions[string])
 		wantErr bool
 	}{
 		{
 			name: "valid options",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.Logger = mockLogger
@@ -76,7 +76,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "empty name",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "   "
 				o.Logger = mockLogger
@@ -87,7 +87,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid worker count",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.WorkerCount = -1
@@ -99,7 +99,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid data capacity",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.DataCapacity = 0
@@ -111,7 +111,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid stop timeout",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.StopTimeout = 0
@@ -123,7 +123,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "nil job handler",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.Logger = mockLogger
@@ -134,7 +134,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "nil logger",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				o.Name = "valid-dispatcher"
 				o.Logger = nil
 				o.JobHandler = validHandler
@@ -144,7 +144,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "nil data provider",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.Logger = mockLogger
@@ -155,7 +155,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid start interval",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.StartInterval = 0
@@ -167,7 +167,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid schedule interval",
-			modify: func(t *testing.T, o *BaseSchedulerDispatcherOptions[string]) {
+			modify: func(t *testing.T, o *PeriodicDispatcherOptions[string]) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-dispatcher"
 				o.ScheduleInterval = -time.Millisecond
@@ -181,7 +181,7 @@ func TestBaseSchedulerDispatcherOptions_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			opts := NewBaseSchedulerDispatcherOptions[string]()
+			opts := NewPeriodicDispatcherOptions[string]()
 			tt.modify(t, opts)
 			err := opts.Validate()
 			if tt.wantErr {

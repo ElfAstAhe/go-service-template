@@ -31,13 +31,13 @@ func TestBaseSchedulerDispatcher_SuccessLifecycle(t *testing.T) {
 	targetTime := time.Now()
 
 	mockProvider.On("Execute", mock.Anything, mock.AnythingOfType("time.Time")).Return(expectedRecords, nil).Once()
-	mockPool.On("Push", "audit-log-1").Return().Once()
-	mockPool.On("Push", "audit-log-2").Return().Once()
+	mockPool.On("Push", mock.Anything, "audit-log-1").Return(nil).Once()
+	mockPool.On("Push", mock.Anything, "audit-log-2").Return(nil).Once()
 
 	mockLogger.On("Debugf", mock.Anything, mock.Anything).Return()
 	mockLogger.On("Debugf", mock.Anything, mock.Anything, mock.Anything).Return()
 
-	opts := &BaseSchedulerDispatcherOptions[string]{
+	opts := &PeriodicDispatcherOptions[string]{
 		Name:             "test-scheduler-dispatcher",
 		WorkerCount:      2,
 		DataCapacity:     10,
@@ -49,7 +49,7 @@ func TestBaseSchedulerDispatcher_SuccessLifecycle(t *testing.T) {
 		Logger:           mockLogger,
 	}
 
-	dispatcher := &BaseSchedulerDispatcher[string]{
+	dispatcher := &PeriodicDispatcher[string]{
 		name:         opts.Name,
 		workerPool:   mockPool,
 		dataProvider: opts.DataProvider,
@@ -66,7 +66,7 @@ func TestBaseSchedulerDispatcher_SuccessLifecycle(t *testing.T) {
 }
 
 func TestBaseSchedulerDispatcher_ValidateFail(t *testing.T) {
-	opts := &BaseSchedulerDispatcherOptions[string]{
+	opts := &PeriodicDispatcherOptions[string]{
 		Name: "",
 	}
 

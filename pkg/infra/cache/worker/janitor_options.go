@@ -15,20 +15,20 @@ type JanitorOption[K comparable, V any] func(options *JanitorOptions[K, V])
 
 // JanitorOptions compositionally expands the baseline background scheduler parameters contract to support localized memory storage caches attributes.
 type JanitorOptions[K comparable, V any] struct {
-	*worker.BaseSchedulerOptions                   // Embedded framework-level foundational intervals configuration blueprint fields
-	Cache                        cache.Cache[K, V] // Underlying data caching storage contract target managing proactive eviction tasks
+	*worker.PeriodicSchedulerOptions                   // Embedded framework-level foundational intervals configuration blueprint fields
+	Cache                            cache.Cache[K, V] // Underlying data caching storage contract target managing proactive eviction tasks
 }
 
 // NewJanitorOptions acts as a generic structural factory constructor initializing and unpacking baseline scheduler intervals default values.
 func NewJanitorOptions[K comparable, V any]() *JanitorOptions[K, V] {
 	return &JanitorOptions[K, V]{
-		BaseSchedulerOptions: worker.NewBaseSchedulerOptions(),
+		PeriodicSchedulerOptions: worker.NewPeriodicSchedulerOptions(),
 	}
 }
 
 // Validate triggers sequential verification checks cascading threshold validations from the baseline scheduler rules into the local properties.
 func (jo *JanitorOptions[K, V]) Validate() error {
-	if err := jo.BaseSchedulerOptions.Validate(); err != nil {
+	if err := jo.PeriodicSchedulerOptions.Validate(); err != nil {
 		return errs.NewTlCommonError("Validate", "scheduler options validation failed", err)
 	}
 

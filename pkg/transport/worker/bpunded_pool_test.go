@@ -23,7 +23,7 @@ func TestBasePool_SuccessLifecycle(t *testing.T) {
 		return nil
 	}
 
-	opts := &BasePoolOptions[string]{
+	opts := &BoundedPoolOptions[string]{
 		Name:            "test-pool",
 		WorkerCount:     2,
 		DataCapacity:    10,
@@ -33,22 +33,21 @@ func TestBasePool_SuccessLifecycle(t *testing.T) {
 		JobHandler:      jobHandler,
 	}
 
-	pool, err := NewBasePool[string](func(options *BasePoolOptions[string]) {
+	pool, err := NewBoundedPool[string](func(options *BoundedPoolOptions[string]) {
 		*options = *opts
 	})
 	require.NoError(t, err)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	err = pool.Start(ctx)
 	require.NoError(t, err)
 
-	pool.Push("task-1")
-	assert.True(t, pool.TryPush("task-2"))
+	_ = pool.Push(ctx, "task-1")
+	assert.True(t, pool.TryPush(ctx, "task-2"))
 
 	var received []string
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		select {
 		case task := <-taskProcessed:
 			received = append(received, task)
@@ -68,7 +67,7 @@ func TestBasePool_SuccessLifecycle(t *testing.T) {
 }
 
 func TestBasePool_ValidateFail(t *testing.T) {
-	opts := &BasePoolOptions[string]{
+	opts := &BoundedPoolOptions[string]{
 		Name: "",
 	}
 	err := opts.Validate()

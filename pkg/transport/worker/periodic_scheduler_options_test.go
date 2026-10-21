@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewBaseSchedulerOptions_Defaults(t *testing.T) {
-	opts := NewBaseSchedulerOptions()
+	opts := NewPeriodicSchedulerOptions()
 
 	assert.Equal(t, DefaultSchedulerStartInterval, opts.StartInterval)
 	assert.Equal(t, DefaultSchedulerScheduleInterval, opts.ScheduleInterval)
@@ -24,14 +24,14 @@ func TestBaseSchedulerOptions_FluentAPI(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(t)
 	var dummyDispatcher TimerDispatcher = func(ctx context.Context, eventTime time.Time) error { return nil }
 
-	opts := NewBaseSchedulerOptions()
+	opts := NewPeriodicSchedulerOptions()
 
-	WithSchedulerName("custom-scheduler")(opts)
-	WithSchedulerStartInterval(time.Millisecond * 15)(opts)
-	WithSchedulerScheduleInterval(time.Millisecond * 45)(opts)
-	WithSchedulerStopTimeout(time.Second * 3)(opts)
-	WithSchedulerLogger(mockLogger)(opts)
-	WithSchedulerTimerDispatcher(dummyDispatcher)(opts)
+	WithPeriodicSchedulerName("custom-scheduler")(opts)
+	WithPeriodicSchedulerStartInterval(time.Millisecond * 15)(opts)
+	WithPeriodicSchedulerScheduleInterval(time.Millisecond * 45)(opts)
+	WithPeriodicSchedulerStopTimeout(time.Second * 3)(opts)
+	WithPeriodicSchedulerLogger(mockLogger)(opts)
+	WithPeriodicSchedulerTimerDispatcher(dummyDispatcher)(opts)
 
 	assert.Equal(t, "custom-scheduler", opts.Name)
 	assert.Equal(t, time.Millisecond*15, opts.StartInterval)
@@ -46,12 +46,12 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		modify  func(*testing.T, *BaseSchedulerOptions)
+		modify  func(*testing.T, *PeriodicSchedulerOptions)
 		wantErr bool
 	}{
 		{
 			name: "valid options",
-			modify: func(t *testing.T, o *BaseSchedulerOptions) {
+			modify: func(t *testing.T, o *PeriodicSchedulerOptions) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-scheduler"
 				o.Logger = mockLogger
@@ -61,7 +61,7 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "empty name",
-			modify: func(t *testing.T, o *BaseSchedulerOptions) {
+			modify: func(t *testing.T, o *PeriodicSchedulerOptions) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "   "
 				o.Logger = mockLogger
@@ -71,7 +71,7 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid start interval",
-			modify: func(t *testing.T, o *BaseSchedulerOptions) {
+			modify: func(t *testing.T, o *PeriodicSchedulerOptions) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-scheduler"
 				o.StartInterval = 0
@@ -82,7 +82,7 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid schedule interval",
-			modify: func(t *testing.T, o *BaseSchedulerOptions) {
+			modify: func(t *testing.T, o *PeriodicSchedulerOptions) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-scheduler"
 				o.ScheduleInterval = -time.Second
@@ -93,7 +93,7 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid stop timeout",
-			modify: func(t *testing.T, o *BaseSchedulerOptions) {
+			modify: func(t *testing.T, o *PeriodicSchedulerOptions) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-scheduler"
 				o.StopTimeout = 0
@@ -104,7 +104,7 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "nil timer dispatcher",
-			modify: func(t *testing.T, o *BaseSchedulerOptions) {
+			modify: func(t *testing.T, o *PeriodicSchedulerOptions) {
 				mockLogger := mocks.NewMockLogger(t)
 				o.Name = "valid-scheduler"
 				o.Logger = mockLogger
@@ -114,7 +114,7 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 		},
 		{
 			name: "nil logger",
-			modify: func(t *testing.T, o *BaseSchedulerOptions) {
+			modify: func(t *testing.T, o *PeriodicSchedulerOptions) {
 				o.Name = "valid-scheduler"
 				o.Logger = nil
 				o.TimerDispatcher = validDispatcher
@@ -125,7 +125,7 @@ func TestBaseSchedulerOptions_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			opts := NewBaseSchedulerOptions()
+			opts := NewPeriodicSchedulerOptions()
 			tt.modify(t, opts)
 			err := opts.Validate()
 			if tt.wantErr {

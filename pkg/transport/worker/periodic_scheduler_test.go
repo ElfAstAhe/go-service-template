@@ -23,7 +23,7 @@ func TestBaseScheduler_SuccessLifecycle(t *testing.T) {
 		return nil
 	}
 
-	opts := &BaseSchedulerOptions{
+	opts := &PeriodicSchedulerOptions{
 		Name:             "test-cleaner-scheduler",
 		StartInterval:    5 * time.Millisecond,
 		ScheduleInterval: 20 * time.Millisecond,
@@ -32,7 +32,7 @@ func TestBaseScheduler_SuccessLifecycle(t *testing.T) {
 		TimerDispatcher:  timerDispatcher,
 	}
 
-	scheduler, err := NewBaseScheduler(func(options *BaseSchedulerOptions) {
+	scheduler, err := NewPeriodicScheduler(func(options *PeriodicSchedulerOptions) {
 		*options = *opts
 	})
 	require.NoError(t, err)
@@ -57,7 +57,7 @@ func TestBaseScheduler_SuccessLifecycle(t *testing.T) {
 }
 
 func TestBaseScheduler_ValidateFail(t *testing.T) {
-	opts := &BaseSchedulerOptions{
+	opts := &PeriodicSchedulerOptions{
 		Name: "",
 	}
 	err := opts.Validate()

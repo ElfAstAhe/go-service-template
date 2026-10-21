@@ -16,11 +16,11 @@ const (
 	DefaultSchedulerStopTimeout      time.Duration = time.Second * 5
 )
 
-// BaseSchedulerOption определяет функциональный тип для конфигурации опций (Fluent API).
-type BaseSchedulerOption func(*BaseSchedulerOptions)
+// PeriodicSchedulerOption определяет функциональный тип для конфигурации опций (Fluent API).
+type PeriodicSchedulerOption func(*PeriodicSchedulerOptions)
 
-// BaseSchedulerOptions содержит параметры рантайма, необходимые для безопасной сборки и работы scheduler.
-type BaseSchedulerOptions struct {
+// PeriodicSchedulerOptions содержит параметры рантайма, необходимые для безопасной сборки и работы scheduler.
+type PeriodicSchedulerOptions struct {
 	// Name Наименование воркера
 	Name string
 
@@ -40,9 +40,9 @@ type BaseSchedulerOptions struct {
 	TimerDispatcher TimerDispatcher
 }
 
-// NewBaseSchedulerOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
-func NewBaseSchedulerOptions() *BaseSchedulerOptions {
-	return &BaseSchedulerOptions{
+// NewPeriodicSchedulerOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
+func NewPeriodicSchedulerOptions() *PeriodicSchedulerOptions {
+	return &PeriodicSchedulerOptions{
 		StartInterval:    DefaultSchedulerStartInterval,
 		ScheduleInterval: DefaultSchedulerScheduleInterval,
 		StopTimeout:      DefaultSchedulerStopTimeout,
@@ -50,7 +50,7 @@ func NewBaseSchedulerOptions() *BaseSchedulerOptions {
 }
 
 // Validate проверяет корректность абсолютно всех опций рантайма перед сборкой scheduler.
-func (bso *BaseSchedulerOptions) Validate() error {
+func (bso *PeriodicSchedulerOptions) Validate() error {
 	if strings.TrimSpace(bso.Name) == "" {
 		return errs.NewTlCommonError("Validate", "name is required", nil)
 	}
@@ -77,44 +77,44 @@ func (bso *BaseSchedulerOptions) Validate() error {
 // Fluent API методы для сборки опций scheduler
 // ====================================================================
 
-// WithSchedulerName настраивает наименование
-func WithSchedulerName(name string) BaseSchedulerOption {
-	return func(options *BaseSchedulerOptions) {
+// WithPeriodicSchedulerName настраивает наименование
+func WithPeriodicSchedulerName(name string) PeriodicSchedulerOption {
+	return func(options *PeriodicSchedulerOptions) {
 		options.Name = name
 	}
 }
 
-// WithSchedulerStartInterval настраивает первичную задержку (холодное смещение) перед самым первым тиком таймера
-func WithSchedulerStartInterval(interval time.Duration) BaseSchedulerOption {
-	return func(options *BaseSchedulerOptions) {
+// WithPeriodicSchedulerStartInterval настраивает первичную задержку (холодное смещение) перед самым первым тиком таймера
+func WithPeriodicSchedulerStartInterval(interval time.Duration) PeriodicSchedulerOption {
+	return func(options *PeriodicSchedulerOptions) {
 		options.StartInterval = interval
 	}
 }
 
-// WithSchedulerScheduleInterval настраивает фиксированный интервал периодического повторения задач (период)
-func WithSchedulerScheduleInterval(interval time.Duration) BaseSchedulerOption {
-	return func(options *BaseSchedulerOptions) {
+// WithPeriodicSchedulerScheduleInterval настраивает фиксированный интервал периодического повторения задач (период)
+func WithPeriodicSchedulerScheduleInterval(interval time.Duration) PeriodicSchedulerOption {
+	return func(options *PeriodicSchedulerOptions) {
 		options.ScheduleInterval = interval
 	}
 }
 
-// WithSchedulerStopTimeout настраивает временной лимит (таймаут) на мягкое завершение активной итерации обработчика
-func WithSchedulerStopTimeout(timeout time.Duration) BaseSchedulerOption {
-	return func(options *BaseSchedulerOptions) {
+// WithPeriodicSchedulerStopTimeout настраивает временной лимит (таймаут) на мягкое завершение активной итерации обработчика
+func WithPeriodicSchedulerStopTimeout(timeout time.Duration) PeriodicSchedulerOption {
+	return func(options *PeriodicSchedulerOptions) {
 		options.StopTimeout = timeout
 	}
 }
 
-// WithSchedulerLogger настраивает scheduler logger
-func WithSchedulerLogger(logger logger.Logger) BaseSchedulerOption {
-	return func(options *BaseSchedulerOptions) {
+// WithPeriodicSchedulerLogger настраивает scheduler logger
+func WithPeriodicSchedulerLogger(logger logger.Logger) PeriodicSchedulerOption {
+	return func(options *PeriodicSchedulerOptions) {
 		options.Logger = logger
 	}
 }
 
-// WithSchedulerTimerDispatcher настраивает обработчик события
-func WithSchedulerTimerDispatcher(timerDispatcher TimerDispatcher) BaseSchedulerOption {
-	return func(options *BaseSchedulerOptions) {
+// WithPeriodicSchedulerTimerDispatcher настраивает обработчик события
+func WithPeriodicSchedulerTimerDispatcher(timerDispatcher TimerDispatcher) PeriodicSchedulerOption {
+	return func(options *PeriodicSchedulerOptions) {
 		options.TimerDispatcher = timerDispatcher
 	}
 }

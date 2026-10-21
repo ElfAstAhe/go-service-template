@@ -11,17 +11,17 @@ import (
 
 // Константы дефолтов для внутренней защиты рантайм-компонента (независимые от пакета config)
 const (
-	DefaultPoolWorkerCount     int  = 2
-	DefaultPoolDataCapacity    int  = 64
-	DefaultPoolCompleteProcess bool = true
-	DefaultPoolStopTimeout          = time.Second * 5
+	DefaultBoundedPoolWorkerCount     int  = 2
+	DefaultBoundedPoolDataCapacity    int  = 64
+	DefaultBoundedPoolCompleteProcess bool = true
+	DefaultBoundedPoolStopTimeout          = time.Second * 5
 )
 
-// BasePoolOption определяет функциональный тип для конфигурации опций (Fluent API).
-type BasePoolOption[D any] func(*BasePoolOptions[D])
+// BoundedPoolOption определяет функциональный тип для конфигурации опций (Fluent API).
+type BoundedPoolOption[D any] func(*BoundedPoolOptions[D])
 
-// BasePoolOptions содержит параметры рантайма, необходимые для безопасной сборки и работы worker pool.
-type BasePoolOptions[D any] struct {
+// BoundedPoolOptions содержит параметры рантайма, необходимые для безопасной сборки и работы worker pool.
+type BoundedPoolOptions[D any] struct {
 	// Name Наименование воркера
 	Name string
 
@@ -41,23 +41,23 @@ type BasePoolOptions[D any] struct {
 	Logger logger.Logger
 
 	// JobHandler обработчик
-	JobHandler JobHandler[D]
+	JobHandler PoolJobHandler[D]
 }
 
-// NewBasePoolOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
-func NewBasePoolOptions[D any]() *BasePoolOptions[D] {
-	return &BasePoolOptions[D]{
-		WorkerCount:     DefaultPoolWorkerCount,
-		DataCapacity:    DefaultPoolDataCapacity,
-		CompleteProcess: DefaultPoolCompleteProcess,
-		StopTimeout:     DefaultPoolStopTimeout,
+// NewBoundedPoolOptions создает структуру опций, сразу наполненную безопасными рантайм-дефолтами.
+func NewBoundedPoolOptions[D any]() *BoundedPoolOptions[D] {
+	return &BoundedPoolOptions[D]{
+		WorkerCount:     DefaultBoundedPoolWorkerCount,
+		DataCapacity:    DefaultBoundedPoolDataCapacity,
+		CompleteProcess: DefaultBoundedPoolCompleteProcess,
+		StopTimeout:     DefaultBoundedPoolStopTimeout,
 	}
 }
 
 // Validate проверяет корректность абсолютно всех опций рантайма перед сборкой worker pool.
 //
 //goland:noinspection DuplicatedCode
-func (bpo *BasePoolOptions[D]) Validate() error {
+func (bpo *BoundedPoolOptions[D]) Validate() error {
 	if strings.TrimSpace(bpo.Name) == "" {
 		return errs.NewTlCommonError("Validate", "name is required", nil)
 	}
@@ -84,51 +84,51 @@ func (bpo *BasePoolOptions[D]) Validate() error {
 // Fluent API методы для сборки опций worker pool
 // ====================================================================
 
-// WithPoolName настраивает наименование worker pool
-func WithPoolName[D any](name string) BasePoolOption[D] {
-	return func(options *BasePoolOptions[D]) {
+// WithBoundedPoolName настраивает наименование worker pool
+func WithBoundedPoolName[D any](name string) BoundedPoolOption[D] {
+	return func(options *BoundedPoolOptions[D]) {
 		options.Name = name
 	}
 }
 
-// WithPoolWorkerCount настраивает кол-во обработчиков
-func WithPoolWorkerCount[D any](workerCount int) BasePoolOption[D] {
-	return func(options *BasePoolOptions[D]) {
+// WithBoundedPoolWorkerCount настраивает кол-во обработчиков
+func WithBoundedPoolWorkerCount[D any](workerCount int) BoundedPoolOption[D] {
+	return func(options *BoundedPoolOptions[D]) {
 		options.WorkerCount = workerCount
 	}
 }
 
-// WithPoolDataCapacity настраивает объём очереди данных обработки
-func WithPoolDataCapacity[D any](dataCapacity int) BasePoolOption[D] {
-	return func(options *BasePoolOptions[D]) {
+// WithBoundedPoolDataCapacity настраивает объём очереди данных обработки
+func WithBoundedPoolDataCapacity[D any](dataCapacity int) BoundedPoolOption[D] {
+	return func(options *BoundedPoolOptions[D]) {
 		options.DataCapacity = dataCapacity
 	}
 }
 
 // WithPoolCompleteProcess настраивает признак обработки всей очереди до заверешения/останова
-func WithPoolCompleteProcess[D any](completeProcess bool) BasePoolOption[D] {
-	return func(options *BasePoolOptions[D]) {
+func WithPoolCompleteProcess[D any](completeProcess bool) BoundedPoolOption[D] {
+	return func(options *BoundedPoolOptions[D]) {
 		options.CompleteProcess = completeProcess
 	}
 }
 
-// WithPoolStopTimeout настраивает таймаут времени остановки worker pool
-func WithPoolStopTimeout[D any](stopTimeout time.Duration) BasePoolOption[D] {
-	return func(options *BasePoolOptions[D]) {
+// WithBoundedPoolStopTimeout настраивает таймаут времени остановки worker pool
+func WithBoundedPoolStopTimeout[D any](stopTimeout time.Duration) BoundedPoolOption[D] {
+	return func(options *BoundedPoolOptions[D]) {
 		options.StopTimeout = stopTimeout
 	}
 }
 
-// WithPoolLogger настраивает worker pool logger
-func WithPoolLogger[D any](logger logger.Logger) BasePoolOption[D] {
-	return func(options *BasePoolOptions[D]) {
+// WithBoundedPoolLogger настраивает worker pool logger
+func WithBoundedPoolLogger[D any](logger logger.Logger) BoundedPoolOption[D] {
+	return func(options *BoundedPoolOptions[D]) {
 		options.Logger = logger
 	}
 }
 
-// WithPoolJobHandler настраивает обработчик
-func WithPoolJobHandler[D any](handler JobHandler[D]) BasePoolOption[D] {
-	return func(options *BasePoolOptions[D]) {
+// WithBoundedPoolJobHandler настраивает обработчик
+func WithBoundedPoolJobHandler[D any](handler PoolJobHandler[D]) BoundedPoolOption[D] {
+	return func(options *BoundedPoolOptions[D]) {
 		options.JobHandler = handler
 	}
 }
