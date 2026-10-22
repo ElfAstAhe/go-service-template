@@ -15,15 +15,15 @@ import (
 // Инкапсулирует рутину выполнения SQL-запросов, автоматическое извлечение Querier
 // из контекста транзакций (ACID) и последовательный запуск хуков жизненного цикла сущностей.
 type Helper[T domain.Entity[ID], ID comparable] struct {
-	exec        db.Executor                     // Менеджер пула соединений с БД
-	errDecipher db.ErrorDecipher                // Переводчик системных ошибок СУБД в ошибки фреймворка
-	info        *EntityInfo                     // Метаданные о сущности и таблице
-	nilInstance T                               // Пустой литерал типа T для безопасных возвратов при сбоях
-	callbacks   *BaseRepositoryCallbacks[T, ID] // Контейнер хуков и сканеров жизненного цикла
+	exec        db.Executor       // Менеджер пула соединений с БД
+	errDecipher db.ErrorDecipher  // Переводчик системных ошибок СУБД в ошибки фреймворка
+	info        *EntityInfo       // Метаданные о сущности и таблице
+	nilInstance T                 // Пустой литерал типа T для безопасных возвратов при сбоях
+	callbacks   *Callbacks[T, ID] // Контейнер хуков и сканеров жизненного цикла
 }
 
 // newHelper — фабричный конструктор низкоуровневого хелпера репозитория.
-func newHelper[T domain.Entity[ID], ID comparable](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *BaseRepositoryCallbacks[T, ID], info *EntityInfo) *Helper[T, ID] {
+func newHelper[T domain.Entity[ID], ID comparable](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *Callbacks[T, ID], info *EntityInfo) *Helper[T, ID] {
 	return &Helper[T, ID]{
 		exec:        exec,
 		errDecipher: errDecipher,
@@ -48,8 +48,8 @@ func (h *Helper[T, ID]) GetInfo() *EntityInfo { return h.info }
 // GetNilInstance возвращает дефолтный пустой литерал типа T для безопасных пустых возвратов при ошибках.
 func (h *Helper[T, ID]) GetNilInstance() T { return h.nilInstance }
 
-// GetCallbacks возвращает контейнер зарегистрированных хуков жизненного цикла BaseRepositoryCallbacks.
-func (h *Helper[T, ID]) GetCallbacks() *BaseRepositoryCallbacks[T, ID] { return h.callbacks }
+// GetCallbacks возвращает контейнер зарегистрированных хуков жизненного цикла Callbacks.
+func (h *Helper[T, ID]) GetCallbacks() *Callbacks[T, ID] { return h.callbacks }
 
 // Get выполняет точечное чтение одной строки (SELECT BY ID) из СУБД.
 // Автоматически извлекает активный Querier из контекста транзакции, создаёт пустую заготовку сущности,

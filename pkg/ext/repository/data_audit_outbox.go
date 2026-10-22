@@ -17,7 +17,7 @@ const (
 )
 
 type DataAuditOutboxRepository struct {
-	*repository.BaseCRUDRepository[*extdom.DataAuditOutbox, string]
+	*repository.CRUD[*extdom.DataAuditOutbox, string]
 }
 
 var _ domain.CRUDRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutboxRepository)(nil)

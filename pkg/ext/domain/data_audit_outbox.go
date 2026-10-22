@@ -21,11 +21,11 @@ type DataAuditOutbox struct {
 	UpdatedAt   time.Time
 }
 
-// Проверяем соответствие структуры строгому контракту Entity фреймворка на этапе компиляции
+// Проверяем соответствие структуры строгому контракту Entity фреймворка на этапе компиляции.
 var _ pkgdom.Entity[string] = (*DataAuditOutbox)(nil)
 var _ Outbox[string] = (*DataAuditOutbox)(nil)
 
-// NewEmptyDataAuditOutbox инициализирует пустой экземпляр сущности со стартовым статусом PENDING.
+// NewEmptyDataAuditOutbox возвращает пустой экземпляр сущности со стартовым статусом PENDING.
 func NewEmptyDataAuditOutbox() *DataAuditOutbox {
 	return &DataAuditOutbox{
 		Status: OutboxStatusPending,
@@ -73,7 +73,7 @@ func (d *DataAuditOutbox) BeforeCreate() error {
 	return nil
 }
 
-// BeforeChange — инфраструктурный хук (интерцептор), автоматически запускаемый СУБД/ORM перед фазой обновления (UPDATE).
+// BeforeChange — infrastructure-хук (интерцептор), автоматически запускаемый СУБД/ORM перед фазой обновления (UPDATE).
 func (d *DataAuditOutbox) BeforeChange() error {
 	d.UpdatedAt = time.Now()
 
@@ -108,7 +108,7 @@ func (d *DataAuditOutbox) ValidateCreate() error {
 //goland:noinspection DuplicatedCode
 func (d *DataAuditOutbox) ValidateChange() error {
 	if d.ID == "" {
-		return errs.NewBllValidateError("AuthAudit.ValidateChange", "id cannot be empty", nil)
+		return errs.NewBllValidateError("DataAuditOutbox.ValidateChange", "id cannot be empty", nil)
 	}
 	if d.InstanceID == "" {
 		return errs.NewBllValidateError("DataAuditOutbox.ValidateChange", "instance_id required", nil)
@@ -126,18 +126,22 @@ func (d *DataAuditOutbox) ValidateChange() error {
 	return nil
 }
 
+// GetKey возвращает идентификатор инстанса в качестве ключа распределения или партиционирования.
 func (d *DataAuditOutbox) GetKey() string {
 	return d.InstanceID
 }
 
+// GetContentType возвращает MIME-тип сериализованного содержимого (Payload).
 func (d *DataAuditOutbox) GetContentType() string {
 	return d.ContentType
 }
 
+// GetStatus возвращает текущий жизненный статус обработки Outbox-записи.
 func (d *DataAuditOutbox) GetStatus() string {
 	return d.Status
 }
 
+// GetPayload возвращает сырой массив байт сериализованной полезной нагрузки.
 func (d *DataAuditOutbox) GetPayload() []byte {
 	return d.Payload
 }

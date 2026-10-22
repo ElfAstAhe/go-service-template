@@ -11,7 +11,7 @@ import (
 )
 
 type TestRepositoryImpl struct {
-	*repository.BaseCRUDRepository[*domain.Test, string]
+	*repository.CRUD[*domain.Test, string]
 }
 
 var _ domain.TestRepository = (*TestRepositoryImpl)(nil)
@@ -38,7 +38,7 @@ func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRe
 		}).
 		Build()
 	// callbacks
-	callbacks, err := repository.NewBaseRepositoryCallbacksBuilder[*domain.Test, string]().NewInstance().
+	callbacks, err := repository.NewCallbacksBuilder[*domain.Test, string]().NewInstance().
 		WithEntityScanner(res.entityScanner).
 		WithNewEntityFactory(domain.NewEmptyTest).
 		WithValidateCreate(res.validateCreate).
@@ -52,7 +52,7 @@ func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRe
 		return nil, errs.NewCommonError("error create test repo callbacks", err)
 	}
 	// base crud
-	base, err := repository.NewBaseCRUDRepository[*domain.Test, string](
+	base, err := repository.NewCRUD[*domain.Test, string](
 		executor,
 		decipher,
 		repository.NewEntityInfo("test", "Test"),
@@ -63,7 +63,7 @@ func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRe
 		return nil, errs.NewCommonError("error create TestRepository", err)
 	}
 
-	res.BaseCRUDRepository = base
+	res.CRUD = base
 
 	return res, nil
 }

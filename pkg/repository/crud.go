@@ -18,34 +18,34 @@ const (
 	SourceLabelChange string = "change"
 )
 
-// BaseCRUDRepository — обобщенная (Generic) реализация базового CRUD-репозитория.
+// CRUD — обобщенная (Generic) реализация базового CRUD-репозитория.
 //
 // Удовлетворяет интерфейсу domain.CRUDRepository[T, ID].
 // Пакует в себя две ключевые абстракции:
 // 1. BaseCRUDQueryBuilders: отвечает исключительно за декларативную генерацию чистых SQL-запросов.
 // 2. Helper[T, ID]: оборачивает рантайм выполнения SQL, управление Querier/Транзакциями и маппинг строк.
-type BaseCRUDRepository[T domain.Entity[ID], ID comparable] struct {
+type CRUD[T domain.Entity[ID], ID comparable] struct {
 	queryBuilders *BaseCRUDQueryBuilders
 	helper        *Helper[T, ID]
 }
 
-// NewBaseCRUDRepository — фабричный конструктор базового CRUD-репозитория.
+// NewCRUD — фабричный конструктор базового CRUD-репозитория.
 // Инициализирует внутренний мост Helper, связывая executor, дешифратор ошибок и жизненные циклы колбеков.
-func NewBaseCRUDRepository[T domain.Entity[ID], ID comparable](
+func NewCRUD[T domain.Entity[ID], ID comparable](
 	exec db.Executor,
 	errDecipher db.ErrorDecipher,
 	info *EntityInfo,
 	queryBuilders *BaseCRUDQueryBuilders,
-	callbacks *BaseRepositoryCallbacks[T, ID],
-) (*BaseCRUDRepository[T, ID], error) {
-	return &BaseCRUDRepository[T, ID]{
+	callbacks *Callbacks[T, ID],
+) (*CRUD[T, ID], error) {
+	return &CRUD[T, ID]{
 		queryBuilders: queryBuilders,
 		helper:        newHelper[T, ID](exec, errDecipher, callbacks, info),
 	}, nil
 }
 
 // Find выполняет поиск и извлечение одиночной доменной сущности по её уникальному идентификатору.
-func (br *BaseCRUDRepository[T, ID]) Find(ctx context.Context, id ID) (T, error) {
+func (br *CRUD[T, ID]) Find(ctx context.Context, id ID) (T, error) {
 	sqlFind, err := br.prepareFind()
 	if err != nil {
 		return br.GetHelper().GetNilInstance(), err
@@ -55,7 +55,7 @@ func (br *BaseCRUDRepository[T, ID]) Find(ctx context.Context, id ID) (T, error)
 }
 
 // prepareFind генерирует и валидирует SQL-строку для операции чтения (SELECT BY ID).
-func (br *BaseCRUDRepository[T, ID]) prepareFind() (string, error) {
+func (br *CRUD[T, ID]) prepareFind() (string, error) {
 	if br.GetQueryBuilders() == nil {
 		return "", errs.NewDalError("BaseCRUDRepository.prepareFind", "query builders not applied", nil)
 	}
@@ -71,7 +71,7 @@ func (br *BaseCRUDRepository[T, ID]) prepareFind() (string, error) {
 }
 
 // List возвращает постраничную выборку (срез) доменных сущностей с учетом лимитов и смещений.
-func (br *BaseCRUDRepository[T, ID]) List(ctx context.Context, limit, offset int) ([]T, error) {
+func (br *CRUD[T, ID]) List(ctx context.Context, limit, offset int) ([]T, error) {
 	if err := br.ValidateList(limit, offset); err != nil {
 		return nil, errs.NewDalError("BaseCRUDRepository.List", "validate list", err)
 	}
@@ -84,7 +84,7 @@ func (br *BaseCRUDRepository[T, ID]) List(ctx context.Context, limit, offset int
 }
 
 // ValidateList проверяет корректность параметров пагинации перед отправкой запроса в СУБД.
-func (br *BaseCRUDRepository[T, ID]) ValidateList(limit, offset int) error {
+func (br *CRUD[T, ID]) ValidateList(limit, offset int) error {
 	if limit <= 0 {
 		return errs.NewDalError("BaseCRUDRepository.ValidateList", "limit must be greater 0", nil)
 	}
@@ -96,7 +96,7 @@ func (br *BaseCRUDRepository[T, ID]) ValidateList(limit, offset int) error {
 }
 
 // prepareList генерирует и валидирует SQL-строку для выборки массивов (SELECT LIST).
-func (br *BaseCRUDRepository[T, ID]) prepareList() (string, error) {
+func (br *CRUD[T, ID]) prepareList() (string, error) {
 	if br.GetQueryBuilders() == nil {
 		return "", errs.NewDalError("BaseCRUDRepository.prepareList", "query builders not applied", nil)
 	}
@@ -112,7 +112,7 @@ func (br *BaseCRUDRepository[T, ID]) prepareList() (string, error) {
 }
 
 // Create запускает валидацию бизнес-инвариантов и атомарно вставляет новую сущность в базу данных.
-func (br *BaseCRUDRepository[T, ID]) Create(ctx context.Context, entity T) (T, error) {
+func (br *CRUD[T, ID]) Create(ctx context.Context, entity T) (T, error) {
 	if err := br.internalValidateCreate(entity); err != nil {
 		return br.GetHelper().GetNilInstance(), err
 	}
@@ -121,7 +121,7 @@ func (br *BaseCRUDRepository[T, ID]) Create(ctx context.Context, entity T) (T, e
 }
 
 // internalValidateCreate страхует рантайм от паник, проверяя наличие Creator колбека и вызывая ValidateCreate.
-func (br *BaseCRUDRepository[T, ID]) internalValidateCreate(entity T) error {
+func (br *CRUD[T, ID]) internalValidateCreate(entity T) error {
 	if br.GetHelper().GetCallbacks().Creator == nil {
 		return errs.NewNotImplementedError(errs.NewDalError("BaseCRUDRepository.internalValidateCreate", "creator not applied", nil))
 	}
@@ -136,7 +136,7 @@ func (br *BaseCRUDRepository[T, ID]) internalValidateCreate(entity T) error {
 }
 
 // Change выполняет обновление (UPDATE) полей существующей сущности.
-func (br *BaseCRUDRepository[T, ID]) Change(ctx context.Context, entity T) (T, error) {
+func (br *CRUD[T, ID]) Change(ctx context.Context, entity T) (T, error) {
 	if err := br.internalValidateChange(entity); err != nil {
 		return br.GetHelper().GetNilInstance(), err
 	}
@@ -145,7 +145,7 @@ func (br *BaseCRUDRepository[T, ID]) Change(ctx context.Context, entity T) (T, e
 }
 
 // internalValidateChange страхует рантайм от паник, проверяя наличие Changer колбека и вызывая ValidateChange.
-func (br *BaseCRUDRepository[T, ID]) internalValidateChange(entity T) error {
+func (br *CRUD[T, ID]) internalValidateChange(entity T) error {
 	if br.GetHelper().GetCallbacks().Changer == nil {
 		return errs.NewNotImplementedError(errs.NewDalError("BaseCRUDRepository.internalValidateChange", "changer not applied", nil))
 	}
@@ -160,7 +160,7 @@ func (br *BaseCRUDRepository[T, ID]) internalValidateChange(entity T) error {
 }
 
 // Delete удаляет запись из физической таблицы по её уникальному идентификатору ID.
-func (br *BaseCRUDRepository[T, ID]) Delete(ctx context.Context, id ID) error {
+func (br *CRUD[T, ID]) Delete(ctx context.Context, id ID) error {
 	sqlDelete, err := br.prepareDelete()
 	if err != nil {
 		return err
@@ -170,7 +170,7 @@ func (br *BaseCRUDRepository[T, ID]) Delete(ctx context.Context, id ID) error {
 }
 
 // prepareDelete генерирует и валидирует SQL-строку для операции удаления (DELETE FROM).
-func (br *BaseCRUDRepository[T, ID]) prepareDelete() (string, error) {
+func (br *CRUD[T, ID]) prepareDelete() (string, error) {
 	if br.GetQueryBuilders() == nil {
 		return "", errs.NewDalError("BaseCRUDRepository.prepareDelete", "query builders not applied", nil)
 	}
@@ -186,11 +186,11 @@ func (br *BaseCRUDRepository[T, ID]) prepareDelete() (string, error) {
 }
 
 // GetQueryBuilders возвращает ссылку на зарегистрированный пулл билдеров SQL-запросов.
-func (br *BaseCRUDRepository[T, ID]) GetQueryBuilders() *BaseCRUDQueryBuilders {
+func (br *CRUD[T, ID]) GetQueryBuilders() *BaseCRUDQueryBuilders {
 	return br.queryBuilders
 }
 
 // GetHelper возвращает ссылку на внутренний инфраструктурный движок выполнения операций.
-func (br *BaseCRUDRepository[T, ID]) GetHelper() *Helper[T, ID] {
+func (br *CRUD[T, ID]) GetHelper() *Helper[T, ID] {
 	return br.helper
 }
