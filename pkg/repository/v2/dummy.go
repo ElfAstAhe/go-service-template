@@ -1,6 +1,8 @@
 package v2
 
-import "github.com/ElfAstAhe/go-service-template/pkg/domain"
+import (
+	"github.com/ElfAstAhe/go-service-template/pkg/domain"
+)
 
 // dummyModel — фейковая доменная модель для изоляции дженериков в тестах.
 type dummyModel struct{ ID string }
@@ -12,7 +14,5 @@ func (d *dummyModel) BeforeCreate() error   { return nil }
 func (d *dummyModel) BeforeChange() error   { return nil }
 func (d *dummyModel) ValidateCreate() error { return nil }
 func (d *dummyModel) ValidateChange() error { return nil }
-func (d *dummyModel) TableName() string     { return "dummy" }
-func (d *dummyModel) EntityName() string    { return "dummy" }
 
 var _ domain.Entity[string] = (*dummyModel)(nil)

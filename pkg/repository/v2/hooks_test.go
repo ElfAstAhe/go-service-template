@@ -23,11 +23,14 @@ func TestCRUDOptions_LifecycleAndFluentAPI(t *testing.T) {
 		// Act: Накладываем опции (передаем по значению в соответствии с текущей сигнатурой фреймворка)
 		WithExecutor[*dummyModel, string](mockExecutor)
 		WithErrorDecipher[*dummyModel, string](mockDecipher)
+		WithEntityInfo[*dummyModel, string]("test", "Test")
 
 		// Заполняем результирующий указатель рантайма для финальной проверки Validate
 		opts.Executor = mockExecutor
 		opts.ErrorDecipher = mockDecipher
 		opts.Statements = statementsRegistry
+		opts.TableName = "test"
+		opts.EntityName = "Test"
 
 		// Assert: Проверки через Testify
 		err := opts.Validate()

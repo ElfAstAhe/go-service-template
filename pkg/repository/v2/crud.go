@@ -46,15 +46,14 @@ func NewCRUD[E domain.Entity[ID], ID comparable](options ...CRUDOption[E, ID]) (
 	if err := hooks.Validate(); err != nil {
 		return nil, errs.NewDalError("NewCRUD[E domain.Entity[ID]", "hooks validations failed", err)
 	}
-	emptyEntity := hooks.NewEntityFactory()
 	// helper
 	helper := NewHelper[E, ID](
 		opts.Executor,
 		opts.ErrorDecipher,
 		hooks,
 		opts.Statements,
-		emptyEntity.TableName(),
-		emptyEntity.EntityName(),
+		opts.TableName,
+		opts.EntityName,
 	)
 	// setup
 	res.helper = helper

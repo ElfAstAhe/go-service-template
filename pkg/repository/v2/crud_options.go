@@ -1,6 +1,8 @@
 package v2
 
 import (
+	"strings"
+
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -16,7 +18,8 @@ type CRUDOptions[E domain.Entity[ID], ID comparable] struct {
 	ErrorDecipher db.ErrorDecipher
 	Statements    *Statements[E, ID]
 	Hooks         []Hook[E, ID]
-	Info          *EntityInfo
+	TableName     string
+	EntityName    string
 }
 
 // NewCRUDOptions — фабричный конструктор для создания пустого объекта конфигурации CRUDOptions.
@@ -38,8 +41,11 @@ func (co *CRUDOptions[E, ID]) Validate() error {
 	if utils.IsNil(co.Statements) {
 		return errs.NewDalError("CRUDOptions[E, ID].Validate", "statements required", nil)
 	}
-	if utils.IsNil(co.Info) {
-		return errs.NewDalError("CRUDOptions[E, ID].Validate", "entity info required", nil)
+	if strings.TrimSpace(co.TableName) == "" {
+		return errs.NewDalError("CRUDOptions[E, ID].Validate", "table name required", nil)
+	}
+	if strings.TrimSpace(co.EntityName) == "" {
+		return errs.NewDalError("CRUDOptions[E, ID].Validate", "entity name required", nil)
 	}
 
 	return nil
@@ -82,8 +88,9 @@ func WithHooks[E domain.Entity[ID], ID comparable](hooks ...Hook[E, ID]) CRUDOpt
 }
 
 // WithEntityInfo инжектирует информацию о таблице и сущности
-func WithEntityInfo[E domain.Entity[ID], ID comparable](info *EntityInfo) CRUDOption[E, ID] {
+func WithEntityInfo[E domain.Entity[ID], ID comparable](tableName, entityName string) CRUDOption[E, ID] {
 	return func(co *CRUDOptions[E, ID]) {
-		co.Info = info
+		co.TableName = tableName
+		co.EntityName = entityName
 	}
 }
