@@ -27,6 +27,12 @@ type Entity[ID comparable] interface {
 
 	// ValidateChange проверяет бизнес-ограничения и инварианты сущности перед обновлением её полей.
 	ValidateChange() error
+
+	// TableName возвращает наименование таблицы
+	TableName() string
+
+	// EntityName возвращает наименование сущности
+	EntityName() string
 }
 
 // SoftDeleteEntity расширяет контракт доменного слоя для поддержки паттерна «Мягкого удаления» (Soft Delete).

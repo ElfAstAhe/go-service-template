@@ -2,6 +2,8 @@ package v2
 
 import (
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 type Hook[E domain.Entity[ID], ID comparable] func(*Hooks[E, ID])
@@ -10,16 +12,20 @@ type Hooks[E domain.Entity[ID], ID comparable] struct {
 	DispatchMapper   DispatchMapperFunc[E, ID]
 	NewEntityFactory NewEntityFactory[E, ID]
 
-	AfterFind      AfterFindFunc[E, ID]
-	AfterListYield AfterListYieldFunc[E, ID]
+	ValidateFind ValidateIDFunc[ID]
+	AfterFind    AfterFindFunc[E, ID]
 
-	ValidateCreate ValidateEntityFunc[E, ID]
-	BeforeCreate   BeforeCreateFunc[E, ID]
-	Creator        CreatorFunc[E, ID]
+	ListFilterYield ListFilterYieldFunc[E, ID]
 
-	ValidateChange ValidateEntityFunc[E, ID]
-	BeforeChange   BeforeChangeFunc[E, ID]
-	Changer        ChangerFunc[E, ID]
+	ValidateCreate ValidateFunc[E, ID]
+	BeforeCreate   BeforeFunc[E, ID]
+	Creator        ModificatorFunc[E, ID]
+
+	ValidateChange ValidateFunc[E, ID]
+	BeforeChange   BeforeFunc[E, ID]
+	Changer        ModificatorFunc[E, ID]
+
+	ValidateDelete ValidateIDFunc[ID]
 }
 
 func NewHooks[E domain.Entity[ID], ID comparable]() *Hooks[E, ID] {
@@ -27,6 +33,13 @@ func NewHooks[E domain.Entity[ID], ID comparable]() *Hooks[E, ID] {
 }
 
 func (ho *Hooks[E, ID]) Validate() error {
+	if utils.IsNil(ho.DispatchMapper) {
+		return errs.NewDalError("Hooks[E, ID].Validate", "DispatchMapper required", nil)
+	}
+	if utils.IsNil(ho.NewEntityFactory) {
+		return errs.NewDalError("Hooks[E, ID].Validate", "NewEntityFactory required", nil)
+	}
+
 	return nil
 }
 
@@ -46,50 +59,62 @@ func WithHookNewEntityFactory[E domain.Entity[ID], ID comparable](factory NewEnt
 	}
 }
 
-func WithCallbackAfterFind[E domain.Entity[ID], ID comparable](callback AfterFindFunc[E, ID]) Hook[E, ID] {
+func WithValidateFind[E domain.Entity[ID], ID comparable](hook ValidateIDFunc[ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.AfterFind = callback
+		c.ValidateFind = hook
 	}
 }
 
-func WithCallbackAfterListYield[E domain.Entity[ID], ID comparable](callback AfterListYieldFunc[E, ID]) Hook[E, ID] {
+func WithHookAfterFind[E domain.Entity[ID], ID comparable](hook AfterFindFunc[E, ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.AfterListYield = callback
+		c.AfterFind = hook
 	}
 }
 
-func WithCallbackValidateCreate[E domain.Entity[ID], ID comparable](callback ValidateEntityFunc[E, ID]) Hook[E, ID] {
+func WithHookListFilterYield[E domain.Entity[ID], ID comparable](hook ListFilterYieldFunc[E, ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.ValidateCreate = callback
+		c.ListFilterYield = hook
 	}
 }
 
-func WithCallbackBeforeCreate[E domain.Entity[ID], ID comparable](callback BeforeCreateFunc[E, ID]) Hook[E, ID] {
+func WithHookValidateCreate[E domain.Entity[ID], ID comparable](hook ValidateFunc[E, ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.BeforeCreate = callback
+		c.ValidateCreate = hook
 	}
 }
 
-func WithCallbackCreator[E domain.Entity[ID], ID comparable](callback CreatorFunc[E, ID]) Hook[E, ID] {
+func WithHookBeforeCreate[E domain.Entity[ID], ID comparable](hook BeforeFunc[E, ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.Creator = callback
+		c.BeforeCreate = hook
 	}
 }
 
-func WithCallbackValidateChange[E domain.Entity[ID], ID comparable](callback ValidateEntityFunc[E, ID]) Hook[E, ID] {
+func WithHookCreator[E domain.Entity[ID], ID comparable](hook ModificatorFunc[E, ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.ValidateChange = callback
+		c.Creator = hook
 	}
 }
 
-func WithCallbackBeforeChange[E domain.Entity[ID], ID comparable](callback BeforeChangeFunc[E, ID]) Hook[E, ID] {
+func WithHookValidateChange[E domain.Entity[ID], ID comparable](hook ValidateFunc[E, ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.BeforeChange = callback
+		c.ValidateChange = hook
 	}
 }
 
-func WithCallbackCHanger[E domain.Entity[ID], ID comparable](callback ChangerFunc[E, ID]) Hook[E, ID] {
+func WithHookBeforeChange[E domain.Entity[ID], ID comparable](hook BeforeFunc[E, ID]) Hook[E, ID] {
 	return func(c *Hooks[E, ID]) {
-		c.Changer = callback
+		c.BeforeChange = hook
+	}
+}
+
+func WithHookChanger[E domain.Entity[ID], ID comparable](hook ModificatorFunc[E, ID]) Hook[E, ID] {
+	return func(c *Hooks[E, ID]) {
+		c.Changer = hook
+	}
+}
+
+func WithHookValidateDelete[E domain.Entity[ID], ID comparable](hook ValidateIDFunc[ID]) Hook[E, ID] {
+	return func(c *Hooks[E, ID]) {
+		c.ValidateDelete = hook
 	}
 }

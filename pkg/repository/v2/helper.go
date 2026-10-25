@@ -21,8 +21,9 @@ type Helper[E domain.Entity[ID], ID comparable] struct {
 	errDecipher db.ErrorDecipher   // Переводчик системных ошибок СУБД в ошибки фреймворка
 	hooks       *Hooks[E, ID]      // Контейнер хуков и сканеров жизненного цикла
 	statements  *Statements[E, ID] // Контейнер sql + mappers
-	info        *EntityInfo        // Метаданные о сущности и таблице
-	nilInstance E                  // Пустой литерал типа T для безопасных возвратов при сбоях
+	nilInstance E                  // Пустой (nil) литерал типа T для безопасных возвратов при сбоях
+	tableName   string             // Наименование таблицы
+	entityName  string             // Наименование entity
 }
 
 func NewHelper[E domain.Entity[ID], ID comparable](
@@ -30,14 +31,16 @@ func NewHelper[E domain.Entity[ID], ID comparable](
 	errDecipher db.ErrorDecipher,
 	hooks *Hooks[E, ID],
 	statements *Statements[E, ID],
-	info *EntityInfo,
+	tableName string,
+	entityName string,
 ) *Helper[E, ID] {
 	return &Helper[E, ID]{
 		executor:    executor,
 		errDecipher: errDecipher,
 		hooks:       hooks,
 		statements:  statements,
-		info:        info,
+		tableName:   tableName,
+		entityName:  entityName,
 	}
 }
 
@@ -46,9 +49,6 @@ func (h *Helper[E, ID]) GetExecutor() db.Executor { return h.executor }
 
 // GetErrDecipher возвращает переводчик системных ошибок СУБД в структурированные исключения фреймворка.
 func (h *Helper[E, ID]) GetErrDecipher() db.ErrorDecipher { return h.errDecipher }
-
-// GetInfo возвращает метаданные сущности EntityInfo (названия таблиц, полей и схемы).
-func (h *Helper[E, ID]) GetInfo() *EntityInfo { return h.info }
 
 // GetNilInstance возвращает дефолтный пустой литерал типа T для безопасных пустых возвратов при ошибках.
 func (h *Helper[E, ID]) GetNilInstance() E { return h.nilInstance }
@@ -72,14 +72,13 @@ func (h *Helper[E, ID]) Get(ctx context.Context, stmtName string, params ...any)
 	}
 
 	row := querier.QueryRowContext(ctx, sqlStmt, params...)
-	//    res := h.callbacks.NewEntityFactory()
 
-	res, _, err := h.hooks.DispatchMapper(ctx, stmtName, row)
+	res, err := h.hooks.DispatchMapper(ctx, stmtName, row, params...)
 
 	//    err := h.callbacks.EntityScanner(row, sourceLabel, res)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return h.nilInstance, errs.NewDalNotFoundError(h.info.Entity, params, err)
+			return h.nilInstance, errs.NewDalNotFoundError(h.entityName, params, err)
 		}
 
 		return h.nilInstance, errs.NewDalError("Helper[E, ID].Get", "get row failed", err)
@@ -120,23 +119,23 @@ func (h *Helper[E, ID]) List(ctx context.Context, stmtName string, params ...any
 			return nil, errs.NewDalError("Helper[E, ID].List", "got context error during iteration", err)
 		}
 
-		isAddEntity := true
+		appendEntity := ListYieldActionAppend
 		//        entity := h.GetCallbacks().NewEntityFactory()
 
 		//        err = h.GetCallbacks().EntityScanner(rows, sourceLabel, entity, params...)
-		entity, _, err := h.hooks.DispatchMapper(ctx, stmtName, rows)
+		entity, err := h.hooks.DispatchMapper(ctx, stmtName, rows, params...)
 		if err != nil {
 			return nil, errs.NewDalError("Helper[E, ID].List", "scan rows failed", err)
 		}
 
-		if !utils.IsNil(h.hooks.AfterListYield) {
-			entity, isAddEntity, err = h.hooks.AfterListYield(ctx, entity, params...)
+		if !utils.IsNil(h.hooks.ListFilterYield) {
+			entity, appendEntity, err = h.hooks.ListFilterYield(ctx, entity, params...)
 			if err != nil {
 				return nil, errs.NewDalError("Helper[E, ID].List", "post scan row yield failed", err)
 			}
 		}
 
-		if any(entity) == nil || !isAddEntity {
+		if any(entity) == nil || appendEntity == ListYieldActionSkip {
 			continue
 		}
 
@@ -154,25 +153,25 @@ func (h *Helper[E, ID]) List(ctx context.Context, stmtName string, params ...any
 // Последовательно выполняет пред-хуки BeforeCreate, запускает инжектированный SQL-замыкание Creator,
 // парсит возвращенные автогенерируемые ID и дешифрует вендоро-специфичные ошибки на предмет коллизий уникальности.
 func (h *Helper[E, ID]) Create(ctx context.Context, stmtName string, entity E, params ...any) (E, error) {
+	var ent = entity
+	var err error
 	if !utils.IsNil(h.hooks.BeforeCreate) {
-		if err := h.hooks.BeforeCreate(ctx, entity, params...); err != nil {
+		if ent, err = h.hooks.BeforeCreate(ctx, entity, params...); err != nil {
 			return h.GetNilInstance(), errs.NewDalError("Helper[T, ID].Create", "before create hook failed", err)
 		}
 	}
 
 	querier := h.GetExecutor().GetQuerier(ctx)
 
-	row, err := h.hooks.Creator(ctx, querier, entity, params...)
+	row, err := h.hooks.Creator(ctx, querier, ent, params...)
 	if err != nil {
 		return h.GetNilInstance(), errs.NewDalError("Helper[T, ID].Create", "create entity execution failed", err)
 	}
 
-	//    res := h.GetCallbacks().NewEntityFactory()
-	//    err = h.GetCallbacks().EntityScanner(row, sourceLabel, res, params...)
-	res, _, err := h.hooks.DispatchMapper(ctx, stmtName, row)
+	res, err := h.hooks.DispatchMapper(ctx, stmtName, row, params...)
 	if err != nil {
 		if h.errDecipher.IsUniqueViolation(err) {
-			return h.GetNilInstance(), errs.NewDalAlreadyExistsError(h.GetInfo().Entity, entity.GetID(), err)
+			return h.GetNilInstance(), errs.NewDalAlreadyExistsError(h.entityName, entity.GetID(), err)
 		}
 
 		return h.GetNilInstance(), errs.NewDalError("Helper[T, ID].Create", "scan after create entity failed", err)
@@ -189,26 +188,27 @@ func (h *Helper[E, ID]) Create(ctx context.Context, stmtName string, entity E, p
 // Последовательно запускает пред-хуки BeforeChange, выполняет прикладной SQL-код Changer
 // и осуществляет повторное сканирование обновленных полей с обработкой коллизий уникальных индексов.
 func (h *Helper[E, ID]) Change(ctx context.Context, stmtName string, entity E, params ...any) (E, error) {
+	var ent = entity
+	var err error
 	if !utils.IsNil(h.hooks.BeforeChange) {
-		if err := h.hooks.BeforeChange(ctx, entity, params...); err != nil {
+		if ent, err = h.hooks.BeforeChange(ctx, entity, params...); err != nil {
 			return h.GetNilInstance(), errs.NewDalError("Helper[E, ID].Change", "before change hook failed", err)
 		}
 	}
 
 	querier := h.GetExecutor().GetQuerier(ctx)
 
-	row, err := h.hooks.Changer(ctx, querier, entity, params...)
+	row, err := h.hooks.Changer(ctx, querier, ent, params...)
 	if err != nil {
 		return h.GetNilInstance(), errs.NewDalError("Helper[E, ID].Change", "change entity execution failed", err)
 	}
 
-	//    res := h.GetCallbacks().NewEntityFactory()
-	//    err = h.GetCallbacks().EntityScanner(row, sourceLabel, res, params...)
-	res, _, err := h.hooks.DispatchMapper(ctx, stmtName, row)
+	res, err := h.hooks.DispatchMapper(ctx, stmtName, row, params...)
 	if err != nil {
 		if h.errDecipher.IsUniqueViolation(err) {
-			return h.GetNilInstance(), errs.NewDalAlreadyExistsError(h.GetInfo().Entity, entity.GetID(), err)
+			return h.GetNilInstance(), errs.NewDalAlreadyExistsError(h.entityName, entity.GetID(), err)
 		}
+
 		return h.GetNilInstance(), errs.NewDalError("Helper[E, ID].Change", "scan after change entity failed", err)
 	}
 
@@ -233,21 +233,21 @@ func (h *Helper[E, ID]) Delete(ctx context.Context, stmtName string, params ...a
 
 	res, err := querier.ExecContext(ctx, sqlStmt, params...)
 	if err != nil {
-		return errs.NewDalError("Helper.Delete", "exec context failed", err)
+		return errs.NewDalError("Helper[E, ID].Delete", "exec context failed", err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return errs.NewDalError("Helper.Delete", "rows affected read failed", err)
+		return errs.NewDalError("Helper[E, ID].Delete", "rows affected read failed", err)
 	}
 	if rowsAffected <= 0 {
-		return errs.NewDalNotFoundError(h.GetInfo().Entity, params, nil)
+		return errs.NewDalNotFoundError(h.entityName, params, nil)
 	}
 
 	return nil
 }
 
-// DeleteNoCheck осуществляет быстрое «слепое» удаление (DELETE) без предварительной верификации факта существования записи.
+// DeleteNoCheck осуществляет быстрое «слепое» удаление (DELETE).
 func (h *Helper[E, ID]) DeleteNoCheck(ctx context.Context, stmtName string, params ...any) error {
 	querier := h.GetExecutor().GetQuerier(ctx)
 
@@ -258,7 +258,7 @@ func (h *Helper[E, ID]) DeleteNoCheck(ctx context.Context, stmtName string, para
 
 	_, err = querier.ExecContext(ctx, sqlStmt, params...)
 	if err != nil {
-		return errs.NewDalError("Helper.DeleteNoCheck", "exec context failed", err)
+		return errs.NewDalError("Helper[E, ID].DeleteNoCheck", "exec context failed", err)
 	}
 
 	return nil

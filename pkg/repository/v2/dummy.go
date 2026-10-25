@@ -12,5 +12,7 @@ func (d *dummyModel) BeforeCreate() error   { return nil }
 func (d *dummyModel) BeforeChange() error   { return nil }
 func (d *dummyModel) ValidateCreate() error { return nil }
 func (d *dummyModel) ValidateChange() error { return nil }
+func (d *dummyModel) TableName() string     { return "dummy" }
+func (d *dummyModel) EntityName() string    { return "dummy" }
 
 var _ domain.Entity[string] = (*dummyModel)(nil)
