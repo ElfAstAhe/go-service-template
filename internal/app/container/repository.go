@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ElfAstAhe/go-service-template/internal/repository"
+	"github.com/ElfAstAhe/go-service-template/internal/repository/metrics"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
@@ -58,5 +58,5 @@ func (rc *RepositoryContainer) providerTestRepository() (any, error) {
 		return nil, errs.NewContainerError(rc.GetName(), fmt.Sprintf("provider: create [%s] repo instance failed", InstanceTestRepo), err)
 	}
 
-	return repository.NewTestMetricsRepository(res), nil
+	return metrics.NewTestRepository(res), nil
 }

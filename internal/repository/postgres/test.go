@@ -6,19 +6,21 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
+	pkgdom "github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/repository"
 )
 
-type TestRepositoryImpl struct {
+type TestRepository struct {
 	*repository.CRUD[*domain.Test, string]
 }
 
-var _ domain.TestRepository = (*TestRepositoryImpl)(nil)
+var _ pkgdom.CRUDRepository[*domain.Test, string] = (*TestRepository)(nil)
+var _ domain.TestRepository = (*TestRepository)(nil)
 
-func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRepositoryImpl, error) {
+func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRepository, error) {
 	// new instance
-	res := &TestRepositoryImpl{}
+	res := &TestRepository{}
 	// sql builders
 	queryBuilders := repository.NewBaseCRUDQueryBuildersBuilder().NewInstance().
 		WithFind(func() string {
@@ -68,15 +70,15 @@ func NewTestRepository(executor db.Executor, decipher db.ErrorDecipher) (*TestRe
 	return res, nil
 }
 
-func (tr *TestRepositoryImpl) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
+func (tr *TestRepository) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
 	return tr.GetHelper().Get(ctx, sqlTestFindByCode, code)
 }
 
-func (tr *TestRepositoryImpl) entityScanner(scanner repository.Scannable, sourceLabel string, dest *domain.Test, params ...any) error {
+func (tr *TestRepository) entityScanner(scanner repository.Scannable, sourceLabel string, dest *domain.Test, params ...any) error {
 	return scanner.Scan(&dest.ID, &dest.Code, &dest.Name, &dest.Description, &dest.CreatedAt, &dest.ModifiedAt)
 }
 
-func (tr *TestRepositoryImpl) validateCreate(entity *domain.Test, params ...any) error {
+func (tr *TestRepository) validateCreate(entity *domain.Test, params ...any) error {
 	if entity == nil {
 		return errs.NewInvalidArgumentError("entity", "test entity is nil")
 	}
@@ -84,7 +86,7 @@ func (tr *TestRepositoryImpl) validateCreate(entity *domain.Test, params ...any)
 	return entity.ValidateCreate()
 }
 
-func (tr *TestRepositoryImpl) beforeCreate(entity *domain.Test, params ...any) error {
+func (tr *TestRepository) beforeCreate(entity *domain.Test, params ...any) error {
 	if err := entity.BeforeCreate(); err != nil {
 		return errs.NewDalError("TestRepository.beforeCreate", "before create entity", err)
 	}
@@ -92,11 +94,11 @@ func (tr *TestRepositoryImpl) beforeCreate(entity *domain.Test, params ...any) e
 	return nil
 }
 
-func (tr *TestRepositoryImpl) creator(ctx context.Context, querier db.Querier, entity *domain.Test, params ...any) (*sql.Row, error) {
+func (tr *TestRepository) creator(ctx context.Context, querier db.Querier, entity *domain.Test, params ...any) (*sql.Row, error) {
 	return querier.QueryRowContext(ctx, tr.GetQueryBuilders().GetCreate()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.CreatedAt, entity.ModifiedAt), nil
 }
 
-func (tr *TestRepositoryImpl) validateChange(entity *domain.Test, params ...any) error {
+func (tr *TestRepository) validateChange(entity *domain.Test, params ...any) error {
 	if entity == nil {
 		return errs.NewInvalidArgumentError("entity", "test entity is nil")
 	}
@@ -104,11 +106,11 @@ func (tr *TestRepositoryImpl) validateChange(entity *domain.Test, params ...any)
 	return entity.ValidateChange()
 }
 
-func (tr *TestRepositoryImpl) changer(ctx context.Context, querier db.Querier, entity *domain.Test, params ...any) (*sql.Row, error) {
+func (tr *TestRepository) changer(ctx context.Context, querier db.Querier, entity *domain.Test, params ...any) (*sql.Row, error) {
 	return querier.QueryRowContext(ctx, tr.GetQueryBuilders().GetChange()(), entity.ID, entity.Code, entity.Name, entity.Description, entity.ModifiedAt), nil
 }
 
-func (tr *TestRepositoryImpl) beforeChange(entity *domain.Test, params ...any) error {
+func (tr *TestRepository) beforeChange(entity *domain.Test, params ...any) error {
 	if err := entity.BeforeChange(); err != nil {
 		return errs.NewDalError("TestRepository.beforeChange", "before change entity", err)
 	}

@@ -1,30 +1,33 @@
-package repository
+package trace
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
+	domain2 "github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/repository/trace"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
 
-type TestTraceRepository struct {
-	*trace.BaseCRUDTraceRepository[*domain.Test, string]
+type TestRepository struct {
+	*trace.CRUD[*domain.Test, string]
 	repo domain.TestRepository
 }
 
-var _ domain.TestRepository = (*TestTraceRepository)(nil)
+var _ domain2.CRUDRepository[*domain.Test, string] = (*TestRepository)(nil)
+var _ domain.TestRepository = (*TestRepository)(nil)
 
-func NewTestTraceRepository(repo domain.TestRepository) *TestTraceRepository {
-	return &TestTraceRepository{
-		BaseCRUDTraceRepository: trace.NewBaseCRUDTraceRepository("TestRepository", repo),
-		repo:                    repo,
+func NewTestRepository(repo domain.TestRepository) *TestRepository {
+	return &TestRepository{
+		CRUD: trace.NewCRUD("TestRepository", repo),
+		repo: repo,
 	}
 }
 
-func (ttr *TestTraceRepository) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
+//goland:noinspection DuplicatedCode
+func (ttr *TestRepository) FindByCode(ctx context.Context, code string) (*domain.Test, error) {
 	ctx, span := ttr.GetTracer().Start(ctx, fmt.Sprintf("%s.FindByCode", ttr.GetRepositoryName()))
 	span.SetAttributes(attribute.String("param.code", code))
 	defer span.End()
