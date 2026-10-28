@@ -183,3 +183,11 @@ func (cr *CRUD[E, ID]) mapperDispatcher(ctx context.Context, stmtName string, sc
 
 	return mapper(ctx, scannable, params...)
 }
+
+func (cr *CRUD[E, ID]) GetOpts() *CRUDOptions[E, ID] {
+	return cr.opts
+}
+
+func (cr *CRUD[E, ID]) GetHelper() *Helper[E, ID] {
+	return cr.helper
+}

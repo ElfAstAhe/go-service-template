@@ -1,7 +1,7 @@
 package postgres
 
 const (
-	sqlTest2Find = `
+	SqlTest2Find string = `
 select
     id,
     code,
@@ -14,7 +14,7 @@ from
 where
     id = $1
 `
-	sqlTest2FindByCode = `
+	SqlTest2FindByCode string = `
 select
     id,
     code,
@@ -27,7 +27,7 @@ from
 where
     code = $1
 `
-	sqlTest2List string = `
+	SqlTest2List string = `
 select
     id,
     code,
@@ -42,7 +42,7 @@ order by
 offset $2
 limit $1
 `
-	sqlTest2Create = `
+	SqlTest2Create string = `
 insert into test2 (
     id,
     code,
@@ -67,7 +67,7 @@ returning
     created_at,
     modified_at
 `
-	sqlTest2Change = `
+	SqlTest2Change string = `
 update
     test2
 set
@@ -85,7 +85,7 @@ returning
     created_at,
     modified_at
 `
-	sqlTest2Delete = `
+	SqlTest2Delete string = `
 delete
 from
     test2

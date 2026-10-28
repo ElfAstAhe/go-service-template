@@ -5,6 +5,7 @@ import (
 
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 // Statement представляет собой строго типизированный инфраструктурный контейнер версии v2,
@@ -99,4 +100,12 @@ func (s *Statements[E, ID]) WithStatement(name string, stmt *Statement[E, ID]) *
 	s.statements[name] = stmt
 
 	return s
+}
+
+func (s *Statements[E, ID]) Count() int {
+	return len(s.statements)
+}
+
+func IsStatementsEmpty[E domain.Entity[ID], ID comparable](stmts *Statements[E, ID]) bool {
+	return utils.IsNil(stmts) || len(stmts.statements) == 0
 }

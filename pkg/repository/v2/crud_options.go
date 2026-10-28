@@ -14,13 +14,17 @@ type CRUDOption[E domain.Entity[ID], ID comparable] func(*CRUDOptions[E, ID])
 
 // CRUDOptions инкапсулирует в себе полный набор инфраструктурных зависимостей, необходимых для рантайм-работы репозитория.
 type CRUDOptions[E domain.Entity[ID], ID comparable] struct {
-	Executor      db.Executor
-	ErrorDecipher db.ErrorDecipher
-	Statements    *Statements[E, ID]
-	Hooks         []Hook[E, ID]
-	TableName     string
-	EntityName    string
+	Executor           db.Executor                             // Database executor
+	ErrorDecipher      db.ErrorDecipher                        // Database error decipher
+	Statements         *Statements[E, ID]                      // Statements
+	Hooks              []Hook[E, ID]                           // Hooks
+	TableName          string                                  // table name info
+	EntityName         string                                  // entity name info
+	DriverName         string                                  // current usable database driver
+	StatementsBuilders map[string]CRUDStatementsBuilder[E, ID] // statements builder by database driver name
 }
+
+type CRUDStatementsBuilder[E domain.Entity[ID], ID comparable] func() []CRUDOption[E, ID]
 
 // NewCRUDOptions — фабричный конструктор для создания пустого объекта конфигурации CRUDOptions.
 func NewCRUDOptions[E domain.Entity[ID], ID comparable]() *CRUDOptions[E, ID] {
@@ -38,8 +42,8 @@ func (co *CRUDOptions[E, ID]) Validate() error {
 	if err := co.Statements.Validate(); err != nil {
 		return errs.NewDalError("CRUDOptions[E, ID].Validate", "actions validation failed", err)
 	}
-	if utils.IsNil(co.Statements) {
-		return errs.NewDalError("CRUDOptions[E, ID].Validate", "statements required", nil)
+	if IsStatementsEmpty(co.Statements) && len(co.StatementsBuilders) == 0 {
+		return errs.NewDalError("CRUDOptions[E, ID].Validate", "statements or statements builder required", nil)
 	}
 	if strings.TrimSpace(co.TableName) == "" {
 		return errs.NewDalError("CRUDOptions[E, ID].Validate", "table name required", nil)
@@ -92,5 +96,22 @@ func WithEntityInfo[E domain.Entity[ID], ID comparable](tableName, entityName st
 	return func(co *CRUDOptions[E, ID]) {
 		co.TableName = tableName
 		co.EntityName = entityName
+	}
+}
+
+// WithDriverName индектирует database driver name for statements builder
+func WithDriverName[E domain.Entity[ID], ID comparable](name string) CRUDOption[E, ID] {
+	return func(co *CRUDOptions[E, ID]) {
+		co.DriverName = name
+	}
+}
+
+// WithStatementsBuilder ленивая инициализация карты билдеров Statements
+func WithStatementsBuilder[E domain.Entity[ID], ID comparable](driverName string, builder CRUDStatementsBuilder[E, ID]) CRUDOption[E, ID] {
+	return func(co *CRUDOptions[E, ID]) {
+		if utils.IsNil(co.StatementsBuilders) {
+			co.StatementsBuilders = make(map[string]CRUDStatementsBuilder[E, ID])
+		}
+		co.StatementsBuilders[driverName] = builder
 	}
 }
