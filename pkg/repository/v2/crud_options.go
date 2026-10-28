@@ -79,7 +79,6 @@ func WithStatement[E domain.Entity[ID], ID comparable](name string, statement *S
 		if utils.IsNil(co.Statements) {
 			co.Statements = NewStatements[E, ID]()
 		}
-
 		co.Statements.Add(name, statement)
 	}
 }
