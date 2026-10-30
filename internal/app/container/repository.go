@@ -3,18 +3,21 @@ package container
 import (
 	"context"
 	"errors"
-	"fmt"
 
-	"github.com/ElfAstAhe/go-service-template/internal/repository/metrics"
-	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
-	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
 const (
-	InstanceTestRepo string = "testRepo"
+	InstanceTestRepo  string = "testRepo"
+	InstanceTest2Repo string = "test2-repository"
+
+	InstanceTestMetrics  string = "test-metrics-repo"
+	InstanceTest2Metrics string = "test2-metrics-repo"
+
+	InstanceTestTrace  string = "test-trace-repo"
+	InstanceTest2Trace string = "test2-trace-repo"
 )
 
 type RepositoryContainer struct {
@@ -37,26 +40,19 @@ func NewRepositoryContainer(
 	}
 }
 
+//goland:noinspection DuplicatedCode
 func (rc *RepositoryContainer) Init(ctx context.Context) error {
 	err := errors.Join(
 		rc.RegisterProvider(InstanceTestRepo, rc.providerTestRepository),
+		rc.RegisterProvider(InstanceTest2Repo, rc.providerTest2Repository),
+		rc.RegisterProvider(InstanceTestMetrics, rc.providerTestMetrics),
+		rc.RegisterProvider(InstanceTest2Metrics, rc.providerTest2Metrics),
+		rc.RegisterProvider(InstanceTestTrace, rc.providerTestTrace),
+		rc.RegisterProvider(InstanceTest2Trace, rc.providerTest2Trace),
 	)
 	if err != nil {
 		return errs.NewContainerError(rc.GetName(), "container init: register providers failed", err)
 	}
 
 	return nil
-}
-
-func (rc *RepositoryContainer) providerTestRepository() (any, error) {
-	dbInst, err := container.GetInstance[db.DB](InstanceDB)
-	if err != nil {
-		return nil, errs.NewContainerError(rc.GetName(), "provider: retrieve instance failed", err)
-	}
-	res, err := postgres.NewTestRepository(dbInst, dbInst)
-	if err != nil {
-		return nil, errs.NewContainerError(rc.GetName(), fmt.Sprintf("provider: create [%s] repo instance failed", InstanceTestRepo), err)
-	}
-
-	return metrics.NewTestRepository(res), nil
 }
