@@ -78,3 +78,12 @@ func (ucc *UseCaseContainer) providerTestDeleteUC() (any, error) {
 
 	return usecase.NewTestDeleteUseCase(uwInst, repoTest), nil
 }
+
+func (ucc *UseCaseContainer) providerTest2GetUC() (any, error) {
+	repoInst, err := container.GetInstance[domain.Test2Repository](InstanceTest2Trace)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+
+	return usecase.NewTest2Get(repoInst), nil
+}

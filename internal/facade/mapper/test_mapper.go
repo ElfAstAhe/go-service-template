@@ -3,10 +3,11 @@ package mapper
 import (
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
 	"github.com/ElfAstAhe/go-service-template/internal/facade/dto"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 func MapTestDtoToModel(testDTO *dto.TestDTO) *domain.Test {
-	if testDTO == nil {
+	if utils.IsNil(testDTO) {
 		return nil
 	}
 
@@ -23,7 +24,7 @@ func MapTestDtoToModel(testDTO *dto.TestDTO) *domain.Test {
 }
 
 func MapTestModelToDto(model *domain.Test) *dto.TestDTO {
-	if model == nil {
+	if utils.IsNil(model) {
 		return nil
 	}
 

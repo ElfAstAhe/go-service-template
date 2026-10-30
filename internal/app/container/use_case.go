@@ -16,6 +16,7 @@ const (
 	InstanceTestListUC      string = "TestListUC"
 	InstanceTestSaveUC      string = "TestSaveUC"
 	InstanceTestDeleteUC    string = "TestDeleteUC"
+	InstanceTest2GetUC      string = "test2-get-use-case"
 )
 
 type UseCaseContainer struct {
@@ -46,6 +47,7 @@ func (ucc *UseCaseContainer) Init(ctx context.Context) error {
 		ucc.RegisterProvider(InstanceTestListUC, ucc.providerTestListUC),
 		ucc.RegisterProvider(InstanceTestSaveUC, ucc.providerTestSaveUC),
 		ucc.RegisterProvider(InstanceTestDeleteUC, ucc.providerTestDeleteUC),
+		ucc.RegisterProvider(InstanceTest2GetUC, ucc.providerTest2GetUC),
 	)
 	if err != nil {
 		return errs.NewContainerError(ucc.GetName(), "container init: register providers failed", err)
