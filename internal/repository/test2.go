@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"github.com/ElfAstAhe/go-service-template/internal/domain"
 	"github.com/ElfAstAhe/go-service-template/internal/repository/postgres"
@@ -23,8 +23,6 @@ type Test2 struct {
 var _ pkgdom.CRUDRepository[*domain.Test2, string] = (*Test2)(nil)
 var _ domain.Test2Repository = (*Test2)(nil)
 
-var test2StmtBuilders map[string]func(*Test2) []pkgrepo.CRUDOption[*domain.Test2, string]
-
 // NewTest2 фабричная функция создания экземпляра репозитория
 func NewTest2(
 	driverName string,
@@ -33,14 +31,8 @@ func NewTest2(
 ) (*Test2, error) {
 	// instance
 	res := &Test2{}
-	// statements
-	stmtOpts, err := buildTest2StmtOptions(driverName, res)
-	if err != nil {
-		return nil, errs.NewDalError("NewTest2", "build statements failed", err)
-	}
-	// options
-	opts := []pkgrepo.CRUDOption[*domain.Test2, string]{
-		pkgrepo.WithExecutor[*domain.Test2, string](executor),
+	// embed
+	embed, err := pkgrepo.NewCRUD[*domain.Test2, string](pkgrepo.WithExecutor[*domain.Test2, string](executor),
 		pkgrepo.WithErrorDecipher[*domain.Test2, string](errDecipher),
 		pkgrepo.WithHooks[*domain.Test2, string](
 			pkgrepo.WithHookNewEntityFactory[*domain.Test2, string](domain.NewEmptyTest2),
@@ -48,10 +40,11 @@ func NewTest2(
 			pkgrepo.WithHookChanger[*domain.Test2, string](res.changer),
 		),
 		pkgrepo.WithEntityInfo[*domain.Test2, string]("test2", "Test2"),
-	}
-	opts = append(opts, stmtOpts...)
-	// embed
-	embed, err := pkgrepo.NewCRUD[*domain.Test2, string](opts...)
+		pkgrepo.WithDriverName[*domain.Test2, string](driverName),
+		pkgrepo.WithStatementsBuilder[*domain.Test2, string](pkgdbpg.DriverName, res.pgStatementsBuilder),
+		pkgrepo.WithStatementsBuilder[*domain.Test2, string]("pgx", res.pgStatementsBuilder),
+		pkgrepo.WithStatementsBuilder[*domain.Test2, string]("postgres", res.pgStatementsBuilder),
+	)
 	if err != nil {
 		return nil, errs.NewDalError("NewTest2", "create embed CRUD failed", err)
 	}
@@ -63,6 +56,10 @@ func NewTest2(
 
 // FindByCode осуществляет поиск сущности по коду
 func (t2 *Test2) FindByCode(ctx context.Context, code string) (*domain.Test2, error) {
+	if strings.TrimSpace(code) == "" {
+		return nil, errs.NewDalNotFoundError(t2.GetOpts().EntityName, code, nil)
+	}
+
 	return t2.GetHelper().Get(ctx, statementTest2FindByCode, code)
 }
 
@@ -114,49 +111,12 @@ func (t2 *Test2) mapDefault(ctx context.Context, scannable pkgrepo.Scannable, pa
 	return res, nil
 }
 
-func (t2 *Test2) pgStatementsBuilder() []pkgrepo.CRUDOption[*domain.Test2, string] {
-	return []pkgrepo.CRUDOption[*domain.Test2, string]{
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementFind, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Find, t2.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementList, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2List, t2.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementCreate, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Create, t2.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementChange, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Change, t2.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementDelete, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Delete, nil)),
-		pkgrepo.WithStatement[*domain.Test2, string](statementTest2FindByCode, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2FindByCode, t2.mapDefault)),
-	}
-}
-
-// =======================================================
-// Statements
-// =======================================================
-
-func initTest2StmtBuilderOptions() {
-	test2StmtBuilders = map[string]func(*Test2) []pkgrepo.CRUDOption[*domain.Test2, string]{
-		pkgdbpg.DriverName: buildTest2PgStmtOptions,
-		"pgx":              buildTest2PgStmtOptions,
-		"postgres":         buildTest2PgStmtOptions,
-	}
-}
-
-func buildTest2StmtOptions(driver string, inst *Test2) ([]pkgrepo.CRUDOption[*domain.Test2, string], error) {
-	builder, ok := test2StmtBuilders[driver]
-	if !ok {
-		return nil, errs.NewDalError("buildStatements", fmt.Sprintf("unknown driver [%s]", driver), nil)
-	}
-
-	return builder(inst), nil
-}
-
-func buildTest2PgStmtOptions(inst *Test2) []pkgrepo.CRUDOption[*domain.Test2, string] {
-	return []pkgrepo.CRUDOption[*domain.Test2, string]{
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementFind, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Find, inst.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementList, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2List, inst.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementCreate, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Create, inst.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementChange, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Change, inst.mapDefault)),
-		pkgrepo.WithStatement[*domain.Test2, string](pkgrepo.StatementDelete, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2Delete, nil)),
-		pkgrepo.WithStatement[*domain.Test2, string](statementTest2FindByCode, pkgrepo.NewStatement[*domain.Test2, string](postgres.SqlTest2FindByCode, inst.mapDefault)),
-	}
-}
-
-func init() {
-	initTest2StmtBuilderOptions()
+func (t2 *Test2) pgStatementsBuilder() *pkgrepo.Statements[*domain.Test2, string] {
+	return pkgrepo.NewStatements[*domain.Test2, string]().
+		WithStatement(pkgrepo.StatementFind, pkgrepo.NewStatement(postgres.SqlTest2Find, t2.mapDefault)).
+		WithStatement(pkgrepo.StatementList, pkgrepo.NewStatement(postgres.SqlTest2List, t2.mapDefault)).
+		WithStatement(pkgrepo.StatementCreate, pkgrepo.NewStatement(postgres.SqlTest2Create, t2.mapDefault)).
+		WithStatement(pkgrepo.StatementChange, pkgrepo.NewStatement(postgres.SqlTest2Change, t2.mapDefault)).
+		WithStatement(pkgrepo.StatementDelete, pkgrepo.NewStatement(postgres.SqlTest2Delete, t2.mapDefault)).
+		WithStatement(statementTest2FindByCode, pkgrepo.NewStatement(postgres.SqlTest2FindByCode, t2.mapDefault))
 }

@@ -24,6 +24,7 @@ type CRUD[E domain.Entity[ID], ID comparable] struct {
 
 var _ domain.CRUDRepository[*dummyModel, string] = (*CRUD[*dummyModel, string])(nil)
 
+// NewCRUD фабричный метод создания экземпляра CRUD репозитория
 func NewCRUD[E domain.Entity[ID], ID comparable](options ...CRUDOption[E, ID]) (*CRUD[E, ID], error) {
 	// options
 	opts := NewCRUDOptions[E, ID]()
@@ -46,12 +47,17 @@ func NewCRUD[E domain.Entity[ID], ID comparable](options ...CRUDOption[E, ID]) (
 	if err := hooks.Validate(); err != nil {
 		return nil, errs.NewDalError("NewCRUD[E domain.Entity[ID]", "hooks validations failed", err)
 	}
+	// statements
+	statements, err := opts.GetStatements(opts.DriverName)
+	if err != nil {
+		return nil, errs.NewDalError("NewCRUD[E domain.Entity[ID]", "statements build failed", err)
+	}
 	// helper
 	helper := NewHelper[E, ID](
 		opts.Executor,
 		opts.ErrorDecipher,
 		hooks,
-		opts.Statements,
+		statements,
 		opts.TableName,
 		opts.EntityName,
 	)
@@ -184,10 +190,12 @@ func (cr *CRUD[E, ID]) mapperDispatcher(ctx context.Context, stmtName string, sc
 	return mapper(ctx, scannable, params...)
 }
 
+// GetOpts возвращает набор опций
 func (cr *CRUD[E, ID]) GetOpts() *CRUDOptions[E, ID] {
 	return cr.opts
 }
 
+// GetHelper возвращает Helper
 func (cr *CRUD[E, ID]) GetHelper() *Helper[E, ID] {
 	return cr.helper
 }

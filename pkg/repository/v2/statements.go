@@ -2,6 +2,7 @@ package v2
 
 import (
 	"fmt"
+	"iter"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
@@ -9,7 +10,7 @@ import (
 )
 
 // Statement представляет собой строго типизированный инфраструктурный контейнер версии v2,
-// инкапсулирующий SQL-запрос и соответствующую функцию-трансформер (Mapper) рекордов СУБД в Entity.
+// инкапсулирующий SQL-запрос и соответствующую функцию-трансформер (Mapper) результата SQL запроса в Entity.
 type Statement[E domain.Entity[ID], ID comparable] struct {
 	SQL    string                  // Сырой текст SQL-инструкции или шаблона запроса
 	Mapper EntityMapperFunc[E, ID] // Функция-маппер для безопасного преобразования результата выполнения в доменную модель
@@ -102,10 +103,23 @@ func (s *Statements[E, ID]) WithStatement(name string, stmt *Statement[E, ID]) *
 	return s
 }
 
-func (s *Statements[E, ID]) Count() int {
+// Len возвращает кол-во стейтментов
+func (s *Statements[E, ID]) Len() int {
 	return len(s.statements)
 }
 
+// Iterate итератор для использования в for ... := range
+func (s *Statements[E, ID]) Iterate() iter.Seq2[string, *Statement[E, ID]] {
+	return func(yield func(string, *Statement[E, ID]) bool) {
+		for name, value := range s.statements {
+			if !yield(name, value) {
+				return
+			}
+		}
+	}
+}
+
+// IsStatementsEmpty утилитный метод, проверяет на nil и отсутствие стейтментов
 func IsStatementsEmpty[E domain.Entity[ID], ID comparable](stmts *Statements[E, ID]) bool {
 	return utils.IsNil(stmts) || len(stmts.statements) == 0
 }
