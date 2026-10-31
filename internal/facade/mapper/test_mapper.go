@@ -6,7 +6,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-func MapTestDtoToModel(testDTO *dto.TestDTO) *domain.Test {
+func MapTestDtoToModel(testDTO *dto.Test) *domain.Test {
 	if utils.IsNil(testDTO) {
 		return nil
 	}
@@ -23,12 +23,12 @@ func MapTestDtoToModel(testDTO *dto.TestDTO) *domain.Test {
 	return res
 }
 
-func MapTestModelToDto(model *domain.Test) *dto.TestDTO {
+func MapTestModelToDto(model *domain.Test) *dto.Test {
 	if utils.IsNil(model) {
 		return nil
 	}
 
-	res := &dto.TestDTO{}
+	res := &dto.Test{}
 	res.ID = model.ID
 	res.Code = model.Code
 	res.Name = model.Name
@@ -39,12 +39,12 @@ func MapTestModelToDto(model *domain.Test) *dto.TestDTO {
 	return res
 }
 
-func MapTestModelsToDtos(models []*domain.Test) []*dto.TestDTO {
+func MapTestModelsToDtos(models []*domain.Test) []*dto.Test {
 	if len(models) == 0 {
-		return make([]*dto.TestDTO, 0)
+		return make([]*dto.Test, 0)
 	}
 
-	res := make([]*dto.TestDTO, len(models))
+	res := make([]*dto.Test, len(models))
 
 	for i, model := range models {
 		res[i] = MapTestModelToDto(model)

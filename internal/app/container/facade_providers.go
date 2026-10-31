@@ -29,5 +29,5 @@ func (fc *FacadeContainer) providerTestFacade() (any, error) {
 		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
 	}
 
-	return facade.NewTestFacade(getUC, getByCodeUC, listUC, saveUC, deleteUC), nil
+	return facade.NewTest(getUC, getByCodeUC, listUC, saveUC, deleteUC), nil
 }

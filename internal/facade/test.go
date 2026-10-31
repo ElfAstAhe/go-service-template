@@ -10,16 +10,16 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
-type TestFacade interface {
-	Get(ctx context.Context, id string) (*dto.TestDTO, error)
-	GetByCode(ctx context.Context, code string) (*dto.TestDTO, error)
-	List(ctx context.Context, limit, offset int) ([]*dto.TestDTO, error)
-	Create(ctx context.Context, test *dto.TestDTO) (*dto.TestDTO, error)
-	Change(ctx context.Context, id string, test *dto.TestDTO) (*dto.TestDTO, error)
+type Test interface {
+	Get(ctx context.Context, id string) (*dto.Test, error)
+	GetByCode(ctx context.Context, code string) (*dto.Test, error)
+	List(ctx context.Context, limit, offset int) ([]*dto.Test, error)
+	Create(ctx context.Context, test *dto.Test) (*dto.Test, error)
+	Change(ctx context.Context, id string, test *dto.Test) (*dto.Test, error)
 	Delete(ctx context.Context, id string) error
 }
 
-type TestFacadeImpl struct {
+type TestImpl struct {
 	getUC       usecase.TestGetUseCase
 	getByCodeUC usecase.TestGetByCodeUseCase
 	listUC      usecase.TestListUseCase
@@ -27,16 +27,16 @@ type TestFacadeImpl struct {
 	deleteUC    usecase.TestDeleteUseCase
 }
 
-var _ TestFacade = (*TestFacadeImpl)(nil)
+var _ Test = (*TestImpl)(nil)
 
-func NewTestFacade(
+func NewTest(
 	getUC usecase.TestGetUseCase,
 	getByCodeUC usecase.TestGetByCodeUseCase,
 	listUC usecase.TestListUseCase,
 	saveUC usecase.TestSaveUseCase,
 	deleteUC usecase.TestDeleteUseCase,
-) *TestFacadeImpl {
-	return &TestFacadeImpl{
+) *TestImpl {
+	return &TestImpl{
 		getUC:       getUC,
 		getByCodeUC: getByCodeUC,
 		listUC:      listUC,
@@ -45,7 +45,7 @@ func NewTestFacade(
 	}
 }
 
-func (tf *TestFacadeImpl) Get(ctx context.Context, id string) (*dto.TestDTO, error) {
+func (tf *TestImpl) Get(ctx context.Context, id string) (*dto.Test, error) {
 	if strings.TrimSpace(id) == "" {
 		return nil, errs.NewInvalidArgumentError("id", "must not be empty")
 	}
@@ -58,7 +58,7 @@ func (tf *TestFacadeImpl) Get(ctx context.Context, id string) (*dto.TestDTO, err
 	return mapper.MapTestModelToDto(model), nil
 }
 
-func (tf *TestFacadeImpl) GetByCode(ctx context.Context, code string) (*dto.TestDTO, error) {
+func (tf *TestImpl) GetByCode(ctx context.Context, code string) (*dto.Test, error) {
 	if strings.TrimSpace(code) == "" {
 		return nil, errs.NewInvalidArgumentError("code", "must not be empty")
 	}
@@ -71,7 +71,7 @@ func (tf *TestFacadeImpl) GetByCode(ctx context.Context, code string) (*dto.Test
 	return mapper.MapTestModelToDto(model), nil
 }
 
-func (tf *TestFacadeImpl) List(ctx context.Context, limit, offset int) ([]*dto.TestDTO, error) {
+func (tf *TestImpl) List(ctx context.Context, limit, offset int) ([]*dto.Test, error) {
 	if err := tf.validateList(limit, offset); err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (tf *TestFacadeImpl) List(ctx context.Context, limit, offset int) ([]*dto.T
 	return mapper.MapTestModelsToDtos(models), nil
 }
 
-func (tf *TestFacadeImpl) validateList(limit, offset int) error {
+func (tf *TestImpl) validateList(limit, offset int) error {
 	if limit <= 0 {
 		return errs.NewInvalidArgumentError("limit", "must be greater than 0")
 	}
@@ -98,7 +98,7 @@ func (tf *TestFacadeImpl) validateList(limit, offset int) error {
 	return nil
 }
 
-func (tf *TestFacadeImpl) Create(ctx context.Context, test *dto.TestDTO) (*dto.TestDTO, error) {
+func (tf *TestImpl) Create(ctx context.Context, test *dto.Test) (*dto.Test, error) {
 	if test == nil {
 		return nil, errs.NewInvalidArgumentError("test", "must not be empty")
 	}
@@ -115,7 +115,7 @@ func (tf *TestFacadeImpl) Create(ctx context.Context, test *dto.TestDTO) (*dto.T
 	return mapper.MapTestModelToDto(model), nil
 }
 
-func (tf *TestFacadeImpl) Change(ctx context.Context, id string, test *dto.TestDTO) (*dto.TestDTO, error) {
+func (tf *TestImpl) Change(ctx context.Context, id string, test *dto.Test) (*dto.Test, error) {
 	if test == nil {
 		return nil, errs.NewInvalidArgumentError("test", "must not be empty")
 	}
@@ -131,7 +131,7 @@ func (tf *TestFacadeImpl) Change(ctx context.Context, id string, test *dto.TestD
 	return mapper.MapTestModelToDto(model), nil
 }
 
-func (tf *TestFacadeImpl) Delete(ctx context.Context, id string) error {
+func (tf *TestImpl) Delete(ctx context.Context, id string) error {
 	if strings.TrimSpace(id) == "" {
 		return errs.NewInvalidArgumentError("id", "must not be empty")
 	}

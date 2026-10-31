@@ -100,7 +100,7 @@ func TestTestSaveUseCase_CreateAndChange(t *testing.T) {
 			mUW := new(mocks2.MockUnitOfWork)
 			tt.prepareMocks(mRepo, mUW)
 
-			uc := NewTestSaveUseCase(mUW, mRepo)
+			uc := NewTestSave(mUW, mRepo)
 
 			// act
 			actual, err := uc.Save(ctx, tt.input)

@@ -32,7 +32,7 @@ func (cr *AppChiRouter) putAPITest(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Debugf("putAPITest start, requestID [%s] path param [%s]", middleware.GetReqID(r.Context()), id)
 	defer cr.log.Debugf("putAPITest finish, requestID [%s] path param [%s]", middleware.GetReqID(r.Context()), id)
 
-	var income = &dto.TestDTO{}
+	var income = &dto.Test{}
 	err := pkghttp.DecodeJSON(r, income)
 	if err != nil {
 		pkghttp.RenderError(rw, err, pkghttp.MapToHTTPStatus)

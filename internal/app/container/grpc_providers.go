@@ -36,7 +36,7 @@ func (gc *GRPCContainer) providerGRPCService() (any, error) {
 	if err != nil {
 		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve instance failed", err)
 	}
-	testFacadeInst, err := container.GetInstance[facade.TestFacade](InstanceTestFacade)
+	testFacadeInst, err := container.GetInstance[facade.Test](InstanceTestFacade)
 	if err != nil {
 		return nil, errs.NewContainerError(gc.GetName(), "provider: retrieve instance failed", err)
 	}

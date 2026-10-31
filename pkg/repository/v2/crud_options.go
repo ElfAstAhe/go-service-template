@@ -14,21 +14,22 @@ type CRUDOption[E domain.Entity[ID], ID comparable] func(*CRUDOptions[E, ID])
 
 // CRUDOptions инкапсулирует в себе полный набор инфраструктурных зависимостей, необходимых для рантайм-работы репозитория.
 type CRUDOptions[E domain.Entity[ID], ID comparable] struct {
-	Executor         db.Executor                         // Database executor
-	ErrorDecipher    db.ErrorDecipher                    // Database error decipher
-	Hooks            []Hook[E, ID]                       // Hooks
-	TableName        string                              // Table name info
-	EntityName       string                              // Entity name info
-	DriverName       string                              // database driver name (pgx, etc.)
-	driverStatements map[string]StatementsBuilder[E, ID] // statements builder by db driver name
+	Executor         db.Executor                             // Database executor
+	ErrorDecipher    db.ErrorDecipher                        // Database error decipher
+	Hooks            []Hook[E, ID]                           // Hooks
+	TableName        string                                  // Table name info
+	EntityName       string                                  // Entity name info
+	DriverName       string                                  // database driver name (pgx, etc.)
+	driverStatements map[string]StatementsBuilderFunc[E, ID] // statements builder by db driver name
 }
 
-type StatementsBuilder[E domain.Entity[ID], ID comparable] func() *Statements[E, ID]
+// StatementsBuilderFunc метод билдер Statements
+type StatementsBuilderFunc[E domain.Entity[ID], ID comparable] func() *Statements[E, ID]
 
 // NewCRUDOptions — фабричный конструктор для создания пустого объекта конфигурации CRUDOptions.
 func NewCRUDOptions[E domain.Entity[ID], ID comparable]() *CRUDOptions[E, ID] {
 	return &CRUDOptions[E, ID]{
-		driverStatements: make(map[string]StatementsBuilder[E, ID]),
+		driverStatements: make(map[string]StatementsBuilderFunc[E, ID]),
 	}
 }
 
@@ -103,10 +104,10 @@ func WithDriverName[E domain.Entity[ID], ID comparable](name string) CRUDOption[
 }
 
 // WithStatementsBuilder ленивая инициализация карты билдеров Statements
-func WithStatementsBuilder[E domain.Entity[ID], ID comparable](driverName string, builder StatementsBuilder[E, ID]) CRUDOption[E, ID] {
+func WithStatementsBuilder[E domain.Entity[ID], ID comparable](driverName string, builder StatementsBuilderFunc[E, ID]) CRUDOption[E, ID] {
 	return func(co *CRUDOptions[E, ID]) {
 		if utils.IsNil(co.driverStatements) {
-			co.driverStatements = make(map[string]StatementsBuilder[E, ID])
+			co.driverStatements = make(map[string]StatementsBuilderFunc[E, ID])
 		}
 		co.driverStatements[driverName] = builder
 	}

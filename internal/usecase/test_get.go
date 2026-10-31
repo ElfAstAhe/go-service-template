@@ -19,7 +19,7 @@ type TestGetInteractor struct {
 
 var _ TestGetUseCase = (*TestGetInteractor)(nil)
 
-func NewTestGetUseCase(repo domain.TestRepository) *TestGetInteractor {
+func NewTestGet(repo domain.TestRepository) *TestGetInteractor {
 	return &TestGetInteractor{
 		repo: repo,
 	}

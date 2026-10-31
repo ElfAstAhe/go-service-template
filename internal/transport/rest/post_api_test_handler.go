@@ -27,7 +27,7 @@ func (cr *AppChiRouter) postAPITest(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Debugf("postAPITest start, requestID [%s]", middleware.GetReqID(r.Context()))
 	defer cr.log.Debugf("postAPITest finish, requestID [%s]", middleware.GetReqID(r.Context()))
 
-	var income = &dto.TestDTO{}
+	var income = &dto.Test{}
 	err := pkghttp.DecodeJSON(r, income)
 	if err != nil {
 		pkghttp.RenderErrorDefault(rw, err)

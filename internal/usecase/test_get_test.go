@@ -51,7 +51,7 @@ func TestTestGetUseCase_Get(t *testing.T) {
 			// prepare
 			mRepo := new(dommocks.MockTestRepository)
 			tt.prepareMocks(mRepo)
-			uc := NewTestGetUseCase(mRepo)
+			uc := NewTestGet(mRepo)
 
 			// act
 			actual, err := uc.Get(ctx, tt.input)

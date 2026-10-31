@@ -14,14 +14,14 @@ import (
 
 type ExampleGRPCService struct {
 	pb.UnimplementedExampleServiceServer
-	testFacade facade.TestFacade
+	testFacade facade.Test
 	log        logger.Logger
 	config     *conf.GRPCConfig
 }
 
 var _ pb.ExampleServiceServer = (*ExampleGRPCService)(nil)
 
-func NewExampleGRPCService(config *conf.GRPCConfig, testFacade facade.TestFacade, logger logger.Logger) *ExampleGRPCService {
+func NewExampleGRPCService(config *conf.GRPCConfig, testFacade facade.Test, logger logger.Logger) *ExampleGRPCService {
 	return &ExampleGRPCService{
 		testFacade: testFacade,
 		log:        logger.GetLogger("example gRPC service"),
@@ -64,7 +64,7 @@ func (es *ExampleGRPCService) List(ctx context.Context, req *pb.ExampleServiceLi
 
 func (es *ExampleGRPCService) Save(ctx context.Context, req *pb.ExampleServiceSaveRequest) (*pb.ExampleServiceInstanceResponse, error) {
 	income := MapTestGRPCToDto(req.GetInstance())
-	var dtoRes *dto.TestDTO
+	var dtoRes *dto.Test
 	var err error
 	if income.ID == "" {
 		dtoRes, err = es.testFacade.Create(ctx, income)

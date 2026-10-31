@@ -6,12 +6,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func MapTestGRPCToDto(src *grpcdto.Test) *dto.TestDTO {
+func MapTestGRPCToDto(src *grpcdto.Test) *dto.Test {
 	if src == nil {
 		return nil
 	}
 
-	res := &dto.TestDTO{
+	res := &dto.Test{
 		ID:           src.GetId(),
 		Code:         src.GetCode(),
 		Name:         src.GetName(),
@@ -23,7 +23,7 @@ func MapTestGRPCToDto(src *grpcdto.Test) *dto.TestDTO {
 	return res
 }
 
-func MapTestDtoToGRPC(src *dto.TestDTO) *grpcdto.Test {
+func MapTestDtoToGRPC(src *dto.Test) *grpcdto.Test {
 	if src == nil {
 		return nil
 	}
@@ -40,7 +40,7 @@ func MapTestDtoToGRPC(src *dto.TestDTO) *grpcdto.Test {
 	return res
 }
 
-func MapTestDtosToGRPCs(src []*dto.TestDTO) []*grpcdto.Test {
+func MapTestDtosToGRPCs(src []*dto.Test) []*grpcdto.Test {
 	res := make([]*grpcdto.Test, len(src))
 	if len(src) == 0 {
 		return res

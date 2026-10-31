@@ -25,7 +25,7 @@ type AppChiRouter struct {
 	health          *health.Health
 	healthz         pkghttp.HealthzFunc
 	readyz          pkghttp.ReadyzFunc
-	testFacade      facade.TestFacade
+	testFacade      facade.Test
 }
 
 var _ pkghttp.Router = (*AppChiRouter)(nil)
@@ -37,7 +37,7 @@ func NewAppChiRouter(
 	health *health.Health,
 	healthz pkghttp.HealthzFunc,
 	readyz pkghttp.ReadyzFunc,
-	testFacade facade.TestFacade,
+	testFacade facade.Test,
 ) *AppChiRouter {
 	res := &AppChiRouter{
 		router:          chi.NewRouter(),

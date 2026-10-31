@@ -19,7 +19,7 @@ type TestGetByCodeInteractor struct {
 
 var _ TestGetByCodeUseCase = (*TestGetByCodeInteractor)(nil)
 
-func NewTestGetByCodeUseCase(repo domain.TestRepository) *TestGetByCodeInteractor {
+func NewTestGetByCode(repo domain.TestRepository) *TestGetByCodeInteractor {
 	return &TestGetByCodeInteractor{repo: repo}
 }
 
