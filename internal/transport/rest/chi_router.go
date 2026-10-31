@@ -26,6 +26,7 @@ type AppChiRouter struct {
 	healthz         pkghttp.HealthzFunc
 	readyz          pkghttp.ReadyzFunc
 	testFacade      facade.Test
+	test2Facade     facade.Test2
 }
 
 var _ pkghttp.Router = (*AppChiRouter)(nil)
@@ -38,6 +39,7 @@ func NewAppChiRouter(
 	healthz pkghttp.HealthzFunc,
 	readyz pkghttp.ReadyzFunc,
 	testFacade facade.Test,
+	test2Facade facade.Test2,
 ) *AppChiRouter {
 	res := &AppChiRouter{
 		router:          chi.NewRouter(),
@@ -48,6 +50,7 @@ func NewAppChiRouter(
 		healthz:         healthz,
 		readyz:          readyz,
 		testFacade:      testFacade,
+		test2Facade:     test2Facade,
 	}
 
 	// setup middleware
@@ -113,6 +116,7 @@ func (cr *AppChiRouter) setupRoutes() {
 
 	// api
 	cr.router.Route("/api", func(r chi.Router) {
+		// test
 		r.Route("/test", func(r chi.Router) {
 			r.Get("/{id}", cr.getAPITest)
 			r.Get("/search", cr.getAPITestSearch)
@@ -120,6 +124,15 @@ func (cr *AppChiRouter) setupRoutes() {
 			r.Post("/", cr.postAPITest)
 			r.Put("/{id}", cr.putAPITest)
 			r.Delete("/{id}", cr.deleteAPITest)
+		})
+		// test2
+		r.Route("/test2", func(r chi.Router) {
+			r.Get("/{id}", cr.getAPITest2)
+			r.Get("/search", cr.getAPITest2Search)
+			r.Get("/", cr.getAPITest2List)
+			r.Post("/", cr.postAPITest2)
+			r.Put("/{id}", cr.putAPITest2)
+			r.Delete("/{id}", cr.deleteAPITest2)
 		})
 	})
 }

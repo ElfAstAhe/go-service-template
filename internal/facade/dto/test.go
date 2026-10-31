@@ -4,7 +4,8 @@ import (
 	"time"
 )
 
-// Test представляет Test model
+// Test представляет domain.Test model
+// @Description Test DTO
 type Test struct {
 	ID           string    `json:"id,omitempty"`
 	Code         string    `json:"code,omitempty"`

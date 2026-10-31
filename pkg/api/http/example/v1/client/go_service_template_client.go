@@ -6,6 +6,7 @@ import (
 	"maps"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/api/http/example/v1/client/test"
+	"github.com/ElfAstAhe/go-service-template/pkg/api/http/example/v1/client/test2"
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -55,6 +56,7 @@ func New(transport runtime.ContextualTransport, formats strfmt.Registry) *GoServ
 	cli := new(GoServiceTemplate)
 	cli.Transport = transport
 	cli.Test = test.New(transport, formats)
+	cli.Test2 = test2.New(transport, formats)
 
 	return cli
 }
@@ -116,6 +118,8 @@ func (cfg *TransportConfig) WithConsumers(consumers map[string]runtime.Consumer)
 type GoServiceTemplate struct {
 	Test test.ClientService
 
+	Test2 test2.ClientService
+
 	Transport runtime.ContextualTransport
 }
 
@@ -123,4 +127,5 @@ type GoServiceTemplate struct {
 func (c *GoServiceTemplate) SetTransport(transport runtime.ContextualTransport) {
 	c.Transport = transport
 	c.Test.SetTransport(transport)
+	c.Test2.SetTransport(transport)
 }

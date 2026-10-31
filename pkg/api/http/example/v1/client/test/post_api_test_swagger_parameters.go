@@ -66,7 +66,7 @@ type PostAPITestParams struct {
 	// Input.
 	//
 	// Тестовые данные
-	Input *models.TestDTO
+	Input *models.Test
 
 	HTTPClient *http.Client
 
@@ -126,13 +126,13 @@ func (o *PostAPITestParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithInput adds the input to the post API test params.
-func (o *PostAPITestParams) WithInput(input *models.TestDTO) *PostAPITestParams {
+func (o *PostAPITestParams) WithInput(input *models.Test) *PostAPITestParams {
 	o.SetInput(input)
 	return o
 }
 
 // SetInput adds the input to the post API test params.
-func (o *PostAPITestParams) SetInput(input *models.TestDTO) {
+func (o *PostAPITestParams) SetInput(input *models.Test) {
 	o.Input = input
 }
 

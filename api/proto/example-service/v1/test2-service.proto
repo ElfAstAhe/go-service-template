@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package example.service;
+
+option go_package = "go-service-template/grpc/example";
+
+import "google/protobuf/empty.proto";
+import "example-service/v1/messages.proto";
+
+service Test2Service {
+  // find
+  rpc Find (Test2ServiceFindRequest) returns (Test2ServiceInstanceResponse);
+  // find by code
+  rpc FindByCode(Test2ServiceFindByCodeRequest) returns (Test2ServiceInstanceResponse);
+  // list paging
+  rpc List (Test2ServiceListRequest) returns (Test2ServiceInstancesResponse);
+  // save
+  rpc Save (Test2ServiceSaveRequest) returns (Test2ServiceInstanceResponse);
+  // delete
+  rpc Delete (Test2ServiceDeleteRequest) returns (google.protobuf.Empty);
+}
+
+message Test2ServiceFindRequest {
+  string id = 1;
+}
+
+message Test2ServiceFindByCodeRequest {
+  string code = 1;
+}
+
+message Test2ServiceSaveRequest {
+  Test2 instance = 2;
+}
+
+message Test2ServiceDeleteRequest {
+  string id = 1;
+}
+
+message Test2ServiceInstanceResponse {
+  Test2 instance = 1;
+}
+
+message Test2ServiceListRequest {
+  uint32 offset = 1;
+  uint32 limit = 2;
+}
+
+message Test2ServiceInstancesResponse {
+  uint32 offset = 1;
+  uint32 limit = 2;
+  repeated Test2 data = 3;
+}

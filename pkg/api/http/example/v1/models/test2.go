@@ -9,13 +9,16 @@ import (
 	"github.com/go-openapi/swag/jsonutils"
 )
 
-// TestDTO test d t o
+// Test2 Test2 DTO
 //
-// swagger:model TestDTO
-type TestDTO struct {
+// swagger:model Test2
+type Test2 struct {
 
 	// code
 	Code string `json:"code,omitempty"`
+
+	// created at
+	CreatedAt string `json:"created_at,omitempty"`
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -23,28 +26,25 @@ type TestDTO struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// modified at
+	ModifiedAt string `json:"modified_at,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
-
-	// registered at
-	RegisteredAt string `json:"registered_at,omitempty"`
-
-	// updated at
-	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
-// Validate validates this test d t o
-func (m *TestDTO) Validate(_ strfmt.Registry) error {
+// Validate validates this test2
+func (m *Test2) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this test d t o based on context it is used
-func (m *TestDTO) ContextValidate(_ context.Context, _ strfmt.Registry) error {
+// ContextValidate validates this test2 based on context it is used
+func (m *Test2) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *TestDTO) MarshalBinary() ([]byte, error) {
+func (m *Test2) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -52,8 +52,8 @@ func (m *TestDTO) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *TestDTO) UnmarshalBinary(b []byte) error {
-	var res TestDTO
+func (m *Test2) UnmarshalBinary(b []byte) error {
+	var res Test2
 	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}

@@ -73,7 +73,7 @@ type PutAPITestIDParams struct {
 	// Input.
 	//
 	// Тестовые данные
-	Input *models.TestDTO
+	Input *models.Test
 
 	HTTPClient *http.Client
 
@@ -144,13 +144,13 @@ func (o *PutAPITestIDParams) SetID(id string) {
 }
 
 // WithInput adds the input to the put API test ID params.
-func (o *PutAPITestIDParams) WithInput(input *models.TestDTO) *PutAPITestIDParams {
+func (o *PutAPITestIDParams) WithInput(input *models.Test) *PutAPITestIDParams {
 	o.SetInput(input)
 	return o
 }
 
 // SetInput adds the input to the put API test ID params.
-func (o *PutAPITestIDParams) SetInput(input *models.TestDTO) {
+func (o *PutAPITestIDParams) SetInput(input *models.Test) {
 	o.Input = input
 }
 

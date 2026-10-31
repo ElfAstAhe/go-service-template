@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"github.com/ElfAstAhe/go-service-template/internal/facade/dto"
-	grpcdto "github.com/ElfAstAhe/go-service-template/pkg/api/grpc/example/v1"
+	grpcdto "github.com/ElfAstAhe/go-service-template/pkg/api/grpc/example/v1/example-service/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

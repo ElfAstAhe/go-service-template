@@ -31,3 +31,28 @@ func (fc *FacadeContainer) providerTestFacade() (any, error) {
 
 	return facade.NewTest(getUC, getByCodeUC, listUC, saveUC, deleteUC), nil
 }
+
+func (fc *FacadeContainer) providerTest2Facade() (any, error) {
+	getUC, err := container.GetInstance[usecase.Test2GetUseCase](InstanceTest2GetUC)
+	if err != nil {
+		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
+	}
+	getByCodeUC, err := container.GetInstance[usecase.Test2GetByCodeUseCase](InstanceTest2GetByCodeUC)
+	if err != nil {
+		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
+	}
+	listUC, err := container.GetInstance[usecase.Test2ListUseCase](InstanceTest2ListUC)
+	if err != nil {
+		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
+	}
+	saveUC, err := container.GetInstance[usecase.Test2SaveUseCase](InstanceTest2SaveUC)
+	if err != nil {
+		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
+	}
+	deleteUC, err := container.GetInstance[usecase.Test2DeleteUseCase](InstanceTest2DeleteUC)
+	if err != nil {
+		return nil, errs.NewContainerError(fc.GetName(), "provider: retrieve instance failed", err)
+	}
+
+	return facade.NewTest2(getUC, getByCodeUC, listUC, saveUC, deleteUC), nil
+}

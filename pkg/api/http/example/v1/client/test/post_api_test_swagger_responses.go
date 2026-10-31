@@ -59,7 +59,7 @@ func NewPostAPITestCreated() *PostAPITestCreated {
 //
 // Created
 type PostAPITestCreated struct {
-	Payload *models.TestDTO
+	Payload *models.Test
 }
 
 // IsSuccess returns true when this post Api test created response has a 2xx status code
@@ -102,13 +102,13 @@ func (o *PostAPITestCreated) String() string {
 	return fmt.Sprintf("[POST /api/test][%d] postApiTestCreated %s", 201, payload)
 }
 
-func (o *PostAPITestCreated) GetPayload() *models.TestDTO {
+func (o *PostAPITestCreated) GetPayload() *models.Test {
 	return o.Payload
 }
 
 func (o *PostAPITestCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.TestDTO)
+	o.Payload = new(models.Test)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

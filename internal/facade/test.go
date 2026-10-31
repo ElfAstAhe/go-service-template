@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/internal/facade/mapper"
 	"github.com/ElfAstAhe/go-service-template/internal/usecase"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 type Test interface {
@@ -99,7 +100,7 @@ func (tf *TestImpl) validateList(limit, offset int) error {
 }
 
 func (tf *TestImpl) Create(ctx context.Context, test *dto.Test) (*dto.Test, error) {
-	if test == nil {
+	if utils.IsNil(test) {
 		return nil, errs.NewInvalidArgumentError("test", "must not be empty")
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
-type Test2GetByCode interface {
+type Test2GetByCodeUseCase interface {
 	Get(context.Context, string) (*domain.Test2, error)
 }
 
@@ -17,7 +17,7 @@ type Test2GetByCodeInteractor struct {
 	repo domain.Test2Repository
 }
 
-var _ Test2GetByCode = (*Test2GetByCodeInteractor)(nil)
+var _ Test2GetByCodeUseCase = (*Test2GetByCodeInteractor)(nil)
 
 func NewTest2GetByCode(repo domain.Test2Repository) *Test2GetByCodeInteractor {
 	return &Test2GetByCodeInteractor{

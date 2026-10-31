@@ -1,4 +1,5 @@
 # Переменные для сборки
+PROTO_ROOT=api/proto
 PROTO_PATH=api/proto/example-service/v1
 PROTO_OUT=pkg/api/grpc/example/v1
 OPEN_API_OUT=pkg/api/http/example/v1
@@ -20,7 +21,8 @@ help:
 # Генерация gRPC кода
 gen-proto: ## Сгенерировать gRPC код (Go & gRPC) из Protobuf файлов
 	mkdir -p $(PROTO_OUT)
-	protoc --proto_path=$(PROTO_PATH) \
+	protoc \
+		-I $(PROTO_ROOT) \
 		--go_out=$(PROTO_OUT) --go_opt=paths=source_relative \
 		--go-grpc_out=$(PROTO_OUT) --go-grpc_opt=paths=source_relative \
 		--go_opt=default_api_level=API_OPAQUE \

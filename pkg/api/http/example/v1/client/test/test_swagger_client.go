@@ -68,6 +68,18 @@ type ClientService interface {
 	// GetAPITestContext получить.
 	GetAPITestContext(ctx context.Context, params *GetAPITestParams, opts ...ClientOption) (*GetAPITestOK, error)
 
+	// GetAPITest2 получить.
+	GetAPITest2(params *GetAPITest2Params, opts ...ClientOption) (*GetAPITest2OK, error)
+
+	// GetAPITest2Context получить.
+	GetAPITest2Context(ctx context.Context, params *GetAPITest2Params, opts ...ClientOption) (*GetAPITest2OK, error)
+
+	// GetAPITest2Search получить.
+	GetAPITest2Search(params *GetAPITest2SearchParams, opts ...ClientOption) (*GetAPITest2SearchOK, error)
+
+	// GetAPITest2SearchContext получить.
+	GetAPITest2SearchContext(ctx context.Context, params *GetAPITest2SearchParams, opts ...ClientOption) (*GetAPITest2SearchOK, error)
+
 	// GetAPITestID получить.
 	GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error)
 
@@ -85,6 +97,12 @@ type ClientService interface {
 
 	// PostAPITestContext создание новых тестовых данных.
 	PostAPITestContext(ctx context.Context, params *PostAPITestParams, opts ...ClientOption) (*PostAPITestCreated, error)
+
+	// PutAPITest2ID изменение тестовых данных.
+	PutAPITest2ID(params *PutAPITest2IDParams, opts ...ClientOption) (*PutAPITest2IDOK, error)
+
+	// PutAPITest2IDContext изменение тестовых данных.
+	PutAPITest2IDContext(ctx context.Context, params *PutAPITest2IDParams, opts ...ClientOption) (*PutAPITest2IDOK, error)
 
 	// PutAPITestID изменение тестовых данных.
 	PutAPITestID(params *PutAPITestIDParams, opts ...ClientOption) (*PutAPITestIDOK, error)
@@ -227,9 +245,141 @@ func (a *Client) GetAPITestContext(ctx context.Context, params *GetAPITestParams
 	panic(msg)
 }
 
-// GetAPITestID получитьs.
+// GetAPITest2 получитьs.
+//
+// Получить список данных 2.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPITest2Context] instead.
+func (a *Client) GetAPITest2(params *GetAPITest2Params, opts ...ClientOption) (*GetAPITest2OK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPITest2Context(ctx, params, opts...)
+}
+
+// GetAPITest2Context получитьs.
+//
+// Получить список данных 2.
+//
+// Do not use the deprecated [GetAPITest2Params.Context] with this method: it would be ignored.
+func (a *Client) GetAPITest2Context(ctx context.Context, params *GetAPITest2Params, opts ...ClientOption) (*GetAPITest2OK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPITest2Params()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPITest2",
+		Method:             "GET",
+		PathPattern:        "/api/test2",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPITest2Reader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPITest2OK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPITest2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPITest2Search получитьs.
 //
 // Удаляет запись по её ID (Soft Delete).
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPITest2SearchContext] instead.
+func (a *Client) GetAPITest2Search(params *GetAPITest2SearchParams, opts ...ClientOption) (*GetAPITest2SearchOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPITest2SearchContext(ctx, params, opts...)
+}
+
+// GetAPITest2SearchContext получитьs.
+//
+// Удаляет запись по её ID (Soft Delete).
+//
+// Do not use the deprecated [GetAPITest2SearchParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPITest2SearchContext(ctx context.Context, params *GetAPITest2SearchParams, opts ...ClientOption) (*GetAPITest2SearchOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPITest2SearchParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPITest2Search",
+		Method:             "GET",
+		PathPattern:        "/api/test2/search",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPITest2SearchReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPITest2SearchOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPITest2Search: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPITestID получитьs.
+//
+// Получает запись по её ID.
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -248,7 +398,7 @@ func (a *Client) GetAPITestID(params *GetAPITestIDParams, opts ...ClientOption) 
 
 // GetAPITestIDContext получитьs.
 //
-// Удаляет запись по её ID (Soft Delete).
+// Получает запись по её ID.
 //
 // Do not use the deprecated [GetAPITestIDParams.Context] with this method: it would be ignored.
 func (a *Client) GetAPITestIDContext(ctx context.Context, params *GetAPITestIDParams, opts ...ClientOption) (*GetAPITestIDOK, error) {
@@ -422,6 +572,72 @@ func (a *Client) PostAPITestContext(ctx context.Context, params *PostAPITestPara
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for PostAPITest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PutAPITest2ID изменениеs тестовых данных.
+//
+// Изменяет тестовые данные.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAPITest2IDContext] instead.
+func (a *Client) PutAPITest2ID(params *PutAPITest2IDParams, opts ...ClientOption) (*PutAPITest2IDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAPITest2IDContext(ctx, params, opts...)
+}
+
+// PutAPITest2IDContext изменениеs тестовых данных.
+//
+// Изменяет тестовые данные.
+//
+// Do not use the deprecated [PutAPITest2IDParams.Context] with this method: it would be ignored.
+func (a *Client) PutAPITest2IDContext(ctx context.Context, params *PutAPITest2IDParams, opts ...ClientOption) (*PutAPITest2IDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutAPITest2IDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "PutAPITest2ID",
+		Method:             "PUT",
+		PathPattern:        "/api/test2/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutAPITest2IDReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutAPITest2IDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PutAPITest2ID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

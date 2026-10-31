@@ -3,15 +3,15 @@ package rest
 import (
 	"net/http"
 
+	pkgtr "github.com/ElfAstAhe/go-service-template/pkg/transport"
 	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
-	_ "github.com/ElfAstAhe/go-service-template/internal/facade/dto"
 	_ "github.com/ElfAstAhe/go-service-template/internal/transport"
 )
 
-// deleteAPITest godoc
+// deleteAPITest обработчик пути DELETE /api/test/{id}
+//
 // @Summary      Удаление тестовых данных
 // @Description  Удаляет запись по её ID
 // @Tags         test
@@ -23,8 +23,8 @@ import (
 func (cr *AppChiRouter) deleteAPITest(rw http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	cr.log.Debugf("deleteAPITest start, requestID [%s] path param [%s]", middleware.GetReqID(r.Context()), id)
-	defer cr.log.Debugf("deleteAPITest finish, requestID [%s] path param [%s]", middleware.GetReqID(r.Context()), id)
+	cr.log.Debugf("deleteAPITest start, requestID [%s] path param [%s]", pkgtr.RequestID(r.Context()), id)
+	defer cr.log.Debugf("deleteAPITest finish, requestID [%s] path param [%s]", pkgtr.RequestID(r.Context()), id)
 
 	err := cr.testFacade.Delete(r.Context(), id)
 	if err != nil {
