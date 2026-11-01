@@ -23,10 +23,10 @@ type AppChiRouter struct {
 	config          *conf.HTTPConfig
 	telemetryConfig *conf.TelemetryConfig
 	health          *health.Health
-	healthz         pkghttp.HealthzFunc
+	livez           pkghttp.LivezFunc
 	readyz          pkghttp.ReadyzFunc
 	testFacade      facade.Test
-	test2Facade     facade.Test2
+	test2Facade     facade.Test2Facade
 }
 
 var _ pkghttp.Router = (*AppChiRouter)(nil)
@@ -36,10 +36,10 @@ func NewAppChiRouter(
 	telemetryConfig *conf.TelemetryConfig,
 	logger logger.Logger,
 	health *health.Health,
-	healthz pkghttp.HealthzFunc,
+	livez pkghttp.LivezFunc,
 	readyz pkghttp.ReadyzFunc,
 	testFacade facade.Test,
-	test2Facade facade.Test2,
+	test2Facade facade.Test2Facade,
 ) *AppChiRouter {
 	res := &AppChiRouter{
 		router:          chi.NewRouter(),
@@ -47,7 +47,7 @@ func NewAppChiRouter(
 		config:          config,
 		telemetryConfig: telemetryConfig,
 		health:          health,
-		healthz:         healthz,
+		livez:           livez,
 		readyz:          readyz,
 		testFacade:      testFacade,
 		test2Facade:     test2Facade,
@@ -109,8 +109,8 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 }
 
 func (cr *AppChiRouter) setupRoutes() {
-	// health check
-	cr.router.Get("/healthz", cr.getHealthz)
+	// liveness check
+	cr.router.Get("/livez", cr.getLivez)
 	// readiness check
 	cr.router.Get("/readyz", cr.getReadyz)
 

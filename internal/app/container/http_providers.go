@@ -31,11 +31,11 @@ func (hc *HTTPContainer) providerChiRouter() (any, error) {
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	test2FacadeInst, err := container.GetInstance[facade.Test2](InstanceTest2Facade)
+	test2FacadeInst, err := container.GetInstance[facade.Test2Facade](InstanceTest2Facade)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	healthInst, err := container.GetInstance[*health.Health](InstanceHealthStatus)
+	healthInst, err := container.GetInstance[*health.Health](InstanceHealthMonitoring)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}

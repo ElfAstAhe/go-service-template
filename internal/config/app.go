@@ -9,6 +9,7 @@ import (
 // AppConfig — конфигурация приложения/сервиса
 type AppConfig struct {
 	*config.AppConfig `mapstructure:",squash"`
+	NodeName          string `mapstructure:"node_name"`
 }
 
 func NewAppConfig(
@@ -16,9 +17,11 @@ func NewAppConfig(
 	initTimeout time.Duration,
 	stopTimeout time.Duration,
 	closeTimeout time.Duration,
+	nodeName string,
 ) *AppConfig {
 	return &AppConfig{
 		AppConfig: config.NewAppConfig(env, initTimeout, stopTimeout, closeTimeout),
+		NodeName:  nodeName,
 	}
 }
 
@@ -28,5 +31,6 @@ func NewDefaultAppConfig() *AppConfig {
 		config.DefaultAppInitTimeout,
 		config.DefaultAppStopTimeout,
 		config.DefaultAppCloseTimeout,
+		defaultNodeName,
 	)
 }

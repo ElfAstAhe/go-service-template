@@ -10,6 +10,10 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 )
 
+const (
+	InstanceHealthMonitoring string = "health-monitoring"
+)
+
 type InfraContainer struct {
 	*container.BaseLazyContainer
 }
@@ -32,7 +36,9 @@ func NewInfraContainer(
 
 //goland:noinspection GoUnusedParameter
 func (ic *InfraContainer) Init(ctx context.Context) error {
-	err := errors.Join()
+	err := errors.Join(
+		ic.RegisterProvider(InstanceHealthMonitoring, ic.providerHealthMonitoring),
+	)
 	if err != nil {
 		return errs.NewContainerError(ic.GetName(), "container init: register providers failed", err)
 	}

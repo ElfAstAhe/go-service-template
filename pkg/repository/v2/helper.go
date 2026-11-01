@@ -155,6 +155,9 @@ func (h *Helper[E, ID]) List(ctx context.Context, stmtName string, params ...any
 func (h *Helper[E, ID]) Create(ctx context.Context, stmtName string, entity E, params ...any) (E, error) {
 	var ent = entity
 	var err error
+	if err = entity.BeforeCreate(); err != nil {
+		return h.GetNilInstance(), errs.NewDalError("Helper[T, ID].Create", "entity before create failed", err)
+	}
 	if !utils.IsNil(h.hooks.BeforeCreate) {
 		if ent, err = h.hooks.BeforeCreate(ctx, entity, params...); err != nil {
 			return h.GetNilInstance(), errs.NewDalError("Helper[T, ID].Create", "before create hook failed", err)
@@ -190,6 +193,9 @@ func (h *Helper[E, ID]) Create(ctx context.Context, stmtName string, entity E, p
 func (h *Helper[E, ID]) Change(ctx context.Context, stmtName string, entity E, params ...any) (E, error) {
 	var ent = entity
 	var err error
+	if err = entity.BeforeChange(); err != nil {
+		return h.GetNilInstance(), errs.NewDalError("Helper[T, ID].Change", "entity before change failed", err)
+	}
 	if !utils.IsNil(h.hooks.BeforeChange) {
 		if ent, err = h.hooks.BeforeChange(ctx, entity, params...); err != nil {
 			return h.GetNilInstance(), errs.NewDalError("Helper[E, ID].Change", "before change hook failed", err)

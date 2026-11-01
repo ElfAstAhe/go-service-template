@@ -14,14 +14,14 @@ import (
 
 type Test2GRPCService struct {
 	pb.UnimplementedTest2ServiceServer
-	facade facade.Test2
+	facade facade.Test2Facade
 	log    logger.Logger
 	config *conf.GRPCConfig
 }
 
 var _ pb.Test2ServiceServer = (*Test2GRPCService)(nil)
 
-func NewTest2GRPCService(config *conf.GRPCConfig, test2Facade facade.Test2, logger logger.Logger) *Test2GRPCService {
+func NewTest2GRPCService(config *conf.GRPCConfig, test2Facade facade.Test2Facade, logger logger.Logger) *Test2GRPCService {
 	return &Test2GRPCService{
 		facade: test2Facade,
 		log:    logger.GetLogger("example gRPC service"),
