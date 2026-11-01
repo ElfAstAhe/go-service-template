@@ -26,6 +26,7 @@ type Helper[E domain.Entity[ID], ID comparable] struct {
 	entityName  string             // Наименование entity
 }
 
+// NewHelper фабричный метод создания экземпляра Helper
 func NewHelper[E domain.Entity[ID], ID comparable](
 	executor db.Executor,
 	errDecipher db.ErrorDecipher,

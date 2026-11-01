@@ -57,6 +57,7 @@ func (co *CRUDOptions[E, ID]) Validate() error {
 	return nil
 }
 
+// GetStatements возвращает реестр стейтментов в разрезе драйвера БД
 func (co *CRUDOptions[E, ID]) GetStatements(driverName string) (*Statements[E, ID], error) {
 	builder, ok := co.driverStatements[driverName]
 	if !ok {

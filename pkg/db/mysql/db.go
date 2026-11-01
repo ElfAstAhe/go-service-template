@@ -1,3 +1,4 @@
 package mysql
 
-const DriverName = "mysql"
+// DriverName default наименование драйвера БД MS SQL
+const DriverName string = "mysql"
