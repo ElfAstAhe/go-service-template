@@ -13,10 +13,10 @@ func TestNewCRUDOptions(t *testing.T) {
 	assert.NotNil(t, opts)
 	assert.Nil(t, opts.Executor)
 	assert.Nil(t, opts.ErrorDecipher)
-	assert.Nil(t, opts.Statements)
 	assert.Empty(t, opts.Hooks)
 	assert.Empty(t, opts.TableName)
 	assert.Empty(t, opts.EntityName)
+	assert.Empty(t, opts.DriverName)
 }
 
 func TestCRUDOptions_FluentAPI(t *testing.T) {
@@ -24,7 +24,6 @@ func TestCRUDOptions_FluentAPI(t *testing.T) {
 	mockExec := mocks.NewMockExecutor(t)
 	mockDecipher := mocks.NewMockErrorDecipher(t)
 
-	dummyStmt := &Statement[*dummyModel, string]{}
 	var dummyHook Hook[*dummyModel, string]
 
 	opts := NewCRUDOptions[*dummyModel, string]()
@@ -42,26 +41,25 @@ func TestCRUDOptions_FluentAPI(t *testing.T) {
 
 	WithHooks[*dummyModel, string](dummyHook)(opts)
 	assert.Len(t, opts.Hooks, 1)
-
-	// Проверяем ленивую инициализацию реестра внутри WithStatement
-	assert.Nil(t, opts.Statements)
-	WithStatement[*dummyModel, string]("FindByID", dummyStmt)(opts)
-	assert.NotNil(t, opts.Statements)
 }
 
 func TestCRUDOptions_Validate(t *testing.T) {
 	mockExec := mocks.NewMockExecutor(t)
 	mockDecipher := mocks.NewMockErrorDecipher(t)
-	validStatements := NewStatements[*dummyModel, string]()
-	validStatements.Add("test sql", nil)
 
 	t.Run("success path", func(t *testing.T) {
-		opts := &CRUDOptions[*dummyModel, string]{
-			Executor:      mockExec,
-			ErrorDecipher: mockDecipher,
-			Statements:    validStatements,
-			TableName:     "products",
-			EntityName:    "Product",
+		optList := []CRUDOption[*dummyModel, string]{
+			WithExecutor[*dummyModel, string](mockExec),
+			WithErrorDecipher[*dummyModel, string](mockDecipher),
+			WithEntityInfo[*dummyModel, string]("users", "User"),
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]()
+			}),
+		}
+		opts := NewCRUDOptions[*dummyModel, string]()
+		for _, opt := range optList {
+			opt(opts)
 		}
 
 		err := opts.Validate()
@@ -69,12 +67,17 @@ func TestCRUDOptions_Validate(t *testing.T) {
 	})
 
 	t.Run("missing executor", func(t *testing.T) {
-		opts := &CRUDOptions[*dummyModel, string]{
-			Executor:      nil,
-			ErrorDecipher: mockDecipher,
-			Statements:    validStatements,
-			TableName:     "products",
-			EntityName:    "Product",
+		optList := []CRUDOption[*dummyModel, string]{
+			WithErrorDecipher[*dummyModel, string](mockDecipher),
+			WithEntityInfo[*dummyModel, string]("users", "User"),
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]()
+			}),
+		}
+		opts := NewCRUDOptions[*dummyModel, string]()
+		for _, opt := range optList {
+			opt(opts)
 		}
 
 		err := opts.Validate()
@@ -83,12 +86,17 @@ func TestCRUDOptions_Validate(t *testing.T) {
 	})
 
 	t.Run("missing error decipher", func(t *testing.T) {
-		opts := &CRUDOptions[*dummyModel, string]{
-			Executor:      mockExec,
-			ErrorDecipher: nil,
-			Statements:    validStatements,
-			TableName:     "products",
-			EntityName:    "Product",
+		optList := []CRUDOption[*dummyModel, string]{
+			WithExecutor[*dummyModel, string](mockExec),
+			WithEntityInfo[*dummyModel, string]("users", "User"),
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]()
+			}),
+		}
+		opts := NewCRUDOptions[*dummyModel, string]()
+		for _, opt := range optList {
+			opt(opts)
 		}
 
 		err := opts.Validate()
@@ -97,12 +105,18 @@ func TestCRUDOptions_Validate(t *testing.T) {
 	})
 
 	t.Run("empty table name", func(t *testing.T) {
-		opts := &CRUDOptions[*dummyModel, string]{
-			Executor:      mockExec,
-			ErrorDecipher: mockDecipher,
-			Statements:    validStatements,
-			TableName:     "   ", // Проверка strings.TrimSpace
-			EntityName:    "Product",
+		optList := []CRUDOption[*dummyModel, string]{
+			WithExecutor[*dummyModel, string](mockExec),
+			WithErrorDecipher[*dummyModel, string](mockDecipher),
+			WithEntityInfo[*dummyModel, string]("   ", "User"),
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]()
+			}),
+		}
+		opts := NewCRUDOptions[*dummyModel, string]()
+		for _, opt := range optList {
+			opt(opts)
 		}
 
 		err := opts.Validate()
@@ -111,16 +125,39 @@ func TestCRUDOptions_Validate(t *testing.T) {
 	})
 
 	t.Run("empty entity name", func(t *testing.T) {
-		opts := &CRUDOptions[*dummyModel, string]{
-			Executor:      mockExec,
-			ErrorDecipher: mockDecipher,
-			Statements:    validStatements,
-			TableName:     "products",
-			EntityName:    "",
+		optList := []CRUDOption[*dummyModel, string]{
+			WithExecutor[*dummyModel, string](mockExec),
+			WithErrorDecipher[*dummyModel, string](mockDecipher),
+			WithEntityInfo[*dummyModel, string]("users", "   "),
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]()
+			}),
+		}
+		opts := NewCRUDOptions[*dummyModel, string]()
+		for _, opt := range optList {
+			opt(opts)
 		}
 
 		err := opts.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "entity name required")
+	})
+
+	t.Run("statement builders required", func(t *testing.T) {
+		optList := []CRUDOption[*dummyModel, string]{
+			WithExecutor[*dummyModel, string](mockExec),
+			WithErrorDecipher[*dummyModel, string](mockDecipher),
+			WithEntityInfo[*dummyModel, string]("users", "User"),
+			WithDriverName[*dummyModel, string]("dummy"),
+		}
+		opts := NewCRUDOptions[*dummyModel, string]()
+		for _, opt := range optList {
+			opt(opts)
+		}
+
+		err := opts.Validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "driver statements builders required")
 	})
 }

@@ -44,6 +44,9 @@ func (co *CRUDOptions[E, ID]) Validate() error {
 	if len(co.driverStatements) == 0 {
 		return errs.NewDalError("CRUDOptions[E, ID].Validate", "driver statements builders required", nil)
 	}
+	if len(co.driverStatements) != 0 && strings.TrimSpace(co.DriverName) == "" {
+		return errs.NewDalError("CRUDOptions[E, ID].Validate", "driver name required", nil)
+	}
 	if strings.TrimSpace(co.TableName) == "" {
 		return errs.NewDalError("CRUDOptions[E, ID].Validate", "table name required", nil)
 	}

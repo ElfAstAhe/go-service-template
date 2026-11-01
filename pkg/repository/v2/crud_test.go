@@ -14,11 +14,10 @@ func dummyEntityFactory() *dummyModel {
 	return &dummyModel{}
 }
 
-func createValidOpts(t *testing.T) (*mocks.MockExecutor, *mocks.MockErrorDecipher, *Statements[*dummyModel, string]) {
+func createValidOpts(t *testing.T) (*mocks.MockExecutor, *mocks.MockErrorDecipher) {
 	mockExec := mocks.NewMockExecutor(t)
 	mockDecipher := mocks.NewMockErrorDecipher(t)
-	stmts := NewStatements[*dummyModel, string]().WithStatement(StatementFind, &Statement[*dummyModel, string]{})
-	return mockExec, mockDecipher, stmts
+	return mockExec, mockDecipher
 }
 
 func TestNewCRUD_Validation(t *testing.T) {
@@ -30,16 +29,17 @@ func TestNewCRUD_Validation(t *testing.T) {
 	})
 
 	t.Run("success initialization", func(t *testing.T) {
-		mockExec, mockDecipher, stmts := createValidOpts(t)
+		mockExec, mockDecipher := createValidOpts(t)
 
 		repo, err := NewCRUD[*dummyModel, string](
 			WithExecutor[*dummyModel, string](mockExec),
 			WithErrorDecipher[*dummyModel, string](mockDecipher),
 			WithEntityInfo[*dummyModel, string]("users", "User"),
 			WithHooks[*dummyModel, string](WithHookNewEntityFactory[*dummyModel, string](dummyEntityFactory)),
-			func(co *CRUDOptions[*dummyModel, string]) {
-				co.Statements = stmts
-			},
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]().WithStatement(StatementFind, NewStatement[*dummyModel, string]("select 1", nil))
+			}),
 		)
 
 		assert.NoError(t, err)
@@ -51,7 +51,7 @@ func TestCRUD_Find(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("validation hook failure", func(t *testing.T) {
-		mockExec, mockDecipher, stmts := createValidOpts(t)
+		mockExec, mockDecipher := createValidOpts(t)
 		repo, _ := NewCRUD[*dummyModel, string](
 			WithExecutor[*dummyModel, string](mockExec),
 			WithErrorDecipher[*dummyModel, string](mockDecipher),
@@ -62,7 +62,10 @@ func TestCRUD_Find(t *testing.T) {
 					return errors.New("invalid id format")
 				}),
 			),
-			func(co *CRUDOptions[*dummyModel, string]) { co.Statements = stmts },
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]().WithStatement(StatementFind, NewStatement[*dummyModel, string]("select 1", nil))
+			}),
 		)
 
 		_, err := repo.Find(ctx, "invalid-id")
@@ -71,7 +74,7 @@ func TestCRUD_Find(t *testing.T) {
 	})
 
 	t.Run("success execution", func(t *testing.T) {
-		mockExec, mockDecipher, stmts := createValidOpts(t)
+		mockExec, mockDecipher := createValidOpts(t)
 		mockQuerier := mocks.NewMockQuerier(t)
 		mockExec.On("GetQuerier", ctx).Return(mockQuerier)
 		mockQuerier.On("QueryRowContext", ctx, mock.Anything, []any{"123"}).Return(nil)
@@ -81,7 +84,10 @@ func TestCRUD_Find(t *testing.T) {
 			WithErrorDecipher[*dummyModel, string](mockDecipher),
 			WithEntityInfo[*dummyModel, string]("users", "User"),
 			WithHooks[*dummyModel, string](WithHookNewEntityFactory[*dummyModel, string](dummyEntityFactory)),
-			func(co *CRUDOptions[*dummyModel, string]) { co.Statements = stmts },
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]().WithStatement(StatementFind, NewStatement[*dummyModel, string]("select 1", nil))
+			}),
 		)
 
 		repo.helper.hooks.DispatchMapper = func(ctx context.Context, name string, row Scannable, params ...any) (*dummyModel, error) {
@@ -98,13 +104,12 @@ func TestCRUD_List(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("invalid limit", func(t *testing.T) {
-		mockExec, mockDecipher, stmts := createValidOpts(t)
+		mockExec, mockDecipher := createValidOpts(t)
 		repo, _ := NewCRUD[*dummyModel, string](
 			WithExecutor[*dummyModel, string](mockExec),
 			WithErrorDecipher[*dummyModel, string](mockDecipher),
 			WithEntityInfo[*dummyModel, string]("users", "User"),
 			WithHooks[*dummyModel, string](WithHookNewEntityFactory[*dummyModel, string](dummyEntityFactory)),
-			func(co *CRUDOptions[*dummyModel, string]) { co.Statements = stmts },
 		)
 
 		_, err := repo.List(ctx, 0, 10)
@@ -117,13 +122,16 @@ func TestCRUD_Create(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("missing creator hook", func(t *testing.T) {
-		mockExec, mockDecipher, stmts := createValidOpts(t)
+		mockExec, mockDecipher := createValidOpts(t)
 		repo, _ := NewCRUD[*dummyModel, string](
 			WithExecutor[*dummyModel, string](mockExec),
 			WithErrorDecipher[*dummyModel, string](mockDecipher),
 			WithEntityInfo[*dummyModel, string]("users", "User"),
 			WithHooks[*dummyModel, string](WithHookNewEntityFactory[*dummyModel, string](dummyEntityFactory)),
-			func(co *CRUDOptions[*dummyModel, string]) { co.Statements = stmts },
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]().WithStatement(StatementFind, NewStatement[*dummyModel, string]("select 1", nil))
+			}),
 		)
 
 		_, err := repo.Create(ctx, &dummyModel{ID: "1"})
@@ -136,22 +144,20 @@ func TestCRUD_MapperDispatcher(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("mapper path success", func(t *testing.T) {
-		mockExec, mockDecipher, _ := createValidOpts(t)
+		mockExec, mockDecipher := createValidOpts(t)
 		expectedModel := &dummyModel{ID: "mapped"}
-
-		stmts := NewStatements[*dummyModel, string]().WithStatement("CustomStmt", &Statement[*dummyModel, string]{
-			SQL: "SELECT 1",
-			Mapper: func(ctx context.Context, scannable Scannable, params ...any) (*dummyModel, error) {
-				return expectedModel, nil
-			},
-		})
 
 		repo, _ := NewCRUD[*dummyModel, string](
 			WithExecutor[*dummyModel, string](mockExec),
 			WithErrorDecipher[*dummyModel, string](mockDecipher),
 			WithEntityInfo[*dummyModel, string]("users", "User"),
 			WithHooks[*dummyModel, string](WithHookNewEntityFactory[*dummyModel, string](dummyEntityFactory)),
-			func(co *CRUDOptions[*dummyModel, string]) { co.Statements = stmts },
+			WithDriverName[*dummyModel, string]("dummy"),
+			WithStatementsBuilder[*dummyModel, string]("dummy", func() *Statements[*dummyModel, string] {
+				return NewStatements[*dummyModel, string]().WithStatement("CustomStmt", NewStatement[*dummyModel, string]("select 1", func(ctx context.Context, scannable Scannable, params ...any) (*dummyModel, error) {
+					return expectedModel, nil
+				}))
+			}),
 		)
 
 		res, err := repo.mapperDispatcher(ctx, "CustomStmt", nil)
