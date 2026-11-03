@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestEntitiesToIDList_WithMocks(t *testing.T) {
+func TestMapEntitiesToIDs_WithMocks(t *testing.T) {
 	t.Run("should extract int IDs", func(t *testing.T) {
 		// Создаем моки для int ID
 		ent1 := mocks.NewMockEntity[int](t)
@@ -21,7 +21,7 @@ func TestEntitiesToIDList_WithMocks(t *testing.T) {
 
 		src := []domain.Entity[int]{ent1, ent2}
 
-		res := domain.EntitiesToIDList(src)
+		res := domain.MapEntitiesToIDs(src)
 
 		assert.Equal(t, []int{1, 2}, res)
 	})
@@ -34,7 +34,7 @@ func TestEntitiesToIDList_WithMocks(t *testing.T) {
 
 		src := []domain.Entity[string]{ent}
 
-		res := domain.EntitiesToIDList(src)
+		res := domain.MapEntitiesToIDs(src)
 
 		assert.Equal(t, []string{"uuid-123"}, res)
 	})

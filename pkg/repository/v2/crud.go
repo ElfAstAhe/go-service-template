@@ -194,8 +194,11 @@ func (cr *CRUD[E, ID]) Delete(ctx context.Context, id ID) error {
 	if err := cr.validateDelete(ctx, id); err != nil {
 		return errs.NewDalError("CRUD[E, ID].Delete", "delete failed", err)
 	}
+	if err := cr.helper.Exec(ctx, StatementDelete, id); err != nil {
+		return errs.NewDalError("CRUD[E, ID].Delete", "delete failed", err)
+	}
 
-	return cr.helper.Delete(ctx, StatementDelete, id)
+	return nil
 }
 
 // validateDelete проверяет возможность удаления идентификатора с помощью хука.

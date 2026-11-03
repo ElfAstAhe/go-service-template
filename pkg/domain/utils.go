@@ -5,9 +5,9 @@ import (
 	"github.com/google/uuid"
 )
 
-// EntitiesToIDList трансформирует срез доменных сущностей в плоский срез их уникальных идентификаторов ID.
+// MapEntitiesToIDs трансформирует срез доменных сущностей в плоский срез их уникальных идентификаторов ID.
 // За счет пре-аллокации памяти точного размера работает с максимальной скоростью без лишней нагрузки на GC.
-func EntitiesToIDList[ID comparable, T Entity[ID]](src []T) []ID {
+func MapEntitiesToIDs[ID comparable, T Entity[ID]](src []T) []ID {
 	res := make([]ID, len(src))
 
 	for index, entity := range src {

@@ -144,7 +144,7 @@ func TestHelper_Change(t *testing.T) {
 	})
 }
 
-func TestHelper_Delete(t *testing.T) {
+func TestHelper_Exec(t *testing.T) {
 	ctx := context.Background()
 	stmtName := "DeleteUser"
 	sqlQuery := "DELETE FROM users WHERE id = ?"
@@ -160,7 +160,7 @@ func TestHelper_Delete(t *testing.T) {
 		hStatements := NewStatements[*dummyModel, string]().WithStatement(stmtName, &Statement[*dummyModel, string]{SQL: sqlQuery})
 		h := NewHelper(mockExec, nil, &Hooks[*dummyModel, string]{}, hStatements, "users", "User")
 
-		err := h.Delete(ctx, stmtName, "123")
+		err := h.Exec(ctx, stmtName, "123")
 		assert.NoError(t, err)
 	})
 
@@ -175,7 +175,7 @@ func TestHelper_Delete(t *testing.T) {
 		hStatements := NewStatements[*dummyModel, string]().WithStatement(stmtName, &Statement[*dummyModel, string]{SQL: sqlQuery})
 		h := NewHelper(mockExec, nil, &Hooks[*dummyModel, string]{}, hStatements, "users", "User")
 
-		err := h.Delete(ctx, stmtName, "999")
+		err := h.Exec(ctx, stmtName, "999")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "not found")
 	})
@@ -196,7 +196,7 @@ func TestHelper_DeleteNoCheck(t *testing.T) {
 		hStatements := NewStatements[*dummyModel, string]().WithStatement(stmtName, &Statement[*dummyModel, string]{SQL: sqlQuery})
 		h := NewHelper(mockExec, nil, &Hooks[*dummyModel, string]{}, hStatements, "users", "User")
 
-		err := h.DeleteNoCheck(ctx, stmtName, "123")
+		err := h.ExecNoCheck(ctx, stmtName, "123")
 		assert.NoError(t, err)
 	})
 }

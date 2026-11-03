@@ -226,26 +226,26 @@ func (h *Helper[E, ID]) Change(ctx context.Context, stmtName string, entity E, p
 	return res, nil
 }
 
-// Delete выполняет удаление (DELETE) записи по переданному SQL-шаблону с обязательным аудитом измененных строк.
+// Exec выполняет SQL инструкцию по переданному SQL-шаблону с обязательным аудитом измененных строк.
 // Возвращает DalNotFoundError, если ни одна строка в таблице не была затронута (запись изначально отсутствовала).
 //
 //goland:noinspection GoLinter
-func (h *Helper[E, ID]) Delete(ctx context.Context, stmtName string, params ...any) error {
+func (h *Helper[E, ID]) Exec(ctx context.Context, stmtName string, params ...any) error {
 	querier := h.GetExecutor().GetQuerier(ctx)
 
 	sqlStmt, err := h.statements.GetSQL(stmtName)
 	if err != nil {
-		return errs.NewDalError("Helper[E, ID].Delete", fmt.Sprintf("sql statement %s not found", stmtName), err)
+		return errs.NewDalError("Helper[E, ID].Exec", fmt.Sprintf("sql statement %s not found", stmtName), err)
 	}
 
 	res, err := querier.ExecContext(ctx, sqlStmt, params...)
 	if err != nil {
-		return errs.NewDalError("Helper[E, ID].Delete", "exec context failed", err)
+		return errs.NewDalError("Helper[E, ID].Exec", "exec context failed", err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return errs.NewDalError("Helper[E, ID].Delete", "rows affected read failed", err)
+		return errs.NewDalError("Helper[E, ID].Exec", "rows affected read failed", err)
 	}
 	if rowsAffected <= 0 {
 		return errs.NewDalNotFoundError(h.entityName, params, nil)
@@ -254,18 +254,18 @@ func (h *Helper[E, ID]) Delete(ctx context.Context, stmtName string, params ...a
 	return nil
 }
 
-// DeleteNoCheck осуществляет быстрое «слепое» удаление (DELETE).
-func (h *Helper[E, ID]) DeleteNoCheck(ctx context.Context, stmtName string, params ...any) error {
+// ExecNoCheck осуществляет быстрое «слепое» удаление (DELETE).
+func (h *Helper[E, ID]) ExecNoCheck(ctx context.Context, stmtName string, params ...any) error {
 	querier := h.GetExecutor().GetQuerier(ctx)
 
 	sqlStmt, err := h.statements.GetSQL(stmtName)
 	if err != nil {
-		return errs.NewDalError("Helper[E, ID].DeleteNoCheck", fmt.Sprintf("sql statement %s not found", stmtName), err)
+		return errs.NewDalError("Helper[E, ID].ExecNoCheck", fmt.Sprintf("sql statement %s not found", stmtName), err)
 	}
 
 	_, err = querier.ExecContext(ctx, sqlStmt, params...)
 	if err != nil {
-		return errs.NewDalError("Helper[E, ID].DeleteNoCheck", "exec context failed", err)
+		return errs.NewDalError("Helper[E, ID].ExecNoCheck", "exec context failed", err)
 	}
 
 	return nil

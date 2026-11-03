@@ -5,63 +5,157 @@ import (
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
+	"github.com/ElfAstAhe/go-service-template/pkg/db/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	extdom "github.com/ElfAstAhe/go-service-template/pkg/ext/domain"
-	"github.com/ElfAstAhe/go-service-template/pkg/repository"
+	apppg "github.com/ElfAstAhe/go-service-template/pkg/ext/repository/postgres"
+	pkgrepo "github.com/ElfAstAhe/go-service-template/pkg/repository/v2"
 )
 
 const (
-	sourceLabelListPending   string = "ListPending"
-	sourceLabelListProcessed string = "ListProcessed"
-	sourceLabelGetTail       string = "GetTail"
+	statementListPending   string = "ListPending"
+	statementListProcessed string = "ListProcessed"
+	statementChangeStatus  string = "ChangeStatus"
+	statementGetTail       string = "GetTail"
 )
 
-type DataAuditOutboxRepository struct {
-	*repository.CRUD[*extdom.DataAuditOutbox, string]
+type DataAuditOutbox struct {
+	*pkgrepo.CRUD[*extdom.DataAuditOutbox, string]
 }
 
-var _ domain.CRUDRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutboxRepository)(nil)
-var _ extdom.OutboxRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutboxRepository)(nil)
-var _ extdom.TailRepository[string] = (*DataAuditOutboxRepository)(nil)
-var _ extdom.DataAuditOutboxRepository = (*DataAuditOutboxRepository)(nil)
+var _ domain.CRUDRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutbox)(nil)
+var _ extdom.OutboxRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutbox)(nil)
+var _ extdom.TailRepository[string] = (*DataAuditOutbox)(nil)
+var _ extdom.DataAuditOutboxRepository = (*DataAuditOutbox)(nil)
 
-func NewDataAuditOutboxRepository(
-	querier db.Querier,
-	decipher db.ErrorDecipher,
-) (*DataAuditOutboxRepository, error) {
+func NewDataAuditOutbox(
+	executor db.Executor,
+	errDecipher db.ErrorDecipher,
+) (*DataAuditOutbox, error) {
 	// instance
-	res := &DataAuditOutboxRepository{}
-	// sql
-
-	// callbacks
+	res := &DataAuditOutbox{}
 	// embed
+	embed, err := pkgrepo.NewCRUD[*extdom.DataAuditOutbox, string](
+		pkgrepo.WithExecutor[*extdom.DataAuditOutbox, string](executor),
+		pkgrepo.WithErrorDecipher[*extdom.DataAuditOutbox, string](errDecipher),
+		pkgrepo.WithHooks[*extdom.DataAuditOutbox, string](
+			pkgrepo.WithHookNewEntityFactory[*extdom.DataAuditOutbox, string](extdom.NewEmptyDataAuditOutbox),
+			pkgrepo.WithHookCreator[*extdom.DataAuditOutbox, string](res.creator),
+			pkgrepo.WithHookChanger[*extdom.DataAuditOutbox, string](res.changer),
+		),
+		pkgrepo.WithEntityInfo[*extdom.DataAuditOutbox, string]("data_audit_outbox", "DataAuditOutbox"),
+		pkgrepo.WithStatementsBuilder[*extdom.DataAuditOutbox, string](postgres.DriverName, res.pgStatementsBuilder),
+		pkgrepo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("pgx", res.pgStatementsBuilder),
+		pkgrepo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("postgres", res.pgStatementsBuilder),
+	)
+	if err != nil {
+		return nil, errs.NewDalError("NewDataAuditOutbox", "create embed crud failed", err)
+	}
 	// setup
+	res.CRUD = embed
 
 	return res, nil
 }
 
-func (dao *DataAuditOutboxRepository) GetTail(ctx context.Context, tailDate time.Time) ([]string, error) {
-	//TODO implement me
-	panic("implement me")
+// GetTail implementation domain.TailRepository
+func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) ([]string, error) {
+	list, err := dao.GetHelper().List(ctx, statementGetTail, tailDate)
+	if err != nil {
+		return nil, errs.NewDalError("DataAuditOutbox.GetTail", "get tail ids failed", err)
+	}
+
+	return domain.MapEntitiesToIDs(list), nil
 }
 
-func (dao *DataAuditOutboxRepository) Save(ctx context.Context, entity *extdom.DataAuditOutbox) error {
+// Save implementation domain.OutboxRepository
+func (dao *DataAuditOutbox) Save(ctx context.Context, entity *extdom.DataAuditOutbox) error {
 	_, err := dao.Create(ctx, entity)
 
 	return err
 }
 
-func (dao *DataAuditOutboxRepository) ChangeStatus(ctx context.Context, id string, status string) error {
-	//TODO implement me
-	panic("implement me")
+// ChangeStatus implementation domain.OutboxRepository
+func (dao *DataAuditOutbox) ChangeStatus(ctx context.Context, id string, status string) error {
+	if err := dao.GetHelper().ExecNoCheck(ctx, statementChangeStatus, id, status); err != nil {
+		return errs.NewDalError("DataAuditOutbox.ChangeStatus", "change status failed", err)
+	}
+
+	return nil
 }
 
-func (dao *DataAuditOutboxRepository) ListPending(ctx context.Context, limit int) ([]*extdom.DataAuditOutbox, error) {
-	//TODO implement me
-	panic("implement me")
+// ListPending implementation domain.OutboxRepository
+func (dao *DataAuditOutbox) ListPending(ctx context.Context, limit int) ([]*extdom.DataAuditOutbox, error) {
+	return dao.GetHelper().List(ctx, statementListPending, limit)
 }
 
-func (dao *DataAuditOutboxRepository) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]*extdom.DataAuditOutbox, error) {
-	//TODO implement me
-	panic("implement me")
+// ListProcessed implementation domain.OutboxRepository
+func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]*extdom.DataAuditOutbox, error) {
+	return dao.GetHelper().List(ctx, statementListProcessed, lastUpdatedAt)
+}
+
+// creator row creation executor
+func (dao *DataAuditOutbox) creator(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (pkgrepo.Scannable, error) {
+	query, err := dao.GetHelper().GetStatements().GetSQL(pkgrepo.StatementCreate)
+	if err != nil {
+		return nil, errs.NewDalError("DataAuditOutbox.Creator", "create statement not found", err)
+	}
+
+	return querier.QueryRowContext(ctx, query, params...), nil
+}
+
+// changer row modification executor
+func (dao *DataAuditOutbox) changer(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (pkgrepo.Scannable, error) {
+	query, err := dao.GetHelper().GetStatements().GetSQL(pkgrepo.StatementChange)
+	if err != nil {
+		return nil, errs.NewDalError("DataAuditOutbox.Creator", "change statement not found", err)
+	}
+
+	return querier.QueryRowContext(ctx, query, params...), nil
+}
+
+// pgStatementsBuilder postgres statements builder
+func (dao *DataAuditOutbox) pgStatementsBuilder() *pkgrepo.Statements[*extdom.DataAuditOutbox, string] {
+	return pkgrepo.NewStatements[*extdom.DataAuditOutbox, string]().
+		WithStatement(pkgrepo.StatementFind, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxFind, dao.mapDefault)).
+		WithStatement(pkgrepo.StatementList, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxList, dao.mapDefault)).
+		WithStatement(pkgrepo.StatementCreate, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxCreate, dao.mapDefault)).
+		WithStatement(pkgrepo.StatementChange, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxChange, dao.mapDefault)).
+		WithStatement(pkgrepo.StatementDelete, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxDelete, dao.mapDefault)).
+		WithStatement(statementGetTail, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxGetTail, dao.mapTail)).
+		WithStatement(statementListPending, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxListPending, dao.mapDefault)).
+		WithStatement(statementListProcessed, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxListProcessed, dao.mapDefault)).
+		WithStatement(statementChangeStatus, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxChangeStatus, nil))
+}
+
+// mapDefault is default full entity mapper
+func (dao *DataAuditOutbox) mapDefault(ctx context.Context, scannable pkgrepo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
+	res := dao.GetHelper().GetHooks().NewEntityFactory()
+	err := scannable.Scan(
+		&res.ID,
+		&res.InstanceID,
+		&res.ContentType,
+		&res.Payload,
+		&res.Status,
+		&res.CreatedAt,
+		&res.UpdatedAt,
+	)
+	if err != nil {
+		return nil, errs.NewDalError("DataAuditOutbox.mapDefault", "default mapper failed", err)
+	}
+
+	return res, nil
+}
+
+// mapTail is ID only mapper
+func (dao *DataAuditOutbox) mapTail(ctx context.Context, scannable pkgrepo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
+	res := dao.GetHelper().GetHooks().NewEntityFactory()
+	err := scannable.Scan(
+		&res.ID,
+	)
+	if err != nil {
+		return nil, errs.NewDalError("DataAuditOutbox.mapTail", "tail mapper failed", err)
+	}
+
+	return res, nil
 }

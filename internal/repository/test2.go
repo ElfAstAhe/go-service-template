@@ -32,7 +32,8 @@ func NewTest2(
 	// instance
 	res := &Test2{}
 	// embed
-	embed, err := pkgrepo.NewCRUD[*domain.Test2, string](pkgrepo.WithExecutor[*domain.Test2, string](executor),
+	embed, err := pkgrepo.NewCRUD[*domain.Test2, string](
+		pkgrepo.WithExecutor[*domain.Test2, string](executor),
 		pkgrepo.WithErrorDecipher[*domain.Test2, string](errDecipher),
 		pkgrepo.WithHooks[*domain.Test2, string](
 			pkgrepo.WithHookNewEntityFactory[*domain.Test2, string](domain.NewEmptyTest2),
