@@ -25,7 +25,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		mockLogger.On("Debugf", mock.Anything, mock.Anything, mock.Anything).Return()
 
 		opts := &Options{
-			BaseSchedulerDispatcherOptions: &worker.BaseSchedulerDispatcherOptions[string]{
+			PeriodicDispatcherOptions: &worker.PeriodicDispatcherOptions[string]{
 				Name:   "test",
 				Logger: mockLogger,
 			},
@@ -65,7 +65,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		mockLogger.On("Debugf", mock.Anything, mock.Anything, mock.Anything).Return()
 
 		opts := &Options{
-			BaseSchedulerDispatcherOptions: &worker.BaseSchedulerDispatcherOptions[string]{
+			PeriodicDispatcherOptions: &worker.PeriodicDispatcherOptions[string]{
 				Name:   "test",
 				Logger: mockLogger,
 			},
@@ -98,7 +98,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		mockLogger.On("Debugf", mock.Anything, mock.Anything, mock.Anything).Return()
 
 		opts := &Options{
-			BaseSchedulerDispatcherOptions: &worker.BaseSchedulerDispatcherOptions[string]{
+			PeriodicDispatcherOptions: &worker.PeriodicDispatcherOptions[string]{
 				Name:   "test",
 				Logger: mockLogger,
 			},

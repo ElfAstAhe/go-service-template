@@ -8,7 +8,8 @@ definitions:
       message:
         type: string
     type: object
-  TestDTO:
+  Test:
+    description: Test DTO
     properties:
       code:
         type: string
@@ -21,6 +22,22 @@ definitions:
       registered_at:
         type: string
       updated_at:
+        type: string
+    type: object
+  Test2:
+    description: Test2 DTO
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      modified_at:
+        type: string
+      name:
         type: string
     type: object
 info:
@@ -57,7 +74,7 @@ paths:
           description: Набор тестовых данных
           schema:
             items:
-              $ref: '#/definitions/TestDTO'
+              $ref: '#/definitions/Test'
             type: array
         "400":
           description: Bad Request
@@ -78,14 +95,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/TestDTO'
+          $ref: '#/definitions/Test'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/TestDTO'
+            $ref: '#/definitions/Test'
         "400":
           description: Bad Request
           schema:
@@ -122,7 +139,7 @@ paths:
       tags:
       - test
     get:
-      description: Удаляет запись по её ID (Soft Delete)
+      description: Получает запись по её ID
       parameters:
       - description: ID записи
         format: string
@@ -136,7 +153,7 @@ paths:
         "200":
           description: Тестовые данные
           schema:
-            $ref: '#/definitions/TestDTO'
+            $ref: '#/definitions/Test'
         "404":
           description: Запись не найдена
           schema:
@@ -162,14 +179,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/TestDTO'
+          $ref: '#/definitions/Test'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/TestDTO'
+            $ref: '#/definitions/Test'
         "400":
           description: Bad Request
           schema:
@@ -203,7 +220,184 @@ paths:
         "200":
           description: Тестовые данные
           schema:
-            $ref: '#/definitions/TestDTO'
+            $ref: '#/definitions/Test'
+        "404":
+          description: Запись не найдена
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Получить
+      tags:
+      - test
+  /api/test2:
+    get:
+      description: Получить список данных 2
+      parameters:
+      - description: limit row count, max 1000
+        format: int
+        in: query
+        name: limit
+        type: integer
+      - description: offset, min 0, max n
+        format: int
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Набор тестовых данных 2
+          schema:
+            items:
+              $ref: '#/definitions/Test2'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Получить
+      tags:
+      - test
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет новые тестовые данные 2
+      parameters:
+      - description: Тестовые данные
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/Test2'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Test2'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Создание новых тестовых данных
+      tags:
+      - test2
+  /api/test2/{id}:
+    delete:
+      description: Удаляет запись по её ID
+      parameters:
+      - description: ID записи
+        format: string
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Запись успешно удалена, тело ответа отсутствует
+        "404":
+          description: Запись не найдена
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Удаление тестовых данных
+      tags:
+      - test2
+    get:
+      description: Удаляет запись по её ID (Soft Delete)
+      parameters:
+      - description: ID записи
+        format: string
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Тестовые данные 2
+          schema:
+            $ref: '#/definitions/Test2'
+        "404":
+          description: Запись не найдена
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Получить
+      tags:
+      - test2
+    put:
+      consumes:
+      - application/json
+      description: Изменяет тестовые данные
+      parameters:
+      - description: ID записи
+        format: string
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Тестовые данные
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/Test2'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Test2'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorDTO'
+        "500":
+          description: Внутренняя ошибка сервера (пустое тело)
+      summary: Изменение тестовых данных
+      tags:
+      - test
+  /api/test2/search:
+    get:
+      description: Удаляет запись по её ID (Soft Delete)
+      parameters:
+      - description: code записи
+        format: string
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Тестовые данные 2
+          schema:
+            $ref: '#/definitions/Test2'
         "404":
           description: Запись не найдена
           schema:

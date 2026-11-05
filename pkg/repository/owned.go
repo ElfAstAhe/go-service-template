@@ -49,7 +49,7 @@ func NewBaseOwnedRepository[T domain.Entity[ID], ID comparable, OwnerID comparab
 	errDecipher db.ErrorDecipher,
 	info *EntityInfo,
 	queryBuilders *BaseOwnedQueryBuilders,
-	callbacks *BaseRepositoryCallbacks[T, ID],
+	callbacks *Callbacks[T, ID],
 	linkStrategy LinkStrategy,
 	ownedSaveSM *OwnedSaveStrategyManager[T, ID, OwnerID],
 ) (*BaseOwnedRepository[T, ID, OwnerID], error) {

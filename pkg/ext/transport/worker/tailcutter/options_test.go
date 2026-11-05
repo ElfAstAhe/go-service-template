@@ -15,7 +15,7 @@ import (
 func TestNewTailCutterOptions_Defaults(t *testing.T) {
 	opts := NewTailCutterOptions()
 
-	require.NotNil(t, opts.BaseSchedulerDispatcherOptions)
+	require.NotNil(t, opts.PeriodicDispatcherOptions)
 	assert.Equal(t, 1, opts.WorkerCount)
 	assert.Equal(t, 32, opts.DataCapacity)
 	assert.False(t, opts.CompleteProcess)
@@ -48,7 +48,7 @@ func TestTailCutterOptions_WithFunctions(t *testing.T) {
 
 func TestTailCutterOptions_Validate(t *testing.T) {
 	mockLogger := mocks2.NewMockLogger(t)
-	var mockJobHandler worker.JobHandler[string] = func(ctx context.Context, workerIndex int, data string) error { return nil }
+	var mockJobHandler worker.PoolJobHandler[string] = func(ctx context.Context, workerIndex int, data string) error { return nil }
 	var mockDataProvider worker.DispatcherDataProvider[string] = func(ctx context.Context, event time.Time) ([]string, error) { return nil, nil }
 	mockGetUC := mocks3.NewMockTailGetUseCase[string](t)
 	mockCutUC := mocks3.NewMockTailCutUseCase[string](t)

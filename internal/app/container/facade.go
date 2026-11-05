@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	InstanceTestFacade string = "TestFacade"
+	InstanceTestFacade  string = "TestFacade"
+	InstanceTest2Facade string = "test2-facade"
 )
 
 type FacadeContainer struct {
@@ -36,6 +37,7 @@ func NewFacadeContainer(
 func (fc *FacadeContainer) Init(ctx context.Context) error {
 	err := errors.Join(
 		fc.RegisterProvider(InstanceTestFacade, fc.providerTestFacade),
+		fc.RegisterProvider(InstanceTest2Facade, fc.providerTest2Facade),
 	)
 	if err != nil {
 		return errs.NewContainerError(fc.GetName(), "container init: register providers failed", err)

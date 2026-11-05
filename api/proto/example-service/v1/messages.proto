@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package example.service;
+
+option go_package = "go-service-template/grpc/example";
+
+import "google/protobuf/timestamp.proto";
+
+message Test {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp modified_at = 6;
+}
+
+message Test2 {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp modified_at = 6;
+}

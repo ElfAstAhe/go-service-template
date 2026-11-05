@@ -3,7 +3,6 @@ package tailcutter
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
@@ -19,10 +18,10 @@ const (
 
 // Worker реализует контракты планировщика и воркера, оркестрируя асинхронный конвейер очистки исторического мусора.
 //
-// Инкапсулирует Use Case слои поиска и удаления, анонимно внедряет BaseSchedulerDispatcher ядра фреймворка,
+// Инкапсулирует Use Case слои поиска и удаления, анонимно внедряет PeriodicDispatcher ядра фреймворка,
 // обеспечивает строгую защиту методов жизненного цикла от сокрытия при эмбеддинге и распараллеливает задачи.
 type Worker struct {
-	*worker.BaseSchedulerDispatcher[string]
+	*worker.PeriodicDispatcher[string]
 	name      string
 	opts      *Options
 	tailGetUC usecase.TailGetUseCase[string]
@@ -32,7 +31,7 @@ type Worker struct {
 
 // Контролируем реализацию контрактов жизненного цикла и запуска фреймворка на этапе компиляции
 var _ worker.Scheduler = (*Worker)(nil)
-var _ worker.CommonWorker = (*Worker)(nil)
+var _ worker.Common = (*Worker)(nil)
 var _ container.Runner = (*Worker)(nil)
 
 // New — фабричный конструктор планировщика очистки хвостов Outbox-журнала.
@@ -54,23 +53,23 @@ func New(options ...Option) (*Worker, error) {
 		logger:    opts.Logger.GetLogger(fmt.Sprintf(workerNameTemplate, opts.Name)),
 	}
 	// scheduler dispatcher
-	dispatcher, err := worker.NewBaseSchedulerDispatcher[string](
-		worker.WithSchedulerDispatcherName[string](opts.Name),
-		worker.WithSchedulerDispatcherStopTimeout[string](opts.StopTimeout),
-		worker.WithSchedulerDispatcherDataProvider[string](res.dataProvider),
-		worker.WithSchedulerDispatcherLogger[string](opts.Logger),
-		worker.WithSchedulerDispatcherPoolWorkerCount[string](opts.WorkerCount),
-		worker.WithSchedulerDispatcherPoolDataCapacity[string](opts.DataCapacity),
-		worker.WithSchedulerDispatcherPoolCompleteProcess[string](opts.CompleteProcess),
-		worker.WithSchedulerDispatcherPoolJobHandler[string](res.cutTail),
-		worker.WithSchedulerDispatcherSchedulerStartInterval[string](opts.StartInterval),
-		worker.WithSchedulerDispatcherSchedulerScheduleInterval[string](opts.ScheduleInterval),
+	dispatcher, err := worker.NewPeriodicDispatcher[string](
+		worker.WithPeriodicDispatcherName[string](opts.Name),
+		worker.WithPeriodicDispatcherStopTimeout[string](opts.StopTimeout),
+		worker.WithPeriodicDispatcherDataProvider[string](res.dataProvider),
+		worker.WithPeriodicDispatcherLogger[string](opts.Logger),
+		worker.WithPeriodicDispatcherPoolWorkerCount[string](opts.WorkerCount),
+		worker.WithPeriodicDispatcherPoolDataCapacity[string](opts.DataCapacity),
+		worker.WithPeriodicDispatcherPoolCompleteProcess[string](opts.CompleteProcess),
+		worker.WithPeriodicDispatcherPoolJobHandler[string](res.cutTail),
+		worker.WithPeriodicDispatcherSchedulerStartInterval[string](opts.StartInterval),
+		worker.WithPeriodicDispatcherSchedulerScheduleInterval[string](opts.ScheduleInterval),
 	)
 	if err != nil {
 		return nil, errs.NewTlCommonError("NewTailCutter", "tail cutter scheduler dispatcher creation failed", err)
 	}
 	// setup
-	res.BaseSchedulerDispatcher = dispatcher
+	res.PeriodicDispatcher = dispatcher
 
 	return res, nil
 }
@@ -78,17 +77,17 @@ func New(options ...Option) (*Worker, error) {
 // Start инициализирует и запускает внутренний цикл планировщика базового диспетчера.
 // Явное объявление метода на уровне структуры защищает публичный SDK-компонент от случайного сокрытия (shadowing) при эмбеддинге.
 func (tc *Worker) Start(ctx context.Context) error {
-	return tc.BaseSchedulerDispatcher.Start(ctx)
+	return tc.PeriodicDispatcher.Start(ctx)
 }
 
 // Stop выполняет мягкую остановку планировщика, сигнализирует контексту и ожидает завершения активных воркеров.
 func (tc *Worker) Stop(ctx context.Context) error {
-	return tc.BaseSchedulerDispatcher.Stop(ctx)
+	return tc.PeriodicDispatcher.Stop(ctx)
 }
 
 // IsRunning возвращает текущий статус активности внутреннего диспетчера планировщика.
 func (tc *Worker) IsRunning() bool {
-	return tc.BaseSchedulerDispatcher.IsRunning()
+	return tc.PeriodicDispatcher.IsRunning()
 }
 
 // dataProvider автоматически вызывается ядром шедулера по тикеру.
@@ -142,15 +141,5 @@ func (tc *Worker) GetOpts() *Options {
 
 // GetContext возвращает контекст управления жизненным циклом базового диспетчера.
 func (tc *Worker) GetContext() context.Context {
-	return tc.BaseSchedulerDispatcher.GetContext()
-}
-
-// GetContextCancel возвращает функцию отмены контекста базового диспетчера.
-func (tc *Worker) GetContextCancel() context.CancelFunc {
-	return tc.BaseSchedulerDispatcher.GetContextCancel()
-}
-
-// GetWaitGroup возвращает указатель на синхронизатор WaitGroup, контролирующий завершение горутин пула воркеров.
-func (tc *Worker) GetWaitGroup() *sync.WaitGroup {
-	return tc.BaseSchedulerDispatcher.GetWaitGroup()
+	return tc.PeriodicDispatcher.GetContext()
 }

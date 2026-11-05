@@ -6,9 +6,7 @@ package mocks
 
 import (
 	"context"
-	"sync"
 
-	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -92,144 +90,6 @@ func (_c *MockPool_Capacity_Call[D]) RunAndReturn(run func() int) *MockPool_Capa
 	return _c
 }
 
-// GetContext provides a mock function for the type MockPool
-func (_mock *MockPool[D]) GetContext() context.Context {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetContext")
-	}
-
-	var r0 context.Context
-	if returnFunc, ok := ret.Get(0).(func() context.Context); ok {
-		r0 = returnFunc()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(context.Context)
-		}
-	}
-	return r0
-}
-
-// MockPool_GetContext_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetContext'
-type MockPool_GetContext_Call[D any] struct {
-	*mock.Call
-}
-
-// GetContext is a helper method to define mock.On call
-func (_e *MockPool_Expecter[D]) GetContext() *MockPool_GetContext_Call[D] {
-	return &MockPool_GetContext_Call[D]{Call: _e.mock.On("GetContext")}
-}
-
-func (_c *MockPool_GetContext_Call[D]) Run(run func()) *MockPool_GetContext_Call[D] {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockPool_GetContext_Call[D]) Return(context1 context.Context) *MockPool_GetContext_Call[D] {
-	_c.Call.Return(context1)
-	return _c
-}
-
-func (_c *MockPool_GetContext_Call[D]) RunAndReturn(run func() context.Context) *MockPool_GetContext_Call[D] {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetContextCancel provides a mock function for the type MockPool
-func (_mock *MockPool[D]) GetContextCancel() context.CancelFunc {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetContextCancel")
-	}
-
-	var r0 context.CancelFunc
-	if returnFunc, ok := ret.Get(0).(func() context.CancelFunc); ok {
-		r0 = returnFunc()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(context.CancelFunc)
-		}
-	}
-	return r0
-}
-
-// MockPool_GetContextCancel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetContextCancel'
-type MockPool_GetContextCancel_Call[D any] struct {
-	*mock.Call
-}
-
-// GetContextCancel is a helper method to define mock.On call
-func (_e *MockPool_Expecter[D]) GetContextCancel() *MockPool_GetContextCancel_Call[D] {
-	return &MockPool_GetContextCancel_Call[D]{Call: _e.mock.On("GetContextCancel")}
-}
-
-func (_c *MockPool_GetContextCancel_Call[D]) Run(run func()) *MockPool_GetContextCancel_Call[D] {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockPool_GetContextCancel_Call[D]) Return(cancelFunc context.CancelFunc) *MockPool_GetContextCancel_Call[D] {
-	_c.Call.Return(cancelFunc)
-	return _c
-}
-
-func (_c *MockPool_GetContextCancel_Call[D]) RunAndReturn(run func() context.CancelFunc) *MockPool_GetContextCancel_Call[D] {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetLogger provides a mock function for the type MockPool
-func (_mock *MockPool[D]) GetLogger() logger.Logger {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetLogger")
-	}
-
-	var r0 logger.Logger
-	if returnFunc, ok := ret.Get(0).(func() logger.Logger); ok {
-		r0 = returnFunc()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(logger.Logger)
-		}
-	}
-	return r0
-}
-
-// MockPool_GetLogger_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLogger'
-type MockPool_GetLogger_Call[D any] struct {
-	*mock.Call
-}
-
-// GetLogger is a helper method to define mock.On call
-func (_e *MockPool_Expecter[D]) GetLogger() *MockPool_GetLogger_Call[D] {
-	return &MockPool_GetLogger_Call[D]{Call: _e.mock.On("GetLogger")}
-}
-
-func (_c *MockPool_GetLogger_Call[D]) Run(run func()) *MockPool_GetLogger_Call[D] {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockPool_GetLogger_Call[D]) Return(logger1 logger.Logger) *MockPool_GetLogger_Call[D] {
-	_c.Call.Return(logger1)
-	return _c
-}
-
-func (_c *MockPool_GetLogger_Call[D]) RunAndReturn(run func() logger.Logger) *MockPool_GetLogger_Call[D] {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetName provides a mock function for the type MockPool
 func (_mock *MockPool[D]) GetName() string {
 	ret := _mock.Called()
@@ -270,52 +130,6 @@ func (_c *MockPool_GetName_Call[D]) Return(s string) *MockPool_GetName_Call[D] {
 }
 
 func (_c *MockPool_GetName_Call[D]) RunAndReturn(run func() string) *MockPool_GetName_Call[D] {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetWaitGroup provides a mock function for the type MockPool
-func (_mock *MockPool[D]) GetWaitGroup() *sync.WaitGroup {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetWaitGroup")
-	}
-
-	var r0 *sync.WaitGroup
-	if returnFunc, ok := ret.Get(0).(func() *sync.WaitGroup); ok {
-		r0 = returnFunc()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*sync.WaitGroup)
-		}
-	}
-	return r0
-}
-
-// MockPool_GetWaitGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetWaitGroup'
-type MockPool_GetWaitGroup_Call[D any] struct {
-	*mock.Call
-}
-
-// GetWaitGroup is a helper method to define mock.On call
-func (_e *MockPool_Expecter[D]) GetWaitGroup() *MockPool_GetWaitGroup_Call[D] {
-	return &MockPool_GetWaitGroup_Call[D]{Call: _e.mock.On("GetWaitGroup")}
-}
-
-func (_c *MockPool_GetWaitGroup_Call[D]) Run(run func()) *MockPool_GetWaitGroup_Call[D] {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockPool_GetWaitGroup_Call[D]) Return(waitGroup *sync.WaitGroup) *MockPool_GetWaitGroup_Call[D] {
-	_c.Call.Return(waitGroup)
-	return _c
-}
-
-func (_c *MockPool_GetWaitGroup_Call[D]) RunAndReturn(run func() *sync.WaitGroup) *MockPool_GetWaitGroup_Call[D] {
 	_c.Call.Return(run)
 	return _c
 }
@@ -409,9 +223,20 @@ func (_c *MockPool_Len_Call[D]) RunAndReturn(run func() int) *MockPool_Len_Call[
 }
 
 // Push provides a mock function for the type MockPool
-func (_mock *MockPool[D]) Push(data D) {
-	_mock.Called(data)
-	return
+func (_mock *MockPool[D]) Push(ctx context.Context, data D) error {
+	ret := _mock.Called(ctx, data)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Push")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, D) error); ok {
+		r0 = returnFunc(ctx, data)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
 }
 
 // MockPool_Push_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Push'
@@ -420,31 +245,37 @@ type MockPool_Push_Call[D any] struct {
 }
 
 // Push is a helper method to define mock.On call
+//   - ctx context.Context
 //   - data D
-func (_e *MockPool_Expecter[D]) Push(data any) *MockPool_Push_Call[D] {
-	return &MockPool_Push_Call[D]{Call: _e.mock.On("Push", data)}
+func (_e *MockPool_Expecter[D]) Push(ctx any, data any) *MockPool_Push_Call[D] {
+	return &MockPool_Push_Call[D]{Call: _e.mock.On("Push", ctx, data)}
 }
 
-func (_c *MockPool_Push_Call[D]) Run(run func(data D)) *MockPool_Push_Call[D] {
+func (_c *MockPool_Push_Call[D]) Run(run func(ctx context.Context, data D)) *MockPool_Push_Call[D] {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 D
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(D)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 D
+		if args[1] != nil {
+			arg1 = args[1].(D)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
 }
 
-func (_c *MockPool_Push_Call[D]) Return() *MockPool_Push_Call[D] {
-	_c.Call.Return()
+func (_c *MockPool_Push_Call[D]) Return(err error) *MockPool_Push_Call[D] {
+	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockPool_Push_Call[D]) RunAndReturn(run func(data D)) *MockPool_Push_Call[D] {
-	_c.Run(run)
+func (_c *MockPool_Push_Call[D]) RunAndReturn(run func(ctx context.Context, data D) error) *MockPool_Push_Call[D] {
+	_c.Call.Return(run)
 	return _c
 }
 
@@ -551,16 +382,16 @@ func (_c *MockPool_Stop_Call[D]) RunAndReturn(run func(stopCtx context.Context) 
 }
 
 // TryPush provides a mock function for the type MockPool
-func (_mock *MockPool[D]) TryPush(data D) bool {
-	ret := _mock.Called(data)
+func (_mock *MockPool[D]) TryPush(ctx context.Context, data D) bool {
+	ret := _mock.Called(ctx, data)
 
 	if len(ret) == 0 {
 		panic("no return value specified for TryPush")
 	}
 
 	var r0 bool
-	if returnFunc, ok := ret.Get(0).(func(D) bool); ok {
-		r0 = returnFunc(data)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, D) bool); ok {
+		r0 = returnFunc(ctx, data)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
@@ -573,19 +404,25 @@ type MockPool_TryPush_Call[D any] struct {
 }
 
 // TryPush is a helper method to define mock.On call
+//   - ctx context.Context
 //   - data D
-func (_e *MockPool_Expecter[D]) TryPush(data any) *MockPool_TryPush_Call[D] {
-	return &MockPool_TryPush_Call[D]{Call: _e.mock.On("TryPush", data)}
+func (_e *MockPool_Expecter[D]) TryPush(ctx any, data any) *MockPool_TryPush_Call[D] {
+	return &MockPool_TryPush_Call[D]{Call: _e.mock.On("TryPush", ctx, data)}
 }
 
-func (_c *MockPool_TryPush_Call[D]) Run(run func(data D)) *MockPool_TryPush_Call[D] {
+func (_c *MockPool_TryPush_Call[D]) Run(run func(ctx context.Context, data D)) *MockPool_TryPush_Call[D] {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 D
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(D)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 D
+		if args[1] != nil {
+			arg1 = args[1].(D)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -596,7 +433,7 @@ func (_c *MockPool_TryPush_Call[D]) Return(b bool) *MockPool_TryPush_Call[D] {
 	return _c
 }
 
-func (_c *MockPool_TryPush_Call[D]) RunAndReturn(run func(data D) bool) *MockPool_TryPush_Call[D] {
+func (_c *MockPool_TryPush_Call[D]) RunAndReturn(run func(ctx context.Context, data D) bool) *MockPool_TryPush_Call[D] {
 	_c.Call.Return(run)
 	return _c
 }

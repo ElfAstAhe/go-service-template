@@ -56,7 +56,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/TestDTO"
+                                "$ref": "#/definitions/Test"
                             }
                         }
                     },
@@ -90,7 +90,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/TestDTO"
+                            "$ref": "#/definitions/Test"
                         }
                     }
                 ],
@@ -98,7 +98,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/TestDTO"
+                            "$ref": "#/definitions/Test"
                         }
                     },
                     "400": {
@@ -143,7 +143,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Тестовые данные",
                         "schema": {
-                            "$ref": "#/definitions/TestDTO"
+                            "$ref": "#/definitions/Test"
                         }
                     },
                     "404": {
@@ -160,7 +160,7 @@ const docTemplate = `{
         },
         "/api/test/{id}": {
             "get": {
-                "description": "Удаляет запись по её ID (Soft Delete)",
+                "description": "Получает запись по её ID",
                 "produces": [
                     "application/json"
                 ],
@@ -182,7 +182,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Тестовые данные",
                         "schema": {
-                            "$ref": "#/definitions/TestDTO"
+                            "$ref": "#/definitions/Test"
                         }
                     },
                     "404": {
@@ -223,7 +223,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/TestDTO"
+                            "$ref": "#/definitions/Test"
                         }
                     }
                 ],
@@ -231,7 +231,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TestDTO"
+                            "$ref": "#/definitions/Test"
                         }
                     },
                     "400": {
@@ -288,6 +288,271 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/test2": {
+            "get": {
+                "description": "Получить список данных 2",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "test"
+                ],
+                "summary": "Получить",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int",
+                        "description": "limit row count, max 1000",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "format": "int",
+                        "description": "offset, min 0, max n",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Набор тестовых данных 2",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Test2"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера (пустое тело)"
+                    }
+                }
+            },
+            "post": {
+                "description": "Сохраняет новые тестовые данные 2",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "test2"
+                ],
+                "summary": "Создание новых тестовых данных",
+                "parameters": [
+                    {
+                        "description": "Тестовые данные",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Test2"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/Test2"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера (пустое тело)"
+                    }
+                }
+            }
+        },
+        "/api/test2/search": {
+            "get": {
+                "description": "Удаляет запись по её ID (Soft Delete)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "test"
+                ],
+                "summary": "Получить",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "string",
+                        "description": "code записи",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Тестовые данные 2",
+                        "schema": {
+                            "$ref": "#/definitions/Test2"
+                        }
+                    },
+                    "404": {
+                        "description": "Запись не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера (пустое тело)"
+                    }
+                }
+            }
+        },
+        "/api/test2/{id}": {
+            "get": {
+                "description": "Удаляет запись по её ID (Soft Delete)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "test2"
+                ],
+                "summary": "Получить",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "string",
+                        "description": "ID записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Тестовые данные 2",
+                        "schema": {
+                            "$ref": "#/definitions/Test2"
+                        }
+                    },
+                    "404": {
+                        "description": "Запись не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера (пустое тело)"
+                    }
+                }
+            },
+            "put": {
+                "description": "Изменяет тестовые данные",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "test"
+                ],
+                "summary": "Изменение тестовых данных",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "string",
+                        "description": "ID записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Тестовые данные",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Test2"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Test2"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера (пустое тело)"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет запись по её ID",
+                "tags": [
+                    "test2"
+                ],
+                "summary": "Удаление тестовых данных",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "string",
+                        "description": "ID записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Запись успешно удалена, тело ответа отсутствует"
+                    },
+                    "404": {
+                        "description": "Запись не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера (пустое тело)"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -303,7 +568,8 @@ const docTemplate = `{
                 }
             }
         },
-        "TestDTO": {
+        "Test": {
+            "description": "Test DTO",
             "type": "object",
             "properties": {
                 "code": {
@@ -322,6 +588,30 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "Test2": {
+            "description": "Test2 DTO",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "modified_at": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

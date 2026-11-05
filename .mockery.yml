@@ -76,3 +76,9 @@ packages:
   github.com/ElfAstAhe/go-service-template/pkg/ext/usecase:
     config:
       all: true
+  github.com/ElfAstAhe/go-service-template/pkg/repository:
+    config:
+      all: true
+  github.com/ElfAstAhe/go-service-template/pkg/repository/v2:
+    config:
+      all: true

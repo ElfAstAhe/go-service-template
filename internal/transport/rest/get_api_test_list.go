@@ -11,14 +11,15 @@ import (
 	_ "github.com/ElfAstAhe/go-service-template/internal/transport"
 )
 
-// getAPITestList godoc
+// getAPITestList обработчик пути GET /api/test
+//
 // @Summary      Получить
 // @Description  Удаляет запись по её ID (Soft Delete)
 // @Tags         test
 // @Produce      json
 // @Param        limit   query   int  false  "limit row count, max 1000" format(int)
 // @Param        offset  query   int  false  "offset, min 0, max n" format(int)
-// @Success      200  {array}  TestDTO "Набор тестовых данных"
+// @Success      200  {array}  Test "Набор тестовых данных"
 // @Failure      400  {object} ErrorDTO
 // @Failure      500  "Внутренняя ошибка сервера (пустое тело)"
 // @Router       /api/test [get]

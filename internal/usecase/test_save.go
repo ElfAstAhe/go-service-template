@@ -21,7 +21,7 @@ type TestSaveInteractor struct {
 
 var _ TestSaveUseCase = (*TestSaveInteractor)(nil)
 
-func NewTestSaveUseCase(uw pkgdom.UnitOfWork, repo domain.TestRepository) *TestSaveInteractor {
+func NewTestSave(uw pkgdom.UnitOfWork, repo domain.TestRepository) *TestSaveInteractor {
 	return &TestSaveInteractor{
 		uw:   uw,
 		repo: repo,
@@ -30,12 +30,12 @@ func NewTestSaveUseCase(uw pkgdom.UnitOfWork, repo domain.TestRepository) *TestS
 
 func (ts *TestSaveInteractor) Save(ctx context.Context, model *domain.Test) (*domain.Test, error) {
 	var res *domain.Test
-	err := ts.uw.Execute(ctx, func(ctx context.Context) error {
+	err := ts.uw.Execute(ctx, func(txCtx context.Context) error {
 		var txErr error
 		if !model.IsExists() {
-			res, txErr = ts.repo.Create(ctx, model)
+			res, txErr = ts.repo.Create(txCtx, model)
 		} else {
-			res, txErr = ts.repo.Change(ctx, model)
+			res, txErr = ts.repo.Change(txCtx, model)
 		}
 		if txErr != nil {
 			return txErr

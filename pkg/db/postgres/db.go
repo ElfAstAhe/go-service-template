@@ -11,6 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+// DriverName using same as original database driver from jackc/pgx library (look at v5/stdlib/sql.go)
+const DriverName = "pgx/v5"
+
 // DB implements db.DB, db.Executor, and db.ErrorDecipher interfaces,
 // serving as a production-grade relational database client for PostgreSQL.
 // Wraps standard sql.DB handle fortified with pgx driver configurations under the hood.
@@ -27,7 +30,7 @@ var _ db.ErrorDecipher = (*DB)(nil)
 // New acts as a factory constructor establishing a connection pool to PostgreSQL via pgx driver.
 // Performs early validation and structures standard connection errors into internal DalError taxonomies.
 func New(conf *config.DBConfig) (*DB, error) {
-	pg, err := sql.Open("pgx", conf.DSN)
+	pg, err := sql.Open(DriverName, conf.DSN)
 	if err != nil {
 		return nil, errs.NewDalError("NewDB", "failed to open pgx db", err)
 	}

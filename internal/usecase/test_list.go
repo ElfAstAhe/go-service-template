@@ -27,7 +27,7 @@ func NewTestListUseCase(repo domain.TestRepository) *TestListInteractor {
 func (tl *TestListInteractor) List(ctx context.Context, limit, offset int) ([]*domain.Test, error) {
 	res, err := tl.repo.List(ctx, limit, offset)
 	if err != nil {
-		return nil, errs.NewBllError("TestListUseCase.List", fmt.Sprintf("list test data with limit [%v] and offset [%v] failed", limit, offset), err)
+		return nil, errs.NewBllError("TestListInteractor.List", fmt.Sprintf("list test data with limit [%v] and offset [%v] failed", limit, offset), err)
 	}
 
 	return res, nil

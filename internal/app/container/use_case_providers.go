@@ -30,7 +30,7 @@ func (ucc *UseCaseContainer) providerTestGetUC() (any, error) {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
 
-	return usecase.NewTestGetUseCase(repoTest), nil
+	return usecase.NewTestGet(repoTest), nil
 }
 
 func (ucc *UseCaseContainer) providerTestGetByCodeUC() (any, error) {
@@ -39,7 +39,7 @@ func (ucc *UseCaseContainer) providerTestGetByCodeUC() (any, error) {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
 
-	return usecase.NewTestGetByCodeUseCase(repoTest), nil
+	return usecase.NewTestGetByCode(repoTest), nil
 }
 
 func (ucc *UseCaseContainer) providerTestListUC() (any, error) {
@@ -62,7 +62,7 @@ func (ucc *UseCaseContainer) providerTestSaveUC() (any, error) {
 		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
 	}
 
-	return usecase.NewTestSaveUseCase(uwInst, repoTest), nil
+	return usecase.NewTestSave(uwInst, repoTest), nil
 }
 
 //goland:noinspection DuplicatedCode
@@ -77,4 +77,57 @@ func (ucc *UseCaseContainer) providerTestDeleteUC() (any, error) {
 	}
 
 	return usecase.NewTestDeleteUseCase(uwInst, repoTest), nil
+}
+
+func (ucc *UseCaseContainer) providerTest2GetUC() (any, error) {
+	repoInst, err := container.GetInstance[domain.Test2Repository](InstanceTest2Trace)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+
+	return usecase.NewTest2Get(repoInst), nil
+}
+
+func (ucc *UseCaseContainer) providerTest2GetByCodeUC() (any, error) {
+	repoInst, err := container.GetInstance[domain.Test2Repository](InstanceTest2Trace)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+
+	return usecase.NewTest2GetByCode(repoInst), nil
+}
+
+func (ucc *UseCaseContainer) providerTest2ListUC() (any, error) {
+	repoInst, err := container.GetInstance[domain.Test2Repository](InstanceTest2Trace)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+
+	return usecase.NewTest2List(repoInst), nil
+}
+
+func (ucc *UseCaseContainer) providerTest2SaveUC() (any, error) {
+	uwInst, err := container.GetInstance[pkgdom.UnitOfWork](InstanceUnitOfWork)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+	repoInst, err := container.GetInstance[domain.Test2Repository](InstanceTest2Trace)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+
+	return usecase.NewTest2Save(uwInst, repoInst), nil
+}
+
+func (ucc *UseCaseContainer) providerTest2DeleteUC() (any, error) {
+	uwInst, err := container.GetInstance[pkgdom.UnitOfWork](InstanceUnitOfWork)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+	repoInst, err := container.GetInstance[domain.Test2Repository](InstanceTest2Trace)
+	if err != nil {
+		return nil, errs.NewContainerError(ucc.GetName(), "provider: retrieve instance failed", err)
+	}
+
+	return usecase.NewTest2Delete(uwInst, repoInst), nil
 }

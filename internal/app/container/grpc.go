@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	InstanceGRPCService string = "grpcService"
-	InstanceGRPCRunner  string = "grpcRunner"
+	InstanceTestGRPCService  string = "test-grpc-service"
+	InstanceTest2GRPCService string = "test2-grpc-service"
+	InstanceGRPCRunner       string = "grpcRunner"
 )
 
 type GRPCContainer struct {
@@ -36,7 +37,8 @@ func NewGRPCContainer(
 
 func (gc *GRPCContainer) Init(initCtx context.Context) error {
 	err := errors.Join(
-		gc.RegisterProvider(InstanceGRPCService, gc.providerGRPCService),
+		gc.RegisterProvider(InstanceTestGRPCService, gc.providerTestGRPCService),
+		gc.RegisterProvider(InstanceTest2GRPCService, gc.providerTest2GRPCService),
 		gc.RegisterProvider(InstanceGRPCRunner, gc.providerGRPCRunner),
 	)
 	if err != nil {

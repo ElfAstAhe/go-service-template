@@ -19,7 +19,7 @@ type OwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable] struct 
 }
 
 // newOwnedHelper — фабричный конструктор расширенного хелпера для Owned-репозиториев.
-func newOwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *BaseRepositoryCallbacks[T, ID], info *EntityInfo) *OwnedHelper[T, ID, OwnerID] {
+func newOwnedHelper[T domain.Entity[ID], ID comparable, OwnerID comparable](exec db.Executor, errDecipher db.ErrorDecipher, callbacks *Callbacks[T, ID], info *EntityInfo) *OwnedHelper[T, ID, OwnerID] {
 	return &OwnedHelper[T, ID, OwnerID]{
 		Helper: newHelper[T, ID](exec, errDecipher, callbacks, info),
 	}

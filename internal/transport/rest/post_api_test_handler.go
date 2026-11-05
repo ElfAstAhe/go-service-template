@@ -4,30 +4,30 @@ import (
 	"net/http"
 
 	"github.com/ElfAstAhe/go-service-template/internal/facade/dto"
+	pkgtr "github.com/ElfAstAhe/go-service-template/pkg/transport"
 	pkghttp "github.com/ElfAstAhe/go-service-template/pkg/transport/http"
-	"github.com/go-chi/chi/v5/middleware"
 
-	_ "github.com/ElfAstAhe/go-service-template/internal/facade/dto"
 	_ "github.com/ElfAstAhe/go-service-template/internal/transport"
 )
 
-// postAPITest godoc
+// postAPITest обработчик пути POST /api/test
+//
 // @Summary      Создание новых тестовых данных
 // @Description  Сохраняет новые тестовые данные
 // @Tags         test
 // @Accept       json
 // @Produce      json
-// @Param        input  body      TestDTO  true  "Тестовые данные"
-// @Success      201    {object}  TestDTO
+// @Param        input  body      Test  true  "Тестовые данные"
+// @Success      201    {object}  Test
 // @Failure      400    {object}  ErrorDTO
 // @Failure      409    {object}  ErrorDTO
 // @Failure      500    "Внутренняя ошибка сервера (пустое тело)"
 // @Router       /api/test [post]
 func (cr *AppChiRouter) postAPITest(rw http.ResponseWriter, r *http.Request) {
-	cr.log.Debugf("postAPITest start, requestID [%s]", middleware.GetReqID(r.Context()))
-	defer cr.log.Debugf("postAPITest finish, requestID [%s]", middleware.GetReqID(r.Context()))
+	cr.log.Debugf("postAPITest start, requestID [%s]", pkgtr.RequestID(r.Context()))
+	defer cr.log.Debugf("postAPITest finish, requestID [%s]", pkgtr.RequestID(r.Context()))
 
-	var income = &dto.TestDTO{}
+	var income = &dto.Test{}
 	err := pkghttp.DecodeJSON(r, income)
 	if err != nil {
 		pkghttp.RenderErrorDefault(rw, err)

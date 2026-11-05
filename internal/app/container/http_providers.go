@@ -27,11 +27,15 @@ func (hc *HTTPContainer) providerChiRouter() (any, error) {
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	testFacadeInst, err := container.GetInstance[facade.TestFacade](InstanceTestFacade)
+	testFacadeInst, err := container.GetInstance[facade.Test](InstanceTestFacade)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
-	healthInst, err := container.GetInstance[*health.Health](InstanceHealthStatus)
+	test2FacadeInst, err := container.GetInstance[facade.Test2Facade](InstanceTest2Facade)
+	if err != nil {
+		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
+	}
+	healthInst, err := container.GetInstance[*health.Health](InstanceHealthMonitoring)
 	if err != nil {
 		return nil, errs.NewContainerError(hc.GetName(), "provider: retrieve instance failed", err)
 	}
@@ -44,6 +48,7 @@ func (hc *HTTPContainer) providerChiRouter() (any, error) {
 		nil,
 		readyz,
 		testFacadeInst,
+		test2FacadeInst,
 	), nil
 }
 

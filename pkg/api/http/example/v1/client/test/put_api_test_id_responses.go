@@ -65,7 +65,7 @@ func NewPutAPITestIDOK() *PutAPITestIDOK {
 //
 // OK
 type PutAPITestIDOK struct {
-	Payload *models.TestDTO
+	Payload *models.Test
 }
 
 // IsSuccess returns true when this put Api test Id o k response has a 2xx status code
@@ -108,13 +108,13 @@ func (o *PutAPITestIDOK) String() string {
 	return fmt.Sprintf("[PUT /api/test/{id}][%d] putApiTestIdOK %s", 200, payload)
 }
 
-func (o *PutAPITestIDOK) GetPayload() *models.TestDTO {
+func (o *PutAPITestIDOK) GetPayload() *models.Test {
 	return o.Payload
 }
 
 func (o *PutAPITestIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.TestDTO)
+	o.Payload = new(models.Test)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

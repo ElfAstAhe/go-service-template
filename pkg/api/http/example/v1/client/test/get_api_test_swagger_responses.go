@@ -53,7 +53,7 @@ func NewGetAPITestOK() *GetAPITestOK {
 //
 // Набор тестовых данных
 type GetAPITestOK struct {
-	Payload []*models.TestDTO
+	Payload []*models.Test
 }
 
 // IsSuccess returns true when this get Api test o k response has a 2xx status code
@@ -96,7 +96,7 @@ func (o *GetAPITestOK) String() string {
 	return fmt.Sprintf("[GET /api/test][%d] getApiTestOK %s", 200, payload)
 }
 
-func (o *GetAPITestOK) GetPayload() []*models.TestDTO {
+func (o *GetAPITestOK) GetPayload() []*models.Test {
 	return o.Payload
 }
 

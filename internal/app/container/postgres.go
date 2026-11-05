@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 
+	"github.com/ElfAstAhe/go-service-template/internal/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/container"
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	"github.com/ElfAstAhe/go-service-template/pkg/logger"
 	"github.com/ElfAstAhe/go-service-template/pkg/migration"
+	"github.com/hellofresh/health-go/v5"
+	healthPg "github.com/hellofresh/health-go/v5/checks/pgx5"
 )
 
 const (
@@ -53,7 +56,7 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 	// init db instance
 	dbInst, err := container.GetInstance[db.DB](InstanceDB)
 	if err != nil {
-		return errs.NewContainerError(pc.GetName(), "container init: init db failed", err)
+		return errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
 	}
 	// check db connection
 	err = dbInst.Ping(initCtx)
@@ -63,12 +66,32 @@ func (pc *PgContainer) Init(initCtx context.Context) error {
 	// data migration
 	migratorInst, err := container.GetInstance[migration.Migrator](InstanceDBMigrator)
 	if err != nil {
-		return errs.NewContainerError(pc.GetName(), "container init: init migrator failed", err)
+		return errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
 	}
 	// migrate up
 	err = migratorInst.Up(initCtx)
 	if err != nil {
 		return errs.NewContainerError(pc.GetName(), "container init: up migrator failed", err)
+	}
+	confInst, err := container.GetInstance[*config.Config](InstanceConfig)
+	if err != nil {
+		return errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
+	}
+	// db metrics
+	healthInst, err := container.GetInstance[*health.Health](InstanceHealthMonitoring)
+	if err != nil {
+		return errs.NewContainerError(pc.GetName(), "provider: retrieve instance failed", err)
+	}
+	err = healthInst.Register(health.Config{
+		Name:      dbInst.GetDriver(),
+		Timeout:   confInst.DB.ConnTimeout,
+		SkipOnErr: true,
+		Check: healthPg.New(healthPg.Config{
+			DSN: confInst.DB.DSN,
+		}),
+	})
+	if err != nil {
+		return errs.NewContainerError(pc.GetName(), "container init: register db health monitoring failed", err)
 	}
 
 	return nil
