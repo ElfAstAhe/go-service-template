@@ -10,15 +10,23 @@ import (
 	extdom "github.com/ElfAstAhe/go-service-template/pkg/ext/domain"
 )
 
+// OutboxChangeStatusUseCase определяет интерфейс для изменения статуса
+// сообщений в паттерне Outbox.
 type OutboxChangeStatusUseCase interface {
+	// Change изменяет статус сообщения по его идентификатору.
+	// Возвращает ошибку валидации или ошибку бизнес-логики в случае сбоя.
 	Change(ctx context.Context, id string, status string) error
 }
 
+// OutboxChangeStatusInteractor реализует интерфейс OutboxChangeStatusUseCase,
+// обеспечивая атомарное изменение статуса в рамках транзакции Unit of Work.
 type OutboxChangeStatusInteractor struct {
 	uw   domain.UnitOfWork
 	repo extdom.OutboxRepository[extdom.Outbox[string], string]
 }
 
+// NewOutboxChangeStatus создает и возвращает новый экземпляр OutboxChangeStatusInteractor
+// с необходимыми зависимостями для управления транзакциями и репозиторием.
 func NewOutboxChangeStatus(uw domain.UnitOfWork, repo extdom.OutboxRepository[extdom.Outbox[string], string]) *OutboxChangeStatusInteractor {
 	return &OutboxChangeStatusInteractor{
 		uw:   uw,
@@ -26,6 +34,8 @@ func NewOutboxChangeStatus(uw domain.UnitOfWork, repo extdom.OutboxRepository[ex
 	}
 }
 
+// Change выполняет валидацию входных данных и обновляет статус сообщения.
+// Операция обновления репозитория оборачивается в транзакцию Unit of Work.
 func (ocs *OutboxChangeStatusInteractor) Change(ctx context.Context, id string, status string) error {
 	// fail fast
 	if strings.TrimSpace(status) == "" {

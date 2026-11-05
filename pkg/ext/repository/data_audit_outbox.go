@@ -20,6 +20,8 @@ const (
 	statementGetTail       string = "GetTail"
 )
 
+// DataAuditOutbox представляет собой PostgreSQL-репозиторий для управления
+// сообщениями аудита данных в паттерне Outbox. Он расширяет базовый CRUD-репозиторий.
 type DataAuditOutbox struct {
 	*pkgrepo.CRUD[*extdom.DataAuditOutbox, string]
 }
@@ -29,6 +31,8 @@ var _ extdom.OutboxRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutb
 var _ extdom.TailRepository[string] = (*DataAuditOutbox)(nil)
 var _ extdom.DataAuditOutboxRepository = (*DataAuditOutbox)(nil)
 
+// NewDataAuditOutbox создает и настраивает новый экземпляр DataAuditOutbox репозитория
+// с внедренным базовым CRUD-функционалом, хуками и SQL-стейтментами.
 func NewDataAuditOutbox(
 	executor db.Executor,
 	errDecipher db.ErrorDecipher,
@@ -58,7 +62,8 @@ func NewDataAuditOutbox(
 	return res, nil
 }
 
-// GetTail implementation domain.TailRepository
+// GetTail возвращает список идентификаторов устаревших записей, время изменения которых
+// меньше указанной даты. Реализует интерфейс extdom.TailRepository.
 func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) ([]string, error) {
 	list, err := dao.GetHelper().List(ctx, statementGetTail, tailDate)
 	if err != nil {
@@ -68,14 +73,16 @@ func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) ([]
 	return domain.MapEntitiesToIDs(list), nil
 }
 
-// Save implementation domain.OutboxRepository
+// Save выполняет сохранение (создание) новой записи outbox в базе данных.
+// Реализует интерфейс extdom.OutboxRepository.
 func (dao *DataAuditOutbox) Save(ctx context.Context, entity *extdom.DataAuditOutbox) error {
 	_, err := dao.Create(ctx, entity)
 
 	return err
 }
 
-// ChangeStatus implementation domain.OutboxRepository
+// ChangeStatus обновляет статус конкретной записи outbox по её идентификатору.
+// Реализует интерфейс extdom.OutboxRepository.
 func (dao *DataAuditOutbox) ChangeStatus(ctx context.Context, id string, status string) error {
 	if err := dao.GetHelper().ExecNoCheck(ctx, statementChangeStatus, id, status); err != nil {
 		return errs.NewDalError("DataAuditOutbox.ChangeStatus", "change status failed", err)
@@ -84,17 +91,19 @@ func (dao *DataAuditOutbox) ChangeStatus(ctx context.Context, id string, status 
 	return nil
 }
 
-// ListPending implementation domain.OutboxRepository
+// ListPending извлекает список необработанных записей outbox с ограничением по количеству.
+// Реализует интерфейс extdom.OutboxRepository.
 func (dao *DataAuditOutbox) ListPending(ctx context.Context, limit int) ([]*extdom.DataAuditOutbox, error) {
 	return dao.GetHelper().List(ctx, statementListPending, limit)
 }
 
-// ListProcessed implementation domain.OutboxRepository
+// ListProcessed извлекает список успешно обработанных записей, обновленных после указанного времени.
+// Реализует интерфейс extdom.OutboxRepository.
 func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]*extdom.DataAuditOutbox, error) {
 	return dao.GetHelper().List(ctx, statementListProcessed, lastUpdatedAt)
 }
 
-// creator row creation executor
+// creator является внутренним хуком для выполнения SQL-запроса на добавление новой строки в базу данных.
 func (dao *DataAuditOutbox) creator(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (pkgrepo.Scannable, error) {
 	query, err := dao.GetHelper().GetStatements().GetSQL(pkgrepo.StatementCreate)
 	if err != nil {
@@ -104,7 +113,7 @@ func (dao *DataAuditOutbox) creator(ctx context.Context, querier db.Querier, ent
 	return querier.QueryRowContext(ctx, query, params...), nil
 }
 
-// changer row modification executor
+// changer является внутренним хуком для выполнения SQL-запроса на изменение существующей строки в базе данных.
 func (dao *DataAuditOutbox) changer(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (pkgrepo.Scannable, error) {
 	query, err := dao.GetHelper().GetStatements().GetSQL(pkgrepo.StatementChange)
 	if err != nil {
@@ -114,7 +123,7 @@ func (dao *DataAuditOutbox) changer(ctx context.Context, querier db.Querier, ent
 	return querier.QueryRowContext(ctx, query, params...), nil
 }
 
-// pgStatementsBuilder postgres statements builder
+// pgStatementsBuilder инициализирует и связывает SQL-запросы PostgreSQL с внутренними идентификаторами стейтментов.
 func (dao *DataAuditOutbox) pgStatementsBuilder() *pkgrepo.Statements[*extdom.DataAuditOutbox, string] {
 	return pkgrepo.NewStatements[*extdom.DataAuditOutbox, string]().
 		WithStatement(pkgrepo.StatementFind, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxFind, dao.mapDefault)).
@@ -128,7 +137,7 @@ func (dao *DataAuditOutbox) pgStatementsBuilder() *pkgrepo.Statements[*extdom.Da
 		WithStatement(statementChangeStatus, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxChangeStatus, nil))
 }
 
-// mapDefault is default full entity mapper
+// mapDefault преобразует сырые строки базы данных (Scannable) в полноценный объект DataAuditOutbox со всеми заполненными полями.
 func (dao *DataAuditOutbox) mapDefault(ctx context.Context, scannable pkgrepo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
 	res := dao.GetHelper().GetHooks().NewEntityFactory()
 	err := scannable.Scan(
@@ -147,7 +156,7 @@ func (dao *DataAuditOutbox) mapDefault(ctx context.Context, scannable pkgrepo.Sc
 	return res, nil
 }
 
-// mapTail is ID only mapper
+// mapTail выполняет частичный маппинг строки базы данных, считывая исключительно поле идентификатора (ID).
 func (dao *DataAuditOutbox) mapTail(ctx context.Context, scannable pkgrepo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
 	res := dao.GetHelper().GetHooks().NewEntityFactory()
 	err := scannable.Scan(
