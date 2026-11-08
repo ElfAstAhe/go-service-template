@@ -45,7 +45,7 @@ func NewTailCutUseCase[ID comparable](
 // Cut выполняет транзакционное удаление одной записи Outbox по её идентификатору, оборачивая операцию в UnitOfWork.
 func (tc *TailCutInteractor[ID]) Cut(ctx context.Context, id ID) error {
 	err := tc.uw.Execute(ctx, func(txCtx context.Context) error {
-		txErr := tc.tailRepo.Delete(txCtx, id)
+		txErr := tc.tailRepo.CutTail(txCtx, id)
 		if txErr != nil {
 			return txErr
 		}

@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/db"
-	"github.com/ElfAstAhe/go-service-template/pkg/db/postgres"
+	pg "github.com/ElfAstAhe/go-service-template/pkg/db/postgres"
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	extdom "github.com/ElfAstAhe/go-service-template/pkg/ext/domain"
-	apppg "github.com/ElfAstAhe/go-service-template/pkg/ext/repository/postgres"
-	pkgrepo "github.com/ElfAstAhe/go-service-template/pkg/repository/v2"
+	extpg "github.com/ElfAstAhe/go-service-template/pkg/ext/repository/postgres"
+	repo "github.com/ElfAstAhe/go-service-template/pkg/repository/v2"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 // DataAuditOutbox представляет собой PostgreSQL-репозиторий для управления
 // сообщениями аудита данных в паттерне Outbox. Он расширяет базовый CRUD-репозиторий.
 type DataAuditOutbox struct {
-	*pkgrepo.CRUD[*extdom.DataAuditOutbox, string]
+	*repo.CRUD[*extdom.DataAuditOutbox, string]
 }
 
 var _ domain.CRUDRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutbox)(nil)
@@ -40,18 +40,18 @@ func NewDataAuditOutbox(
 	// instance
 	res := &DataAuditOutbox{}
 	// embed
-	embed, err := pkgrepo.NewCRUD[*extdom.DataAuditOutbox, string](
-		pkgrepo.WithExecutor[*extdom.DataAuditOutbox, string](executor),
-		pkgrepo.WithErrorDecipher[*extdom.DataAuditOutbox, string](errDecipher),
-		pkgrepo.WithHooks[*extdom.DataAuditOutbox, string](
-			pkgrepo.WithHookNewEntityFactory[*extdom.DataAuditOutbox, string](extdom.NewEmptyDataAuditOutbox),
-			pkgrepo.WithHookCreator[*extdom.DataAuditOutbox, string](res.creator),
-			pkgrepo.WithHookChanger[*extdom.DataAuditOutbox, string](res.changer),
+	embed, err := repo.NewCRUD[*extdom.DataAuditOutbox, string](
+		repo.WithExecutor[*extdom.DataAuditOutbox, string](executor),
+		repo.WithErrorDecipher[*extdom.DataAuditOutbox, string](errDecipher),
+		repo.WithHooks[*extdom.DataAuditOutbox, string](
+			repo.WithHookNewEntityFactory[*extdom.DataAuditOutbox, string](extdom.NewEmptyDataAuditOutbox),
+			repo.WithHookCreator[*extdom.DataAuditOutbox, string](res.creator),
+			repo.WithHookChanger[*extdom.DataAuditOutbox, string](res.changer),
 		),
-		pkgrepo.WithEntityInfo[*extdom.DataAuditOutbox, string]("data_audit_outbox", "DataAuditOutbox"),
-		pkgrepo.WithStatementsBuilder[*extdom.DataAuditOutbox, string](postgres.DriverName, res.pgStatementsBuilder),
-		pkgrepo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("pgx", res.pgStatementsBuilder),
-		pkgrepo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("postgres", res.pgStatementsBuilder),
+		repo.WithEntityInfo[*extdom.DataAuditOutbox, string]("data_audit_outbox", "DataAuditOutbox"),
+		repo.WithStatementsBuilder[*extdom.DataAuditOutbox, string](pg.DriverName, res.pgStatementsBuilder),
+		repo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("pgx", res.pgStatementsBuilder),
+		repo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("postgres", res.pgStatementsBuilder),
 	)
 	if err != nil {
 		return nil, errs.NewDalError("NewDataAuditOutbox", "create embed crud failed", err)
@@ -63,7 +63,7 @@ func NewDataAuditOutbox(
 }
 
 // GetTail возвращает список идентификаторов устаревших записей, время изменения которых
-// меньше указанной даты. Реализует интерфейс extdom.TailRepository.
+// меньше указанной даты. Реализует интерфейс domain.TailRepository.
 func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) ([]string, error) {
 	list, err := dao.GetHelper().List(ctx, statementGetTail, tailDate)
 	if err != nil {
@@ -71,6 +71,11 @@ func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) ([]
 	}
 
 	return domain.MapEntitiesToIDs(list), nil
+}
+
+// CutTail точечно удаляет элемент хвоста. Реализует интерфейс domain.TailRepository
+func (dao *DataAuditOutbox) CutTail(ctx context.Context, id string) error {
+	return dao.Delete(ctx, id)
 }
 
 // Save выполняет сохранение (создание) новой записи outbox в базе данных.
@@ -104,8 +109,8 @@ func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt tim
 }
 
 // creator является внутренним хуком для выполнения SQL-запроса на добавление новой строки в базу данных.
-func (dao *DataAuditOutbox) creator(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (pkgrepo.Scannable, error) {
-	query, err := dao.GetHelper().GetStatements().GetSQL(pkgrepo.StatementCreate)
+func (dao *DataAuditOutbox) creator(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (repo.Scannable, error) {
+	query, err := dao.GetHelper().GetStatements().GetSQL(repo.StatementCreate)
 	if err != nil {
 		return nil, errs.NewDalError("DataAuditOutbox.Creator", "create statement not found", err)
 	}
@@ -114,8 +119,8 @@ func (dao *DataAuditOutbox) creator(ctx context.Context, querier db.Querier, ent
 }
 
 // changer является внутренним хуком для выполнения SQL-запроса на изменение существующей строки в базе данных.
-func (dao *DataAuditOutbox) changer(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (pkgrepo.Scannable, error) {
-	query, err := dao.GetHelper().GetStatements().GetSQL(pkgrepo.StatementChange)
+func (dao *DataAuditOutbox) changer(ctx context.Context, querier db.Querier, entity *extdom.DataAuditOutbox, params ...any) (repo.Scannable, error) {
+	query, err := dao.GetHelper().GetStatements().GetSQL(repo.StatementChange)
 	if err != nil {
 		return nil, errs.NewDalError("DataAuditOutbox.Creator", "change statement not found", err)
 	}
@@ -124,21 +129,21 @@ func (dao *DataAuditOutbox) changer(ctx context.Context, querier db.Querier, ent
 }
 
 // pgStatementsBuilder инициализирует и связывает SQL-запросы PostgreSQL с внутренними идентификаторами стейтментов.
-func (dao *DataAuditOutbox) pgStatementsBuilder() *pkgrepo.Statements[*extdom.DataAuditOutbox, string] {
-	return pkgrepo.NewStatements[*extdom.DataAuditOutbox, string]().
-		WithStatement(pkgrepo.StatementFind, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxFind, dao.mapDefault)).
-		WithStatement(pkgrepo.StatementList, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxList, dao.mapDefault)).
-		WithStatement(pkgrepo.StatementCreate, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxCreate, dao.mapDefault)).
-		WithStatement(pkgrepo.StatementChange, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxChange, dao.mapDefault)).
-		WithStatement(pkgrepo.StatementDelete, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxDelete, dao.mapDefault)).
-		WithStatement(statementGetTail, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxGetTail, dao.mapTail)).
-		WithStatement(statementListPending, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxListPending, dao.mapDefault)).
-		WithStatement(statementListProcessed, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxListProcessed, dao.mapDefault)).
-		WithStatement(statementChangeStatus, pkgrepo.NewStatement[*extdom.DataAuditOutbox, string](apppg.SqlDataAuditOutboxChangeStatus, nil))
+func (dao *DataAuditOutbox) pgStatementsBuilder() *repo.Statements[*extdom.DataAuditOutbox, string] {
+	return repo.NewStatements[*extdom.DataAuditOutbox, string]().
+		WithStatement(repo.StatementFind, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxFind, dao.mapDefault)).
+		WithStatement(repo.StatementList, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxList, dao.mapDefault)).
+		WithStatement(repo.StatementCreate, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxCreate, dao.mapDefault)).
+		WithStatement(repo.StatementChange, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxChange, dao.mapDefault)).
+		WithStatement(repo.StatementDelete, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxDelete, dao.mapDefault)).
+		WithStatement(statementGetTail, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxGetTail, dao.mapTail)).
+		WithStatement(statementListPending, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxListPending, dao.mapDefault)).
+		WithStatement(statementListProcessed, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxListProcessed, dao.mapDefault)).
+		WithStatement(statementChangeStatus, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxChangeStatus, nil))
 }
 
-// mapDefault преобразует сырые строки базы данных (Scannable) в полноценный объект DataAuditOutbox со всеми заполненными полями.
-func (dao *DataAuditOutbox) mapDefault(ctx context.Context, scannable pkgrepo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
+// mapDefault преобразует сырые строки базы данных (v2.Scannable) в полноценный объект DataAuditOutbox со всеми заполненными полями.
+func (dao *DataAuditOutbox) mapDefault(ctx context.Context, scannable repo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
 	res := dao.GetHelper().GetHooks().NewEntityFactory()
 	err := scannable.Scan(
 		&res.ID,
@@ -157,7 +162,7 @@ func (dao *DataAuditOutbox) mapDefault(ctx context.Context, scannable pkgrepo.Sc
 }
 
 // mapTail выполняет частичный маппинг строки базы данных, считывая исключительно поле идентификатора (ID).
-func (dao *DataAuditOutbox) mapTail(ctx context.Context, scannable pkgrepo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
+func (dao *DataAuditOutbox) mapTail(ctx context.Context, scannable repo.Scannable, params ...any) (*extdom.DataAuditOutbox, error) {
 	res := dao.GetHelper().GetHooks().NewEntityFactory()
 	err := scannable.Scan(
 		&res.ID,

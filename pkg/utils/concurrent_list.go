@@ -2,6 +2,7 @@ package utils
 
 import (
 	"iter"
+	"slices"
 	"sync"
 )
 
@@ -55,9 +56,7 @@ func (l *ConcurrentList[T]) Snapshot() []T {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
-	cp := make([]T, len(l.items))
-	copy(cp, l.items)
-	return cp
+	return slices.Clone(l.items)
 }
 
 // All возвращает нативный функциональный итератор iter.Seq2, отдающий пары [индекс, значение].

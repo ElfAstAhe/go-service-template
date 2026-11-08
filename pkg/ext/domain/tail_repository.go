@@ -15,7 +15,7 @@ type TailRepository[ID comparable] interface {
 	// Используется фоновым Use Case для предварительного отбора пачки ключей, подлежащих плановой очистке.
 	GetTail(ctx context.Context, tailDate time.Time) ([]ID, error)
 
-	// Delete осуществляет точечное физическое удаление одной записи из хранилища Outbox по её уникальному первичному ключу.
+	// CutTail осуществляет точечное физическое удаление одной записи из хранилища по её уникальному первичному ключу.
 	// Метод оптимизирован под попоточную обработку в горутинах и гарантирует константную скорость выполнения O(1) в СУБД.
-	Delete(ctx context.Context, id ID) error
+	CutTail(ctx context.Context, id ID) error
 }
