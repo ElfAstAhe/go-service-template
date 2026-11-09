@@ -62,7 +62,7 @@ func TestTailCutInteractor_Cut_WithTestify(t *testing.T) {
 
 			tt.setup(mockUW, mockRepo)
 
-			interactor := NewTailCutUseCase[string](mockUW, mockRepo)
+			interactor := NewTailCut[string](mockUW, mockRepo)
 			err := interactor.Cut(ctx, targetID)
 
 			if tt.wantErr {

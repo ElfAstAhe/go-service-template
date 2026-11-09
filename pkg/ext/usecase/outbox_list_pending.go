@@ -21,6 +21,8 @@ type OutboxListPendingInteractor struct {
 	repo domain.OutboxRepository[domain.Outbox[string], string]
 }
 
+var _ OutboxListPendingUseCase = (*OutboxListPendingInteractor)(nil)
+
 // NewOutboxListPending создает и возвращает новый экземпляр OutboxListPendingInteractor
 // с внедренной зависимостью репозитория.
 func NewOutboxListPending(repo domain.OutboxRepository[domain.Outbox[string], string]) *OutboxListPendingInteractor {

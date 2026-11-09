@@ -31,8 +31,8 @@ type TailCutInteractor[ID comparable] struct {
 // Проверяем соответствие интерактора контракту UseCase на этапе компиляции для строковых ключей
 var _ TailCutUseCase[string] = (*TailCutInteractor[string])(nil)
 
-// NewTailCutUseCase — фабричный конструктор прикладного интерактора контура очистки хвостов.
-func NewTailCutUseCase[ID comparable](
+// NewTailCut — фабричный конструктор прикладного интерактора контура очистки хвостов.
+func NewTailCut[ID comparable](
 	uw domain.UnitOfWork,
 	tailRepo extdom.TailRepository[ID],
 ) *TailCutInteractor[ID] {
