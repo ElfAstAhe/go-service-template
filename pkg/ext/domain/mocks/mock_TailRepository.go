@@ -47,12 +47,12 @@ func (_m *MockTailRepository[ID]) EXPECT() *MockTailRepository_Expecter[ID] {
 	return &MockTailRepository_Expecter[ID]{mock: &_m.Mock}
 }
 
-// Delete provides a mock function for the type MockTailRepository
-func (_mock *MockTailRepository[ID]) Delete(ctx context.Context, id ID) error {
+// CutTail provides a mock function for the type MockTailRepository
+func (_mock *MockTailRepository[ID]) CutTail(ctx context.Context, id ID) error {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Delete")
+		panic("no return value specified for CutTail")
 	}
 
 	var r0 error
@@ -64,19 +64,19 @@ func (_mock *MockTailRepository[ID]) Delete(ctx context.Context, id ID) error {
 	return r0
 }
 
-// MockTailRepository_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
-type MockTailRepository_Delete_Call[ID comparable] struct {
+// MockTailRepository_CutTail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CutTail'
+type MockTailRepository_CutTail_Call[ID comparable] struct {
 	*mock.Call
 }
 
-// Delete is a helper method to define mock.On call
+// CutTail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id ID
-func (_e *MockTailRepository_Expecter[ID]) Delete(ctx any, id any) *MockTailRepository_Delete_Call[ID] {
-	return &MockTailRepository_Delete_Call[ID]{Call: _e.mock.On("Delete", ctx, id)}
+func (_e *MockTailRepository_Expecter[ID]) CutTail(ctx any, id any) *MockTailRepository_CutTail_Call[ID] {
+	return &MockTailRepository_CutTail_Call[ID]{Call: _e.mock.On("CutTail", ctx, id)}
 }
 
-func (_c *MockTailRepository_Delete_Call[ID]) Run(run func(ctx context.Context, id ID)) *MockTailRepository_Delete_Call[ID] {
+func (_c *MockTailRepository_CutTail_Call[ID]) Run(run func(ctx context.Context, id ID)) *MockTailRepository_CutTail_Call[ID] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -94,12 +94,12 @@ func (_c *MockTailRepository_Delete_Call[ID]) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *MockTailRepository_Delete_Call[ID]) Return(err error) *MockTailRepository_Delete_Call[ID] {
+func (_c *MockTailRepository_CutTail_Call[ID]) Return(err error) *MockTailRepository_CutTail_Call[ID] {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockTailRepository_Delete_Call[ID]) RunAndReturn(run func(ctx context.Context, id ID) error) *MockTailRepository_Delete_Call[ID] {
+func (_c *MockTailRepository_CutTail_Call[ID]) RunAndReturn(run func(ctx context.Context, id ID) error) *MockTailRepository_CutTail_Call[ID] {
 	_c.Call.Return(run)
 	return _c
 }

@@ -247,6 +247,63 @@ func (_c *MockDataAuditOutboxRepository_Create_Call) RunAndReturn(run func(ctx c
 	return _c
 }
 
+// CutTail provides a mock function for the type MockDataAuditOutboxRepository
+func (_mock *MockDataAuditOutboxRepository) CutTail(ctx context.Context, id string) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CutTail")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockDataAuditOutboxRepository_CutTail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CutTail'
+type MockDataAuditOutboxRepository_CutTail_Call struct {
+	*mock.Call
+}
+
+// CutTail is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id string
+func (_e *MockDataAuditOutboxRepository_Expecter) CutTail(ctx any, id any) *MockDataAuditOutboxRepository_CutTail_Call {
+	return &MockDataAuditOutboxRepository_CutTail_Call{Call: _e.mock.On("CutTail", ctx, id)}
+}
+
+func (_c *MockDataAuditOutboxRepository_CutTail_Call) Run(run func(ctx context.Context, id string)) *MockDataAuditOutboxRepository_CutTail_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDataAuditOutboxRepository_CutTail_Call) Return(err error) *MockDataAuditOutboxRepository_CutTail_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockDataAuditOutboxRepository_CutTail_Call) RunAndReturn(run func(ctx context.Context, id string) error) *MockDataAuditOutboxRepository_CutTail_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Delete provides a mock function for the type MockDataAuditOutboxRepository
 func (_mock *MockDataAuditOutboxRepository) Delete(ctx context.Context, id string) error {
 	ret := _mock.Called(ctx, id)
