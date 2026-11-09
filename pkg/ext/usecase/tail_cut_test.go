@@ -28,7 +28,7 @@ func TestTailCutInteractor_Cut_WithTestify(t *testing.T) {
 				uw.On("Execute", mock.Anything, mock.Anything).Return(func(ctx context.Context, fn func(context.Context) error) error {
 					return fn(ctx)
 				})
-				repo.On("Delete", mock.Anything, targetID).Return(nil).Once()
+				repo.On("CutTail", mock.Anything, targetID).Return(nil).Once()
 			},
 			wantErr: false,
 		},
@@ -39,7 +39,7 @@ func TestTailCutInteractor_Cut_WithTestify(t *testing.T) {
 				uw.On("Execute", mock.Anything, mock.Anything).Return(func(ctx context.Context, fn func(context.Context) error) error {
 					return fn(ctx)
 				})
-				repo.On("Delete", mock.Anything, targetID).Return(errDb).Once()
+				repo.On("CutTail", mock.Anything, targetID).Return(errDb).Once()
 			},
 			wantErr: true,
 		},
