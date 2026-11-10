@@ -11,8 +11,8 @@ import (
 // TailGetUseCase определяет обобщенный контракт оркестрации прикладного уровня для извлечения
 // исторических цепочек или границ срезов логов, соответствующих определенным временным критериям.
 type TailGetUseCase[ID comparable] interface {
-	// GetTail возвращает срез идентификаторов записей, находящихся за границей указанной временной метки tail.
-	GetTail(ctx context.Context, tail time.Time) ([]ID, error)
+	// Get возвращает срез идентификаторов записей, находящихся за границей указанной временной метки tail.
+	Get(ctx context.Context, tail time.Time) ([]ID, error)
 }
 
 // TailGetInteractor оркестрирует несвязанные запросы поиска, управляя контрольными точками
@@ -24,15 +24,15 @@ type TailGetInteractor[ID comparable] struct {
 // Проверяем соответствие интерактора контракту UseCase на этапе компиляции для строковых ключей
 var _ TailGetUseCase[string] = (*TailGetInteractor[string])(nil)
 
-// NewTailGetUseCase — фабричный конструктор, инициализирующий зависимости адаптеров постоянного хранения данных.
-func NewTailGetUseCase[ID comparable](tailRepo domain.TailRepository[ID]) *TailGetInteractor[ID] {
+// NewTailGet — фабричный конструктор, инициализирующий зависимости адаптеров постоянного хранения данных.
+func NewTailGet[ID comparable](tailRepo domain.TailRepository[ID]) *TailGetInteractor[ID] {
 	return &TailGetInteractor[ID]{
 		tailRepo: tailRepo,
 	}
 }
 
-// GetTail оценивает инварианты временных границ перед делегированием диагностической команды поиска вниз по потоку репозитория.
-func (tl *TailGetInteractor[ID]) GetTail(ctx context.Context, tail time.Time) ([]ID, error) {
+// Get оценивает инварианты временных границ перед делегированием диагностической команды поиска вниз по потоку репозитория.
+func (tl *TailGetInteractor[ID]) Get(ctx context.Context, tail time.Time) ([]ID, error) {
 	if tail.IsZero() {
 		return nil, errs.NewInvalidArgumentError("tail", "must not be zero")
 	}

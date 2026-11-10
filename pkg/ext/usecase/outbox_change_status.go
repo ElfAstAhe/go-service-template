@@ -25,6 +25,8 @@ type OutboxChangeStatusInteractor struct {
 	repo extdom.OutboxRepository[extdom.Outbox[string], string]
 }
 
+var _ OutboxChangeStatusUseCase = (*OutboxChangeStatusInteractor)(nil)
+
 // NewOutboxChangeStatus создает и возвращает новый экземпляр OutboxChangeStatusInteractor
 // с необходимыми зависимостями для управления транзакциями и репозиторием.
 func NewOutboxChangeStatus(uw domain.UnitOfWork, repo extdom.OutboxRepository[extdom.Outbox[string], string]) *OutboxChangeStatusInteractor {

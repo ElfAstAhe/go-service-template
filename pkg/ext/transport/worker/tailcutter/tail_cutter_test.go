@@ -38,7 +38,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		eventTime := time.Now()
 		expectedCutTime := eventTime.Add(-opts.DataInterval)
 
-		mockGetUC.On("GetTail", ctx, expectedCutTime).Return(expectedData, nil).Once()
+		mockGetUC.On("Get", ctx, expectedCutTime).Return(expectedData, nil).Once()
 
 		tc := &Worker{
 			name:      "tail-cutter-test",
@@ -107,7 +107,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		}
 
 		expectedErr := errors.New("db connection failure")
-		mockGetUC.On("GetTail", mock.Anything, mock.Anything).Return(nil, expectedErr).Once()
+		mockGetUC.On("Get", mock.Anything, mock.Anything).Return(nil, expectedErr).Once()
 
 		tc := &Worker{
 			opts:      opts,

@@ -57,8 +57,8 @@ func TestTailGetInteractor_GetTail_WithTestify(t *testing.T) {
 
 			tt.setup(mockRepo)
 
-			interactor := NewTailGetUseCase[string](mockRepo)
-			res, err := interactor.GetTail(ctx, tt.tail)
+			interactor := NewTailGet[string](mockRepo)
+			res, err := interactor.Get(ctx, tt.tail)
 
 			if tt.wantErr {
 				assert.Error(t, err)
