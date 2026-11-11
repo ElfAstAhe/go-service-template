@@ -6,7 +6,7 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-// getHealthz обработчик пути GET /healthz
+// getLivez обработчик пути GET /livez
 func (cr *AppChiRouter) getLivez(rw http.ResponseWriter, r *http.Request) {
 	if !utils.IsNil(cr.livez) {
 		if cr.livez() {
