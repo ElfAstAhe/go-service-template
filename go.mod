@@ -17,7 +17,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4
 	github.com/hellofresh/health-go/v5 v5.5.5
-	github.com/jackc/pgx/v5 v5.12.0
+	github.com/jackc/pgx/v5 v5.13.0
 	github.com/pressly/goose/v3 v3.30.0
 	github.com/prometheus/client_golang v1.25.0
 	github.com/riandyrn/otelchi v0.12.3
@@ -36,7 +36,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.47.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/zap v1.28.0
-	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto v0.59.0
 	golang.org/x/text v0.44.0
 	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
