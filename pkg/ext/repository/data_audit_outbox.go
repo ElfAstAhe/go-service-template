@@ -9,7 +9,6 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/domain"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 	extdom "github.com/ElfAstAhe/go-service-template/pkg/ext/domain"
-	extpg "github.com/ElfAstAhe/go-service-template/pkg/ext/repository/postgres"
 	repo "github.com/ElfAstAhe/go-service-template/pkg/repository/v2"
 )
 
@@ -34,6 +33,7 @@ var _ extdom.DataAuditOutboxRepository = (*DataAuditOutbox)(nil)
 // NewDataAuditOutbox создает и настраивает новый экземпляр DataAuditOutbox репозитория
 // с внедренным базовым CRUD-функционалом, хуками и SQL-стейтментами.
 func NewDataAuditOutbox(
+	driverName string,
 	executor db.Executor,
 	errDecipher db.ErrorDecipher,
 ) (*DataAuditOutbox, error) {
@@ -49,6 +49,7 @@ func NewDataAuditOutbox(
 			repo.WithHookChanger[*extdom.DataAuditOutbox, string](res.changer),
 		),
 		repo.WithEntityInfo[*extdom.DataAuditOutbox, string]("data_audit_outbox", "DataAuditOutbox"),
+		repo.WithDriverName[*extdom.DataAuditOutbox, string](driverName),
 		repo.WithStatementsBuilder[*extdom.DataAuditOutbox, string](pg.DriverName, res.pgStatementsBuilder),
 		repo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("pgx", res.pgStatementsBuilder),
 		repo.WithStatementsBuilder[*extdom.DataAuditOutbox, string]("postgres", res.pgStatementsBuilder),
@@ -126,20 +127,6 @@ func (dao *DataAuditOutbox) changer(ctx context.Context, querier db.Querier, ent
 	}
 
 	return querier.QueryRowContext(ctx, query, params...), nil
-}
-
-// pgStatementsBuilder инициализирует и связывает SQL-запросы PostgreSQL с внутренними идентификаторами стейтментов.
-func (dao *DataAuditOutbox) pgStatementsBuilder() *repo.Statements[*extdom.DataAuditOutbox, string] {
-	return repo.NewStatements[*extdom.DataAuditOutbox, string]().
-		WithStatement(repo.StatementFind, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxFind, dao.mapDefault)).
-		WithStatement(repo.StatementList, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxList, dao.mapDefault)).
-		WithStatement(repo.StatementCreate, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxCreate, dao.mapDefault)).
-		WithStatement(repo.StatementChange, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxChange, dao.mapDefault)).
-		WithStatement(repo.StatementDelete, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxDelete, dao.mapDefault)).
-		WithStatement(statementGetTail, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxGetTail, dao.mapTail)).
-		WithStatement(statementListPending, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxListPending, dao.mapDefault)).
-		WithStatement(statementListProcessed, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxListProcessed, dao.mapDefault)).
-		WithStatement(statementChangeStatus, repo.NewStatement[*extdom.DataAuditOutbox, string](extpg.SqlDataAuditOutboxChangeStatus, nil))
 }
 
 // mapDefault преобразует сырые строки базы данных (v2.Scannable) в полноценный объект DataAuditOutbox со всеми заполненными полями.
