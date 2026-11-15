@@ -8,7 +8,7 @@ create table if not exists data_audit_outbox (
     id varchar(50) not null,
     instanceID varchar(50) not null,
     content_type varchar(50) not null,
-    payload jsonb not null,
+    payload bytea not null,
     status varchar(50) not null default 'pending',
     created_at timestamptz not null default now(),
     updated_at timestamptz null,
