@@ -6,7 +6,7 @@ const (
 	sqlCreateTableDataAuditOutbox string = `
 create table if not exists data_audit_outbox (
     id varchar(50) not null,
-    instanceID varchar(50) not null,
+    instance_id varchar(50) not null,
     content_type varchar(50) not null,
     payload bytea not null,
     status varchar(50) not null default 'pending',
