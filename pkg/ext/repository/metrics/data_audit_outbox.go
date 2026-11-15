@@ -73,10 +73,10 @@ func (dao *DataAuditOutbox) ListPending(ctx context.Context, limit int) (res []*
 }
 
 // ListProcessed возвращает список обработанных элементов domain.DataAuditOutbox, реализация domain.OutboxRepository
-func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) (res []*extdom.DataAuditOutbox, err error) {
+func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time, limit int) (res []*extdom.DataAuditOutbox, err error) {
 	defer func(startTime time.Time) {
 		metrics.ObserveRepositoryOp(dao.GetRepositoryName(), "ListProcessed", err, startTime)
 	}(time.Now())
 
-	return dao.next.ListProcessed(ctx, lastUpdatedAt)
+	return dao.next.ListProcessed(ctx, lastUpdatedAt, limit)
 }
