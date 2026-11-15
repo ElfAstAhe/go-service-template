@@ -180,8 +180,8 @@ func (_c *MockOutboxRepository_ListPending_Call[E, ID]) RunAndReturn(run func(ct
 }
 
 // ListProcessed provides a mock function for the type MockOutboxRepository
-func (_mock *MockOutboxRepository[E, ID]) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]E, error) {
-	ret := _mock.Called(ctx, lastUpdatedAt)
+func (_mock *MockOutboxRepository[E, ID]) ListProcessed(ctx context.Context, lastUpdatedAt time.Time, limit int) ([]E, error) {
+	ret := _mock.Called(ctx, lastUpdatedAt, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListProcessed")
@@ -189,18 +189,18 @@ func (_mock *MockOutboxRepository[E, ID]) ListProcessed(ctx context.Context, las
 
 	var r0 []E
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) ([]E, error)); ok {
-		return returnFunc(ctx, lastUpdatedAt)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) ([]E, error)); ok {
+		return returnFunc(ctx, lastUpdatedAt, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) []E); ok {
-		r0 = returnFunc(ctx, lastUpdatedAt)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) []E); ok {
+		r0 = returnFunc(ctx, lastUpdatedAt, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]E)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time) error); ok {
-		r1 = returnFunc(ctx, lastUpdatedAt)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, int) error); ok {
+		r1 = returnFunc(ctx, lastUpdatedAt, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -215,11 +215,12 @@ type MockOutboxRepository_ListProcessed_Call[E domain.Outbox[ID], ID comparable]
 // ListProcessed is a helper method to define mock.On call
 //   - ctx context.Context
 //   - lastUpdatedAt time.Time
-func (_e *MockOutboxRepository_Expecter[E, ID]) ListProcessed(ctx any, lastUpdatedAt any) *MockOutboxRepository_ListProcessed_Call[E, ID] {
-	return &MockOutboxRepository_ListProcessed_Call[E, ID]{Call: _e.mock.On("ListProcessed", ctx, lastUpdatedAt)}
+//   - limit int
+func (_e *MockOutboxRepository_Expecter[E, ID]) ListProcessed(ctx any, lastUpdatedAt any, limit any) *MockOutboxRepository_ListProcessed_Call[E, ID] {
+	return &MockOutboxRepository_ListProcessed_Call[E, ID]{Call: _e.mock.On("ListProcessed", ctx, lastUpdatedAt, limit)}
 }
 
-func (_c *MockOutboxRepository_ListProcessed_Call[E, ID]) Run(run func(ctx context.Context, lastUpdatedAt time.Time)) *MockOutboxRepository_ListProcessed_Call[E, ID] {
+func (_c *MockOutboxRepository_ListProcessed_Call[E, ID]) Run(run func(ctx context.Context, lastUpdatedAt time.Time, limit int)) *MockOutboxRepository_ListProcessed_Call[E, ID] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -229,9 +230,14 @@ func (_c *MockOutboxRepository_ListProcessed_Call[E, ID]) Run(run func(ctx conte
 		if args[1] != nil {
 			arg1 = args[1].(time.Time)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -242,7 +248,7 @@ func (_c *MockOutboxRepository_ListProcessed_Call[E, ID]) Return(vs []E, err err
 	return _c
 }
 
-func (_c *MockOutboxRepository_ListProcessed_Call[E, ID]) RunAndReturn(run func(ctx context.Context, lastUpdatedAt time.Time) ([]E, error)) *MockOutboxRepository_ListProcessed_Call[E, ID] {
+func (_c *MockOutboxRepository_ListProcessed_Call[E, ID]) RunAndReturn(run func(ctx context.Context, lastUpdatedAt time.Time, limit int) ([]E, error)) *MockOutboxRepository_ListProcessed_Call[E, ID] {
 	_c.Call.Return(run)
 	return _c
 }

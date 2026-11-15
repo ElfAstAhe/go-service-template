@@ -18,5 +18,5 @@ type OutboxRepository[E Outbox[ID], ID comparable] interface {
 
 	// ListPending извлекает из хранилища пачку неотправленных outbox-сущностей заданного лимита.
 	ListPending(ctx context.Context, limit int) ([]E, error)
-	ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]E, error)
+	ListProcessed(ctx context.Context, lastUpdatedAt time.Time, limit int) ([]E, error)
 }

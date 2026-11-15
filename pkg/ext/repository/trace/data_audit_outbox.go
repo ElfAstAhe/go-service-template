@@ -128,15 +128,16 @@ func (dao *DataAuditOutbox) ListPending(ctx context.Context, limit int) ([]*extd
 }
 
 // ListProcessed возвращает список успешно обработанных записей outbox, измененных после указанного времени.
-func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]*extdom.DataAuditOutbox, error) {
+func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time, limit int) ([]*extdom.DataAuditOutbox, error) {
 	repoCtx, span := dao.StartSpan(ctx, fmt.Sprintf("%s.ListProcessed", dao.GetRepositoryName()))
 	defer span.End()
 
 	span.SetAttributes(
 		attribute.Int64("params.last_updated_at", lastUpdatedAt.Unix()),
+		attribute.Int("params.limit", limit),
 	)
 
-	res, err := dao.next.ListProcessed(repoCtx, lastUpdatedAt)
+	res, err := dao.next.ListProcessed(repoCtx, lastUpdatedAt, limit)
 	if err != nil {
 		span.AddEvent("ListProcessed_failed")
 		span.RecordError(err)

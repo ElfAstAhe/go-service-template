@@ -100,13 +100,13 @@ func (dao *DataAuditOutbox) ChangeStatus(ctx context.Context, id string, status 
 // ListPending извлекает список необработанных записей outbox с ограничением по количеству.
 // Реализует интерфейс extdom.OutboxRepository.
 func (dao *DataAuditOutbox) ListPending(ctx context.Context, limit int) ([]*extdom.DataAuditOutbox, error) {
-	return dao.GetHelper().List(ctx, statementListPending, limit)
+	return dao.GetHelper().List(ctx, statementListPending, []string{extdom.OutboxStatusPending}, limit)
 }
 
 // ListProcessed извлекает список успешно обработанных записей, обновленных после указанного времени.
 // Реализует интерфейс extdom.OutboxRepository.
-func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]*extdom.DataAuditOutbox, error) {
-	return dao.GetHelper().List(ctx, statementListProcessed, lastUpdatedAt)
+func (dao *DataAuditOutbox) ListProcessed(ctx context.Context, lastUpdatedAt time.Time, limit int) ([]*extdom.DataAuditOutbox, error) {
+	return dao.GetHelper().List(ctx, statementListProcessed, []string{extdom.OutboxStatusFailed, extdom.OutboxStatusSuccess}, lastUpdatedAt, limit)
 }
 
 // creator является внутренним хуком для выполнения SQL-запроса на добавление новой строки в базу данных.
