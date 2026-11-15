@@ -640,8 +640,8 @@ func (_c *MockDataAuditOutboxRepository_ListPending_Call) RunAndReturn(run func(
 }
 
 // ListProcessed provides a mock function for the type MockDataAuditOutboxRepository
-func (_mock *MockDataAuditOutboxRepository) ListProcessed(ctx context.Context, lastUpdatedAt time.Time) ([]*domain.DataAuditOutbox, error) {
-	ret := _mock.Called(ctx, lastUpdatedAt)
+func (_mock *MockDataAuditOutboxRepository) ListProcessed(ctx context.Context, lastUpdatedAt time.Time, limit int) ([]*domain.DataAuditOutbox, error) {
+	ret := _mock.Called(ctx, lastUpdatedAt, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListProcessed")
@@ -649,18 +649,18 @@ func (_mock *MockDataAuditOutboxRepository) ListProcessed(ctx context.Context, l
 
 	var r0 []*domain.DataAuditOutbox
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) ([]*domain.DataAuditOutbox, error)); ok {
-		return returnFunc(ctx, lastUpdatedAt)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) ([]*domain.DataAuditOutbox, error)); ok {
+		return returnFunc(ctx, lastUpdatedAt, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) []*domain.DataAuditOutbox); ok {
-		r0 = returnFunc(ctx, lastUpdatedAt)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) []*domain.DataAuditOutbox); ok {
+		r0 = returnFunc(ctx, lastUpdatedAt, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*domain.DataAuditOutbox)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time) error); ok {
-		r1 = returnFunc(ctx, lastUpdatedAt)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, int) error); ok {
+		r1 = returnFunc(ctx, lastUpdatedAt, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -675,11 +675,12 @@ type MockDataAuditOutboxRepository_ListProcessed_Call struct {
 // ListProcessed is a helper method to define mock.On call
 //   - ctx context.Context
 //   - lastUpdatedAt time.Time
-func (_e *MockDataAuditOutboxRepository_Expecter) ListProcessed(ctx any, lastUpdatedAt any) *MockDataAuditOutboxRepository_ListProcessed_Call {
-	return &MockDataAuditOutboxRepository_ListProcessed_Call{Call: _e.mock.On("ListProcessed", ctx, lastUpdatedAt)}
+//   - limit int
+func (_e *MockDataAuditOutboxRepository_Expecter) ListProcessed(ctx any, lastUpdatedAt any, limit any) *MockDataAuditOutboxRepository_ListProcessed_Call {
+	return &MockDataAuditOutboxRepository_ListProcessed_Call{Call: _e.mock.On("ListProcessed", ctx, lastUpdatedAt, limit)}
 }
 
-func (_c *MockDataAuditOutboxRepository_ListProcessed_Call) Run(run func(ctx context.Context, lastUpdatedAt time.Time)) *MockDataAuditOutboxRepository_ListProcessed_Call {
+func (_c *MockDataAuditOutboxRepository_ListProcessed_Call) Run(run func(ctx context.Context, lastUpdatedAt time.Time, limit int)) *MockDataAuditOutboxRepository_ListProcessed_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -689,9 +690,14 @@ func (_c *MockDataAuditOutboxRepository_ListProcessed_Call) Run(run func(ctx con
 		if args[1] != nil {
 			arg1 = args[1].(time.Time)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -702,7 +708,7 @@ func (_c *MockDataAuditOutboxRepository_ListProcessed_Call) Return(dataAuditOutb
 	return _c
 }
 
-func (_c *MockDataAuditOutboxRepository_ListProcessed_Call) RunAndReturn(run func(ctx context.Context, lastUpdatedAt time.Time) ([]*domain.DataAuditOutbox, error)) *MockDataAuditOutboxRepository_ListProcessed_Call {
+func (_c *MockDataAuditOutboxRepository_ListProcessed_Call) RunAndReturn(run func(ctx context.Context, lastUpdatedAt time.Time, limit int) ([]*domain.DataAuditOutbox, error)) *MockDataAuditOutboxRepository_ListProcessed_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -116,7 +116,9 @@ select
 from
     data_audit_outbox
 where
-    
+    status = any($1)
+and updated_at < $2
+limit $3
 `
 	// SqlDataAuditOutboxChangeStatus возвращает SQL-запрос для частичного обновления только статуса записи outbox
 	// и фиксации времени изменения.

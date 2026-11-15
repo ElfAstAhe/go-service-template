@@ -27,6 +27,15 @@ func CreateIndexDataAuditOutboxPending(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
+// CreateIndexDataAuditOutboxProcessed конструирует специализированный частичный индекс для оптимизации сквозной выборки логов.
+func CreateIndexDataAuditOutboxProcessed(ctx context.Context, db *sql.DB) error {
+	if _, err := db.ExecContext(ctx, sqlCreateIndexDataAuditOutboxProcessed); err != nil {
+		return errs.NewDBMigrationError("failed to create index idx_data_audit_outbox_processed", err)
+	}
+
+	return nil
+}
+
 // DropTableDataAuditOutbox выполняет деструктивное удаление таблицы data_audit_outbox из схемы данных СУБД.
 func DropTableDataAuditOutbox(ctx context.Context, db *sql.DB) error {
 	if _, err := db.ExecContext(ctx, sqlDropTableDataAuditOutbox); err != nil {
@@ -40,6 +49,15 @@ func DropTableDataAuditOutbox(ctx context.Context, db *sql.DB) error {
 func DropIndexDataAuditOutboxPending(ctx context.Context, db *sql.DB) error {
 	if _, err := db.ExecContext(ctx, sqlDropIndexDataAuditOutboxPending); err != nil {
 		return errs.NewDBMigrationError("failed to drop index idx_data_audit_outbox_pending", err)
+	}
+
+	return nil
+}
+
+// DropIndexDataAuditOutboxProcessed выполняет удаление частичного индекса оптимизации выборки из схемы данных СУБД.
+func DropIndexDataAuditOutboxProcessed(ctx context.Context, db *sql.DB) error {
+	if _, err := db.ExecContext(ctx, sqlDropIndexDataAuditOutboxProcessed); err != nil {
+		return errs.NewDBMigrationError("failed to drop index idx_data_audit_outbox_processed", err)
 	}
 
 	return nil
