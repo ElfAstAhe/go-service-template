@@ -18,6 +18,7 @@ type DataAuditOutbox struct {
 var _ domain.CRUDRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutbox)(nil)
 var _ extdom.DataAuditOutboxRepository = (*DataAuditOutbox)(nil)
 var _ extdom.TailRepository[string] = (*DataAuditOutbox)(nil)
+var _ extdom.OutboxRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutbox)(nil)
 
 // NewDataAuditOutboxRepository фабричный метод создания экземпляра декоратора metrics.DataAuditOutbox репозитория domain.DataAuditOutboxRepository
 func NewDataAuditOutboxRepository(next extdom.DataAuditOutboxRepository) *DataAuditOutbox {

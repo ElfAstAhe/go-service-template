@@ -22,6 +22,7 @@ type DataAuditOutbox struct {
 var _ domain.CRUDRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutbox)(nil)
 var _ extdom.DataAuditOutboxRepository = (*DataAuditOutbox)(nil)
 var _ extdom.TailRepository[string] = (*DataAuditOutbox)(nil)
+var _ extdom.OutboxRepository[*extdom.DataAuditOutbox, string] = (*DataAuditOutbox)(nil)
 
 // NewDataAuditOutboxRepository создает новый экземпляр трассирующего декоратора DataAuditOutbox.
 func NewDataAuditOutboxRepository(next extdom.DataAuditOutboxRepository) *DataAuditOutbox {
