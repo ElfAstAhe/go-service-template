@@ -12,7 +12,7 @@ import (
 // исторических цепочек или границ срезов логов, соответствующих определенным временным критериям.
 type TailGetUseCase[ID comparable] interface {
 	// Get возвращает срез идентификаторов записей, находящихся за границей указанной временной метки tail.
-	Get(ctx context.Context, tail time.Time) ([]ID, error)
+	Get(ctx context.Context, tail time.Time, limit int) ([]ID, error)
 }
 
 // TailGetInteractor оркестрирует несвязанные запросы поиска, управляя контрольными точками
@@ -32,10 +32,10 @@ func NewTailGet[ID comparable](tailRepo domain.TailRepository[ID]) *TailGetInter
 }
 
 // Get оценивает инварианты временных границ перед делегированием диагностической команды поиска вниз по потоку репозитория.
-func (tl *TailGetInteractor[ID]) Get(ctx context.Context, tail time.Time) ([]ID, error) {
+func (tl *TailGetInteractor[ID]) Get(ctx context.Context, tail time.Time, limit int) ([]ID, error) {
 	if tail.IsZero() {
 		return nil, errs.NewInvalidArgumentError("tail", "must not be zero")
 	}
 
-	return tl.tailRepo.GetTail(ctx, tail)
+	return tl.tailRepo.GetTail(ctx, tail, limit)
 }

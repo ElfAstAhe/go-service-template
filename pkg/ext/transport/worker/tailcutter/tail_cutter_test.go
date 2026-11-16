@@ -38,7 +38,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		eventTime := time.Now()
 		expectedCutTime := eventTime.Add(-opts.DataInterval)
 
-		mockGetUC.On("Get", ctx, expectedCutTime).Return(expectedData, nil).Once()
+		mockGetUC.On("Get", ctx, expectedCutTime, mock.Anything).Return(expectedData, nil).Once()
 
 		tc := &Worker{
 			name:      "tail-cutter-test",
@@ -86,7 +86,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		// Assert
 		assert.NoError(t, err)
 		assert.Empty(t, res)
-		mockGetUC.AssertNotCalled(t, "GetTail", mock.Anything, mock.Anything)
+		mockGetUC.AssertNotCalled(t, "GetTail", mock.Anything, mock.Anything, mock.Anything)
 	})
 
 	t.Run("Трансляция ошибки доменного UseCase наверх", func(t *testing.T) {
@@ -107,7 +107,7 @@ func TestWorker_DataProvider(t *testing.T) {
 		}
 
 		expectedErr := errors.New("db connection failure")
-		mockGetUC.On("Get", mock.Anything, mock.Anything).Return(nil, expectedErr).Once()
+		mockGetUC.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(nil, expectedErr).Once()
 
 		tc := &Worker{
 			opts:      opts,

@@ -48,8 +48,8 @@ func (_m *MockTailGetUseCase[ID]) EXPECT() *MockTailGetUseCase_Expecter[ID] {
 }
 
 // Get provides a mock function for the type MockTailGetUseCase
-func (_mock *MockTailGetUseCase[ID]) Get(ctx context.Context, tail time.Time) ([]ID, error) {
-	ret := _mock.Called(ctx, tail)
+func (_mock *MockTailGetUseCase[ID]) Get(ctx context.Context, tail time.Time, limit int) ([]ID, error) {
+	ret := _mock.Called(ctx, tail, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Get")
@@ -57,18 +57,18 @@ func (_mock *MockTailGetUseCase[ID]) Get(ctx context.Context, tail time.Time) ([
 
 	var r0 []ID
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) ([]ID, error)); ok {
-		return returnFunc(ctx, tail)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) ([]ID, error)); ok {
+		return returnFunc(ctx, tail, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) []ID); ok {
-		r0 = returnFunc(ctx, tail)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) []ID); ok {
+		r0 = returnFunc(ctx, tail, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]ID)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time) error); ok {
-		r1 = returnFunc(ctx, tail)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, int) error); ok {
+		r1 = returnFunc(ctx, tail, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -83,11 +83,12 @@ type MockTailGetUseCase_Get_Call[ID comparable] struct {
 // Get is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tail time.Time
-func (_e *MockTailGetUseCase_Expecter[ID]) Get(ctx any, tail any) *MockTailGetUseCase_Get_Call[ID] {
-	return &MockTailGetUseCase_Get_Call[ID]{Call: _e.mock.On("Get", ctx, tail)}
+//   - limit int
+func (_e *MockTailGetUseCase_Expecter[ID]) Get(ctx any, tail any, limit any) *MockTailGetUseCase_Get_Call[ID] {
+	return &MockTailGetUseCase_Get_Call[ID]{Call: _e.mock.On("Get", ctx, tail, limit)}
 }
 
-func (_c *MockTailGetUseCase_Get_Call[ID]) Run(run func(ctx context.Context, tail time.Time)) *MockTailGetUseCase_Get_Call[ID] {
+func (_c *MockTailGetUseCase_Get_Call[ID]) Run(run func(ctx context.Context, tail time.Time, limit int)) *MockTailGetUseCase_Get_Call[ID] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -97,9 +98,14 @@ func (_c *MockTailGetUseCase_Get_Call[ID]) Run(run func(ctx context.Context, tai
 		if args[1] != nil {
 			arg1 = args[1].(time.Time)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -110,7 +116,7 @@ func (_c *MockTailGetUseCase_Get_Call[ID]) Return(vs []ID, err error) *MockTailG
 	return _c
 }
 
-func (_c *MockTailGetUseCase_Get_Call[ID]) RunAndReturn(run func(ctx context.Context, tail time.Time) ([]ID, error)) *MockTailGetUseCase_Get_Call[ID] {
+func (_c *MockTailGetUseCase_Get_Call[ID]) RunAndReturn(run func(ctx context.Context, tail time.Time, limit int) ([]ID, error)) *MockTailGetUseCase_Get_Call[ID] {
 	_c.Call.Return(run)
 	return _c
 }

@@ -12,6 +12,7 @@ const (
 	DefaultTailCutterDataCapacity       int           = 128
 	DefaultTailCutterCompleteProcessing bool          = false
 	DefaultTailCutterStopTimeout        time.Duration = 15 * time.Second
+	DefaultTailCutterTailLimit          int           = 100
 	DefaultTailCutterTailInterval       time.Duration = 182 * 24 * time.Hour // 182 days
 	DefaultTailCutterTailCut            bool          = true
 )

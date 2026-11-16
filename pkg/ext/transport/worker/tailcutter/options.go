@@ -20,6 +20,7 @@ const (
 	defaultTailCutterScheduleInterval time.Duration = 5 * time.Minute
 	defaultTailCutterDataInterval     time.Duration = 14 * 24 * time.Hour
 	defaultTailCutterCutEnabled       bool          = false
+	defaultTailLimit                  int           = 100
 )
 
 // Option определяет сигнатуру функции для настройки параметров Worker.
@@ -33,6 +34,7 @@ type Options struct {
 	TailCutUC    usecase.TailCutUseCase[string]
 	DataInterval time.Duration
 	CutEnabled   bool
+	TailLimit    int
 }
 
 // NewTailCutterOptions создает и возвращает новый экземпляр Options
@@ -42,6 +44,7 @@ func NewTailCutterOptions() *Options {
 		PeriodicDispatcherOptions: tailCutterBuildDefaultDispatcherOptions(),
 		DataInterval:              defaultTailCutterDataInterval,
 		CutEnabled:                defaultTailCutterCutEnabled,
+		TailLimit:                 defaultTailLimit,
 	}
 
 	return res
@@ -87,6 +90,9 @@ func (tco *Options) Validate() error {
 	}
 	if tco.DataInterval <= 0 {
 		return errs.NewTlCommonError("Validate", "data interval is required", nil)
+	}
+	if tco.TailLimit <= 0 {
+		return errs.NewTlCommonError("Validate", "tail limit is required", nil)
 	}
 
 	return nil
@@ -166,6 +172,13 @@ func WithTailGetUseCase(uc usecase.TailGetUseCase[string]) Option {
 func WithTailCutUseCase(uc usecase.TailCutUseCase[string]) Option {
 	return func(options *Options) {
 		options.TailCutUC = uc
+	}
+}
+
+// WithTailLimit конфигурирует лимит хвоста
+func WithTailLimit(limit int) Option {
+	return func(options *Options) {
+		options.TailLimit = limit
 	}
 }
 
