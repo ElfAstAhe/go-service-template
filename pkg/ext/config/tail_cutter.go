@@ -9,11 +9,13 @@ import (
 
 type TailCutterConfig struct {
 	Dispatcher   *config.SchedulerDispatcherConfig `mapstructure:"dispatcher" json:"dispatcher,omitempty" yaml:"dispatcher,omitempty" toml:"dispatcher,omitempty"`
+	TailLimit    int                               `mapstructure:"tail-limit" json:"tailLimit,omitempty" yaml:"tail-limit,omitempty" toml:"tail-limit,omitempty"`
 	TailInterval time.Duration                     `mapstructure:"tail_interval" json:"tail_interval,omitempty" yaml:"tail_interval,omitempty" toml:"tail_interval,omitempty"`
 	TailCut      bool                              `mapstructure:"tail_cut" json:"tail_cut,omitempty" yaml:"tail_cut,omitempty" toml:"tail_cut,omitempty"`
 }
 
 func NewTailCutterConfig(
+	tailLimit int,
 	tailInterval time.Duration,
 	tailCut bool,
 	dispatcher *config.SchedulerDispatcherConfig,
@@ -27,6 +29,7 @@ func NewTailCutterConfig(
 
 func NewDefaultTailCutterConfig() *TailCutterConfig {
 	return NewTailCutterConfig(
+		DefaultTailCutterTailLimit,
 		DefaultTailCutterTailInterval,
 		DefaultTailCutterTailCut,
 		config.NewSchedulerDispatcherConfig(
@@ -43,6 +46,9 @@ func NewDefaultTailCutterConfig() *TailCutterConfig {
 func (tcc *TailCutterConfig) Validate() error {
 	if err := tcc.Dispatcher.Validate(); err != nil {
 		return errs.NewConfigValidateError("tail_cutter", "dispatcher", "validation failed", err)
+	}
+	if tcc.TailLimit <= 0 {
+		return errs.NewConfigValidateError("tail_cutter", "tail limit", "must be greater than zero", nil)
 	}
 	if tcc.TailInterval <= 0 {
 		return errs.NewConfigValidateError("tail_cutter", "tail interval", "must be greater zero", nil)

@@ -65,8 +65,8 @@ func NewDataAuditOutbox(
 
 // GetTail возвращает список идентификаторов устаревших записей, время изменения которых
 // меньше указанной даты. Реализует интерфейс domain.TailRepository.
-func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) ([]string, error) {
-	list, err := dao.GetHelper().List(ctx, statementGetTail, tailDate)
+func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time, limit int) ([]string, error) {
+	list, err := dao.GetHelper().List(ctx, statementGetTail, []string{extdom.OutboxStatusFailed, extdom.OutboxStatusSuccess}, tailDate, limit)
 	if err != nil {
 		return nil, errs.NewDalError("DataAuditOutbox.GetTail", "get tail ids failed", err)
 	}

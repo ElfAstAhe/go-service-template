@@ -29,12 +29,12 @@ func NewDataAuditOutboxRepository(next extdom.DataAuditOutboxRepository) *DataAu
 }
 
 // GetTail получение списка на удаление, реализация интерфейса domain.TailRepository
-func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) (res []string, err error) {
+func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time, limit int) (res []string, err error) {
 	defer func(startTime time.Time) {
 		metrics.ObserveRepositoryOp(dao.GetRepositoryName(), "GetTail", err, startTime)
 	}(time.Now())
 
-	return dao.next.GetTail(ctx, tailDate)
+	return dao.next.GetTail(ctx, tailDate, limit)
 }
 
 // CutTail удаление одного элемента, реализация domain.TailRepository

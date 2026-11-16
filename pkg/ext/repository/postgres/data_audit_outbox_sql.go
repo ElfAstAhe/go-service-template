@@ -77,7 +77,7 @@ where
 select
     id
 from
-    data_audit_aoutbox
+    data_audit_outbox
 where
     status = any($1)
 and updated_at < $2

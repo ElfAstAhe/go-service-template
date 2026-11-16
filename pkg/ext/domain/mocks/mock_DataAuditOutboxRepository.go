@@ -430,8 +430,8 @@ func (_c *MockDataAuditOutboxRepository_Find_Call) RunAndReturn(run func(ctx con
 }
 
 // GetTail provides a mock function for the type MockDataAuditOutboxRepository
-func (_mock *MockDataAuditOutboxRepository) GetTail(ctx context.Context, tailDate time.Time) ([]string, error) {
-	ret := _mock.Called(ctx, tailDate)
+func (_mock *MockDataAuditOutboxRepository) GetTail(ctx context.Context, tailDate time.Time, limit int) ([]string, error) {
+	ret := _mock.Called(ctx, tailDate, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTail")
@@ -439,18 +439,18 @@ func (_mock *MockDataAuditOutboxRepository) GetTail(ctx context.Context, tailDat
 
 	var r0 []string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) ([]string, error)); ok {
-		return returnFunc(ctx, tailDate)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) ([]string, error)); ok {
+		return returnFunc(ctx, tailDate, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) []string); ok {
-		r0 = returnFunc(ctx, tailDate)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) []string); ok {
+		r0 = returnFunc(ctx, tailDate, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]string)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time) error); ok {
-		r1 = returnFunc(ctx, tailDate)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, int) error); ok {
+		r1 = returnFunc(ctx, tailDate, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -465,11 +465,12 @@ type MockDataAuditOutboxRepository_GetTail_Call struct {
 // GetTail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tailDate time.Time
-func (_e *MockDataAuditOutboxRepository_Expecter) GetTail(ctx any, tailDate any) *MockDataAuditOutboxRepository_GetTail_Call {
-	return &MockDataAuditOutboxRepository_GetTail_Call{Call: _e.mock.On("GetTail", ctx, tailDate)}
+//   - limit int
+func (_e *MockDataAuditOutboxRepository_Expecter) GetTail(ctx any, tailDate any, limit any) *MockDataAuditOutboxRepository_GetTail_Call {
+	return &MockDataAuditOutboxRepository_GetTail_Call{Call: _e.mock.On("GetTail", ctx, tailDate, limit)}
 }
 
-func (_c *MockDataAuditOutboxRepository_GetTail_Call) Run(run func(ctx context.Context, tailDate time.Time)) *MockDataAuditOutboxRepository_GetTail_Call {
+func (_c *MockDataAuditOutboxRepository_GetTail_Call) Run(run func(ctx context.Context, tailDate time.Time, limit int)) *MockDataAuditOutboxRepository_GetTail_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -479,9 +480,14 @@ func (_c *MockDataAuditOutboxRepository_GetTail_Call) Run(run func(ctx context.C
 		if args[1] != nil {
 			arg1 = args[1].(time.Time)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -492,7 +498,7 @@ func (_c *MockDataAuditOutboxRepository_GetTail_Call) Return(strings []string, e
 	return _c
 }
 
-func (_c *MockDataAuditOutboxRepository_GetTail_Call) RunAndReturn(run func(ctx context.Context, tailDate time.Time) ([]string, error)) *MockDataAuditOutboxRepository_GetTail_Call {
+func (_c *MockDataAuditOutboxRepository_GetTail_Call) RunAndReturn(run func(ctx context.Context, tailDate time.Time, limit int) ([]string, error)) *MockDataAuditOutboxRepository_GetTail_Call {
 	_c.Call.Return(run)
 	return _c
 }

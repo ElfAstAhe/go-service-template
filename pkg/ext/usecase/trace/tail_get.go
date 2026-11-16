@@ -36,15 +36,16 @@ func NewTailGetUseCase[ID comparable](
 
 // Get выполняет декорируемый вызов для получения списка идентификаторов из хвоста, созданных до указанного времени,
 // фиксируя метку времени в атрибутах спана, события ошибок и статус операции.
-func (tgi *TailGetInteractor[ID]) Get(ctx context.Context, tail time.Time) ([]ID, error) {
+func (tgi *TailGetInteractor[ID]) Get(ctx context.Context, tail time.Time, limit int) ([]ID, error) {
 	ucCtx, span := tgi.StartSpan(ctx, tgi.spanName)
 	defer span.End()
 
 	span.SetAttributes(
 		attribute.Int64("param.tail", tail.Unix()),
+		attribute.Int("param.limit", limit),
 	)
 
-	res, err := tgi.next.Get(ucCtx, tail)
+	res, err := tgi.next.Get(ucCtx, tail, limit)
 	if err != nil {
 		span.AddEvent("Get_failed")
 		span.RecordError(err)

@@ -33,15 +33,16 @@ func NewDataAuditOutboxRepository(next extdom.DataAuditOutboxRepository) *DataAu
 }
 
 // GetTail возвращает срез идентификаторов старых ("хвостовых") записей outbox, созданных до указанной даты.
-func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time) ([]string, error) {
+func (dao *DataAuditOutbox) GetTail(ctx context.Context, tailDate time.Time, limit int) ([]string, error) {
 	repoCtx, span := dao.StartSpan(ctx, fmt.Sprintf("%s.GetTail", dao.GetRepositoryName()))
 	defer span.End()
 
 	span.SetAttributes(
 		attribute.Int64("param.tailDate", tailDate.Unix()),
+		attribute.Int("param.limit", limit),
 	)
 
-	res, err := dao.next.GetTail(repoCtx, tailDate)
+	res, err := dao.next.GetTail(repoCtx, tailDate, limit)
 	if err != nil {
 		span.AddEvent("GetTail_failed")
 		span.RecordError(err)

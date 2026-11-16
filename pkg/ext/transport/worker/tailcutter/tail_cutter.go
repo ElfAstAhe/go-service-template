@@ -105,7 +105,7 @@ func (tc *Worker) dataProvider(ctx context.Context, eventTime time.Time) ([]stri
 		return []string{}, nil
 	}
 
-	res, err := tc.tailGetUC.Get(ctx, tailCutTime)
+	res, err := tc.tailGetUC.Get(ctx, tailCutTime, tc.opts.TailLimit)
 	if err != nil {
 		return nil, err
 	}

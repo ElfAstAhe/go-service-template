@@ -19,21 +19,24 @@ func TestTailGetInteractor_GetTail_WithTestify(t *testing.T) {
 	tests := []struct {
 		name    string
 		tail    time.Time
+		limit   int
 		setup   func(repo *mocks2.MockTailRepository[string])
 		wantErr bool
 		errType any
 	}{
 		{
-			name: "Успешное извлечение среза идентификаторов по валидной временной метке",
-			tail: mockTime,
+			name:  "Успешное извлечение среза идентификаторов по валидной временной метке",
+			tail:  mockTime,
+			limit: 10,
 			setup: func(repo *mocks2.MockTailRepository[string]) {
-				repo.On("GetTail", mock.Anything, mockTime).Return(expectedIDs, nil).Once()
+				repo.On("GetTail", mock.Anything, mockTime, mock.Anything).Return(expectedIDs, nil).Once()
 			},
 			wantErr: false,
 		},
 		{
-			name: "Сбой операции: передана нулевая временная метка, срабатывает Fail-Fast валидация",
-			tail: time.Time{}, // IsZero() == true
+			name:  "Сбой операции: передана нулевая временная метка, срабатывает Fail-Fast валидация",
+			tail:  time.Time{}, // IsZero() == true
+			limit: 10,
 			setup: func(repo *mocks2.MockTailRepository[string]) {
 				// Репозиторий вообще не должен вызываться
 			},
@@ -41,10 +44,11 @@ func TestTailGetInteractor_GetTail_WithTestify(t *testing.T) {
 			errType: &errs.InvalidArgumentError{},
 		},
 		{
-			name: "Сбой операции: репозиторий возвращает инфраструктурную ошибку базы данных",
-			tail: mockTime,
+			name:  "Сбой операции: репозиторий возвращает инфраструктурную ошибку базы данных",
+			tail:  mockTime,
+			limit: 10,
 			setup: func(repo *mocks2.MockTailRepository[string]) {
-				repo.On("GetTail", mock.Anything, mockTime).Return(nil, errors.New("db disconnect")).Once()
+				repo.On("GetTail", mock.Anything, mockTime, mock.Anything).Return(nil, errors.New("db disconnect")).Once()
 			},
 			wantErr: true,
 		},
@@ -58,7 +62,7 @@ func TestTailGetInteractor_GetTail_WithTestify(t *testing.T) {
 			tt.setup(mockRepo)
 
 			interactor := NewTailGet[string](mockRepo)
-			res, err := interactor.Get(ctx, tt.tail)
+			res, err := interactor.Get(ctx, tt.tail, tt.limit)
 
 			if tt.wantErr {
 				assert.Error(t, err)

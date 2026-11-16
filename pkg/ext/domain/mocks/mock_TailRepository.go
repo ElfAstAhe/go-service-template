@@ -105,8 +105,8 @@ func (_c *MockTailRepository_CutTail_Call[ID]) RunAndReturn(run func(ctx context
 }
 
 // GetTail provides a mock function for the type MockTailRepository
-func (_mock *MockTailRepository[ID]) GetTail(ctx context.Context, tailDate time.Time) ([]ID, error) {
-	ret := _mock.Called(ctx, tailDate)
+func (_mock *MockTailRepository[ID]) GetTail(ctx context.Context, tailDate time.Time, limit int) ([]ID, error) {
+	ret := _mock.Called(ctx, tailDate, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTail")
@@ -114,18 +114,18 @@ func (_mock *MockTailRepository[ID]) GetTail(ctx context.Context, tailDate time.
 
 	var r0 []ID
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) ([]ID, error)); ok {
-		return returnFunc(ctx, tailDate)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) ([]ID, error)); ok {
+		return returnFunc(ctx, tailDate, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) []ID); ok {
-		r0 = returnFunc(ctx, tailDate)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, int) []ID); ok {
+		r0 = returnFunc(ctx, tailDate, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]ID)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time) error); ok {
-		r1 = returnFunc(ctx, tailDate)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, int) error); ok {
+		r1 = returnFunc(ctx, tailDate, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -140,11 +140,12 @@ type MockTailRepository_GetTail_Call[ID comparable] struct {
 // GetTail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tailDate time.Time
-func (_e *MockTailRepository_Expecter[ID]) GetTail(ctx any, tailDate any) *MockTailRepository_GetTail_Call[ID] {
-	return &MockTailRepository_GetTail_Call[ID]{Call: _e.mock.On("GetTail", ctx, tailDate)}
+//   - limit int
+func (_e *MockTailRepository_Expecter[ID]) GetTail(ctx any, tailDate any, limit any) *MockTailRepository_GetTail_Call[ID] {
+	return &MockTailRepository_GetTail_Call[ID]{Call: _e.mock.On("GetTail", ctx, tailDate, limit)}
 }
 
-func (_c *MockTailRepository_GetTail_Call[ID]) Run(run func(ctx context.Context, tailDate time.Time)) *MockTailRepository_GetTail_Call[ID] {
+func (_c *MockTailRepository_GetTail_Call[ID]) Run(run func(ctx context.Context, tailDate time.Time, limit int)) *MockTailRepository_GetTail_Call[ID] {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -154,9 +155,14 @@ func (_c *MockTailRepository_GetTail_Call[ID]) Run(run func(ctx context.Context,
 		if args[1] != nil {
 			arg1 = args[1].(time.Time)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -167,7 +173,7 @@ func (_c *MockTailRepository_GetTail_Call[ID]) Return(vs []ID, err error) *MockT
 	return _c
 }
 
-func (_c *MockTailRepository_GetTail_Call[ID]) RunAndReturn(run func(ctx context.Context, tailDate time.Time) ([]ID, error)) *MockTailRepository_GetTail_Call[ID] {
+func (_c *MockTailRepository_GetTail_Call[ID]) RunAndReturn(run func(ctx context.Context, tailDate time.Time, limit int) ([]ID, error)) *MockTailRepository_GetTail_Call[ID] {
 	_c.Call.Return(run)
 	return _c
 }
