@@ -140,8 +140,15 @@ func Load() (*Config, error) {
 	return res, nil
 }
 
+func buildCommonSettings() pkgconf.Settings {
+	return pkgconf.Settings{
+		pkgconf.NewSetting("", pkgconf.FlagConfig, pkgconf.DefaultConfigFile, "application config file path"),
+	}
+}
+
 func buildSettings() pkgconf.Settings {
 	var builders = []func() pkgconf.Settings{
+		buildCommonSettings,
 		BuildAppSettings,
 		pkgconf.BuildAuthSettings,
 		pkgconf.BuildHTTPSettings,

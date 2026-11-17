@@ -44,7 +44,7 @@ type Runner struct {
 	serviceRegister ServiceRegister
 	serverLauncher  ServerLauncher
 	log             logger.Logger
-	env             config.AppEnv
+	env             string
 }
 
 // Гарантируем компиляционную верификацию соответствия интерфейсу container.Runner

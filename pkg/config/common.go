@@ -1,45 +1,39 @@
 package config
 
+import (
+	"fmt"
+)
+
 // Validator поддержка метода проверки конфигурации
 type Validator interface {
 	Validate() error
 }
 
-// AppEnv определяет строго типизированный строковый доменный тип для сред окружения (Environment Type).
-type AppEnv string
-
-// Exists выполняет атомарную проверку за константное время O(1), входит ли текущая строка
-// в пул легитимных сред окружения платформы, защищая рантайм от некорректных конфигураций.
-func (ae AppEnv) Exists() bool {
-	return appEnvs.Contains(ae)
-}
-
-// appEnvList инкапсулирует внутреннюю структуру реестра доступных сред окружения.
-type appEnvList map[AppEnv]struct{}
-
-// Contains верифицирует фактическое наличие переданного ключа в хэш-карте.
-func (ae appEnvList) Contains(env AppEnv) bool {
-	_, ok := ae[env]
-
-	return ok
-}
-
 // Набор констант поддерживаемых и валидируемых сред окружения (App Env Enum).
 const (
 	// AppEnvProduction промышленный контур (Production)
-	AppEnvProduction AppEnv = "prod"
+	AppEnvProduction string = "prod"
 
 	// AppEnvDevelopment контур локальной разработки и отладки (Development)
-	AppEnvDevelopment AppEnv = "dev"
+	AppEnvDevelopment string = "dev"
 
 	// AppEnvTest контур автоматизированного тестирования (CI/CD / Testing)
-	AppEnvTest AppEnv = "test"
+	AppEnvTest string = "test"
 )
 
 // Глобальный неизменяемый синглтон-реестр валидных окружений.
 // 💡 Оптимизация: пустая структура struct{} имеет нулевой размер (0 bytes), исключая нагрузку на GC.
-var appEnvs appEnvList = map[AppEnv]struct{}{
+var appEnvs = map[string]struct{}{
 	AppEnvProduction:  {},
 	AppEnvDevelopment: {},
 	AppEnvTest:        {},
+}
+
+// ValidateAppEnv validate environment parameter value
+func ValidateAppEnv(env string) error {
+	if _, ok := appEnvs[env]; !ok {
+		return fmt.Errorf("invalid environment %q", env)
+	}
+
+	return nil
 }

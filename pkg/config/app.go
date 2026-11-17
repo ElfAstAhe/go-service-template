@@ -24,7 +24,7 @@ const (
 
 // Параметры по умолчанию для ядра жизненного цикла приложения.
 const (
-	DefaultAppEnv          AppEnv        = AppEnvDevelopment // Среда окружения по умолчанию (dev контур локальной разработки)
+	DefaultAppEnv          string        = AppEnvDevelopment // Среда окружения по умолчанию (dev контур локальной разработки)
 	DefaultAppInitTimeout  time.Duration = 30 * time.Second  // Дефолтный лимит на сборку и инициализацию IoC графа зависимостей
 	DefaultAppStopTimeout  time.Duration = 20 * time.Second  // Дефолтный лимит на Graceful Shutdown серверов и воркеров
 	DefaultAppCloseTimeout time.Duration = 5 * time.Second   // Дефолтный лимит на деаллокацию тяжелых пулов памяти и сокетов СУБД
@@ -34,7 +34,7 @@ const (
 // временные лимиты (таймауты) для управления фазами жизненного цикла микросервиса.
 type AppConfig struct {
 	// Env режим запуска рантайма (dev, prod, test)
-	Env AppEnv `mapstructure:"env" json:"env,omitempty" yaml:"env,omitempty"`
+	Env string `mapstructure:"env" json:"env,omitempty" yaml:"env,omitempty"`
 
 	// InitTimeout временной потолок на сборку и инициализацию DI-контейнеров (Bootstrap)
 	InitTimeout time.Duration `mapstructure:"init_timeout" json:"init_timeout,omitempty" yaml:"init_timeout,omitempty"`
@@ -48,7 +48,7 @@ type AppConfig struct {
 
 // NewAppConfig — фабричный конструктор центральной конфигурации приложения.
 func NewAppConfig(
-	env AppEnv,
+	env string,
 	initTimeout time.Duration,
 	stopTimeout time.Duration,
 	closeTimeout time.Duration,
@@ -78,7 +78,7 @@ func (ac *AppConfig) Validate() error {
 		return errs.NewConfigValidateError("app", "Env", "empty", nil)
 	}
 	// Валидируем соответствие переданной строки доступному пулу сред (dev/prod/test)
-	if !ac.Env.Exists() {
+	if err := ValidateAppEnv(ac.Env); err != nil {
 		return errs.NewConfigValidateError("app", "env", "env value not match", nil)
 	}
 	if ac.InitTimeout < 0 {

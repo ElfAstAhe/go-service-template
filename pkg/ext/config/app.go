@@ -31,9 +31,9 @@ const (
 //
 //nolint:gosec // G101 : dev/test default conf vals
 const (
-	DefaultAppEnv          pkgconf.AppEnv = pkgconf.AppEnvDevelopment
-	DefaultAppMaxListLimit int            = 100
-	DefaultAppCipherKey    string         = "123456"
+	DefaultAppEnv          string = pkgconf.AppEnvDevelopment
+	DefaultAppMaxListLimit int    = 100
+	DefaultAppCipherKey    string = "123456"
 )
 
 // DefaultAcceptTokenIssuers default token issuers
