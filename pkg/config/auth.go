@@ -7,6 +7,44 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// CLI-флаги подсистемы безопасности, шифрования и авторизации (IAM/Auth).
+//
+//nolint:gosec // G101 : это флаги (параметры)
+const (
+	FlagAuthJWTSecret          string = "auth-jwt-secret"           // CLI-флаг секретной соли HMAC подписи JWT токенов
+	FlagAuthJWTSigningMethod   string = "auth-jwt-signing-method"   // CLI-флаг алгоритма подписи JWT (например, HS256)
+	FlagAuthAccessTokenTTL     string = "auth-access-token-ttl"     // CLI-флаг времени жизни Access-токена
+	FlagAuthRefreshTokenTTL    string = "auth-refresh-token-ttl"    // CLI-флаг времени жизни Refresh-токена
+	FlagAuthRSAPrivateKeyPath  string = "auth-rsa-private-key-path" // CLI-флаг пути к приватному RSA-ключу на диске
+	FlagAuthMasterPasswordSalt string = "auth-master-password-salt" // CLI-флаг соли для хэширования паролей пользователей
+)
+
+// ====================================================================
+// Auth
+// ====================================================================
+// Строковые ключи Viper-маппинга для иерархического связывания секретов подсистемы безопасности и IAM.
+//
+//nolint:gosec // G101 : это ключи
+const (
+	KeyAuthJWTSecret          string = "auth.jwt_secret"
+	KeyAuthJWTSigningMethod   string = "auth.jwt_signing_method"
+	KeyAuthAccessTokenTTL     string = "auth.access_token_ttl"
+	KeyAuthRefreshTokenTTL    string = "auth.refresh_token_ttl"
+	KeyAuthRSAPrivateKeyPath  string = "auth.rsa_private_key_path"
+	KeyAuthMasterPasswordSalt string = "auth.master_password_salt"
+)
+
+// ====================================================================
+// access defaults
+// ====================================================================
+// Константные таймауты авторизации и параметры безопасности сессий по умолчанию.
+const (
+	DefaultAuthJWTSecret       string        = "123456"
+	DefaultAuthSigningMethod   string        = "HS256"          // Метод подписи токенов по умолчанию: HMAC-SHA256
+	DefaultAuthAccessTokenTTL  time.Duration = 15 * time.Minute // Время жизни короткоживущего токена доступа (Access Token)
+	DefaultAuthRefreshTokenTTL time.Duration = 24 * time.Hour   // Время жизни сессионного токена обновления (Refresh Token)
+)
+
 // AuthConfig инкапсулирует криптографические секреты, алгоритмы подписи,
 // временные лимиты сессий (JWT TTL) и параметры хэширования для подсистемы безопасности (IAM/Auth).
 type AuthConfig struct {
@@ -72,4 +110,16 @@ func (ac *AuthConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildAuthSettings auth settings builder
+func BuildAuthSettings() Settings {
+	return Settings{
+		NewSetting(KeyAuthJWTSecret, FlagAuthJWTSecret, DefaultAuthJWTSecret, "JWT secret"),
+		NewSetting(KeyAuthJWTSigningMethod, FlagAuthJWTSigningMethod, DefaultAuthSigningMethod, "JWT signing method"),
+		NewSetting(KeyAuthAccessTokenTTL, FlagAuthAccessTokenTTL, DefaultAuthAccessTokenTTL, "JWT access token TTL"),
+		NewSetting(KeyAuthRefreshTokenTTL, FlagAuthRefreshTokenTTL, DefaultAuthRefreshTokenTTL, "JWT refresh token TTL"),
+		NewSetting(KeyAuthRSAPrivateKeyPath, FlagAuthRSAPrivateKeyPath, "", "RSA private key path"),
+		NewSetting(KeyAuthMasterPasswordSalt, FlagAuthMasterPasswordSalt, "", "master password salt"),
+	}
 }

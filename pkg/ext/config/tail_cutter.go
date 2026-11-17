@@ -43,6 +43,7 @@ func NewDefaultTailCutterConfig() *TailCutterConfig {
 	)
 }
 
+// Validate метод проверки настроечных значений
 func (tcc *TailCutterConfig) Validate() error {
 	if err := tcc.Dispatcher.Validate(); err != nil {
 		return errs.NewConfigValidateError("tail_cutter", "dispatcher", "validation failed", err)

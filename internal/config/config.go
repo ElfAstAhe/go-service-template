@@ -5,22 +5,24 @@ import (
 	"log"
 	"strings"
 
-	conf "github.com/ElfAstAhe/go-service-template/pkg/config"
+	pkgconf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 // Config — корневой объект
 type Config struct {
-	App       *AppConfig            `mapstructure:"app" json:"app,omitempty" yaml:"app,omitempty"`
-	Auth      *conf.AuthConfig      `mapstructure:"auth" json:"auth,omitempty" yaml:"auth,omitempty"`
-	HTTP      *conf.HTTPConfig      `mapstructure:"http" json:"http,omitempty" yaml:"http,omitempty"`
-	GRPC      *conf.GRPCConfig      `mapstructure:"grpc" json:"grpc,omitempty" yaml:"grpc,omitempty"`
-	Log       *conf.LogConfig       `mapstructure:"log" json:"log,omitempty" yaml:"log,omitempty"`
-	DB        *conf.DBConfig        `mapstructure:"db" json:"db,omitempty" yaml:"db,omitempty"`
-	Telemetry *conf.TelemetryConfig `mapstructure:"telemetry" json:"telemetry,omitempty" yaml:"telemetry,omitempty"`
-	//    Redis *RedisConfig `mapstructure:"redis"`
+	App       *AppConfig               `mapstructure:"app" json:"app,omitempty" yaml:"app,omitempty" toml:"app,omitempty"`
+	Auth      *pkgconf.AuthConfig      `mapstructure:"auth" json:"auth,omitempty" yaml:"auth,omitempty" toml:"auth,omitempty"`
+	HTTP      *pkgconf.HTTPConfig      `mapstructure:"http" json:"http,omitempty" yaml:"http,omitempty" toml:"http,omitempty"`
+	GRPC      *pkgconf.GRPCConfig      `mapstructure:"grpc" json:"grpc,omitempty" yaml:"grpc,omitempty" toml:"grpc,omitempty"`
+	Log       *pkgconf.LogConfig       `mapstructure:"log" json:"log,omitempty" yaml:"log,omitempty" toml:"log,omitempty"`
+	DB        *pkgconf.DBConfig        `mapstructure:"db" json:"db,omitempty" yaml:"db,omitempty" toml:"db,omitempty"`
+	Telemetry *pkgconf.TelemetryConfig `mapstructure:"telemetry" json:"telemetry,omitempty" yaml:"telemetry,omitempty" toml:"telemetry,omitempty"`
 }
+
+var _ pkgconf.Validator = (*Config)(nil)
 
 // linker params
 var (
@@ -31,12 +33,12 @@ var (
 
 func NewConfig(
 	app *AppConfig,
-	auth *conf.AuthConfig,
-	HTTP *conf.HTTPConfig,
-	GRPC *conf.GRPCConfig,
-	log *conf.LogConfig,
-	db *conf.DBConfig,
-	telemetry *conf.TelemetryConfig,
+	auth *pkgconf.AuthConfig,
+	HTTP *pkgconf.HTTPConfig,
+	GRPC *pkgconf.GRPCConfig,
+	log *pkgconf.LogConfig,
+	db *pkgconf.DBConfig,
+	telemetry *pkgconf.TelemetryConfig,
 ) *Config {
 	return &Config{
 		App:       app,
@@ -52,33 +54,17 @@ func NewConfig(
 func NewDefaultConfig() *Config {
 	return NewConfig(
 		NewDefaultAppConfig(),
-		conf.NewDefaultAuthConfig(),
-		conf.NewDefaultHTTPConfig(),
-		conf.NewDefaultGRPCConfig(),
-		conf.NewDefaultLogConfig(),
-		conf.NewDefaultDBConfig(),
-		conf.NewDefaultTelemetryConfig(),
+		pkgconf.NewDefaultAuthConfig(),
+		pkgconf.NewDefaultHTTPConfig(),
+		pkgconf.NewDefaultGRPCConfig(),
+		pkgconf.NewDefaultLogConfig(),
+		pkgconf.NewDefaultDBConfig(),
+		pkgconf.NewDefaultTelemetryConfig(),
 	)
 }
 
-func NewEmptyConfig() *Config {
-	return &Config{
-		App: &AppConfig{
-			AppConfig: &conf.AppConfig{},
-		},
-		Auth:      &conf.AuthConfig{},
-		HTTP:      &conf.HTTPConfig{},
-		GRPC:      &conf.GRPCConfig{},
-		Log:       &conf.LogConfig{},
-		DB:        &conf.DBConfig{},
-		Telemetry: &conf.TelemetryConfig{},
-	}
-}
-
 func (c *Config) Validate() error {
-	validators := []interface {
-		Validate() error
-	}{
+	validators := []pkgconf.Validator{
 		c.App,
 		//		c.Auth,
 		c.HTTP,
@@ -102,52 +88,79 @@ func (c *Config) Validate() error {
 
 // Load собирает конфигурацию из: Flags -> ENV -> YAML -> Defaults
 func Load() (*Config, error) {
+	// 1. Instances.
+	settings := buildSettings()
 	v := viper.New()
+	fs := pflag.NewFlagSet("app-cmd-flags", pflag.PanicOnError)
 
-	// 1. Установка значений по умолчанию (Defaults)
-	applyDefaults(v)
-
-	// 2. Настройка Флагов (pflag для длинных имен --port)
-	pFlagSet, err := initFLags()
-	if err != nil {
-		return nil, errs.NewConfigError("failed init flags", err)
+	// 2. Init flags.
+	if err := settings.InitFlags(fs); err != nil {
+		return nil, errs.NewConfigError("flags initialization failed", err)
 	}
 
-	// 3. Привязываем все флаги к Viper
-	if err := bindFlags(pFlagSet, v); err != nil {
-		return nil, err
+	// 3. Init keys.
+	if err := settings.InitKeys(v); err != nil {
+		return nil, errs.NewConfigError("keys initialization failed", err)
 	}
 
-	// 4. Настройка Переменных окружения (ENV)
-	// Используем твой механизм AutomaticEnv
+	// 4. Binds.
+	if err := settings.BindKeysAndFlags(v, fs); err != nil {
+		return nil, errs.NewConfigError("keys and flags binding failed", err)
+	}
+
+	// 5. Настройка Переменных окружения (ENV). Используем твой механизм AutomaticEnv
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	v.AutomaticEnv()
 
-	// 5. Поддержка ENV для пути к конфигу
-	err = v.BindEnv(conf.FlagConfig, conf.EnvConfig)
-	if err != nil {
+	// 6. Поддержка ENV для пути к конфигу
+	if err := v.BindEnv(pkgconf.FlagConfig, pkgconf.EnvConfig); err != nil {
 		return nil, errs.NewConfigError("failed to bind env", err)
 	}
 
-	// 6. Чтение файла конфигурации
-	cfgFile := v.GetString(conf.FlagConfig)
-	v.SetConfigFile(cfgFile)
+	// 7. Чтение файла конфигурации
+	confPath := v.GetString(pkgconf.FlagConfig)
+	v.SetConfigFile(confPath)
 
 	if err := v.ReadInConfig(); err != nil {
 		// Если файла нет — это предупреждение, но не фатальная ошибка (могут быть ENV)
-		log.Printf("WARN: config file not found [%s]\n", cfgFile)
+		log.Printf("WARN: config file not found [%s]\n", confPath)
 	}
 
-	// 7. Маппинг в структуру
-	var cfg = NewDefaultConfig()
-	if err := v.Unmarshal(cfg); err != nil {
+	// 8. Маппинг в структуру
+	var res = NewDefaultConfig()
+	if err := v.Unmarshal(res); err != nil {
 		return nil, errs.NewConfigError("failed to unmarshal config struct", err)
 	}
 
-	// 8. Итоговая валидация по всем слоям
-	if err := cfg.Validate(); err != nil {
+	// 9. Итоговая валидация по всем слоям
+	if err := res.Validate(); err != nil {
 		return nil, errs.NewConfigError("config validation failed", err)
 	}
 
-	return cfg, nil
+	return res, nil
+}
+
+func buildCommonSettings() pkgconf.Settings {
+	return pkgconf.Settings{
+		pkgconf.NewSetting("", pkgconf.FlagConfig, pkgconf.DefaultConfigFile, "application config file path"),
+	}
+}
+
+func buildSettings() pkgconf.Settings {
+	var builders = []func() pkgconf.Settings{
+		buildCommonSettings,
+		BuildAppSettings,
+		pkgconf.BuildAuthSettings,
+		pkgconf.BuildHTTPSettings,
+		pkgconf.BuildGRPCSettings,
+		pkgconf.BuildLogSettings,
+		pkgconf.BuildDBSettings,
+		pkgconf.BuildTelemetrySettings,
+	}
+	var res pkgconf.Settings
+	for _, builder := range builders {
+		res = append(res, builder()...)
+	}
+
+	return res
 }

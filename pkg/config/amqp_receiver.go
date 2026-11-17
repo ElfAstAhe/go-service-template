@@ -7,6 +7,15 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// amqp receiver
+// ====================================================================
+const (
+	DefaultAMQPReceiverConnectTimeout  time.Duration = 10 * time.Second
+	DefaultAMQPReceiverShutdownTimeout time.Duration = 15 * time.Second
+	DefaultAMQPReceiverPrefetchCredit  int           = 100
+)
+
 // AMQPReceiverConfig инкапсулирует конфигурационные параметры получателя (Consumer / Receiver)
 // для чтения сообщений из брокеров по протоколу AMQP 0-9-1.
 //

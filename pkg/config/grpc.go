@@ -6,6 +6,54 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// CLI-флаги для настройки транспортных параметров и KeepAlive-политик gRPC-сервера.
+const (
+	FlagGRPCAddress          string = "grpc-address"            // CLI-флаг сетевого адреса gRPC слушателя
+	FlagGRPCMaxConnIdle      string = "grpc-max-conn-idle"      // CLI-флаг лимита простоя HTTP/2 соединений
+	FlagGRPCMaxConnAge       string = "grpc-max-conn-age"       // CLI-флаг лимита времени жизни коннекта (Ротация)
+	FlagGRPCMaxConnAgeGrace  string = "grpc-max-conn-age-grace" // CLI-флаг Grace-периода мягкого закрытия старых gRPC запросов
+	FlagGRPCTimeout          string = "grpc-timeout"            // CLI-флаг сетевого таймаута gRPC операций
+	FlagGRPCKeepAliveTime    string = "grpc-keep-alive-time"    // CLI-флаг интервала пинга KeepAlive со стороны сервера
+	FlagGRPCKeepAliveTimeout string = "grpc-keep-alive-timeout" // CLI-флаг таймаута ожидания ответа на KeepAlive пинг
+	FlagGRPCShutdownTimeout  string = "grpc-shutdown-timeout"   // CLI-флаг таймаута мягкого гашения gRPC сервера
+)
+
+// ====================================================================
+// gRPC
+// ====================================================================
+// Строковые ключи Viper-маппинга для иерархического связывания параметров gRPC сервера.
+const (
+	KeyGRPCAddress          string = "grpc.address"
+	KeyGRPCMaxConnIdle      string = "grpc.max-conn-idle"
+	KeyGRPCMaxConnAge       string = "grpc.max-conn-age"
+	KeyGRPCMaxConnAgeGrace  string = "grpc-max-conn-age-grace"
+	KeyGRPCTimeout          string = "grpc.timeout"
+	KeyGRPCKeepAliveTime    string = "grpc-keep-alive-time"
+	KeyGRPCKeepAliveTimeout string = "grpc-keep-alive-timeout"
+	KeyGRPCShutdownTimeout  string = "grpc.shutdown_timeout"
+)
+
+// ====================================================================
+// gRPC defaults
+// ====================================================================
+// Настройки по умолчанию и политики балансировки HTTP/2 соединений для gRPC-транспорта.
+const (
+	DefaultGRPCAddress string = "localhost:50051" // Сетевой интерфейс и порт по умолчанию для gRPC-слушателя
+
+	// DefaultGRPCMaxConnIdle - Даем соединениям «отдохнуть», но не убиваем их сразу, снижая нагрузку на сокеты.
+	DefaultGRPCMaxConnIdle time.Duration = 5 * time.Minute
+
+	// DefaultGRPCMaxConnAge - Ротируем соединения раз в 20 минут для равномерной балансировки трафика внутри K8s.
+	DefaultGRPCMaxConnAge time.Duration = 20 * time.Minute
+
+	// DefaultGRPCMaxConnAgeGrace - Grace-период, чтобы активные gRPC-стримы успели довариться при ротации коннекта.
+	DefaultGRPCMaxConnAgeGrace  time.Duration = 1 * time.Minute
+	DefaultGRPCTimeout          time.Duration = 5 * time.Second     // Жесткий порог ожидания выполнения gRPC операции
+	DefaultGRPCKeepAliveTime    time.Duration = 2 * 2 * time.Minute // Интервал превентивной отправки пингов для проверки живой TCP-сессии
+	DefaultGRPCKeepAliveTimeout time.Duration = 20 * time.Second    // Время ожидания ответа на пинг до принудительного дропа сокета
+	DefaultGRPCShutdownTimeout  time.Duration = 15 * time.Second    // Лимит времени на мягкую остановку gRPC обработчиков
+)
+
 // GRPCConfig — настройки gRPC сервера
 //
 // Инкапсулирует конфигурационные параметры gRPC-транспорта, включая адресацию,
@@ -87,4 +135,18 @@ func (gc *GRPCConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildGRPCSettings GRPC settings builder
+func BuildGRPCSettings() Settings {
+	return Settings{
+		NewSetting(KeyGRPCAddress, FlagGRPCAddress, DefaultGRPCAddress, "gRPC address"),
+		NewSetting(KeyGRPCMaxConnIdle, FlagGRPCMaxConnIdle, DefaultGRPCMaxConnIdle, "gRPC max connection idle time"),
+		NewSetting(KeyGRPCMaxConnAge, FlagGRPCMaxConnAge, DefaultGRPCMaxConnAge, "gRPC max connection age timeout"),
+		NewSetting(KeyGRPCMaxConnAgeGrace, FlagGRPCMaxConnAgeGrace, DefaultGRPCMaxConnAgeGrace, "gRPC max connection age grace timeout"),
+		NewSetting(KeyGRPCTimeout, FlagGRPCTimeout, DefaultGRPCTimeout, "gRPC timeout"),
+		NewSetting(KeyGRPCKeepAliveTime, FlagGRPCKeepAliveTime, DefaultGRPCKeepAliveTime, "gRPC keep alive time"),
+		NewSetting(KeyGRPCKeepAliveTimeout, FlagGRPCKeepAliveTimeout, DefaultGRPCKeepAliveTimeout, "gRPC keep alive timeout"),
+		NewSetting(KeyGRPCShutdownTimeout, FlagGRPCShutdownTimeout, DefaultGRPCShutdownTimeout, "gRPC shutdown timeout"),
+	}
 }

@@ -60,7 +60,7 @@ func WithShutdownTimeout(timeout time.Duration) Option {
 }
 
 // WithAppEnv инжектирует текущую среду окружения рантайма (dev/prod/test) для адаптации политик безопасности gRPC.
-func WithAppEnv(env config.AppEnv) Option {
+func WithAppEnv(env string) Option {
 	return func(r *Runner) {
 		r.env = env
 	}

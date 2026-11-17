@@ -7,6 +7,51 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// Kafka Receiver (Consumer) Defaults
+// ====================================================================
+// Системные параметры по умолчанию для распределенного отказоустойчивого консьюмера Кафки.
+const (
+	// DefaultKafkaReceiverConnectTimeout задает лимит времени на подключение к координатору группы брокеров.
+	DefaultKafkaReceiverConnectTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaReceiverShutdownTimeout — время на безопасную остановку чтения и корректный выход из Consumer Group.
+	DefaultKafkaReceiverShutdownTimeout time.Duration = 15 * time.Second
+
+	// DefaultKafkaReceiverMinBytes — минимальный объем данных (в байтах), который брокер должен собрать перед ответом.
+	// Снижено до 1024 (1 KB) для dev/test окружений, чтобы одиночные мелкие сообщения доставлялись без задержек.
+	DefaultKafkaReceiverMinBytes int = 1024
+
+	// DefaultKafkaReceiverMaxBytes — максимальный объем данных, принимаемый за одну сетевую трансляцию (итерацию Fetch).
+	// Значение 10e6 (10 MB) защищает consumer-группу от застревания при обработке «жирных» JSON-пакетов.
+	DefaultKafkaReceiverMaxBytes int = 10e6
+
+	// DefaultKafkaReceiverMaxWait — максимальное время ожидания брокера, если объем данных еще не достиг лимита MinBytes.
+	// Значение 500ms на dev/test экономит ресурсы CPU сервера, предотвращая «горячий цикл» пустых запросов.
+	DefaultKafkaReceiverMaxWait time.Duration = 500 * time.Millisecond
+
+	// DefaultKafkaReceiverHeartbeatInterval — частота фонового пинга ("я жив") к координатору группы.
+	DefaultKafkaReceiverHeartbeatInterval time.Duration = 3 * time.Second
+
+	// DefaultKafkaReceiverSessionTimeout — таймаут отсутствия пингов, после которого брокер считает под мертвым и запускает ребаланс.
+	DefaultKafkaReceiverSessionTimeout time.Duration = 30 * time.Second
+
+	// DefaultKafkaReceiverRebalanceTimeout — время, выделяемое воркеру на доработку текущей пачки и сдачу партиций при ребалансе.
+	DefaultKafkaReceiverRebalanceTimeout time.Duration = 60 * time.Second
+
+	// DefaultKafkaReceiverReadTimeout — низкоуровневый таймаут сетевого сокета на чтение. Уходит в Dialer.
+	DefaultKafkaReceiverReadTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaReceiverMaxAttempts — количество попыток переподключения до возврата критической ошибки.
+	DefaultKafkaReceiverMaxAttempts int = 3
+
+	// DefaultKafkaReceiverQueueCapacity — емкость внутреннего фонового буфера предвыборки сообщений из сети.
+	DefaultKafkaReceiverQueueCapacity int = 100
+
+	// DefaultKafkaReceiverStartOffset определяет точку старта, если для Consumer Group еще нет сохраненного оффсета ("first" или "last").
+	DefaultKafkaReceiverStartOffset string = "first"
+)
+
 // KafkaReceiverConfig содержит настройки для вычитки сообщений и координации в рамках Consumer Group кластера Kafka.
 //
 // Управляет сетевыми лимитами рантайма (таймауты, объемы батчей), стратегиями координации распределенной группы,

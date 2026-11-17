@@ -6,6 +6,25 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// Scheduler Dispatcher Defaults
+// ====================================================================
+// Системные параметры по умолчанию для scheduler
+const (
+	// DefaultSchedulerDispatcherPoolWorkerCount - кол-во обработчиков
+	DefaultSchedulerDispatcherPoolWorkerCount int = 2
+	// DefaultSchedulerDispatcherPoolDataCapacity - емкость внутреннего фонового буфера
+	DefaultSchedulerDispatcherPoolDataCapacity int = 100
+	// DefaultSchedulerDispatcherPoolCompleteProcess - признак завершения обработки при закрытии
+	DefaultSchedulerDispatcherPoolCompleteProcess bool = true
+	// DefaultSchedulerDispatcherSchedulerStartInterval - первичная задержка (холодное смещение) перед самым первым тиком таймера
+	DefaultSchedulerDispatcherSchedulerStartInterval time.Duration = time.Second
+	// DefaultSchedulerDispatcherSchedulerScheduleInterval - фиксированный интервал периодического повторения задач (период)
+	DefaultSchedulerDispatcherSchedulerScheduleInterval time.Duration = 5 * time.Second
+	// DefaultSchedulerDispatcherStopTimeout - Временной лимит (таймаут) на мягкое завершение активной итерации обработчика
+	DefaultSchedulerDispatcherStopTimeout time.Duration = 5 * time.Second
+)
+
 // SchedulerDispatcherConfig инкапсулирует конфигурационные параметры емкости и политик останова пула воркеров.
 type SchedulerDispatcherConfig struct {
 	// WorkerCount Количество параллельно запущенных горутин-обработчиков

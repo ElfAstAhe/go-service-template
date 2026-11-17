@@ -6,6 +6,12 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// Временные лимиты по умолчанию для управления жизненным циклом асинхронных раннеров (Runners).
+const (
+	DefaultRunnerStopTimeout  time.Duration = 15 * time.Second // Дефолтный таймаут на остановку консьюмеров или серверов
+	DefaultRunnerCloseTimeout time.Duration = 5 * time.Second  // Дефолтный таймаут на уничтожение внутренних сетевых ресурсов
+)
+
 // RunnerConfig инкапсулирует конфигурационные параметры временных лимитов (таймаутов)
 // для управления фазами остановки и очистки ресурсов исполняемых компонентов (Runners).
 type RunnerConfig struct {

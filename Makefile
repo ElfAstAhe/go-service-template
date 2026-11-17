@@ -10,7 +10,7 @@ VERSION=1.0.0
 BUILD_TIME=$(shell date +'%Y/%m/%d_%H:%M:%S')
 STAGE=DEV
 
-.PHONY: gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run test bench static-check lint lint-revive clean update-deps
+.PHONY: help gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run run-help test bench static-check lint lint-revive clean update-deps
 # Показывает это руководство (выполняется по умолчанию)
 help:
 	@echo "Доступные команды для сборки и тестирования:"
@@ -72,6 +72,9 @@ run: build-only ## Собрать проект и запустить бинар�
 		--db-driver "postgres" \
 		--db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service" \
 		--log-level "DEBUG"
+
+run-help: build-only
+	./bin/$(SERVER_BINARY_NAME) --help
 
 # Запуск тестов
 test: gen-sources gen-proto gen-swagger gen-mocks ## Запустить модульные и интеграционные тесты проекта

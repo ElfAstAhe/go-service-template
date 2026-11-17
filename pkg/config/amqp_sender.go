@@ -7,6 +7,18 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// amqp sender
+// ====================================================================
+// Параметры по умолчанию политики повторных попыток отправки фреймов (Publish Retry Policy) продюсера.
+const (
+	DefaultAMQPSenderConnectTimeout        time.Duration = 10 * time.Second       // Таймаут логического открытия продюсер-канала
+	DefaultAMQPSenderShutdownTimeout       time.Duration = 15 * time.Second       // Таймаут на принудительный Flush буферов отправки
+	DefaultAMQPSenderPublishMaxTryAttempts int           = 2                      // Лимит попыток публикации до возвращения критической ошибки
+	DefaultAMQPSenderPublishBaseRetryDelay time.Duration = 100 * time.Millisecond // Стартовая задержка экспоненциального бэккоффа ретраев
+	DefaultAMQPSenderPublishMaxRetryDelay  time.Duration = 3 * time.Second        // Верхний жесткий потолок ожидания между попытками
+)
+
 // AMQPSenderConfig инкапсулирует конфигурационные параметры отправителя сообщений (Producer / Publisher)
 // для взаимодействия с очередями и брокерами платформы.
 //
