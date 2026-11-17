@@ -10,7 +10,7 @@ VERSION=1.0.0
 BUILD_TIME=$(shell date +'%Y/%m/%d_%H:%M:%S')
 STAGE=DEV
 
-.PHONY: gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run test bench static-check lint lint-revive clean update-deps
+.PHONY: help gen-proto gen-swagger gen-http-client gen-mocks gen-sources build build-only run test bench static-check lint lint-revive clean update-deps
 # Показывает это руководство (выполняется по умолчанию)
 help:
 	@echo "Доступные команды для сборки и тестирования:"
