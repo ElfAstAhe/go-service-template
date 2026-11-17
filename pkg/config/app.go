@@ -6,6 +6,30 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// CLI-флаги для переопределения базовых параметров жизненного цикла приложения.
+const (
+	FlagAppEnv          string = "env"               // CLI-флаг режима среды окружения (prod/dev/test)
+	FlagAppInitTimeout  string = "app-init-timeout"  // CLI-флаг лимита времени на сборку IoC графа зависимостей
+	FlagAppStopTimeout  string = "app-stop-timeout"  // CLI-флаг лимита времени на мягкую остановку серверов и воркеров
+	FlagAppCloseTimeout string = "app-close-timeout" // CLI-флаг лимита времени на принудительную деаллокацию пулов СУБД
+)
+
+// Строковые ключи Viper-маппинга для иерархического связывания внутренних параметров ядра приложения.
+const (
+	KeyAppEnv          string = "app.env"
+	KeyAppInitTimeout  string = "app.init_timeout"
+	KeyAppStopTimeout  string = "app.stop_timeout"
+	KeyAppCloseTimeout string = "app.close_timeout"
+)
+
+// Параметры по умолчанию для ядра жизненного цикла приложения.
+const (
+	DefaultAppEnv          AppEnv        = AppEnvDevelopment // Среда окружения по умолчанию (dev контур локальной разработки)
+	DefaultAppInitTimeout  time.Duration = 30 * time.Second  // Дефолтный лимит на сборку и инициализацию IoC графа зависимостей
+	DefaultAppStopTimeout  time.Duration = 20 * time.Second  // Дефолтный лимит на Graceful Shutdown серверов и воркеров
+	DefaultAppCloseTimeout time.Duration = 5 * time.Second   // Дефолтный лимит на деаллокацию тяжелых пулов памяти и сокетов СУБД
+)
+
 // AppConfig инкапсулирует глобальные метаданные среды окружения и системные
 // временные лимиты (таймауты) для управления фазами жизненного цикла микросервиса.
 type AppConfig struct {
@@ -68,4 +92,14 @@ func (ac *AppConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildAppSettings app settings builder
+func BuildAppSettings() Settings {
+	return Settings{
+		NewSetting(KeyAppEnv, FlagAppEnv, DefaultAppEnv, "application environment (prod, dev, test)"),
+		NewSetting(KeyAppInitTimeout, FlagAppInitTimeout, DefaultAppInitTimeout, "application init timeout"),
+		NewSetting(KeyAppStopTimeout, FlagAppStopTimeout, DefaultAppStopTimeout, "application stop timeout"),
+		NewSetting(KeyAppCloseTimeout, FlagAppCloseTimeout, DefaultAppCloseTimeout, "application close timeout"),
+	}
 }

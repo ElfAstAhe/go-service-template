@@ -6,6 +6,21 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// Worker Pool Defaults
+// ====================================================================
+// Системные параметры по умолчанию для worker pool
+const (
+	// DefaultPoolWorkerCount - кол-во обработчиков
+	DefaultPoolWorkerCount int = 2
+	// DefaultPoolDataCapacity - емкость внутреннего фонового буфера
+	DefaultPoolDataCapacity int = 100
+	// DefaultPoolCompleteProcess - признак завершения обработки при закрытии
+	DefaultPoolCompleteProcess bool = true
+	// DefaultPoolStopTimeout - время на безопасную остановку и корректное завершение
+	DefaultPoolStopTimeout time.Duration = 5 * time.Second
+)
+
 // WorkerPoolConfig инкапсулирует конфигурационные параметры емкости и политик останова пула воркеров.
 type WorkerPoolConfig struct {
 	// WorkerCount Количество параллельно запущенных горутин-обработчиков

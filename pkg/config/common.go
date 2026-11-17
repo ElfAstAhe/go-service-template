@@ -1,5 +1,10 @@
 package config
 
+// Validator поддержка метода проверки конфигурации
+type Validator interface {
+	Validate() error
+}
+
 // AppEnv определяет строго типизированный строковый доменный тип для сред окружения (Environment Type).
 type AppEnv string
 

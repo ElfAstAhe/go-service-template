@@ -6,6 +6,19 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// Scheduler Defaults
+// ====================================================================
+// Системные параметры по умолчанию для scheduler
+const (
+	// DefaultSchedulerStartInterval - первичная задержка (холодное смещение) перед самым первым тиком таймера
+	DefaultSchedulerStartInterval time.Duration = time.Second
+	// DefaultSchedulerScheduleInterval - фиксированный интервал периодического повторения задач (период)
+	DefaultSchedulerScheduleInterval time.Duration = 5 * time.Second
+	// DefaultSchedulerStopTimeout - Временной лимит (таймаут) на мягкое завершение активной итерации обработчика
+	DefaultSchedulerStopTimeout time.Duration = 5 * time.Second
+)
+
 // SchedulerConfig инкапсулирует конфигурационные параметры интервалов запуска фоновых задач по расписанию.
 type SchedulerConfig struct {
 	// StartInterval Первичная задержка (холодное смещение) перед самым первым тиком таймера

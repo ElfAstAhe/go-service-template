@@ -7,6 +7,18 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// amqp connector
+// ====================================================================
+// Настройки по умолчанию для сетевого пула соединений брокеров сообщений по протоколу AMQP 0-9-1.
+const (
+	DefaultAMQPConnectorURL             string        = "amqp://localhost:5672/" // Сетевой адрес брокера RabbitMQ по умолчанию
+	DefaultAMQPConnectorConnectTimeout  time.Duration = 10 * time.Second         // Лимит времени на установку TCP-сессии
+	DefaultAMQPConnectorWriteTimeout    time.Duration = 10 * time.Second         // Лимит времени на запись фрейма в брокер
+	DefaultAMQPConnectorIdleTimeout     time.Duration = 30 * time.Second         // Лимит удержания простаивающего канала со стороны ОС
+	DefaultAMQPConnectorShutdownTimeout time.Duration = 15 * time.Second         // Лимит времени на мягкое освобождение ресурсов канала
+)
+
 // AMQPConnectorConfig connector configuration
 //
 // Инкапсулирует конфигурационные параметры низкоуровневого сетевого подключения (Connector)

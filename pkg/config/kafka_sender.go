@@ -7,6 +7,50 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// ====================================================================
+// Kafka Sender (Producer) Defaults
+// ====================================================================
+// Системные параметры по умолчанию для высокопроизводительного асинхронного продюсера Кафки.
+const (
+	// DefaultKafkaSenderConnectTimeout задает лимит времени на установку сетевого соединения с брокерами.
+	DefaultKafkaSenderConnectTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaSenderIdleTimeout задаёт время простоя сетевых соединений в пуле коннектов.
+	DefaultKafkaSenderIdleTimeout time.Duration = 60 * time.Second
+
+	// DefaultKafkaSenderShutdownTimeout определяет время, выделяемое врайтеру на плавное закрытие.
+	// 15 секунд гарантируют успешный сброс (flushing) асинхронных буферов из памяти на диски брокеров при остановке пода.
+	DefaultKafkaSenderShutdownTimeout time.Duration = 15 * time.Second
+
+	// DefaultKafkaSenderPublishMaxTryAttempts — количество попыток публикации сообщения при сетевых сбоях (Network Flaps).
+	// Повторами на транспортном уровне мы управляем сами в методе Publish.
+	DefaultKafkaSenderPublishMaxTryAttempts int = 2
+
+	// DefaultKafkaSenderPublishBaseRetryDelay — начальная задержка перед первой повторной отправкой для экспоненциального бэкоффа.
+	DefaultKafkaSenderPublishBaseRetryDelay time.Duration = 100 * time.Millisecond
+
+	// DefaultKafkaSenderPublishMaxRetryDelay — жесткий верхний лимит задержки между повторными попытками отправки.
+	DefaultKafkaSenderPublishMaxRetryDelay time.Duration = 3 * time.Second
+
+	// ПОЛЯ ПРОИЗВОДИТЕЛЬНОСТИ (Асинхронный батчинг)
+
+	// DefaultKafkaSenderBatchSize — лимит количества сообщений в локальном буфере перед отправкой пачки.
+	DefaultKafkaSenderBatchSize int = 100
+
+	// DefaultKafkaSenderBatchBytes — максимальный объем одной пачки в байтах (1 MB).
+	DefaultKafkaSenderBatchBytes int = 1048576
+
+	// DefaultKafkaSenderBatchTimeout — 10ms. Время ожидания накопления пачки.
+	// Исключает секундную задержку библиотеки по умолчанию, обеспечивая минимальный latency.
+	DefaultKafkaSenderBatchTimeout time.Duration = 10 * time.Millisecond
+
+	// DefaultKafkaSenderWriteTimeout — жесткий таймаут сокета на операцию отправки пачки в сеть.
+	DefaultKafkaSenderWriteTimeout time.Duration = 10 * time.Second
+
+	// DefaultKafkaSenderRequiredAcks — уровень подтверждения записи брокером (-1 означает "all" — весь ISR пул).
+	DefaultKafkaSenderRequiredAcks int = -1
+)
+
 // KafkaSenderConfig содержит настройки для отправки (публикации) сообщений в брокер Kafka (Producer Config).
 //
 // Инкапсулирует параметры сетевого пула соединений, тонкие настройки асинхронного батчинга,
