@@ -9,8 +9,8 @@ import (
 // BasicCredentialConfig содержит параметры конфигурации базовых учетных данных
 // (имя пользователя и пароль) для аутентификации в клиентских подключениях.
 type BasicCredentialConfig struct {
-	Username string `mapstructure:"username" json:"username"`
-	Password string `mapstructure:"password" json:"password"`
+	Username string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty" toml:"username,omitempty"`
+	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty" toml:"password,omitempty"`
 }
 
 // NewBasicCredentialConfig создает и инициализирует новый экземпляр конфигурации BasicCredentialConfig.

@@ -1,9 +1,28 @@
 package config
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+)
+
+// flags templates
+const (
+	// TemplateFlagRunnerStopTimeout таймаут на остановку консьюмеров или серверов
+	TemplateFlagRunnerStopTimeout string = "%s-stop-timeout"
+
+	// TemplateFlagRunnerCloseTimeout таймаут на уничтожение внутренних сетевых ресурсов
+	TemplateFlagRunnerCloseTimeout string = "%s-close-timeout"
+)
+
+// keys template
+const (
+	// TemplateKeyRunnerStopTimeout таймаут на остановку консьюмеров или серверов
+	TemplateKeyRunnerStopTimeout string = "%s.stop_timeout"
+
+	// TemplateKeyRunnerCloseTimeout таймаут на уничтожение внутренних сетевых ресурсов
+	TemplateKeyRunnerCloseTimeout string = "%s.close_timeout"
 )
 
 // Временные лимиты по умолчанию для управления жизненным циклом асинхронных раннеров (Runners).
@@ -16,9 +35,10 @@ const (
 // для управления фазами остановки и очистки ресурсов исполняемых компонентов (Runners).
 type RunnerConfig struct {
 	// StopTimeout Временной лимит на мягкую остановку приема трафика/сообщений
-	StopTimeout time.Duration
+	StopTimeout time.Duration `mapstructure:"stop_timeout" json:"stop_timeout,omitempty" yaml:"stop_timeout,omitempty" toml:"stop_timeout,omitempty"`
+
 	// CloseTimeout Временной лимит на деаллокацию и закрытие внутренних пулов/сокетов
-	CloseTimeout time.Duration
+	CloseTimeout time.Duration `mapstructure:"close_timeout" json:"close_timeout,omitempty" yaml:"close_timeout,omitempty" toml:"close_timeout,omitempty"`
 }
 
 // NewRunnerConfig — фабричный конструктор конфигурации раннеров.
@@ -51,4 +71,12 @@ func (brc *RunnerConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildRunnerSettings runner settings builder
+func BuildRunnerSettings(keyPrefix, flagPrefix string) Settings {
+	return Settings{
+		NewSetting(fmt.Sprintf(TemplateKeyRunnerStopTimeout, keyPrefix), fmt.Sprintf(TemplateFlagRunnerStopTimeout, flagPrefix), DefaultRunnerStopTimeout, fmt.Sprintf("%s stop timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyRunnerCloseTimeout, keyPrefix), fmt.Sprintf(TemplateFlagRunnerCloseTimeout, flagPrefix), DefaultRunnerCloseTimeout, fmt.Sprintf("%s close timeout", flagPrefix)),
+	}
 }

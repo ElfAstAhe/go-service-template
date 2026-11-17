@@ -1,24 +1,50 @@
 package config
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/ElfAstAhe/go-service-template/pkg/config"
+	pkgconf "github.com/ElfAstAhe/go-service-template/pkg/config"
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+const (
+	TemplateFlagTailCutterTailLimit    string = "%s-tail-limit"
+	TemplateFlagTailCutterTailInterval string = "%s-tail-interval"
+	TemplateFlagTailCutterTailCut      string = "%s-tail-cut"
+)
+
+const (
+	TemplateKeyTailCutterTailLimit    string = "%s.tail_limit"
+	TemplateKeyTailCutterTailInterval string = "%s.tail_interval"
+	TemplateKeyTailCutterTailCut      string = "%s.tail_cut"
+)
+
+// TailCutterConfig default values
+const (
+	DefaultTailCutterStartInterval      time.Duration = 5 * time.Second
+	DefaultTailCutterScheduleInterval   time.Duration = 1 * time.Minute
+	DefaultTailCutterWorkerCount        int           = 2
+	DefaultTailCutterDataCapacity       int           = 128
+	DefaultTailCutterCompleteProcessing bool          = false
+	DefaultTailCutterStopTimeout        time.Duration = 15 * time.Second
+	DefaultTailCutterTailLimit          int           = 100
+	DefaultTailCutterTailInterval       time.Duration = 182 * 24 * time.Hour // 182 days
+	DefaultTailCutterTailCut            bool          = true
+)
+
 type TailCutterConfig struct {
-	Dispatcher   *config.SchedulerDispatcherConfig `mapstructure:"dispatcher" json:"dispatcher,omitempty" yaml:"dispatcher,omitempty" toml:"dispatcher,omitempty"`
-	TailLimit    int                               `mapstructure:"tail-limit" json:"tailLimit,omitempty" yaml:"tail-limit,omitempty" toml:"tail-limit,omitempty"`
-	TailInterval time.Duration                     `mapstructure:"tail_interval" json:"tail_interval,omitempty" yaml:"tail_interval,omitempty" toml:"tail_interval,omitempty"`
-	TailCut      bool                              `mapstructure:"tail_cut" json:"tail_cut,omitempty" yaml:"tail_cut,omitempty" toml:"tail_cut,omitempty"`
+	Dispatcher   *pkgconf.SchedulerDispatcherConfig `mapstructure:"dispatcher" json:"dispatcher,omitempty" yaml:"dispatcher,omitempty" toml:"dispatcher,omitempty"`
+	TailLimit    int                                `mapstructure:"tail-limit" json:"tailLimit,omitempty" yaml:"tail-limit,omitempty" toml:"tail-limit,omitempty"`
+	TailInterval time.Duration                      `mapstructure:"tail_interval" json:"tail_interval,omitempty" yaml:"tail_interval,omitempty" toml:"tail_interval,omitempty"`
+	TailCut      bool                               `mapstructure:"tail_cut" json:"tail_cut,omitempty" yaml:"tail_cut,omitempty" toml:"tail_cut,omitempty"`
 }
 
 func NewTailCutterConfig(
 	tailLimit int,
 	tailInterval time.Duration,
 	tailCut bool,
-	dispatcher *config.SchedulerDispatcherConfig,
+	dispatcher *pkgconf.SchedulerDispatcherConfig,
 ) *TailCutterConfig {
 	return &TailCutterConfig{
 		Dispatcher:   dispatcher,
@@ -32,7 +58,7 @@ func NewDefaultTailCutterConfig() *TailCutterConfig {
 		DefaultTailCutterTailLimit,
 		DefaultTailCutterTailInterval,
 		DefaultTailCutterTailCut,
-		config.NewSchedulerDispatcherConfig(
+		pkgconf.NewSchedulerDispatcherConfig(
 			DefaultTailCutterWorkerCount,
 			DefaultTailCutterDataCapacity,
 			DefaultTailCutterCompleteProcessing,
@@ -56,4 +82,14 @@ func (tcc *TailCutterConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildTailCutterSettings tail cutter settings builder
+func BuildTailCutterSettings(keyPrefix, flagPrefix string) pkgconf.Settings {
+	return append(
+		pkgconf.BuildSchedulerDispatcherSettings(fmt.Sprintf("%s.dispatcher", keyPrefix), flagPrefix),
+		pkgconf.NewSetting(fmt.Sprintf(TemplateKeyTailCutterTailLimit, keyPrefix), fmt.Sprintf(TemplateFlagTailCutterTailLimit, flagPrefix), DefaultTailCutterTailLimit, fmt.Sprintf("%s tail limit", flagPrefix)),
+		pkgconf.NewSetting(fmt.Sprintf(TemplateKeyTailCutterTailInterval, keyPrefix), fmt.Sprintf(TemplateFlagTailCutterTailInterval, flagPrefix), DefaultTailCutterTailInterval, fmt.Sprintf("%s tail interval", flagPrefix)),
+		pkgconf.NewSetting(fmt.Sprintf(TemplateKeyTailCutterTailCut, keyPrefix), fmt.Sprintf(TemplateFlagTailCutterTailCut, flagPrefix), DefaultTailCutterTailCut, fmt.Sprintf("%s tail cut", flagPrefix)),
+	)
 }

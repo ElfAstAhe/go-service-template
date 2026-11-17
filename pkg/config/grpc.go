@@ -59,15 +59,15 @@ const (
 // Инкапсулирует конфигурационные параметры gRPC-транспорта, включая адресацию,
 // параметры управления жизненным циклом HTTP/2 соединений и KeepAlive-политики.
 type GRPCConfig struct {
-	Address         string        `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty"`
-	MaxConnIdle     time.Duration `mapstructure:"max_conn_idle" json:"max_conn_idle,omitempty" yaml:"max_conn_idle,omitempty"`
-	MaxConnAge      time.Duration `mapstructure:"max_conn_age" json:"max_conn_age,omitempty" yaml:"max_conn_age,omitempty"`
-	MaxConnAgeGrace time.Duration `mapstructure:"max_conn_age_grace" json:"max_conn_age_grace,omitempty" yaml:"max_conn_age_grace,omitempty"`
-	Timeout         time.Duration `mapstructure:"timeout" json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	Address         string        `mapstructure:"address" json:"address,omitempty" yaml:"address,omitempty" toml:"address,omitempty"`
+	MaxConnIdle     time.Duration `mapstructure:"max_conn_idle" json:"max_conn_idle,omitempty" yaml:"max_conn_idle,omitempty" toml:"max_conn_idle,omitempty"`
+	MaxConnAge      time.Duration `mapstructure:"max_conn_age" json:"max_conn_age,omitempty" yaml:"max_conn_age,omitempty" toml:"max_conn_age,omitempty"`
+	MaxConnAgeGrace time.Duration `mapstructure:"max_conn_age_grace" json:"max_conn_age_grace,omitempty" yaml:"max_conn_age_grace,omitempty" toml:"max_conn_age_grace,omitempty"`
+	Timeout         time.Duration `mapstructure:"timeout" json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
 	// Настройки KeepAlive важны, чтобы соединения не "протухали" за балансировщиками
-	KeepAliveTime    time.Duration `mapstructure:"keep_alive_time" json:"keep_alive_time,omitempty" yaml:"keep_alive_time,omitempty"`
-	KeepAliveTimeout time.Duration `mapstructure:"keep_alive_timeout" json:"keep_alive_timeout,omitempty" yaml:"keep_alive_timeout,omitempty"`
-	ShutdownTimeout  time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"`
+	KeepAliveTime    time.Duration `mapstructure:"keep_alive_time" json:"keep_alive_time,omitempty" yaml:"keep_alive_time,omitempty" toml:"keep_alive_time,omitempty"`
+	KeepAliveTimeout time.Duration `mapstructure:"keep_alive_timeout" json:"keep_alive_timeout,omitempty" yaml:"keep_alive_timeout,omitempty" toml:"keep_alive_timeout,omitempty"`
+	ShutdownTimeout  time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty" toml:"shutdown_timeout,omitempty"`
 }
 
 // NewGRPCConfig конструктор

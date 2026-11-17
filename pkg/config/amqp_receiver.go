@@ -22,14 +22,20 @@ const (
 // Управляет как сетевыми лимитами рантайма, так и стратегиями Backpressure для защиты
 // оперативной памяти приложения от лавинообразных нагрузок.
 type AMQPReceiverConfig struct {
-	TargetName string `mapstructure:"target_name" json:"target_name,omitempty" yaml:"target_name,omitempty"` // Имя очереди брокера, которую слушает текущий воркер
+	// TargetName имя очереди брокера, которую слушает текущий воркер.
+	TargetName string `mapstructure:"target_name" json:"target_name,omitempty" yaml:"target_name,omitempty" toml:"target_name,omitempty"`
 
 	// Сетевые таймауты получателя
-	ConnectTimeout  time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"`    // Лимит времени на установку логического канала (Default: 5s)
-	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty"` // Лимит времени на мягкую остановку и коммит offset-ов (Default: 5s)
+
+	// ConnectTimeout лимит времени на установку логического канала (Default: 5s)
+	ConnectTimeout time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty" toml:"connect_timeout,omitempty"`
+	// ShutdownTimeout лимит времени на мягкую остановку и коммит offset-ов (Default: 5s)
+	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout,omitempty" yaml:"shutdown_timeout,omitempty" toml:"shutdown_timeout,omitempty"`
 
 	// Параметры Backpressure для Receiver / Consumer
-	PrefetchCredit int `mapstructure:"prefetch_credit" json:"prefetch_credit,omitempty" yaml:"prefetch_credit,omitempty"` // Лимит QoS Prefetch: сколько сообщений воркер может удерживать в памяти без Ack (Default: 100)
+
+	// PrefetchCredit лимит QoS Prefetch: сколько сообщений воркер может удерживать в памяти без Ack (Default: 100)
+	PrefetchCredit int `mapstructure:"prefetch_credit" json:"prefetch_credit,omitempty" yaml:"prefetch_credit,omitempty" toml:"prefetch_credit,omitempty"`
 }
 
 // NewAMQPReceiverConfig — фабричный конструктор конфигурации AMQP получателя.
