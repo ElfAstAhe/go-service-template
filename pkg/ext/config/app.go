@@ -31,7 +31,6 @@ const (
 //
 //nolint:gosec // G101 : dev/test default conf vals
 const (
-	DefaultAppEnv          string = pkgconf.AppEnvDevelopment
 	DefaultAppMaxListLimit int    = 100
 	DefaultAppCipherKey    string = "123456"
 )
@@ -68,15 +67,11 @@ func NewAppConfig(
 
 // NewDefaultAppConfig создает дефолтный профиль конфигурации, использующий константы базового шаблона.
 func NewDefaultAppConfig(
+	env string,
 	nodeName string,
 ) *AppConfig {
 	return NewAppConfig(
-		pkgconf.NewAppConfig(
-			DefaultAppEnv,
-			pkgconf.DefaultAppInitTimeout,
-			pkgconf.DefaultAppStopTimeout,
-			pkgconf.DefaultAppCloseTimeout,
-		),
+		pkgconf.NewDefaultAppConfig(env),
 		nodeName,
 		DefaultAppMaxListLimit,
 		DefaultAcceptTokenIssuers,

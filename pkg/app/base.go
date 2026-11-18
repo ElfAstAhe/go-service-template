@@ -39,7 +39,7 @@ func NewBaseApplication(opts ...Option) *BaseApplication {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	res := &BaseApplication{
-		conf:   config.NewDefaultAppConfig(), // Загружаем константные дефолты таймаутов рантайма
+		conf:   config.NewDefaultAppConfig(config.DefaultAppEnv), // Загружаем константные дефолты таймаутов рантайма
 		ctx:    ctx,
 		cancel: cancel,
 		ready:  new(atomic.Bool),

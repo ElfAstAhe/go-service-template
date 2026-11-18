@@ -47,12 +47,12 @@ const (
 // Инкапсулирует конфигурационные параметры пула соединений, строковые dsn-секреты
 // и сетевые лимиты для основной реляционной СУБД (PostgreSQL, MySQL).
 type DBConfig struct {
-	Driver              string        `mapstructure:"driver" json:"driver,omitempty" yaml:"driver,omitempty"` // postgres, mysql, etc.
-	DSN                 string        `mapstructure:"dsn" json:"dsn,omitempty" yaml:"dsn,omitempty"`
-	MaxOpenConns        int           `mapstructure:"max_open_conns" json:"max_open_conns,omitempty" yaml:"max_open_conns,omitempty"`
-	MaxIdleConns        int           `mapstructure:"max_idle_conns" json:"max_idle_conns,omitempty" yaml:"max_idle_conns,omitempty"`
-	ConnMaxIdleLifetime time.Duration `mapstructure:"conn_max_idle_lifetime" json:"conn_max_idle_lifetime,omitempty" yaml:"conn_max_idle_lifetime,omitempty"`
-	ConnTimeout         time.Duration `mapstructure:"conn_timeout" json:"conn_timeout,omitempty" yaml:"conn_timeout,omitempty"`
+	Driver              string        `mapstructure:"driver" json:"driver,omitempty" yaml:"driver,omitempty" toml:"driver,omitempty"`
+	DSN                 string        `mapstructure:"dsn" json:"dsn,omitempty" yaml:"dsn,omitempty" toml:"dsn,omitempty"`
+	MaxOpenConns        int           `mapstructure:"max_open_conns" json:"max_open_conns,omitempty" yaml:"max_open_conns,omitempty" toml:"max_open_conns,omitempty"`
+	MaxIdleConns        int           `mapstructure:"max_idle_conns" json:"max_idle_conns,omitempty" yaml:"max_idle_conns,omitempty" toml:"max_idle_conns,omitempty"`
+	ConnMaxIdleLifetime time.Duration `mapstructure:"conn_max_idle_lifetime" json:"conn_max_idle_lifetime,omitempty" yaml:"conn_max_idle_lifetime,omitempty" toml:"conn_max_idle_lifetime,omitempty"`
+	ConnTimeout         time.Duration `mapstructure:"conn_timeout" json:"conn_timeout,omitempty" yaml:"conn_timeout,omitempty" toml:"conn_timeout,omitempty"`
 }
 
 // NewDBConfig — фабричный конструктор конфигурации репозиториев СУБД.
