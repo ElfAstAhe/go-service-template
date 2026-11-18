@@ -1,10 +1,43 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+)
+
+// flags templates
+const (
+	// TemplateFlagAMQPSenderTargetName Имя целевой очереди или адреса брокера
+	TemplateFlagAMQPSenderTargetName string = "%s-amqp-sender-target-name"
+	// TemplateFlagAMQPSenderConnectTimeout Лимит времени на логическое подключение
+	TemplateFlagAMQPSenderConnectTimeout string = "%s-amqp-sender-connect-timeout"
+	// TemplateFlagAMQPSenderShutdownTimeout Лимит времени на Flush буферов при закрытии сендера
+	TemplateFlagAMQPSenderShutdownTimeout string = "%s-amqp-sender-shutdown-timeout"
+	// TemplateFlagAMQPSenderPublishMaxTryAttempts Максимальное количество попыток публикации фрейма
+	TemplateFlagAMQPSenderPublishMaxTryAttempts string = "%s-amqp-sender-publish-max-try-attempts"
+	// TemplateFlagAMQPSenderPublishBaseRetryDelay Стартовая базовая задержка повторной попытки (Exponential Backoff)
+	TemplateFlagAMQPSenderPublishBaseRetryDelay string = "%s-amqp-sender-publish-base-retry-delay"
+	// TemplateFlagAMQPSenderPublishMaxRetryDelay Верхний жесткий временной потолок задержки между попытками
+	TemplateFlagAMQPSenderPublishMaxRetryDelay string = "%s-amqp-sender-publish-max-retry-delay"
+)
+
+// key templates
+const (
+	// TemplateKeyAMQPSenderTargetName Имя целевой очереди или адреса брокера
+	TemplateKeyAMQPSenderTargetName string = "%s.target_name"
+	// TemplateKeyAMQPSenderConnectTimeout Лимит времени на логическое подключение
+	TemplateKeyAMQPSenderConnectTimeout string = "%s.connect_timeout"
+	// TemplateKeyAMQPSenderShutdownTimeout Лимит времени на Flush буферов при закрытии сендера
+	TemplateKeyAMQPSenderShutdownTimeout string = "%s.shutdown_timeout"
+	// TemplateKeyAMQPSenderPublishMaxTryAttempts Максимальное количество попыток публикации фрейма
+	TemplateKeyAMQPSenderPublishMaxTryAttempts string = "%s.publish_max_try_attempts"
+	// TemplateKeyAMQPSenderPublishBaseRetryDelay Стартовая базовая задержка повторной попытки (Exponential Backoff)
+	TemplateKeyAMQPSenderPublishBaseRetryDelay string = "%s.publish_base_retry_delay"
+	// TemplateKeyAMQPSenderPublishMaxRetryDelay Верхний жесткий временной потолок задержки между попытками
+	TemplateKeyAMQPSenderPublishMaxRetryDelay string = "%s.publish_max_retry_delay"
 )
 
 // ====================================================================
@@ -95,4 +128,16 @@ func (sc *AMQPSenderConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildAMQPSenderSettings AMQP sender settings builder
+func BuildAMQPSenderSettings(keyPrefix, flagPrefix string) Settings {
+	return Settings{
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderConnectTimeout, flagPrefix), DefaultAMQPSenderConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderShutdownTimeout, flagPrefix), DefaultAMQPSenderShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderPublishMaxTryAttempts, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderPublishMaxTryAttempts, flagPrefix), DefaultAMQPSenderPublishMaxTryAttempts, fmt.Sprintf("%s AMQP publish max send tries", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderPublishBaseRetryDelay, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderPublishBaseRetryDelay, flagPrefix), DefaultAMQPSenderPublishBaseRetryDelay, fmt.Sprintf("%s AMQP publish base retry delay", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderPublishMaxRetryDelay, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderPublishMaxRetryDelay, flagPrefix), DefaultAMQPSenderPublishMaxRetryDelay, fmt.Sprintf("%s AMQP publish max retry delay", flagPrefix)),
+	}
 }

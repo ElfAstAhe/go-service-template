@@ -1,10 +1,48 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+)
+
+// flags template
+const (
+	// TemplateFlagAMQPConnectorURL Сетевой адрес брокера AMQP v1.0
+	TemplateFlagAMQPConnectorURL string = "%s-amqp-connector-url"
+	// TemplateFlagAMQPConnectorUsername пользователь
+	TemplateFlagAMQPConnectorUsername string = "%s-amqp-connector-username"
+	// TemplateFlagAMQPConnectorPassword пароль
+	//nolint:gosec // G101 : это флаги (параметры)
+	TemplateFlagAMQPConnectorPassword string = "%s-amqp-connector-password"
+	// TemplateFlagAMQPConnectorConnectTimeout Лимит времени на установку TCP-сессии
+	TemplateFlagAMQPConnectorConnectTimeout string = "%s-amqp-connector-connect-timeout"
+	// TemplateFlagAMQPConnectorIdleTimeout Лимит удержания простаивающего канала со стороны ОС
+	TemplateFlagAMQPConnectorIdleTimeout string = "%s-amqp-connector-idle-timeout"
+	// TemplateFlagAMQPConnectorWriteTimeout Лимит времени на запись фрейма в брокер
+	TemplateFlagAMQPConnectorWriteTimeout string = "%s-amqp-connector-write-timeout"
+	// TemplateFlagAMQPConnectorShutdownTimeout Лимит времени на мягкое освобождение ресурсов канала
+	TemplateFlagAMQPConnectorShutdownTimeout string = "%s-amqp-connector-shutdown-timeout"
+)
+
+// keys template
+const (
+	// TemplateKeyAMQPConnectorURL Сетевой адрес брокера AMQP v1.0
+	TemplateKeyAMQPConnectorURL string = "%s.url"
+	// TemplateKeyAMQPConnectorUsername пользователь
+	TemplateKeyAMQPConnectorUsername string = "%s.username"
+	// TemplateKeyAMQPConnectorPassword пароль
+	TemplateKeyAMQPConnectorPassword string = "%s.password"
+	// TemplateKeyAMQPConnectorConnectTimeout Лимит времени на установку TCP-сессии
+	TemplateKeyAMQPConnectorConnectTimeout string = "%s.connect_timeout"
+	// TemplateKeyAMQPConnectorIdleTimeout Лимит удержания простаивающего канала со стороны ОС
+	TemplateKeyAMQPConnectorIdleTimeout string = "%s.idle_timeout"
+	// TemplateKeyAMQPConnectorWriteTimeout Лимит времени на запись фрейма в брокер
+	TemplateKeyAMQPConnectorWriteTimeout string = "%s.write_timeout"
+	// TemplateKeyAMQPConnectorShutdownTimeout Лимит времени на мягкое освобождение ресурсов канала
+	TemplateKeyAMQPConnectorShutdownTimeout string = "%s.shutdown_timeout"
 )
 
 // ====================================================================
@@ -12,7 +50,7 @@ import (
 // ====================================================================
 // Настройки по умолчанию для сетевого пула соединений брокеров сообщений по протоколу AMQP 0-9-1.
 const (
-	DefaultAMQPConnectorURL             string        = "amqp://localhost:5672/" // Сетевой адрес брокера RabbitMQ по умолчанию
+	DefaultAMQPConnectorURL             string        = "amqp://localhost:5672/" // Сетевой адрес брокера AMQP v1.0 по умолчанию
 	DefaultAMQPConnectorConnectTimeout  time.Duration = 10 * time.Second         // Лимит времени на установку TCP-сессии
 	DefaultAMQPConnectorWriteTimeout    time.Duration = 10 * time.Second         // Лимит времени на запись фрейма в брокер
 	DefaultAMQPConnectorIdleTimeout     time.Duration = 30 * time.Second         // Лимит удержания простаивающего канала со стороны ОС
@@ -92,4 +130,17 @@ func (cc *AMQPConnectorConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildAMQPConnectorSettings AMQP connector settings builder
+func BuildAMQPConnectorSettings(keyPrefix, flagPrefix string) Settings {
+	return Settings{
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorURL, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorURL, flagPrefix), DefaultAMQPConnectorURL, fmt.Sprintf("%s AMQP server URL", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorUsername, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorUsername, flagPrefix), "", fmt.Sprintf("%s AMQP server username", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorPassword, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorPassword, flagPrefix), "", fmt.Sprintf("%s AMQP server password", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorConnectTimeout, flagPrefix), DefaultAMQPReceiverConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorIdleTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorIdleTimeout, flagPrefix), DefaultAMQPConnectorIdleTimeout, fmt.Sprintf("%s AMQP idle timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorWriteTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorWriteTimeout, flagPrefix), DefaultAMQPConnectorWriteTimeout, fmt.Sprintf("%s AMQP write timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorShutdownTimeout, flagPrefix), DefaultAMQPConnectorShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
+	}
 }

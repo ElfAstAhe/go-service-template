@@ -1,19 +1,49 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// flags templates
+const (
+	// TemplateFlagAMQPReceiverTargetName имя очереди брокера, которую слушает текущий воркер
+	TemplateFlagAMQPReceiverTargetName string = "%s-amqp-receiver-target-name"
+	// TemplateFlagAMQPReceiverConnectTimeout лимит времени на установку логического канала
+	TemplateFlagAMQPReceiverConnectTimeout string = "%s-amqp-receiver-connect-timeout"
+	// TemplateFlagAMQPReceiverShutdownTimeout лимит времени на мягкую остановку и коммит offset-ов
+	TemplateFlagAMQPReceiverShutdownTimeout string = "%s-amqp-receiver-shutdown-timeout"
+	// TemplateFlagAMQPReceiverPrefetchCredit лимит QoS Prefetch: сколько сообщений воркер может удерживать в памяти без Ack
+	//nolint:gosec // G101 : это флаги (параметры)
+	TemplateFlagAMQPReceiverPrefetchCredit string = "%s-amqp-receiver-prefetch-credit"
+)
+
+// keys templates
+const (
+	// TemplateKeyAMQPReceiverTargetName имя очереди брокера, которую слушает текущий воркер
+	TemplateKeyAMQPReceiverTargetName string = "%s.target_name"
+	// TemplateKeyAMQPReceiverConnectTimeout лимит времени на установку логического канала
+	TemplateKeyAMQPReceiverConnectTimeout string = "%s.connect_timeout"
+	// TemplateKeyAMQPReceiverShutdownTimeout лимит времени на мягкую остановку и коммит offset-ов
+	TemplateKeyAMQPReceiverShutdownTimeout string = "%s.shutdown_timeout"
+	// TemplateKeyAMQPReceiverPrefetchCredit лимит QoS Prefetch: сколько сообщений воркер может удерживать в памяти без Ack
+	//nolint:gosec // G101 : это флаги (параметры)
+	TemplateKeyAMQPReceiverPrefetchCredit string = "%s.prefetch_credit"
+)
+
 // ====================================================================
 // amqp receiver
 // ====================================================================
 const (
-	DefaultAMQPReceiverConnectTimeout  time.Duration = 10 * time.Second
+	// DefaultAMQPReceiverConnectTimeout AMQP receiver лимит времени на установку логического канала
+	DefaultAMQPReceiverConnectTimeout time.Duration = 10 * time.Second
+	// DefaultAMQPReceiverShutdownTimeout AMQP receiver лимит времени на мягкую остановку и коммит offset-ов
 	DefaultAMQPReceiverShutdownTimeout time.Duration = 15 * time.Second
-	DefaultAMQPReceiverPrefetchCredit  int           = 100
+	// DefaultAMQPReceiverPrefetchCredit лимит QoS Prefetch: сколько сообщений воркер может удерживать в памяти без Ack
+	DefaultAMQPReceiverPrefetchCredit int = 100
 )
 
 // AMQPReceiverConfig инкапсулирует конфигурационные параметры получателя (Consumer / Receiver)
@@ -80,4 +110,14 @@ func (rc *AMQPReceiverConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// BuildAMQPReceiverSettings AMQP receiver settings builder
+func BuildAMQPReceiverSettings(keyPrefix, flagPrefix string) Settings {
+	return Settings{
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverConnectTimeout, flagPrefix), DefaultAMQPReceiverConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverShutdownTimeout, flagPrefix), DefaultAMQPReceiverShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
+		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverPrefetchCredit, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverPrefetchCredit, flagPrefix), DefaultAMQPReceiverPrefetchCredit, fmt.Sprintf("%s AMQP prefetch credit", flagPrefix)),
+	}
 }

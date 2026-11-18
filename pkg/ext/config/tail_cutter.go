@@ -8,12 +8,14 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+// flags templates
 const (
 	TemplateFlagTailCutterTailLimit    string = "%s-tail-limit"
 	TemplateFlagTailCutterTailInterval string = "%s-tail-interval"
 	TemplateFlagTailCutterTailCut      string = "%s-tail-cut"
 )
 
+// keys templates
 const (
 	TemplateKeyTailCutterTailLimit    string = "%s.tail_limit"
 	TemplateKeyTailCutterTailInterval string = "%s.tail_interval"
@@ -33,6 +35,7 @@ const (
 	DefaultTailCutterTailCut            bool          = true
 )
 
+// TailCutterConfig конфигурация tail cutter worker
 type TailCutterConfig struct {
 	Dispatcher   *pkgconf.SchedulerDispatcherConfig `mapstructure:"dispatcher" json:"dispatcher,omitempty" yaml:"dispatcher,omitempty" toml:"dispatcher,omitempty"`
 	TailLimit    int                                `mapstructure:"tail-limit" json:"tailLimit,omitempty" yaml:"tail-limit,omitempty" toml:"tail-limit,omitempty"`
@@ -40,6 +43,7 @@ type TailCutterConfig struct {
 	TailCut      bool                               `mapstructure:"tail_cut" json:"tail_cut,omitempty" yaml:"tail_cut,omitempty" toml:"tail_cut,omitempty"`
 }
 
+// NewTailCutterConfig параметризованный конструктор для явного формирования конфигурационной структуры.
 func NewTailCutterConfig(
 	tailLimit int,
 	tailInterval time.Duration,
@@ -53,6 +57,7 @@ func NewTailCutterConfig(
 	}
 }
 
+// NewDefaultTailCutterConfig создает дефолтный профиль конфигурации, использующий константы базового шаблона.
 func NewDefaultTailCutterConfig() *TailCutterConfig {
 	return NewTailCutterConfig(
 		DefaultTailCutterTailLimit,

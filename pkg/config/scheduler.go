@@ -93,6 +93,7 @@ func (sc *SchedulerConfig) Validate() error {
 	return nil
 }
 
+// BuildSchedulerSettings scheduler settings builder
 func BuildSchedulerSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
 		NewSetting(fmt.Sprintf(TemplateKeySchedulerStartInterval, keyPrefix), fmt.Sprintf(TemplateFlagSchedulerStartInterval, flagPrefix), DefaultSchedulerStartInterval, fmt.Sprintf("%s start interval", flagPrefix)),
