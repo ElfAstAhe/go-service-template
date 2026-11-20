@@ -85,12 +85,6 @@ func (scb *SubjectClaimsBuilder) WithSubjectType(subjectType string) *SubjectCla
 	return scb
 }
 
-// WithAdmin устанавливает флаг суперпользователя.
-func (scb *SubjectClaimsBuilder) WithAdmin(flag bool) *SubjectClaimsBuilder {
-	scb.instance.Admin = flag
-	return scb
-}
-
 // WithRoles заполняет список RBAC-ролей субъекта.
 func (scb *SubjectClaimsBuilder) WithRoles(roles ...string) *SubjectClaimsBuilder {
 	scb.instance.Roles = roles

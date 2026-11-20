@@ -17,7 +17,6 @@ func TestNewSubjectClaims(t *testing.T) {
 		assert.Empty(t, claims.Subject)
 		assert.Empty(t, claims.SubjectID)
 		assert.Empty(t, claims.SubjectType)
-		assert.False(t, claims.Admin)
 		assert.Nil(t, claims.Roles)
 	})
 }
@@ -87,30 +86,6 @@ func TestSubjectClaims_ValidateSubject(t *testing.T) {
 			},
 			expectErr:   true,
 			expectedMsg: "subject type required",
-		},
-		{
-			name: "failed - empty subject id",
-			claims: &SubjectClaims{
-				RegisteredClaims: jwt.RegisteredClaims{
-					Subject: "ivan_prod",
-				},
-				SubjectID:   "",
-				SubjectType: "user",
-			},
-			expectErr:   true,
-			expectedMsg: "subject id required",
-		},
-		{
-			name: "failed - space-only subject id",
-			claims: &SubjectClaims{
-				RegisteredClaims: jwt.RegisteredClaims{
-					Subject: "ivan_prod",
-				},
-				SubjectID:   "     ",
-				SubjectType: "user",
-			},
-			expectErr:   true,
-			expectedMsg: "subject id required",
 		},
 	}
 

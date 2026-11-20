@@ -24,7 +24,6 @@ func TestSubjectClaimsBuilder_FluentAPI(t *testing.T) {
 			WithID("jti-111").
 			WithSubjectID("user-uuid-999").
 			WithSubjectType("user").
-			WithAdmin(true).
 			WithRoles("admin", "manager").
 			WithIssuedAt(now).
 			WithExpiresAt(exp).
@@ -38,7 +37,6 @@ func TestSubjectClaimsBuilder_FluentAPI(t *testing.T) {
 		assert.Equal(t, "jti-111", claims.ID)
 		assert.Equal(t, "user-uuid-999", claims.SubjectID)
 		assert.Equal(t, "user", claims.SubjectType)
-		assert.True(t, claims.Admin)
 		assert.Equal(t, []string{"admin", "manager"}, claims.Roles)
 
 		assert.Equal(t, now.Unix(), claims.IssuedAt.Unix())

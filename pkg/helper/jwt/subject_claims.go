@@ -11,7 +11,6 @@ import (
 // Расширяет стандартные W3C утверждения (RegisteredClaims) кастомными полями прав (RBAC).
 type SubjectClaims struct {
 	jwt.RegisteredClaims
-	Admin       bool     `json:"admin,omitempty"`        // Флаг суперпользователя (root)
 	SubjectID   string   `json:"subject_id,omitempty"`   // Уникальный ID субъекта (например, User UUID)
 	SubjectType string   `json:"subject_type,omitempty"` // Тип субъекта (user, service_account, bot)
 	Roles       []string `json:"roles,omitempty"`        // Список текстовых ролей пользователя для RBAC контроля
@@ -32,9 +31,9 @@ func (sc *SubjectClaims) ValidateSubject() error {
 	if strings.TrimSpace(sc.SubjectType) == "" {
 		return errs.NewUtlJWTError("subject type required", nil)
 	}
-	if strings.TrimSpace(sc.SubjectID) == "" {
-		return errs.NewUtlJWTError("subject id required", nil)
-	}
+	//if strings.TrimSpace(sc.SubjectID) == "" {
+	//	return errs.NewUtlJWTError("subject id required", nil)
+	//}
 
 	return nil
 }

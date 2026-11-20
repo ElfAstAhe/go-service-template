@@ -17,6 +17,7 @@ type TokenIDBuilderFunc func() (string, error)
 // валидации, сборки и криптографической подписи новых JWT-токенов.
 type Factory struct {
 	issuer             string
+	audiences          []string
 	signingMethod      jwt.SigningMethod
 	secretKey          []byte
 	expirationInterval time.Duration
@@ -25,9 +26,10 @@ type Factory struct {
 
 var _ TokenFactory = (*Factory)(nil)
 
-// NewJWTTokenBuilder создает и инициализирует новый экземпляр Factory для сборки и подписи токенов.
-func NewJWTTokenBuilder(
+// NewFactory создает и инициализирует новый экземпляр Factory для сборки и подписи токенов.
+func NewFactory(
 	issuer string,
+	audiences []string,
 	signingMethodName string,
 	secretKey []byte,
 	expirationInterval time.Duration,
@@ -40,6 +42,7 @@ func NewJWTTokenBuilder(
 
 	res := &Factory{
 		issuer:             issuer,
+		audiences:          audiences,
 		signingMethod:      signingMethod,
 		secretKey:          secretKey,
 		expirationInterval: expirationInterval,
@@ -58,8 +61,21 @@ func (f *Factory) Claims(builder *SubjectClaimsBuilder) (*SubjectClaims, error) 
 	if utils.IsNil(builder) {
 		return nil, errs.NewInvalidArgumentError("builder", "is required")
 	}
+	claimsID, err := f.idBuilder()
+	if err != nil {
+		return nil, errs.NewUtlJWTError("token id builder failed", err)
+	}
 
-	claims := builder.Build()
+	// обогащаем claims необходимыми параметрами
+	currentTime := time.Now()
+	claims := builder.
+		WithIssuer(f.issuer).
+		WithAudience(f.audiences...).
+		WithID(claimsID).
+		WithIssuedAt(currentTime).
+		WithExpiresAt(currentTime.Add(f.expirationInterval)).
+		WithNotBefore(currentTime).
+		Build()
 	if err := claims.ValidateSubject(); err != nil {
 		return nil, err
 	}
