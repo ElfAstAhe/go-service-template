@@ -2,6 +2,9 @@ package auth
 
 import (
 	"context"
+
+	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
 // Приватный тип ключа contextKey полностью исключает коллизии (Context Collision)
@@ -30,11 +33,11 @@ func WithSubject(ctx context.Context, s *Subject) context.Context {
 // FromContext извлекает верифицированный объект Subject из context.Context выполнения запроса.
 // ИСПРАВЛЕНО: Теперь возвращает чистый nil, если субъект отсутствует в метаданных контекста горутины,
 // что позволяет вышестоящим хелперам корректно обрабатывать и логировать ошибки неавторизованных сессий.
-func FromContext(ctx context.Context) *Subject {
+func FromContext(ctx context.Context) (*Subject, error) {
 	s, ok := ctx.Value(subjectKey).(*Subject)
-	if !ok || s == nil {
-		return nil
+	if !ok || utils.IsNil(s) {
+		return nil, errs.NewUtlAuthError("no subject info", nil)
 	}
 
-	return s
+	return s, nil
 }
