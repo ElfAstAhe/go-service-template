@@ -130,10 +130,10 @@ func (sc *AMQPSenderConfig) Validate() error {
 	return nil
 }
 
-// BuildAMQPSenderSettings AMQP sender settings builder
-func BuildAMQPSenderSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultAMQPSenderSettings AMQP sender settings builder
+func BuildDefaultAMQPSenderSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderConnectTimeout, flagPrefix), DefaultAMQPSenderConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderShutdownTimeout, flagPrefix), DefaultAMQPSenderShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderPublishMaxTryAttempts, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderPublishMaxTryAttempts, flagPrefix), DefaultAMQPSenderPublishMaxTryAttempts, fmt.Sprintf("%s AMQP publish max send tries", flagPrefix)),

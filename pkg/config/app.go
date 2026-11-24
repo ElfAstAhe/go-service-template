@@ -91,8 +91,8 @@ func (ac *AppConfig) Validate() error {
 	return nil
 }
 
-// BuildAppSettings app settings builder
-func BuildAppSettings() Settings {
+// BuildDefaultAppSettings app settings builder
+func BuildDefaultAppSettings() Settings {
 	return Settings{
 		NewSetting(KeyAppEnv, FlagAppEnv, DefaultAppEnv, "application environment (prod, dev, test)"),
 		NewSetting(KeyAppInitTimeout, FlagAppInitTimeout, DefaultAppInitTimeout, "application init timeout"),

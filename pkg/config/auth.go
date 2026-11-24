@@ -41,11 +41,11 @@ const (
 // ====================================================================
 // Константные таймауты авторизации и параметры безопасности сессий по умолчанию.
 const (
-	DefaultAuthJWTSecret       string        = "123456"
-	DefaultAuthSigningMethod   string        = "HS256" // Метод подписи токенов по умолчанию: HMAC-SHA256
-	DefaultAuthJWTLeeway       time.Duration = 30 * time.Second
-	DefaultAuthAccessTokenTTL  time.Duration = 15 * time.Minute // Время жизни короткоживущего токена доступа (Access Token)
-	DefaultAuthRefreshTokenTTL time.Duration = 24 * time.Hour   // Время жизни сессионного токена обновления (Refresh Token)
+	DefaultAuthJWTSecret        string        = "123456"
+	DefaultAuthJWTSigningMethod string        = "HS256" // Метод подписи токенов по умолчанию: HMAC-SHA256
+	DefaultAuthJWTLeeway        time.Duration = 30 * time.Second
+	DefaultAuthAccessTokenTTL   time.Duration = 15 * time.Minute // Время жизни короткоживущего токена доступа (Access Token)
+	DefaultAuthRefreshTokenTTL  time.Duration = 24 * time.Hour   // Время жизни сессионного токена обновления (Refresh Token)
 )
 
 // AuthConfig инкапсулирует криптографические секреты, алгоритмы подписи,
@@ -98,7 +98,7 @@ func NewAuthConfig(
 func NewDefaultAuthConfig() *AuthConfig {
 	return NewAuthConfig(
 		"",
-		DefaultAuthSigningMethod,
+		DefaultAuthJWTSigningMethod,
 		DefaultAuthJWTLeeway,
 		DefaultAuthAccessTokenTTL,
 		DefaultAuthRefreshTokenTTL,
@@ -131,11 +131,11 @@ func (ac *AuthConfig) Validate() error {
 	return nil
 }
 
-// BuildAuthSettings auth settings builder
-func BuildAuthSettings() Settings {
+// BuildDefaultAuthSettings auth settings builder
+func BuildDefaultAuthSettings() Settings {
 	return Settings{
 		NewSetting(KeyAuthJWTSecret, FlagAuthJWTSecret, DefaultAuthJWTSecret, "JWT secret"),
-		NewSetting(KeyAuthJWTSigningMethod, FlagAuthJWTSigningMethod, DefaultAuthSigningMethod, "JWT signing method"),
+		NewSetting(KeyAuthJWTSigningMethod, FlagAuthJWTSigningMethod, DefaultAuthJWTSigningMethod, "JWT signing method"),
 		NewSetting(KeyAuthJWTLeeway, FlagAuthJWTLeeway, DefaultAuthJWTLeeway, "JWT leeway time interval"),
 		NewSetting(KeyAuthAccessTokenTTL, FlagAuthAccessTokenTTL, DefaultAuthAccessTokenTTL, "JWT access token TTL"),
 		NewSetting(KeyAuthRefreshTokenTTL, FlagAuthRefreshTokenTTL, DefaultAuthRefreshTokenTTL, "JWT refresh token TTL"),

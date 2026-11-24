@@ -73,8 +73,8 @@ func (brc *RunnerConfig) Validate() error {
 	return nil
 }
 
-// BuildRunnerSettings runner settings builder
-func BuildRunnerSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultRunnerSettings runner settings builder
+func BuildDefaultRunnerSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
 		NewSetting(fmt.Sprintf(TemplateKeyRunnerStopTimeout, keyPrefix), fmt.Sprintf(TemplateFlagRunnerStopTimeout, flagPrefix), DefaultRunnerStopTimeout, fmt.Sprintf("%s stop timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyRunnerCloseTimeout, keyPrefix), fmt.Sprintf(TemplateFlagRunnerCloseTimeout, flagPrefix), DefaultRunnerCloseTimeout, fmt.Sprintf("%s close timeout", flagPrefix)),

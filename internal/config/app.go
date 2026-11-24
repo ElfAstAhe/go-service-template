@@ -13,10 +13,12 @@ const (
 	flagAppNodeName string = "app-node-name"
 )
 
+// app keys
 const (
 	keyAppNodeName string = "app.node_name"
 )
 
+// app defaults
 const (
 	defaultNodeName string = "example-service"
 )
@@ -71,7 +73,7 @@ func (ac *AppConfig) Validate() error {
 
 func BuildAppSettings() pkgconf.Settings {
 	return append(
-		pkgconf.BuildAppSettings(),
+		pkgconf.BuildDefaultAppSettings(),
 		pkgconf.NewSetting(keyAppNodeName, flagAppNodeName, defaultNodeName, "node name"),
 		pkgconf.NewSetting(pkgextconf.KeyAppMaxListLimit, pkgextconf.FlagAppMaxListLimit, pkgextconf.DefaultAppMaxListLimit, "max list limit"),
 	)

@@ -88,7 +88,7 @@ func (br *CRUD[T, ID]) ValidateList(limit, offset int) error {
 	if limit <= 0 {
 		return errs.NewDalError("BaseCRUDRepository.ValidateList", "limit must be greater 0", nil)
 	}
-	if offset <= 0 {
+	if offset < 0 {
 		return errs.NewDalError("BaseCRUDRepository.ValidateList", "offset must be equal or greater 0", nil)
 	}
 

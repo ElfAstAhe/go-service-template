@@ -132,12 +132,19 @@ func (cc *AMQPConnectorConfig) Validate() error {
 	return nil
 }
 
-// BuildAMQPConnectorSettings AMQP connector settings builder
-func BuildAMQPConnectorSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultAMQPConnectorSettings AMQP connector settings builder
+//
+// # ВНИМАНИЕ!
+//
+// Сюда не входят:
+//
+//	TemplateKeyAMQPConnectorUsername TemplateFlagAMQPConnectorUsername
+//	TemplateKeyAMQPConnectorPassword TemplateFlagAMQPConnectorPassword
+func BuildDefaultAMQPConnectorSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorURL, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorURL, flagPrefix), DefaultAMQPConnectorURL, fmt.Sprintf("%s AMQP server URL", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorUsername, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorUsername, flagPrefix), "", fmt.Sprintf("%s AMQP server username", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorPassword, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorPassword, flagPrefix), "", fmt.Sprintf("%s AMQP server password", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorUsername, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorUsername, flagPrefix), "", fmt.Sprintf("%s AMQP server username", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorPassword, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorPassword, flagPrefix), "", fmt.Sprintf("%s AMQP server password", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorConnectTimeout, flagPrefix), DefaultAMQPReceiverConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorIdleTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorIdleTimeout, flagPrefix), DefaultAMQPConnectorIdleTimeout, fmt.Sprintf("%s AMQP idle timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorWriteTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorWriteTimeout, flagPrefix), DefaultAMQPConnectorWriteTimeout, fmt.Sprintf("%s AMQP write timeout", flagPrefix)),

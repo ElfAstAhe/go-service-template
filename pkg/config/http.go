@@ -144,16 +144,23 @@ func (hc *HTTPConfig) Validate() error {
 	return nil
 }
 
-// BuildHTTPSettings http settings builder
-func BuildHTTPSettings() Settings {
+// BuildDefaultHTTPSettings http settings builder
+//
+// # ВНИМАНИЕ!!!
+//
+// Сюда не входят:
+//
+// KeyHTTPPrivateKeyPath FlagHTTPPrivateKeyPath
+// KeyHTTPCertificatePath FlagHTTPCertificatePath
+func BuildDefaultHTTPSettings() Settings {
 	return Settings{
 		NewSetting(KeyHTTPAddress, FlagHTTPAddress, DefaultHTTPAddress, "http address"),
 		NewSetting(KeyHTTPReadTimeout, FlagHTTPReadTimeout, DefaultHTTPReadTimeout, "http read timeout"),
 		NewSetting(KeyHTTPWriteTimeout, FlagHTTPWriteTimeout, DefaultHTTPWriteTimeout, "http write timeout"),
 		NewSetting(KeyHTTPIdleTimeout, FlagHTTPIdleTimeout, DefaultHTTPIdleTimeout, "http idle timeout"),
 		NewSetting(KeyHTTPShutdownTimeout, FlagHTTPShutdownTimeout, DefaultHTTPShutdownTimeout, "http shutdown timeout"),
-		NewSetting(KeyHTTPPrivateKeyPath, FlagHTTPPrivateKeyPath, "", "http private key path"),
-		NewSetting(KeyHTTPCertificatePath, FlagHTTPCertificatePath, "", "http certificate path"),
+		//NewSetting(KeyHTTPPrivateKeyPath, FlagHTTPPrivateKeyPath, "", "http private key path"),
+		//NewSetting(KeyHTTPCertificatePath, FlagHTTPCertificatePath, "", "http certificate path"),
 		NewSetting(KeyHTTPSecure, FlagHTTPSecure, DefaultHTTPSecure, "http secure mode"),
 		NewSetting(KeyHTTPMaxRequestBodySize, FlagHTTPMaxRequestBodySize, DefaultHTTPMaxRequestBodySize, "http max request body size"),
 	}

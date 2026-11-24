@@ -230,19 +230,27 @@ func (ksc *KafkaSenderConfig) Validate() error {
 	return nil
 }
 
-// BuildKafkaSenderSettings kafka sender settings builder
-func BuildKafkaSenderSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultKafkaSenderSettings kafka sender settings builder
+//
+// # ВНИМАНИЕ!!!
+//
+// Сюда не входят:
+//
+// TemplateKeyKafkaSenderTargetName TemplateFlagKafkaSenderTargetName
+// TemplateKeyKafkaSenderUsername TemplateFlagKafkaSenderUsername
+// TemplateKeyKafkaSenderPassword TemplateFlagKafkaSenderPassword
+func BuildDefaultKafkaSenderSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderBrokers, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderBrokers, flagPrefix), DefaultKafkaBrokers, fmt.Sprintf("%s kafka brokers, separated by comma, like: localhost:9092,localhost:9093", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderTargetName, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderTargetName, flagPrefix), "", fmt.Sprintf("%s kafka queue/topic name", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderTargetName, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderTargetName, flagPrefix), "", fmt.Sprintf("%s kafka queue/topic name", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderConnectTimeout, flagPrefix), DefaultKafkaSenderConnectTimeout, fmt.Sprintf("%s kafka connect timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderIdleTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderIdleTimeout, flagPrefix), DefaultKafkaSenderIdleTimeout, fmt.Sprintf("%s kafka idle timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderShutdownTimeout, flagPrefix), DefaultKafkaSenderShutdownTimeout, fmt.Sprintf("%s kafka shutdown timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderPublishMaxTryAttempts, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderPublishMaxTryAttempts, flagPrefix), DefaultKafkaSenderPublishMaxTryAttempts, fmt.Sprintf("%s kafka publish max try attempts", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderPublishBaseRetryDelay, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderPublishBaseRetryDelay, flagPrefix), DefaultKafkaSenderPublishMaxTryAttempts, fmt.Sprintf("%s kafka publish base retry delay", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderPublishMaxRetryDelay, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderPublishMaxRetryDelay, flagPrefix), DefaultKafkaSenderPublishMaxRetryDelay, fmt.Sprintf("%s kafka publish max retry delay", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderUsername, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderUsername, flagPrefix), "", fmt.Sprintf("%s kafka username", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderPassword, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderPassword, flagPrefix), "", fmt.Sprintf("%s kafka password", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderUsername, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderUsername, flagPrefix), "", fmt.Sprintf("%s kafka username", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderPassword, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderPassword, flagPrefix), "", fmt.Sprintf("%s kafka password", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderBatchSize, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderBatchSize, flagPrefix), DefaultKafkaSenderBatchSize, fmt.Sprintf("%s kafka batch size", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderBatchBytes, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderBatchBytes, flagPrefix), DefaultKafkaSenderBatchBytes, fmt.Sprintf("%s kafka batch bytes", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaSenderBatchTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaSenderBatchTimeout, flagPrefix), DefaultKafkaSenderBatchTimeout, fmt.Sprintf("%s kafka batch timeout", flagPrefix)),
