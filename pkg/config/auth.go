@@ -13,6 +13,7 @@ import (
 const (
 	FlagAuthJWTSecret          string = "auth-jwt-secret"           // CLI-флаг секретной соли HMAC подписи JWT токенов
 	FlagAuthJWTSigningMethod   string = "auth-jwt-signing-method"   // CLI-флаг алгоритма подписи JWT (например, HS256)
+	FlagAuthJWTLeeway          string = "auth-jwt-leeway"           // CLI-флаг времени погрешности валидации токена
 	FlagAuthAccessTokenTTL     string = "auth-access-token-ttl"     // CLI-флаг времени жизни Access-токена
 	FlagAuthRefreshTokenTTL    string = "auth-refresh-token-ttl"    // CLI-флаг времени жизни Refresh-токена
 	FlagAuthRSAPrivateKeyPath  string = "auth-rsa-private-key-path" // CLI-флаг пути к приватному RSA-ключу на диске
@@ -28,6 +29,7 @@ const (
 const (
 	KeyAuthJWTSecret          string = "auth.jwt_secret"
 	KeyAuthJWTSigningMethod   string = "auth.jwt_signing_method"
+	KeyAuthJWTLeeway          string = "auth.jwt_leeway"
 	KeyAuthAccessTokenTTL     string = "auth.access_token_ttl"
 	KeyAuthRefreshTokenTTL    string = "auth.refresh_token_ttl"
 	KeyAuthRSAPrivateKeyPath  string = "auth.rsa_private_key_path"
@@ -40,7 +42,8 @@ const (
 // Константные таймауты авторизации и параметры безопасности сессий по умолчанию.
 const (
 	DefaultAuthJWTSecret       string        = "123456"
-	DefaultAuthSigningMethod   string        = "HS256"          // Метод подписи токенов по умолчанию: HMAC-SHA256
+	DefaultAuthSigningMethod   string        = "HS256" // Метод подписи токенов по умолчанию: HMAC-SHA256
+	DefaultAuthJWTLeeway       time.Duration = 30 * time.Second
 	DefaultAuthAccessTokenTTL  time.Duration = 15 * time.Minute // Время жизни короткоживущего токена доступа (Access Token)
 	DefaultAuthRefreshTokenTTL time.Duration = 24 * time.Hour   // Время жизни сессионного токена обновления (Refresh Token)
 )
@@ -53,6 +56,9 @@ type AuthConfig struct {
 
 	// JWTSigningMethod строковое имя алгоритма подписи (например, "HS256", "RS256")
 	JWTSigningMethod string `mapstructure:"jwt_signing_method" json:"jwt_signing_method,omitempty" yaml:"jwt_signing_method,omitempty" toml:"jwt_signing_method,omitempty"`
+
+	// JWTLeeway
+	JWTLeeway time.Duration `mapstructure:"jwt_leeway" json:"jwt_leeway,omitempty" yaml:"jwt_leeway,omitempty" toml:"jwt_leeway,omitempty"`
 
 	// AccessTokenTTL время жизни Access-токена (Default: 15m)
 	AccessTokenTTL time.Duration `mapstructure:"access_token_ttl" json:"access_token_ttl,omitempty" yaml:"access_token_ttl,omitempty" toml:"access_token_ttl,omitempty"`
@@ -71,6 +77,7 @@ type AuthConfig struct {
 func NewAuthConfig(
 	JWTSecret string,
 	JWTSigningMethod string,
+	JWTLeeway time.Duration,
 	accessTokenTTL time.Duration,
 	refreshTokenTTL time.Duration,
 	RSAPrivateKeyPath string,
@@ -79,6 +86,7 @@ func NewAuthConfig(
 	return &AuthConfig{
 		JWTSecret:          JWTSecret,
 		JWTSigningMethod:   JWTSigningMethod,
+		JWTLeeway:          JWTLeeway,
 		AccessTokenTTL:     accessTokenTTL,
 		RefreshTokenTTL:    refreshTokenTTL,
 		RSAPrivateKeyPath:  RSAPrivateKeyPath,
@@ -88,7 +96,15 @@ func NewAuthConfig(
 
 // NewDefaultAuthConfig собирает конфигурацию по умолчанию, наполняя её константными таймаутами авторизации.
 func NewDefaultAuthConfig() *AuthConfig {
-	return NewAuthConfig("", DefaultAuthSigningMethod, DefaultAuthAccessTokenTTL, DefaultAuthRefreshTokenTTL, "", "")
+	return NewAuthConfig(
+		"",
+		DefaultAuthSigningMethod,
+		DefaultAuthJWTLeeway,
+		DefaultAuthAccessTokenTTL,
+		DefaultAuthRefreshTokenTTL,
+		"",
+		"",
+	)
 }
 
 // Validate осуществляет семантическую и системную проверку секретов и крипто-путей на этапе запуска (Bootstrap Phase).
@@ -96,6 +112,9 @@ func NewDefaultAuthConfig() *AuthConfig {
 func (ac *AuthConfig) Validate() error {
 	if ac.JWTSecret == "" {
 		return errs.NewConfigValidateError("auth", "JWTSecret", "must not be empty", nil)
+	}
+	if ac.JWTLeeway <= 0 {
+		return errs.NewConfigValidateError("auth", "JWTLeeway", "must be greater than 0", nil)
 	}
 	if ac.AccessTokenTTL <= 0 {
 		return errs.NewConfigValidateError("auth", "AccessTokenTTL", "must be greater than 0", nil)
@@ -117,6 +136,7 @@ func BuildAuthSettings() Settings {
 	return Settings{
 		NewSetting(KeyAuthJWTSecret, FlagAuthJWTSecret, DefaultAuthJWTSecret, "JWT secret"),
 		NewSetting(KeyAuthJWTSigningMethod, FlagAuthJWTSigningMethod, DefaultAuthSigningMethod, "JWT signing method"),
+		NewSetting(KeyAuthJWTLeeway, FlagAuthJWTLeeway, DefaultAuthJWTLeeway, "JWT leeway time interval"),
 		NewSetting(KeyAuthAccessTokenTTL, FlagAuthAccessTokenTTL, DefaultAuthAccessTokenTTL, "JWT access token TTL"),
 		NewSetting(KeyAuthRefreshTokenTTL, FlagAuthRefreshTokenTTL, DefaultAuthRefreshTokenTTL, "JWT refresh token TTL"),
 		NewSetting(KeyAuthRSAPrivateKeyPath, FlagAuthRSAPrivateKeyPath, "", "RSA private key path"),

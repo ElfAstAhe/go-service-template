@@ -78,7 +78,8 @@ run-help: build-only
 
 # Запуск тестов
 test: gen-sources gen-proto gen-swagger gen-mocks ## Запустить модульные и интеграционные тесты проекта
-	go test -v $$(go list ./... | grep -vE "mocks|test.go")
+	go test -count=1 -v $$(go list ./... | grep -vE "mocks|test.go")
+#	go test -race -count=1 -v $$(go list ./... | grep -vE "mocks|test.go")
 
 # Запуск бенчмарков (сюда добавляем все вызовы) или разные параметры под один пакет
 bench: gen-sources gen-proto gen-mocks ## Запустить кэш-бенчмарки и утилиты с замером памяти
