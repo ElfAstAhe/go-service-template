@@ -52,6 +52,7 @@ func NewTailCutterConfig(
 ) *TailCutterConfig {
 	return &TailCutterConfig{
 		Dispatcher:   dispatcher,
+		TailLimit:    tailLimit,
 		TailInterval: tailInterval,
 		TailCut:      tailCut,
 	}
@@ -89,10 +90,10 @@ func (tcc *TailCutterConfig) Validate() error {
 	return nil
 }
 
-// BuildTailCutterSettings tail cutter settings builder
-func BuildTailCutterSettings(keyPrefix, flagPrefix string) pkgconf.Settings {
+// BuildDefaultTailCutterSettings tail cutter settings builder
+func BuildDefaultTailCutterSettings(keyPrefix, flagPrefix string) pkgconf.Settings {
 	return append(
-		pkgconf.BuildSchedulerDispatcherSettings(fmt.Sprintf("%s.dispatcher", keyPrefix), flagPrefix),
+		pkgconf.BuildDefaultSchedulerDispatcherSettings(fmt.Sprintf("%s.dispatcher", keyPrefix), flagPrefix),
 		pkgconf.NewSetting(fmt.Sprintf(TemplateKeyTailCutterTailLimit, keyPrefix), fmt.Sprintf(TemplateFlagTailCutterTailLimit, flagPrefix), DefaultTailCutterTailLimit, fmt.Sprintf("%s tail limit", flagPrefix)),
 		pkgconf.NewSetting(fmt.Sprintf(TemplateKeyTailCutterTailInterval, keyPrefix), fmt.Sprintf(TemplateFlagTailCutterTailInterval, flagPrefix), DefaultTailCutterTailInterval, fmt.Sprintf("%s tail interval", flagPrefix)),
 		pkgconf.NewSetting(fmt.Sprintf(TemplateKeyTailCutterTailCut, keyPrefix), fmt.Sprintf(TemplateFlagTailCutterTailCut, flagPrefix), DefaultTailCutterTailCut, fmt.Sprintf("%s tail cut", flagPrefix)),

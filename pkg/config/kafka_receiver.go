@@ -305,20 +305,29 @@ func (krc *KafkaReceiverConfig) Validate() error {
 	return nil
 }
 
-// BuildKafkaReceiverSettings kafka receiver settings builder
-func BuildKafkaReceiverSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultKafkaReceiverSettings kafka receiver settings builder
+//
+// # ВНИМАНИЕ!!!
+//
+// Сюда не входят:
+//
+// TemplateKeyKafkaReceiverTargetName TemplateFlagKafkaReceiverTargetName
+// TemplateKeyKafkaReceiverGroupID TemplateFlagKafkaReceiverGroupID
+// TemplateKeyKafkaReceiverUsername TemplateFlagKafkaReceiverUsername
+// TemplateKeyKafkaReceiverPassword TemplateFlagKafkaReceiverPassword
+func BuildDefaultKafkaReceiverSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverBrokers, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverBrokers, flagPrefix), DefaultKafkaBrokers, fmt.Sprintf("%s kafka brokers, separated by comma, like: localhost:9092,localhost:9093", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverTargetName, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverTargetName, flagPrefix), "", fmt.Sprintf("%s kafka queue/topic name", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverGroupID, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverGroupID, flagPrefix), "", fmt.Sprintf("%s kafka group id", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverTargetName, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverTargetName, flagPrefix), "", fmt.Sprintf("%s kafka queue/topic name", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverGroupID, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverGroupID, flagPrefix), "", fmt.Sprintf("%s kafka group id", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverPartition, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverPartition, flagPrefix), DefaultKafkaReceiverPartition, fmt.Sprintf("%s kafka partition", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverConnectTimeout, flagPrefix), DefaultKafkaReceiverConnectTimeout, fmt.Sprintf("%s kafka connect timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverShutdownTimeout, flagPrefix), DefaultKafkaReceiverShutdownTimeout, fmt.Sprintf("%s kafka shutdown timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverMinBytes, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverMinBytes, flagPrefix), DefaultKafkaReceiverMinBytes, fmt.Sprintf("%s kafka min bytes", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverMaxBytes, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverMaxBytes, flagPrefix), DefaultKafkaReceiverMaxBytes, fmt.Sprintf("%s kafka max bytes", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverMaxWait, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverMaxWait, flagPrefix), DefaultKafkaReceiverMaxWait, fmt.Sprintf("%s kafka max wait", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverUsername, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverUsername, flagPrefix), "", fmt.Sprintf("%s kafka username", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverPassword, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverPassword, keyPrefix), "", fmt.Sprintf("%s kafka password", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverUsername, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverUsername, flagPrefix), "", fmt.Sprintf("%s kafka username", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverPassword, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverPassword, keyPrefix), "", fmt.Sprintf("%s kafka password", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverHeartbeatInterval, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverHeartbeatInterval, flagPrefix), DefaultKafkaReceiverHeartbeatInterval, fmt.Sprintf("%s kafka heartbeat interval", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverSessionTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverSessionTimeout, flagPrefix), DefaultKafkaReceiverSessionTimeout, fmt.Sprintf("%s kafka session timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyKafkaReceiverRebalanceTimeout, keyPrefix), fmt.Sprintf(TemplateFlagKafkaReceiverRebalanceTimeout, flagPrefix), DefaultKafkaReceiverRebalanceTimeout, fmt.Sprintf("%s kafka rebalance timeout", flagPrefix)),

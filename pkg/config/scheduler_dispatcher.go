@@ -119,8 +119,8 @@ func (sdc *SchedulerDispatcherConfig) Validate() error {
 	return nil
 }
 
-// BuildSchedulerDispatcherSettings scheduler dispatcher settings builder
-func BuildSchedulerDispatcherSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultSchedulerDispatcherSettings scheduler dispatcher settings builder
+func BuildDefaultSchedulerDispatcherSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
 		NewSetting(fmt.Sprintf(TemplateKeySchedulerDispatcherPoolWorkerCount, keyPrefix), fmt.Sprintf(TemplateFlagSchedulerDispatcherPoolWorkerCount, flagPrefix), DefaultSchedulerDispatcherPoolWorkerCount, fmt.Sprintf("%s worker count", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeySchedulerDispatcherPoolDataCapacity, keyPrefix), fmt.Sprintf(TemplateFlagSchedulerDispatcherPoolDataCapacity, flagPrefix), DefaultSchedulerDispatcherPoolDataCapacity, fmt.Sprintf("%s data capacity", flagPrefix)),

@@ -103,14 +103,19 @@ func (ac *AppConfig) Validate() error {
 	return nil
 }
 
-// BuildAppSettings app settings builder
-func BuildAppSettings(
-	nodeName string,
-) pkgconf.Settings {
-	return append(pkgconf.BuildAppSettings(),
-		pkgconf.NewSetting(KeyAppNodeName, FlagAppNodeName, nodeName, "application node name"),
-		pkgconf.NewSetting(KeyAppMaxListLimit, FlagAppMaxListLimit, nodeName, "max list limit"),
-		pkgconf.NewSetting(KeyAppCipherKey, FlagAppCipherKey, nodeName, "cipher key"),
-		pkgconf.NewSetting(KeyAppAcceptTokenIssuers, FlagAppAcceptTokenIssuers, DefaultAcceptTokenIssuers, `accept token issuers separated by comma, like: "issuer1,issuer2,issuer3"`),
+// BuildDefaultAppSettings app settings builder
+//
+// # ВНИМАНИЕ!!!
+//
+// Сюда не входит:
+//
+// KeyAppNodeName FlagAppNodeName
+// KeyAppAcceptTokenIssuers FlagAppAcceptTokenIssuers
+func BuildDefaultAppSettings() pkgconf.Settings {
+	return append(pkgconf.BuildDefaultAppSettings(),
+		//pkgconf.NewSetting(KeyAppNodeName, FlagAppNodeName, "", "application node name"),
+		pkgconf.NewSetting(KeyAppMaxListLimit, FlagAppMaxListLimit, DefaultAppMaxListLimit, "max list limit"),
+		pkgconf.NewSetting(KeyAppCipherKey, FlagAppCipherKey, DefaultAppCipherKey, "cipher key"),
+		//pkgconf.NewSetting(KeyAppAcceptTokenIssuers, FlagAppAcceptTokenIssuers, DefaultAcceptTokenIssuers, `accept token issuers separated by comma, like: "issuer1,issuer2,issuer3"`),
 	)
 }

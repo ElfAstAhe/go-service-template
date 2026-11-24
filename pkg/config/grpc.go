@@ -137,8 +137,8 @@ func (gc *GRPCConfig) Validate() error {
 	return nil
 }
 
-// BuildGRPCSettings GRPC settings builder
-func BuildGRPCSettings() Settings {
+// BuildDefaultGRPCSettings GRPC settings builder
+func BuildDefaultGRPCSettings() Settings {
 	return Settings{
 		NewSetting(KeyGRPCAddress, FlagGRPCAddress, DefaultGRPCAddress, "gRPC address"),
 		NewSetting(KeyGRPCMaxConnIdle, FlagGRPCMaxConnIdle, DefaultGRPCMaxConnIdle, "gRPC max connection idle time"),

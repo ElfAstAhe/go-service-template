@@ -69,7 +69,7 @@ build-only: gen-sources gen-proto gen-swagger gen-http-client ## Быстрая 
 # Запуск проекта (сначала соберет, потом запустит)
 run: build-only ## Собрать проект и запустить бинарник с локальными флагами (БД, логи)
 	./bin/$(SERVER_BINARY_NAME) \
-		--db-driver "postgres" \
+		--db-driver "pgx" \
 		--db-dsn "postgres://test:password@localhost:5432/test?sslmode=disable&search_path=example_service" \
 		--log-level "DEBUG"
 

@@ -67,8 +67,8 @@ func (lc *LogConfig) Validate() error {
 	return nil
 }
 
-// BuildLogSettings log settings builder
-func BuildLogSettings() Settings {
+// BuildDefaultLogSettings log settings builder
+func BuildDefaultLogSettings() Settings {
 	return Settings{
 		NewSetting(KeyLogLevel, FlagLogLevel, DefaultLogLevel, "log level"),
 		NewSetting(KeyLogFormat, FlagLogFormat, DefaultLogFormat, "log format"),

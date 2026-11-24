@@ -110,8 +110,8 @@ func (wpc *WorkerPoolConfig) Validate() error {
 	return nil
 }
 
-// BuildPoolSettings pool settings builder
-func BuildPoolSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultPoolSettings pool settings builder
+func BuildDefaultPoolSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
 		NewSetting(fmt.Sprintf(TemplateKeyPoolWorkerCount, keyPrefix), fmt.Sprintf(TemplateFlagPoolWorkerCount, flagPrefix), DefaultPoolWorkerCount, fmt.Sprintf("%s worker count", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyPoolDataCapacity, keyPrefix), fmt.Sprintf(TemplateFlagPoolDataCapacity, keyPrefix), DefaultPoolDataCapacity, fmt.Sprintf("%s data capacity", keyPrefix)),

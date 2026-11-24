@@ -112,10 +112,10 @@ func (rc *AMQPReceiverConfig) Validate() error {
 	return nil
 }
 
-// BuildAMQPReceiverSettings AMQP receiver settings builder
-func BuildAMQPReceiverSettings(keyPrefix, flagPrefix string) Settings {
+// BuildDefaultAMQPReceiverSettings AMQP receiver settings builder
+func BuildDefaultAMQPReceiverSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
+		//NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverConnectTimeout, flagPrefix), DefaultAMQPReceiverConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverShutdownTimeout, flagPrefix), DefaultAMQPReceiverShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
 		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverPrefetchCredit, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverPrefetchCredit, flagPrefix), DefaultAMQPReceiverPrefetchCredit, fmt.Sprintf("%s AMQP prefetch credit", flagPrefix)),

@@ -98,13 +98,19 @@ func (tc *TelemetryConfig) Validate() error {
 	return nil
 }
 
-// BuildTelemetrySettings telemetry settings builder
-func BuildTelemetrySettings() Settings {
+// BuildDefaultTelemetrySettings telemetry settings builder
+//
+// # ВНИМАНИЕ!!!
+//
+// Сюда не входят:
+//
+// KeyTelemetryServiceName FlagTelemetryServiceName
+func BuildDefaultTelemetrySettings() Settings {
 	return Settings{
 		NewSetting(KeyTelemetryEnabled, FlagTelemetryEnabled, DefaultTelemetryEnabled, "telemetry operational"),
 		NewSetting(KeyTelemetryExporterEndpoint, FlagTelemetryExporterEndpoint, DefaultTelemetryExporterEndpoint, "telemetry exporter endpoint"),
 		NewSetting(KeyTelemetrySampleRate, FlagTelemetrySampleRate, DefaultTelemetrySampleRate, "telemetry sample rate"),
 		NewSetting(KeyTelemetryTimeout, FlagTelemetryTimeout, DefaultTelemetryTimeout, "telemetry timeout"),
-		NewSetting(KeyTelemetryServiceName, FlagTelemetryServiceName, "", "telemetry service name"),
+		//NewSetting(KeyTelemetryServiceName, FlagTelemetryServiceName, "", "telemetry service name"),
 	}
 }

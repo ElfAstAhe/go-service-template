@@ -140,22 +140,16 @@ func Load() (*Config, error) {
 	return res, nil
 }
 
-func buildCommonSettings() pkgconf.Settings {
-	return pkgconf.Settings{
-		pkgconf.NewSetting("", pkgconf.FlagConfig, pkgconf.DefaultConfigFile, "application config file path"),
-	}
-}
-
 func buildSettings() pkgconf.Settings {
 	var builders = []func() pkgconf.Settings{
 		buildCommonSettings,
 		BuildAppSettings,
-		pkgconf.BuildAuthSettings,
-		pkgconf.BuildHTTPSettings,
-		pkgconf.BuildGRPCSettings,
-		pkgconf.BuildLogSettings,
-		pkgconf.BuildDBSettings,
-		pkgconf.BuildTelemetrySettings,
+		pkgconf.BuildDefaultAuthSettings,
+		buildHTTPSettings,
+		pkgconf.BuildDefaultGRPCSettings,
+		pkgconf.BuildDefaultLogSettings,
+		buildDBSettings,
+		buildTelemetrySettings,
 	}
 	var res pkgconf.Settings
 	for _, builder := range builders {
