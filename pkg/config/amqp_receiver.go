@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -112,12 +111,10 @@ func (rc *AMQPReceiverConfig) Validate() error {
 	return nil
 }
 
-// BuildDefaultAMQPReceiverSettings AMQP receiver settings builder
-func BuildDefaultAMQPReceiverSettings(keyPrefix, flagPrefix string) Settings {
-	return Settings{
-		//NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverConnectTimeout, flagPrefix), DefaultAMQPReceiverConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverShutdownTimeout, flagPrefix), DefaultAMQPReceiverShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPReceiverPrefetchCredit, keyPrefix), fmt.Sprintf(TemplateFlagAMQPReceiverPrefetchCredit, flagPrefix), DefaultAMQPReceiverPrefetchCredit, fmt.Sprintf("%s AMQP prefetch credit", flagPrefix)),
-	}
+// DefaultAMQPReceiverSettingsBuilder default AMQP Receiver SettingsBuilder
+func DefaultAMQPReceiverSettingsBuilder(keyPrefix, flagPrefix string) *SettingsBuilder {
+	return NewSettingsBuilder(keyPrefix, flagPrefix).
+		WithTemplated(TemplateKeyAMQPReceiverConnectTimeout, TemplateFlagAMQPReceiverConnectTimeout, DefaultAMQPReceiverConnectTimeout, "%s AMQP connect timeout").
+		WithTemplated(TemplateKeyAMQPReceiverShutdownTimeout, TemplateFlagAMQPReceiverShutdownTimeout, DefaultAMQPReceiverShutdownTimeout, "%s AMQP shutdown timeout").
+		WithTemplated(TemplateKeyAMQPReceiverPrefetchCredit, TemplateFlagAMQPReceiverPrefetchCredit, DefaultAMQPReceiverPrefetchCredit, "%s AMQP prefetch credit")
 }

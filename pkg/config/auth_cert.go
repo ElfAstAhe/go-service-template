@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -12,26 +11,30 @@ import (
 //
 //nolint:gosec // G101 : это флаги (параметры)
 const (
-	TemplateFlagAuthCertEnabled    string = "%s-auth-cert"             // CLI-флаг включения аутентификации по клиентским сертификатам
-	TemplateFlagAuthCertCAPath     string = "%s-auth-cert-ca-path"     // CLI-флаг пути к корневому CA-сертификату проверки клиентов
-	TemplateFlagAuthCertAllowedCNs string = "%s-auth-cert-allowed-cns" // CLI-флаг списка разрешённых Common Name (CN)
-	TemplateFlagAuthCertRequired   string = "%s-auth-cert-required"    // CLI-флаг обязательности предъявления сертификата на уровне TLS
+	TemplateFlagAuthCertEnabled string = "%s-auth-cert"         // CLI-флаг включения аутентификации по клиентским сертификатам
+	TemplateFlagAuthCertCAPath  string = "%s-auth-cert-ca-path" // CLI-флаг пути к корневому CA-сертификату проверки клиентов
+
+	//TemplateFlagAuthCertAllowedCNs string = "%s-auth-cert-allowed-cns" // CLI-флаг списка разрешённых Common Name (CN)
+
+	TemplateFlagAuthCertRequired string = "%s-auth-cert-required" // CLI-флаг обязательности предъявления сертификата на уровне TLS
 )
 
 // Строковые ключи Viper-маппинга для иерархического связывания параметров mTLS.
 //
 //nolint:gosec // G101 : это ключи
 const (
-	TemplateKeyAuthCertEnabled    string = "%s.enabled"
-	TemplateKeyAuthCertCAPath     string = "%s.ca_path"
-	TemplateKeyAuthCertAllowedCNs string = "%s.allowed_cns"
-	TemplateKeyAuthCertRequired   string = "%s.required"
+	TemplateKeyAuthCertEnabled string = "%s.enabled"
+	TemplateKeyAuthCertCAPath  string = "%s.ca_path"
+
+	//TemplateKeyAuthCertAllowedCNs string = "%s.allowed_cns"
+
+	TemplateKeyAuthCertRequired string = "%s.required"
 )
 
 // Значения по умолчанию для клиентской TLS-аутентификации.
 const (
 	DefaultAuthCertEnabled  bool = false
-	DefaultAuthCertRequired bool = true
+	DefaultAuthCertRequired bool = false
 )
 
 // AuthCertConfig инкапсулирует параметры проверки клиентских X.509-сертификатов (mTLS)
@@ -43,8 +46,8 @@ type AuthCertConfig struct {
 	// CAPath путь в файловой системе к корневому сертификату CA для верификации цепочки доверия клиента
 	CAPath string `mapstructure:"ca_path" json:"ca_path,omitempty" yaml:"ca_path,omitempty" toml:"ca_path,omitempty"`
 
-	// AllowedCNs белый список разрешённых Common Name (CN) субъектов сертификата (если пуст — разрешены все валидные от CA)
-	AllowedCNs []string `mapstructure:"allowed_cns" json:"allowed_cns,omitempty" yaml:"allowed_cns,omitempty" toml:"allowed_cns,omitempty"`
+	//// AllowedCNs белый список разрешённых Common Name (CN) субъектов сертификата (если пуст — разрешены все валидные от CA)
+	//AllowedCNs []string `mapstructure:"allowed_cns" json:"allowed_cns,omitempty" yaml:"allowed_cns,omitempty" toml:"allowed_cns,omitempty"`
 
 	// Required определяет строгий режим TLS (RequireAndVerifyClientCert при true, VerifyClientCertIfGiven при false)
 	Required bool `mapstructure:"required" json:"required,omitempty" yaml:"required,omitempty" toml:"required,omitempty"`
@@ -54,14 +57,14 @@ type AuthCertConfig struct {
 func NewAuthCertConfig(
 	enabled bool,
 	caPath string,
-	allowedCNs []string,
+	//allowedCNs []string,
 	required bool,
 ) *AuthCertConfig {
 	return &AuthCertConfig{
-		Enabled:    enabled,
-		CAPath:     caPath,
-		AllowedCNs: allowedCNs,
-		Required:   required,
+		Enabled: enabled,
+		CAPath:  caPath,
+		//AllowedCNs: allowedCNs,
+		Required: required,
 	}
 }
 
@@ -70,7 +73,7 @@ func NewDefaultAuthCertConfig() *AuthCertConfig {
 	return NewAuthCertConfig(
 		DefaultAuthCertEnabled,
 		"",
-		nil,
+		//nil,
 		DefaultAuthCertRequired,
 	)
 }
@@ -94,17 +97,9 @@ func (acc *AuthCertConfig) Validate() error {
 	return nil
 }
 
-// BuildDefaultAuthCertSettings формирует набор настроек Viper/PFlag для AuthCertConfig.
-//
-// # ВНИМАНИЕ!!!
-//
-// Сюда не входит:
-//
-//	TemplateKeyAuthCertCAPath TemplateFlagAuthCertCAPath
-//	TemplateKeyAuthCertAllowedCNs TemplateFlagAuthCertAllowedCNs
-func BuildDefaultAuthCertSettings(keyPrefix, flagPrefix string) Settings {
-	return Settings{
-		NewSetting(fmt.Sprintf(TemplateKeyAuthCertEnabled, keyPrefix), fmt.Sprintf(TemplateFlagAuthCertEnabled, flagPrefix), DefaultAuthCertEnabled, fmt.Sprintf("%s use cert auth", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAuthCertRequired, keyPrefix), fmt.Sprintf(TemplateFlagAuthCertRequired, flagPrefix), DefaultAuthCertRequired, fmt.Sprintf("%s require client certificate", flagPrefix)),
-	}
+// DefaultAuthCertSettingsBuilder default Auth Cert SettingsBuilder
+func DefaultAuthCertSettingsBuilder(keyPrefix, flagPrefix string) *SettingsBuilder {
+	return NewSettingsBuilder(keyPrefix, flagPrefix).
+		WithTemplated(TemplateKeyAuthCertEnabled, TemplateFlagAuthCertEnabled, DefaultAuthCertEnabled, "%s use cert auth").
+		WithTemplated(TemplateKeyAuthCertRequired, TemplateFlagAuthCertRequired, DefaultAuthCertRequired, "%s require client certificate")
 }

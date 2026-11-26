@@ -1,13 +1,29 @@
 package config
 
 import (
+	"fmt"
+
 	pkgconf "github.com/ElfAstAhe/go-service-template/pkg/config"
+)
+
+const (
+	defaultJWTAuthIssuer string = "tiny-auth-service"
 )
 
 func buildCommonSettings() pkgconf.Settings {
 	return pkgconf.Settings{
 		pkgconf.NewSetting("", pkgconf.FlagConfig, pkgconf.DefaultConfigFile, "application config file path"),
 	}
+}
+
+func buildJWTAuthSettings() pkgconf.Settings {
+	return append(pkgconf.BuildDefaultAuthJWTSettings("auth", "auth"),
+		pkgconf.NewSetting(fmt.Sprintf(pkgconf.TemplateKeyAuthJWTIssuer, "auth.jwt"), fmt.Sprintf(pkgconf.TemplateKeyAuthJWTIssuer, "auth"), defaultJWTAuthIssuer, "auth jwt issuer"),
+	)
+}
+
+func buildAuthSettings() pkgconf.Settings {
+	return nil
 }
 
 func buildHTTPSettings() pkgconf.Settings {

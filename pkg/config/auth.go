@@ -63,13 +63,17 @@ func (ac *AuthConfig) Validate() error {
 	return nil
 }
 
-// BuildDefaultAuthSettings формирует объединённый набор настроек Viper/PFlag
-// для всех провайдеров аутентификации с соответствующими вложенными префиксами.
-func BuildDefaultAuthSettings(keyPrefix, flagPrefix string) Settings {
-	var res Settings
-	res = append(res, BuildDefaultAuthBasicSettings(keyPrefix+".basic", flagPrefix)...)
-	res = append(res, BuildDefaultAuthJWTSettings(keyPrefix+".jwt", flagPrefix)...)
-	res = append(res, BuildDefaultAuthCertSettings(keyPrefix+".cert", flagPrefix)...)
+// BuildAuthBasicPrefixes конструирует key и flag префиксы basic auth
+func BuildAuthBasicPrefixes(keyPrefix, flagPrefix string) (string, string) {
+	return keyPrefix + ".basic", "basic"
+}
 
-	return res
+// BuildAuthJWTPrefixes конструирует key и flag префиксы JWT auth
+func BuildAuthJWTPrefixes(keyPrefix, flagPrefix string) (string, string) {
+	return keyPrefix + ".jwt", "jwt"
+}
+
+// BuildAuthCertPrefixes конструирует key и flag префиксы cert auth
+func BuildAuthCertPrefixes(keyPrefix, flagPrefix string) (string, string) {
+	return keyPrefix + ".cert", "cert"
 }

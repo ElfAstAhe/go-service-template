@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -40,7 +39,7 @@ const (
 
 // Константные таймауты авторизации и параметры безопасности сессий по умолчанию.
 const (
-	DefaultAuthJWTEnabled         bool          = true
+	DefaultAuthJWTEnabled         bool          = false
 	DefaultAuthJWTSecret          string        = "123456"
 	DefaultAuthJWTSigningMethod   string        = "HS256" // Метод подписи токенов по умолчанию: HMAC-SHA256
 	DefaultAuthJWTLeeway          time.Duration = 30 * time.Second
@@ -150,24 +149,13 @@ func (jac *AuthJWTConfig) Validate() error {
 	return nil
 }
 
-// BuildDefaultAuthJWTSettings auth settings builder
-//
-// # ВНИМАНИЕ!!!
-//
-// Сюда не входит:
-//
-// # TemplateKeyAuthJWTIssuer TemplateFlagAuthJWTIssuer
-//
-// TemplateKeyAuthJWTRSAPrivateKeyPath TemplateFlagAuthJWTRSAPrivateKeyPath
-func BuildDefaultAuthJWTSettings(keyPrefix, flagPrefix string) Settings {
-	return Settings{
-		NewSetting(fmt.Sprintf(TemplateKeyAuthJWTEnabled, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTEnabled, flagPrefix), DefaultAuthJWTEnabled, fmt.Sprintf("%s use jwt auth", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAuthJWTSecret, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTSecret, flagPrefix), DefaultAuthJWTSecret, fmt.Sprintf("%s secret", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAuthJWTSigningMethod, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTSigningMethod, flagPrefix), DefaultAuthJWTSigningMethod, fmt.Sprintf("%s signing method", flagPrefix)),
-		//NewSetting(fmt.Sprintf(TemplateKeyAuthJWTIssuer, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTIssuer, flagPrefix), "", fmt.Sprintf("%s issuer", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAuthJWTLeeway, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTLeeway, flagPrefix), DefaultAuthJWTLeeway, fmt.Sprintf("%s leeway time interval", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAuthJWTAccessTokenTTL, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTAccessTokenTTL, flagPrefix), DefaultAuthJWTAccessTokenTTL, fmt.Sprintf("%s access token TTL", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAuthJWTRefreshTokenTTL, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTRefreshTokenTTL, flagPrefix), DefaultAuthJWTRefreshTokenTTL, fmt.Sprintf("%s refresh token TTL", flagPrefix)),
-		//NewSetting(fmt.Sprintf(TemplateKeyAuthJWTRSAPrivateKeyPath, keyPrefix), fmt.Sprintf(TemplateFlagAuthJWTRSAPrivateKeyPath, flagPrefix), "", fmt.Sprintf("%s RSA private key path", flagPrefix)),
-	}
+// DefaultAuthJWTSettingsBuilder default auth jwt SettingsBuilder
+func DefaultAuthJWTSettingsBuilder(keyPrefix, flagPrefix string) *SettingsBuilder {
+	return NewSettingsBuilder(keyPrefix, flagPrefix).
+		WithTemplated(TemplateKeyAuthJWTEnabled, TemplateFlagAuthJWTEnabled, DefaultAuthJWTEnabled, "%s use jwt auth").
+		WithTemplated(TemplateKeyAuthJWTSecret, TemplateFlagAuthJWTSecret, DefaultAuthJWTSecret, "%s secret").
+		WithTemplated(TemplateKeyAuthJWTSigningMethod, TemplateFlagAuthJWTSigningMethod, DefaultAuthJWTSigningMethod, "%s signing method").
+		WithTemplated(TemplateKeyAuthJWTLeeway, TemplateFlagAuthJWTLeeway, DefaultAuthJWTLeeway, "%s leeway time interval").
+		WithTemplated(TemplateKeyAuthJWTAccessTokenTTL, TemplateFlagAuthJWTAccessTokenTTL, DefaultAuthJWTAccessTokenTTL, "%s access token TTL").
+		WithTemplated(TemplateKeyAuthJWTRefreshTokenTTL, TemplateFlagAuthJWTRefreshTokenTTL, DefaultAuthJWTRefreshTokenTTL, "%s refresh token TTL")
 }

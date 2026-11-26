@@ -6,6 +6,11 @@ import (
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
 )
 
+const (
+	TemplateKeyBasicCredsUsername string = "%s.username"
+	TemplateKeyBasicCredsPassword string = "%s.password"
+)
+
 // BasicCredentialConfig содержит параметры конфигурации базовых учетных данных
 // (имя пользователя и пароль) для аутентификации в клиентских подключениях.
 type BasicCredentialConfig struct {

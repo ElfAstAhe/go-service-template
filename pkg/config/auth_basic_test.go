@@ -14,7 +14,6 @@ func TestNewDefaultAuthBasicConfig(t *testing.T) {
 	require.NotNil(t, cfg)
 	assert.Equal(t, DefaultAuthBasicEnabled, cfg.Enabled)
 	assert.Equal(t, DefaultAuthBasicRealm, cfg.Realm)
-	assert.Empty(t, cfg.Users)
 }
 
 func TestAuthBasicConfig_Validate(t *testing.T) {
@@ -35,7 +34,6 @@ func TestAuthBasicConfig_Validate(t *testing.T) {
 			cfg: NewAuthBasicConfig(
 				true,
 				"Admin Area",
-				map[string]string{"admin": "secret123"},
 			),
 			expectErr: false,
 		},
@@ -44,34 +42,6 @@ func TestAuthBasicConfig_Validate(t *testing.T) {
 			cfg: NewAuthBasicConfig(
 				true,
 				"   ",
-				map[string]string{"admin": "secret123"},
-			),
-			expectErr: true,
-		},
-		{
-			name: "failed - empty users map",
-			cfg: NewAuthBasicConfig(
-				true,
-				"Admin Area",
-				nil,
-			),
-			expectErr: true,
-		},
-		{
-			name: "failed - empty login in users",
-			cfg: NewAuthBasicConfig(
-				true,
-				"Admin Area",
-				map[string]string{"": "secret123"},
-			),
-			expectErr: true,
-		},
-		{
-			name: "failed - empty password for user",
-			cfg: NewAuthBasicConfig(
-				true,
-				"Admin Area",
-				map[string]string{"admin": "   "},
 			),
 			expectErr: true,
 		},

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -130,14 +129,12 @@ func (sc *AMQPSenderConfig) Validate() error {
 	return nil
 }
 
-// BuildDefaultAMQPSenderSettings AMQP sender settings builder
-func BuildDefaultAMQPSenderSettings(keyPrefix, flagPrefix string) Settings {
-	return Settings{
-		//NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderTargetName, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderTargetName, flagPrefix), "", fmt.Sprintf("%s AMQP queue/topic name", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderConnectTimeout, flagPrefix), DefaultAMQPSenderConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderShutdownTimeout, flagPrefix), DefaultAMQPSenderShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderPublishMaxTryAttempts, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderPublishMaxTryAttempts, flagPrefix), DefaultAMQPSenderPublishMaxTryAttempts, fmt.Sprintf("%s AMQP publish max send tries", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderPublishBaseRetryDelay, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderPublishBaseRetryDelay, flagPrefix), DefaultAMQPSenderPublishBaseRetryDelay, fmt.Sprintf("%s AMQP publish base retry delay", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPSenderPublishMaxRetryDelay, keyPrefix), fmt.Sprintf(TemplateFlagAMQPSenderPublishMaxRetryDelay, flagPrefix), DefaultAMQPSenderPublishMaxRetryDelay, fmt.Sprintf("%s AMQP publish max retry delay", flagPrefix)),
-	}
+// DefaultAMQPSenderSettingsBuilder default AMQP Sender SettingsBuilder
+func DefaultAMQPSenderSettingsBuilder(keyPrefix, flagPrefix string) *SettingsBuilder {
+	return NewSettingsBuilder(keyPrefix, flagPrefix).
+		WithTemplated(TemplateKeyAMQPSenderConnectTimeout, TemplateFlagAMQPSenderConnectTimeout, DefaultAMQPSenderConnectTimeout, "%s AMQP connect timeout").
+		WithTemplated(TemplateKeyAMQPSenderShutdownTimeout, TemplateFlagAMQPSenderShutdownTimeout, DefaultAMQPSenderShutdownTimeout, "%s AMQP shutdown timeout").
+		WithTemplated(TemplateKeyAMQPSenderPublishMaxTryAttempts, TemplateFlagAMQPSenderPublishMaxTryAttempts, DefaultAMQPSenderPublishMaxTryAttempts, "%s AMQP publish max send tries").
+		WithTemplated(TemplateKeyAMQPSenderPublishBaseRetryDelay, TemplateFlagAMQPSenderPublishBaseRetryDelay, DefaultAMQPSenderPublishBaseRetryDelay, "%s AMQP publish base retry delay").
+		WithTemplated(TemplateKeyAMQPSenderPublishMaxRetryDelay, TemplateFlagAMQPSenderPublishMaxRetryDelay, DefaultAMQPSenderPublishMaxRetryDelay, "%s AMQP publish max retry delay")
 }

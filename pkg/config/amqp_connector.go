@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -31,10 +30,6 @@ const (
 const (
 	// TemplateKeyAMQPConnectorURL Сетевой адрес брокера AMQP v1.0
 	TemplateKeyAMQPConnectorURL string = "%s.url"
-	// TemplateKeyAMQPConnectorUsername пользователь
-	TemplateKeyAMQPConnectorUsername string = "%s.username"
-	// TemplateKeyAMQPConnectorPassword пароль
-	TemplateKeyAMQPConnectorPassword string = "%s.password"
 	// TemplateKeyAMQPConnectorConnectTimeout Лимит времени на установку TCP-сессии
 	TemplateKeyAMQPConnectorConnectTimeout string = "%s.connect_timeout"
 	// TemplateKeyAMQPConnectorIdleTimeout Лимит удержания простаивающего канала со стороны ОС
@@ -66,8 +61,7 @@ type AMQPConnectorConfig struct {
 	// host,port
 	URL string `mapstructure:"url" json:"url,omitempty" yaml:"url,omitempty"` // Хост и порт брокера (например, "localhost:5672")
 	// security
-	Username string `mapstructure:"username" json:"username,omitempty" yaml:"username,omitempty"`
-	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password,omitempty"`
+	Creds *BasicCredentialConfig `mapstructure:"creds" json:"creds,omitempty" yaml:"creds,omitempty"`
 
 	// Сетевые таймауты отправителя (Prod Way)
 	ConnectTimeout  time.Duration `mapstructure:"connect_timeout" json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty" toml:"connect_timeout,omitempty"`
@@ -79,8 +73,7 @@ type AMQPConnectorConfig struct {
 // NewAMQPConnectorConfig конструктор
 func NewAMQPConnectorConfig(
 	url string,
-	username string,
-	password string,
+	creds *BasicCredentialConfig,
 	connectTimeout time.Duration,
 	IdleTimeout time.Duration,
 	writeTimeout time.Duration,
@@ -88,8 +81,7 @@ func NewAMQPConnectorConfig(
 ) *AMQPConnectorConfig {
 	return &AMQPConnectorConfig{
 		URL:             url,
-		Username:        username,
-		Password:        password,
+		Creds:           creds,
 		ConnectTimeout:  connectTimeout,
 		ShutdownTimeout: shutdownTimeout,
 		WriteTimeout:    writeTimeout,
@@ -101,11 +93,10 @@ func NewAMQPConnectorConfig(
 func NewDefaultAMQPConnectorConfig() *AMQPConnectorConfig {
 	return NewAMQPConnectorConfig(
 		DefaultAMQPConnectorURL,
-		"",
-		"",
+		NewDefaultBasicCredentialConfig(),
 		DefaultAMQPConnectorConnectTimeout,
-		DefaultAMQPConnectorWriteTimeout,
 		DefaultAMQPConnectorIdleTimeout,
+		DefaultAMQPConnectorWriteTimeout,
 		DefaultAMQPConnectorShutdownTimeout,
 	)
 }
@@ -132,22 +123,15 @@ func (cc *AMQPConnectorConfig) Validate() error {
 	return nil
 }
 
-// BuildDefaultAMQPConnectorSettings AMQP connector settings builder
-//
-// # ВНИМАНИЕ!
-//
-// Сюда не входят:
-//
-//	TemplateKeyAMQPConnectorUsername TemplateFlagAMQPConnectorUsername
-//	TemplateKeyAMQPConnectorPassword TemplateFlagAMQPConnectorPassword
-func BuildDefaultAMQPConnectorSettings(keyPrefix, flagPrefix string) Settings {
-	return Settings{
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorURL, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorURL, flagPrefix), DefaultAMQPConnectorURL, fmt.Sprintf("%s AMQP server URL", flagPrefix)),
-		//NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorUsername, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorUsername, flagPrefix), "", fmt.Sprintf("%s AMQP server username", flagPrefix)),
-		//NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorPassword, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorPassword, flagPrefix), "", fmt.Sprintf("%s AMQP server password", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorConnectTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorConnectTimeout, flagPrefix), DefaultAMQPReceiverConnectTimeout, fmt.Sprintf("%s AMQP connect timeout", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorIdleTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorIdleTimeout, flagPrefix), DefaultAMQPConnectorIdleTimeout, fmt.Sprintf("%s AMQP idle timeout", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorWriteTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorWriteTimeout, flagPrefix), DefaultAMQPConnectorWriteTimeout, fmt.Sprintf("%s AMQP write timeout", flagPrefix)),
-		NewSetting(fmt.Sprintf(TemplateKeyAMQPConnectorShutdownTimeout, keyPrefix), fmt.Sprintf(TemplateFlagAMQPConnectorShutdownTimeout, flagPrefix), DefaultAMQPConnectorShutdownTimeout, fmt.Sprintf("%s AMQP shutdown timeout", flagPrefix)),
-	}
+// DefaultAMQPConnectorSettingsBuilder default AMQP Connector SettingsBuilder
+func DefaultAMQPConnectorSettingsBuilder(keyPrefix, flagPrefix string) *SettingsBuilder {
+	return NewSettingsBuilder(keyPrefix, flagPrefix).
+		WithTemplated(TemplateKeyAMQPConnectorURL, TemplateFlagAMQPConnectorURL, DefaultAMQPConnectorURL, "%s AMQP server URL").
+		WithBuilder(NewSettingsBuilder(keyPrefix+"creds", "").
+			WithTemplated(TemplateKeyBasicCredsUsername, TemplateFlagAMQPConnectorUsername, "", "%s AMQP server username").
+			WithTemplated(TemplateKeyBasicCredsPassword, TemplateFlagAMQPConnectorPassword, "", "%s AMQP server password")).
+		WithTemplated(TemplateKeyAMQPConnectorConnectTimeout, TemplateFlagAMQPConnectorConnectTimeout, DefaultAMQPConnectorConnectTimeout, "%s AMQP connect timeout").
+		WithTemplated(TemplateKeyAMQPConnectorIdleTimeout, TemplateFlagAMQPConnectorIdleTimeout, DefaultAMQPConnectorIdleTimeout, "%s AMQP idle timeout").
+		WithTemplated(TemplateKeyAMQPConnectorWriteTimeout, TemplateFlagAMQPConnectorWriteTimeout, DefaultAMQPConnectorWriteTimeout, "%s AMQP write timeout").
+		WithTemplated(TemplateKeyAMQPConnectorShutdownTimeout, TemplateFlagAMQPConnectorShutdownTimeout, DefaultAMQPConnectorShutdownTimeout, "%s AMQP shutdown timeout")
 }

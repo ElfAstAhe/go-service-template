@@ -8,18 +8,18 @@ import (
 
 // CLI-флаги для переопределения базовых параметров жизненного цикла приложения.
 const (
-	FlagAppEnv          string = "env"               // CLI-флаг режима среды окружения (prod/dev/test)
-	FlagAppInitTimeout  string = "app-init-timeout"  // CLI-флаг лимита времени на сборку IoC графа зависимостей
-	FlagAppStopTimeout  string = "app-stop-timeout"  // CLI-флаг лимита времени на мягкую остановку серверов и воркеров
-	FlagAppCloseTimeout string = "app-close-timeout" // CLI-флаг лимита времени на принудительную деаллокацию пулов СУБД
+	TemplateFlagAppEnv          string = "%s-env"           // CLI-флаг режима среды окружения (prod/dev/test)
+	TemplateFlagAppInitTimeout  string = "%s-init-timeout"  // CLI-флаг лимита времени на сборку IoC графа зависимостей
+	TemplateFlagAppStopTimeout  string = "%s-stop-timeout"  // CLI-флаг лимита времени на мягкую остановку серверов и воркеров
+	TemplateFlagAppCloseTimeout string = "%s-close-timeout" // CLI-флаг лимита времени на принудительную деаллокацию пулов СУБД
 )
 
 // Строковые ключи Viper-маппинга для иерархического связывания внутренних параметров ядра приложения.
 const (
-	KeyAppEnv          string = "app.env"
-	KeyAppInitTimeout  string = "app.init_timeout"
-	KeyAppStopTimeout  string = "app.stop_timeout"
-	KeyAppCloseTimeout string = "app.close_timeout"
+	TemplateKeyAppEnv          string = "%s.env"
+	TemplateKeyAppInitTimeout  string = "%s.init_timeout"
+	TemplateKeyAppStopTimeout  string = "%s.stop_timeout"
+	TemplateKeyAppCloseTimeout string = "%s.close_timeout"
 )
 
 // Параметры по умолчанию для ядра жизненного цикла приложения.
@@ -91,12 +91,11 @@ func (ac *AppConfig) Validate() error {
 	return nil
 }
 
-// BuildDefaultAppSettings app settings builder
-func BuildDefaultAppSettings() Settings {
-	return Settings{
-		NewSetting(KeyAppEnv, FlagAppEnv, DefaultAppEnv, "application environment (prod, dev, test)"),
-		NewSetting(KeyAppInitTimeout, FlagAppInitTimeout, DefaultAppInitTimeout, "application init timeout"),
-		NewSetting(KeyAppStopTimeout, FlagAppStopTimeout, DefaultAppStopTimeout, "application stop timeout"),
-		NewSetting(KeyAppCloseTimeout, FlagAppCloseTimeout, DefaultAppCloseTimeout, "application close timeout"),
-	}
+// DefaultAppSettingsBuilder default Application SettingsBuilder
+func DefaultAppSettingsBuilder(keyPrefix, flagPrefix string) *SettingsBuilder {
+	return NewSettingsBuilder(keyPrefix, flagPrefix).
+		WithTemplated(TemplateKeyAppEnv, TemplateFlagAppEnv, DefaultAppEnv, "%s environment (prod, dev, test)").
+		WithTemplated(TemplateKeyAppInitTimeout, TemplateFlagAppInitTimeout, DefaultAppInitTimeout, "%s init timeout").
+		WithTemplated(TemplateKeyAppStopTimeout, TemplateFlagAppStopTimeout, DefaultAppStopTimeout, "%s stop timeout").
+		WithTemplated(TemplateKeyAppCloseTimeout, TemplateFlagAppCloseTimeout, DefaultAppCloseTimeout, "%s close timeout")
 }
