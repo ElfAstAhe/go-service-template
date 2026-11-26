@@ -1,145 +1,75 @@
 package config
 
 import (
-	"os"
-	"time"
-
 	"github.com/ElfAstAhe/go-service-template/pkg/errs"
+	"github.com/ElfAstAhe/go-service-template/pkg/utils"
 )
 
-// CLI-флаги подсистемы безопасности, шифрования и авторизации (IAM/Auth).
-//
-//nolint:gosec // G101 : это флаги (параметры)
-const (
-	FlagAuthJWTSecret          string = "auth-jwt-secret"           // CLI-флаг секретной соли HMAC подписи JWT токенов
-	FlagAuthJWTSigningMethod   string = "auth-jwt-signing-method"   // CLI-флаг алгоритма подписи JWT (например, HS256)
-	FlagAuthJWTLeeway          string = "auth-jwt-leeway"           // CLI-флаг времени погрешности валидации токена
-	FlagAuthAccessTokenTTL     string = "auth-access-token-ttl"     // CLI-флаг времени жизни Access-токена
-	FlagAuthRefreshTokenTTL    string = "auth-refresh-token-ttl"    // CLI-флаг времени жизни Refresh-токена
-	FlagAuthRSAPrivateKeyPath  string = "auth-rsa-private-key-path" // CLI-флаг пути к приватному RSA-ключу на диске
-	FlagAuthMasterPasswordSalt string = "auth-master-password-salt" // CLI-флаг соли для хэширования паролей пользователей
-)
-
-// ====================================================================
-// Auth
-// ====================================================================
-// Строковые ключи Viper-маппинга для иерархического связывания секретов подсистемы безопасности и IAM.
-//
-//nolint:gosec // G101 : это ключи
-const (
-	KeyAuthJWTSecret          string = "auth.jwt_secret"
-	KeyAuthJWTSigningMethod   string = "auth.jwt_signing_method"
-	KeyAuthJWTLeeway          string = "auth.jwt_leeway"
-	KeyAuthAccessTokenTTL     string = "auth.access_token_ttl"
-	KeyAuthRefreshTokenTTL    string = "auth.refresh_token_ttl"
-	KeyAuthRSAPrivateKeyPath  string = "auth.rsa_private_key_path"
-	KeyAuthMasterPasswordSalt string = "auth.master_password_salt"
-)
-
-// ====================================================================
-// access defaults
-// ====================================================================
-// Константные таймауты авторизации и параметры безопасности сессий по умолчанию.
-const (
-	DefaultAuthJWTSecret        string        = "123456"
-	DefaultAuthJWTSigningMethod string        = "HS256" // Метод подписи токенов по умолчанию: HMAC-SHA256
-	DefaultAuthJWTLeeway        time.Duration = 30 * time.Second
-	DefaultAuthAccessTokenTTL   time.Duration = 15 * time.Minute // Время жизни короткоживущего токена доступа (Access Token)
-	DefaultAuthRefreshTokenTTL  time.Duration = 24 * time.Hour   // Время жизни сессионного токена обновления (Refresh Token)
-)
-
-// AuthConfig инкапсулирует криптографические секреты, алгоритмы подписи,
-// временные лимиты сессий (JWT TTL) и параметры хэширования для подсистемы безопасности (IAM/Auth).
+// AuthConfig объединяет настройки всех поддерживаемых механизмов аутентификации сервиса
+// (Basic Auth, JWT, клиентские TLS-сертификаты mTLS).
 type AuthConfig struct {
-	// JWTSecret секретный ключ (соль) для симметричной HMAC-подписи токенов
-	JWTSecret string `mapstructure:"jwt_secret" json:"jwt_secret,omitempty" yaml:"jwt_secret,omitempty" toml:"jwt_secret,omitempty"`
+	// Basic конфигурация HTTP/gRPC Basic-аутентификации
+	Basic *AuthBasicConfig `mapstructure:"basic" json:"basic,omitempty" yaml:"basic,omitempty" toml:"basic,omitempty"`
 
-	// JWTSigningMethod строковое имя алгоритма подписи (например, "HS256", "RS256")
-	JWTSigningMethod string `mapstructure:"jwt_signing_method" json:"jwt_signing_method,omitempty" yaml:"jwt_signing_method,omitempty" toml:"jwt_signing_method,omitempty"`
+	// JWT конфигурация выпуска и проверки JWT-токенов
+	JWT *AuthJWTConfig `mapstructure:"jwt" json:"jwt,omitempty" yaml:"jwt,omitempty" toml:"jwt,omitempty"`
 
-	// JWTLeeway
-	JWTLeeway time.Duration `mapstructure:"jwt_leeway" json:"jwt_leeway,omitempty" yaml:"jwt_leeway,omitempty" toml:"jwt_leeway,omitempty"`
-
-	// AccessTokenTTL время жизни Access-токена (Default: 15m)
-	AccessTokenTTL time.Duration `mapstructure:"access_token_ttl" json:"access_token_ttl,omitempty" yaml:"access_token_ttl,omitempty" toml:"access_token_ttl,omitempty"`
-
-	// RefreshTokenTTL время жизни Refresh-токена (Default: 30d)
-	RefreshTokenTTL time.Duration `mapstructure:"refresh_token_ttl" json:"refresh_token_ttl,omitempty" yaml:"refresh_token_ttl,omitempty" toml:"refresh_token_ttl,omitempty"`
-
-	// RSAPrivateKeyPath путь в файловой системе к приватному RSA-ключу для асимметричной подписи токенов
-	RSAPrivateKeyPath string `mapstructure:"rsa_private_key_path" json:"rsa_private_key_path,omitempty" yaml:"rsa_private_key_path,omitempty" toml:"rsa_private_key_path,omitempty"`
-
-	// MasterPasswordSalt кастомная соль для хэширования паролей пользователей (Argon2/Bcrypt)
-	MasterPasswordSalt string `mapstructure:"master_password_salt" json:"master_password_salt,omitempty" yaml:"master_password_salt,omitempty" toml:"master_password_salt,omitempty"`
+	// Cert конфигурация клиентской TLS-аутентификации (mTLS)
+	Cert *AuthCertConfig `mapstructure:"cert" json:"cert,omitempty" yaml:"cert,omitempty" toml:"cert,omitempty"`
 }
 
-// NewAuthConfig — фабричный конструктор конфигурации подсистемы безопасности.
+// NewAuthConfig — фабричный конструктор корневой конфигурации подсистемы аутентификации.
 func NewAuthConfig(
-	JWTSecret string,
-	JWTSigningMethod string,
-	JWTLeeway time.Duration,
-	accessTokenTTL time.Duration,
-	refreshTokenTTL time.Duration,
-	RSAPrivateKeyPath string,
-	MasterPasswordSalt string,
+	basic *AuthBasicConfig,
+	jwt *AuthJWTConfig,
+	cert *AuthCertConfig,
 ) *AuthConfig {
 	return &AuthConfig{
-		JWTSecret:          JWTSecret,
-		JWTSigningMethod:   JWTSigningMethod,
-		JWTLeeway:          JWTLeeway,
-		AccessTokenTTL:     accessTokenTTL,
-		RefreshTokenTTL:    refreshTokenTTL,
-		RSAPrivateKeyPath:  RSAPrivateKeyPath,
-		MasterPasswordSalt: MasterPasswordSalt,
+		Basic: basic,
+		JWT:   jwt,
+		Cert:  cert,
 	}
 }
 
-// NewDefaultAuthConfig собирает конфигурацию по умолчанию, наполняя её константными таймаутами авторизации.
+// NewDefaultAuthConfig собирает конфигурацию подсистемы аутентификации со значениями по умолчанию
+// для всех поддерживаемых провайдеров.
 func NewDefaultAuthConfig() *AuthConfig {
 	return NewAuthConfig(
-		"",
-		DefaultAuthJWTSigningMethod,
-		DefaultAuthJWTLeeway,
-		DefaultAuthAccessTokenTTL,
-		DefaultAuthRefreshTokenTTL,
-		"",
-		"",
+		NewDefaultAuthBasicConfig(),
+		NewDefaultAuthJWTConfig(),
+		NewDefaultAuthCertConfig(),
 	)
 }
 
-// Validate осуществляет семантическую и системную проверку секретов и крипто-путей на этапе запуска (Bootstrap Phase).
-// Защищает рантайм от запуска IAM контура с пустыми солями, нулевыми таймаутами или несмонтированными RSA-ключами.
+// Validate осуществляет каскадную проверку всех инициализированных конфигураций провайдеров
+// аутентификации на этапе запуска приложения (Fail-Fast).
 func (ac *AuthConfig) Validate() error {
-	if ac.JWTSecret == "" {
-		return errs.NewConfigValidateError("auth", "JWTSecret", "must not be empty", nil)
+	if !utils.IsNil(ac.Basic) {
+		if err := ac.Basic.Validate(); err != nil {
+			return errs.NewConfigValidateError("auth", "basic", "validation failed", err)
+		}
 	}
-	if ac.JWTLeeway <= 0 {
-		return errs.NewConfigValidateError("auth", "JWTLeeway", "must be greater than 0", nil)
+	if !utils.IsNil(ac.JWT) {
+		if err := ac.JWT.Validate(); err != nil {
+			return errs.NewConfigValidateError("auth", "jwt", "validation failed", err)
+		}
 	}
-	if ac.AccessTokenTTL <= 0 {
-		return errs.NewConfigValidateError("auth", "AccessTokenTTL", "must be greater than 0", nil)
-	}
-
-	// Если путь к приватному ключу RSA задан — проактивно проверяем его физическое существование на диске (Fail-Fast)
-	if ac.RSAPrivateKeyPath != "" {
-		if _, err := os.Stat(ac.RSAPrivateKeyPath); os.IsNotExist(err) {
-			// Возвращаем типизированную ошибку валидации конфигурации фреймворка с привязкой исходного OS-сбоя
-			return errs.NewConfigValidateError("auth", "RSAPrivateKeyPath", "does not exist", err)
+	if !utils.IsNil(ac.Cert) {
+		if err := ac.Cert.Validate(); err != nil {
+			return errs.NewConfigValidateError("auth", "cert", "validation failed", err)
 		}
 	}
 
 	return nil
 }
 
-// BuildDefaultAuthSettings auth settings builder
-func BuildDefaultAuthSettings() Settings {
-	return Settings{
-		NewSetting(KeyAuthJWTSecret, FlagAuthJWTSecret, DefaultAuthJWTSecret, "JWT secret"),
-		NewSetting(KeyAuthJWTSigningMethod, FlagAuthJWTSigningMethod, DefaultAuthJWTSigningMethod, "JWT signing method"),
-		NewSetting(KeyAuthJWTLeeway, FlagAuthJWTLeeway, DefaultAuthJWTLeeway, "JWT leeway time interval"),
-		NewSetting(KeyAuthAccessTokenTTL, FlagAuthAccessTokenTTL, DefaultAuthAccessTokenTTL, "JWT access token TTL"),
-		NewSetting(KeyAuthRefreshTokenTTL, FlagAuthRefreshTokenTTL, DefaultAuthRefreshTokenTTL, "JWT refresh token TTL"),
-		NewSetting(KeyAuthRSAPrivateKeyPath, FlagAuthRSAPrivateKeyPath, "", "RSA private key path"),
-		NewSetting(KeyAuthMasterPasswordSalt, FlagAuthMasterPasswordSalt, "", "master password salt"),
-	}
+// BuildDefaultAuthSettings формирует объединённый набор настроек Viper/PFlag
+// для всех провайдеров аутентификации с соответствующими вложенными префиксами.
+func BuildDefaultAuthSettings(keyPrefix, flagPrefix string) Settings {
+	var res Settings
+	res = append(res, BuildDefaultAuthBasicSettings(keyPrefix+".basic", flagPrefix)...)
+	res = append(res, BuildDefaultAuthJWTSettings(keyPrefix+".jwt", flagPrefix)...)
+	res = append(res, BuildDefaultAuthCertSettings(keyPrefix+".cert", flagPrefix)...)
+
+	return res
 }

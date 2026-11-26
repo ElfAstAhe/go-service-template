@@ -42,10 +42,17 @@ var DefaultAcceptTokenIssuers []string
 // лимиты выборок, параметры криптографии и правила валидации токенов безопасности микросервиса.
 type AppConfig struct {
 	*pkgconf.AppConfig `mapstructure:",squash"`
-	NodeName           string   `mapstructure:"node_name" json:"node_name,omitempty" yaml:"node_name,omitempty" toml:"node_name,omitempty"`
-	MaxListLimit       int      `mapstructure:"max_list_limit" json:"max_list_limit,omitempty" yaml:"max_list_limit,omitempty" toml:"max_list_limit,omitempty"`
+
+	// NodeName наименование узла сервиса, при горизонтальном масштабировании может выглядеть как some-service-123, some-service-124, ..
+	NodeName string `mapstructure:"node_name" json:"node_name,omitempty" yaml:"node_name,omitempty" toml:"node_name,omitempty"`
+
+	// MaxListLimit Дефолтное максимальное кол-во данных списков
+	MaxListLimit int `mapstructure:"max_list_limit" json:"max_list_limit,omitempty" yaml:"max_list_limit,omitempty" toml:"max_list_limit,omitempty"`
+
+	// AcceptTokenIssuers
 	AcceptTokenIssuers []string `mapstructure:"accept_token_issuers" json:"accept_token_issuers,omitempty" yaml:"accept_token_issuers,omitempty" toml:"accept_token_issuers,omitempty"`
-	CipherKey          string   `mapstructure:"cipher_key" json:"cipher_key,omitempty" yaml:"cipher_key,omitempty" toml:"cipher_key,omitempty"`
+
+	CipherKey string `mapstructure:"cipher_key" json:"cipher_key,omitempty" yaml:"cipher_key,omitempty" toml:"cipher_key,omitempty"`
 }
 
 // NewAppConfig — параметризованный конструктор для явного формирования конфигурационной структуры.

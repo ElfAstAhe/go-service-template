@@ -311,9 +311,12 @@ func (krc *KafkaReceiverConfig) Validate() error {
 //
 // Сюда не входят:
 //
-// TemplateKeyKafkaReceiverTargetName TemplateFlagKafkaReceiverTargetName
-// TemplateKeyKafkaReceiverGroupID TemplateFlagKafkaReceiverGroupID
-// TemplateKeyKafkaReceiverUsername TemplateFlagKafkaReceiverUsername
+// # TemplateKeyKafkaReceiverTargetName TemplateFlagKafkaReceiverTargetName
+//
+// # TemplateKeyKafkaReceiverGroupID TemplateFlagKafkaReceiverGroupID
+//
+// # TemplateKeyKafkaReceiverUsername TemplateFlagKafkaReceiverUsername
+//
 // TemplateKeyKafkaReceiverPassword TemplateFlagKafkaReceiverPassword
 func BuildDefaultKafkaReceiverSettings(keyPrefix, flagPrefix string) Settings {
 	return Settings{

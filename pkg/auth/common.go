@@ -11,3 +11,11 @@ const (
 	// DefaultMetadataName auth meta data name
 	DefaultMetadataName string = "authorization"
 )
+
+const (
+	// DefaultBasicPrefix auth basic prefix
+	DefaultBasicPrefix string = "Basic "
+
+	// DefaultJWTPrefix auth jwt prefix
+	DefaultJWTPrefix string = "Bearer "
+)
